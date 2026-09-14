@@ -5,3 +5,6 @@
 # dependências e sistema
 node_modules/
 .DS_Store
+
+# worktrees locais
+.claude/worktrees/
