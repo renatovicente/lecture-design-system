@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head><meta charset="utf-8">
+<title>Aula USP · referência: composição</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+:root{--bg-primary:#f5f5f7;--bg-secondary:#fff;--bg-tertiary:#e5e5e7;--border:#d1d1d6;--text-primary:#1d1d1f;--text-secondary:#86868b;--accent:#0071e3}
+body{margin:0;padding:32px;font-family:system-ui,-apple-system,sans-serif;background:var(--bg-primary);color:var(--text-primary)}
+h2{margin:0 0 .4rem}.subtitle{color:var(--text-secondary);margin:0 0 1.5rem}
+.label{font-size:.7rem;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.5rem}
+.options{display:flex;flex-direction:column;gap:.75rem}
+.option{background:var(--bg-secondary);border:2px solid var(--border);border-radius:12px;padding:1rem 1.25rem;display:flex;gap:1rem}
+.option .letter{background:var(--bg-tertiary);color:var(--text-secondary);width:1.8rem;height:1.8rem;border-radius:6px;display:flex;align-items:center;justify-content:center;font-weight:600;flex:none}
+.option .content{flex:1}.option .content h3{margin:0 0 .15rem;font-size:.95rem}.option .content p{color:var(--text-secondary);font-size:.85rem;margin:0}
+.section{margin-top:1.5rem}
+.nota-ref{background:#fff;border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:.85rem;margin-bottom:1.5rem}
+</style></head><body>
+<div class="nota-ref">Referência congelada do brainstorming de 2026-09-14 (spec <code>2026-09-14-aula-usp-design.md</code>). Escolha aprovada: <b>C</b> (mapa de blocos).</div>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;700&family=Geist:wght@400;600&family=Open+Sans:wght@400;600&display=swap">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.47/dist/katex.min.css" integrity="sha384-nH0MfJ44wi1dd7w6jinlyBgljjS8EJAh2JBoRad8a3VDw2K69vfaaqm4WnR+gXtA" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.47/dist/katex.min.js" integrity="sha384-CwjPRVHTvLiMBFjEoij+QZViMV5rhTOIp7CJzl24JEqpRDA1sJFHVXXLURktbYYp" crossorigin="anonymous"></script>
+<style>
+.cmp .option { align-items: flex-start; cursor: pointer; }
+.cmp .content h3 { font-size: 1.05rem; }
+.set { display: grid; grid-template-columns: 2fr 1fr; gap: 12px; margin-top: 12px; }
+.stack { display: grid; grid-template-rows: auto auto; gap: 12px; align-content: start; }
+.cap { font: 400 .72rem/1.2 ui-monospace, monospace; color: var(--text-secondary); margin: 4px 0 0; }
+.cmp .pc { font-size: .8rem; color: var(--text-secondary); margin-top: 10px; line-height: 1.5; }
+.cmp .pc b { color: var(--text-primary); font-weight: 600; }
+
+/* ---------- base do slide ---------- */
+.cmp .s { container-type: inline-size; aspect-ratio: 16/9; background: #FFFFFF; border: 1px solid #d1d1d6; position: relative; overflow: hidden; color: #0A0A0A; font-family: 'Geist', system-ui, sans-serif; }
+.cmp .s * { box-sizing: border-box; }
+.cmp .m { font-family: 'Geist Mono', ui-monospace, monospace; letter-spacing: .16em; text-transform: uppercase; }
+.cmp .h { font-weight: 600; letter-spacing: -.03em; line-height: 1.06; margin: 0; }
+.cmp .h .a { color: #1094AB; }
+.cmp .s p.b { margin: 0; color: #0A0A0A; }
+.cmp .eq .katex-display { margin: 0; text-align: left; }
+.cmp .eq .katex-display > .katex { text-align: left; }
+.cmp .def { background: #FCB421; line-height: 1.4; }
+.cmp .steps { display: flex; flex-direction: column; }
+.cmp .step { display: grid; align-items: baseline; border-top: .22cqw solid #0A0A0A; }
+.cmp .step .n { font-weight: 600; line-height: 1; }
+.cmp .gray { color: #666666; }
+.cmp .logo { border: .16cqw solid #0A0A0A; display: flex; align-items: center; justify-content: center; font-family: 'Geist Mono', monospace; text-transform: uppercase; letter-spacing: .1em; }
+.cmp .usp { display: flex; align-items: center; }
+.cmp .usp .w { font-family: 'Open Sans', sans-serif; font-weight: 600; line-height: 1.15; }
+
+/* conteudo padrao (reaproveitado por A, B, C) */
+.cmp .content-g { display: grid; grid-template-columns: 1.1fr 1fr; gap: 3.6cqw; align-items: start; }
+.cmp .content-g p.b { font-size: 1.8cqw; line-height: 1.42; }
+.cmp .content-g .eq { font-size: 1.8cqw; margin: 1.1cqw 0 1.4cqw; }
+.cmp .content-g .def { font-size: 1.55cqw; padding: 1.2cqw 1.6cqw; }
+.cmp .content-g .def .m { display: block; font-size: .95cqw; font-weight: 700; margin-bottom: .7cqw; }
+.cmp .content-g .steps { gap: 2cqw; }
+.cmp .content-g .step { grid-template-columns: 4.6cqw 1fr; padding-top: 1.1cqw; }
+.cmp .content-g .step .n { font-size: 3.2cqw; }
+.cmp .content-g .step .t { font-size: 1.8cqw; line-height: 1.35; }
+.cmp .content-g code { font-family: 'Geist Mono', monospace; font-size: .88em; }
+
+/* ---------- A: coluna de margem ---------- */
+.A .mg { position: absolute; left: 0; top: 0; bottom: 0; width: 21cqw; padding: 4.4cqw 2.2cqw 3.6cqw 5.5cqw; display: flex; flex-direction: column; }
+.A .mg .num { font-weight: 600; font-size: 7.5cqw; line-height: .85; letter-spacing: -.04em; }
+.A .mg .lb { font-size: 1.05cqw; font-weight: 700; margin-top: 1.6cqw; line-height: 1.5; }
+.A .mg .bt { margin-top: auto; font-size: 1cqw; line-height: 1.7; color: #666666; }
+.A .vr { position: absolute; left: 21cqw; top: 4.4cqw; bottom: 3.6cqw; width: .22cqw; background: #0A0A0A; }
+.A .vr i { position: absolute; left: -.2cqw; top: 0; width: .62cqw; height: 40%; background: #1094AB; }
+.A .mn { position: absolute; left: 24cqw; right: 5.5cqw; top: 4.4cqw; bottom: 3.6cqw; }
+.A .mn .h { font-size: 3.3cqw; margin-bottom: 2.6cqw; }
+.A .mn .content-g { grid-template-columns: 1.15fr 1fr; gap: 3cqw; }
+/* A abertura */
+.A.open .fld { position: absolute; left: 0; top: 0; bottom: 0; width: 36cqw; background: #FCB421; display: flex; align-items: flex-end; padding: 6cqw 5.5cqw; }
+.A.open .fld .num { font-weight: 600; font-size: 22cqw; line-height: .78; letter-spacing: -.05em; }
+.A.open .rt { position: absolute; left: 41cqw; right: 5.5cqw; bottom: 6cqw; }
+.A.open .rt .m { font-size: 2cqw; font-weight: 700; }
+.A.open .rt .h { font-size: 6.4cqw; margin-top: 2cqw; }
+/* A capa */
+.A.cover .mg .lb { font-size: 1.6cqw; margin-top: 0; }
+.A.cover .mn .h { font-size: 7.4cqw; margin-top: 7cqw; }
+.A.cover .mn .who { font-size: 2.4cqw; margin-top: 3cqw; }
+.A.cover .logos { position: absolute; left: 24cqw; right: 5.5cqw; bottom: 3.6cqw; display: flex; justify-content: space-between; align-items: flex-end; }
+.A.cover .mg .unit { margin-top: auto; }
+
+/* ---------- B: reguas horizontais ---------- */
+.B .hd { position: absolute; left: 5.5cqw; right: 5.5cqw; top: 3.4cqw; display: flex; justify-content: space-between; font-size: 1.1cqw; font-weight: 700; }
+.B .hr { position: absolute; left: 5.5cqw; right: 5.5cqw; top: 6cqw; height: .22cqw; background: #0A0A0A; }
+.B .mn { position: absolute; left: 5.5cqw; right: 5.5cqw; top: 8.8cqw; }
+.B .mn .h { font-size: 3.5cqw; margin-bottom: 2.6cqw; }
+.B .ft { position: absolute; left: 5.5cqw; right: 5.5cqw; bottom: 2.2cqw; font-size: 1cqw; color: #666666; }
+.B .pb { position: absolute; left: 0; bottom: 0; height: .5cqw; width: 40%; background: #1094AB; }
+/* B abertura */
+.B.open .band { position: absolute; left: 0; right: 0; top: 0; height: 33cqw; background: #FCB421; display: flex; align-items: flex-end; padding: 0 5.5cqw 3cqw; }
+.B.open .band .num { font-weight: 600; font-size: 24cqw; line-height: .76; letter-spacing: -.05em; }
+.B.open .under { position: absolute; left: 5.5cqw; right: 5.5cqw; bottom: 6cqw; display: flex; justify-content: space-between; align-items: flex-end; }
+.B.open .under .h { font-size: 6.6cqw; }
+.B.open .under .m { font-size: 2cqw; font-weight: 700; }
+/* B capa */
+.B.cover .hd { font-size: 1.6cqw; top: 4cqw; }
+.B.cover .hr { top: 7.4cqw; }
+.B.cover .mn { top: 15cqw; }
+.B.cover .mn .h { font-size: 7.4cqw; }
+.B.cover .mn .who { font-size: 2.4cqw; margin-top: 2.6cqw; }
+.B.cover .thick { position: absolute; left: 5.5cqw; right: 5.5cqw; bottom: 12cqw; height: .8cqw; background: #0A0A0A; }
+.B.cover .logos { position: absolute; left: 5.5cqw; right: 5.5cqw; bottom: 3.6cqw; display: flex; justify-content: space-between; align-items: flex-end; }
+
+/* ---------- C: mapa de blocos ---------- */
+.C .hd { position: absolute; left: 5.5cqw; right: 5.5cqw; top: 3.6cqw; display: flex; justify-content: space-between; align-items: center; }
+.C .hd .lb { font-size: 1.1cqw; font-weight: 700; }
+.C .map { display: flex; align-items: center; gap: .6cqw; }
+.C .map i { display: block; width: 1.5cqw; height: 1.5cqw; border: .18cqw solid #0A0A0A; }
+.C .map i.p { background: #0A0A0A; }
+.C .map i.c { background: #1094AB; border-color: #1094AB; }
+.C .map .k { font-size: 1.05cqw; margin-left: 1cqw; }
+.C .mn { position: absolute; left: 5.5cqw; right: 5.5cqw; top: 8.4cqw; }
+.C .mn .h { font-size: 3.5cqw; margin-bottom: 2.6cqw; }
+.C .ft { position: absolute; left: 5.5cqw; right: 5.5cqw; bottom: 2.2cqw; font-size: 1cqw; color: #666666; }
+/* C abertura: o mapa vira a composicao */
+.C.open .row { position: absolute; left: 5.5cqw; right: 5.5cqw; top: 7cqw; display: grid; grid-template-columns: repeat(6, 1fr); gap: 2.4cqw; }
+.C.open .sq { aspect-ratio: 1; border: .35cqw solid #0A0A0A; display: flex; align-items: flex-end; padding: 1.2cqw; }
+.C.open .sq.p { background: #0A0A0A; }
+.C.open .sq.c { background: #FCB421; border-color: #FCB421; }
+.C.open .sq .num { font-weight: 600; font-size: 7cqw; line-height: .8; letter-spacing: -.04em; }
+.C.open .nm { font-size: 1.35cqw; font-weight: 700; margin-top: 1.2cqw; line-height: 1.3; }
+.C.open .nm.c { color: #0A0A0A; }
+.C.open .nm.f { color: #666666; }
+.C.open .under { position: absolute; left: 5.5cqw; right: 5.5cqw; bottom: 6cqw; display: flex; justify-content: space-between; align-items: flex-end; }
+.C.open .under .h { font-size: 6.6cqw; }
+.C.open .under .m { font-size: 2cqw; font-weight: 700; }
+/* C capa: o mapa vira o roteiro */
+.C.cover .mn { top: 6cqw; }
+.C.cover .mn .h { font-size: 7.4cqw; }
+.C.cover .mn .who { font-size: 2.4cqw; margin-top: 2.4cqw; }
+.C.cover .agenda { position: absolute; left: 5.5cqw; right: 5.5cqw; top: 31cqw; display: grid; grid-template-columns: repeat(6, 1fr); gap: 2.4cqw; }
+.C.cover .agenda .sq { height: 2.6cqw; width: 2.6cqw; border: .28cqw solid #0A0A0A; }
+.C.cover .agenda .nm { font-size: 1.45cqw; font-weight: 700; margin-top: 1cqw; line-height: 1.3; }
+.C.cover .logos { position: absolute; left: 5.5cqw; right: 5.5cqw; bottom: 3.6cqw; display: flex; justify-content: space-between; align-items: flex-end; }
+
+.rules { margin-top: 1.5rem; }
+.rules ul { margin: .4rem 0 0 1.2rem; font-size: .85rem; color: var(--text-secondary); line-height: 1.6; }
+</style>
+
+<h2>Composição: onde a Bauhaus mora neste sistema</h2>
+<p class="subtitle">Três direções de grid, cada uma com slide de conteúdo, abertura de bloco e capa. Paleta B, Geist. Os logos aparecem como caixas reservadas: unidade à esquerda, USP à direita, como pede o manual.</p>
+
+<div class="options cmp">
+
+  <!-- ===================== A ===================== -->
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Coluna de margem</h3>
+      <p>Grid editorial assimétrico: uma coluna à esquerda guarda a orientação (bloco, aula, número) e uma régua vertical separa essa informação do conteúdo. A régua ganha um trecho azul que marca o progresso.</p>
+      <div class="set">
+        <div>
+          <div class="s A">
+            <div class="mg">
+              <div class="num">03</div>
+              <div class="lb m">Back&shy;propagation</div>
+              <div class="bt m">Redes Neurais<br>Aula 04<br>17 / 42</div>
+            </div>
+            <div class="vr"><i></i></div>
+            <div class="mn">
+              <div class="h">A culpa flui para trás;<br><span class="a">cada peso recebe a sua parte.</span></div>
+              <div class="content-g">
+                <div>
+                  <p class="b">O erro na saída é distribuído pelas camadas, na proporção em que cada conexão contribuiu para ele.</p>
+                  <div class="eq" data-tex="\frac{\partial E}{\partial w_{ij}} = \delta_j \, a_i"></div>
+                  <div class="def"><span class="m">Definição</span>Sinal de erro δ<sub>j</sub>: quanto a unidade j precisa mudar para o erro cair.</div>
+                </div>
+                <div class="steps">
+                  <div class="step"><div class="n">1</div><div class="t">Calcule o erro na saída.</div></div>
+                  <div class="step"><div class="n">2</div><div class="t">Propague δ para trás, camada a camada.</div></div>
+                  <div class="step"><div class="n">3</div><div class="t">Atualize com <code>w -= lr * grad</code>.</div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="cap">conteúdo</div>
+        </div>
+        <div class="stack">
+          <div>
+            <div class="s A open">
+              <div class="fld"><div class="num">03</div></div>
+              <div class="rt"><div class="m">Bloco 3 de 6</div><div class="h">Backpropagation</div></div>
+            </div>
+            <div class="cap">abertura de bloco</div>
+          </div>
+          <div>
+            <div class="s A cover">
+              <div class="mg">
+                <div class="lb m">IME-USP<br>Aula 04<br>14 set 2026</div>
+                <div class="logo unit" style="width:11cqw;height:6cqw;font-size:1cqw">unidade</div>
+              </div>
+              <div class="vr"></div>
+              <div class="mn">
+                <div class="h">Redes Neurais<br><span class="a">de Turing aos LLMs</span></div>
+                <div class="who">Prof. Renato Vicente</div>
+              </div>
+              <div class="logos"><span></span>
+                <div class="usp"><div class="w" style="font-size:1.7cqw;margin-right:1.6cqw;text-align:right">Universidade<br>de São Paulo</div><div class="logo" style="width:9cqw;height:5cqw;font-size:1cqw">logo USP</div></div>
+              </div>
+            </div>
+            <div class="cap">capa</div>
+          </div>
+        </div>
+      </div>
+      <div class="pc"><b>A favor:</b> calma e editorial; a orientação nunca disputa espaço com o conteúdo. <b>Contra:</b> a coluna consome um quinto da largura, o que aperta slides densos de equações, código ou gráficos largos.</div>
+    </div>
+  </div>
+
+  <!-- ===================== B ===================== -->
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Réguas horizontais</h3>
+      <p>Cabeçalho em mono sobre uma régua preta de ponta a ponta; conteúdo com a largura inteira; rodapé discreto e barra de progresso azul. A abertura de bloco é uma faixa amarela com o número.</p>
+      <div class="set">
+        <div>
+          <div class="s B">
+            <div class="hd m"><span>03 · Backpropagation</span><span>17 / 42</span></div>
+            <div class="hr"></div>
+            <div class="mn">
+              <div class="h">A culpa flui para trás;<br><span class="a">cada peso recebe a sua parte.</span></div>
+              <div class="content-g">
+                <div>
+                  <p class="b">O erro na saída é distribuído pelas camadas, na proporção em que cada conexão contribuiu para ele.</p>
+                  <div class="eq" data-tex="\frac{\partial E}{\partial w_{ij}} = \delta_j \, a_i"></div>
+                  <div class="def"><span class="m">Definição</span>Sinal de erro δ<sub>j</sub>: quanto a unidade j precisa mudar para o erro cair.</div>
+                </div>
+                <div class="steps">
+                  <div class="step"><div class="n">1</div><div class="t">Calcule o erro na saída.</div></div>
+                  <div class="step"><div class="n">2</div><div class="t">Propague δ para trás, camada a camada.</div></div>
+                  <div class="step"><div class="n">3</div><div class="t">Atualize com <code>w -= lr * grad</code>.</div></div>
+                </div>
+              </div>
+            </div>
+            <div class="ft m">Redes Neurais · Aula 04</div>
+            <div class="pb"></div>
+          </div>
+          <div class="cap">conteúdo</div>
+        </div>
+        <div class="stack">
+          <div>
+            <div class="s B open">
+              <div class="band"><div class="num">03</div></div>
+              <div class="under"><div class="h">Backpropagation</div><div class="m">Bloco 3 de 6</div></div>
+            </div>
+            <div class="cap">abertura de bloco</div>
+          </div>
+          <div>
+            <div class="s B cover">
+              <div class="hd m"><span>IME-USP · Aula 04</span><span>14 set 2026</span></div>
+              <div class="hr"></div>
+              <div class="mn">
+                <div class="h">Redes Neurais<br><span class="a">de Turing aos LLMs</span></div>
+                <div class="who">Prof. Renato Vicente</div>
+              </div>
+              <div class="thick"></div>
+              <div class="logos">
+                <div class="logo" style="width:11cqw;height:6cqw;font-size:1cqw">unidade</div>
+                <div class="usp"><div class="w" style="font-size:1.7cqw;margin-right:1.6cqw;text-align:right">Universidade<br>de São Paulo</div><div class="logo" style="width:9cqw;height:5cqw;font-size:1cqw">logo USP</div></div>
+              </div>
+            </div>
+            <div class="cap">capa</div>
+          </div>
+        </div>
+      </div>
+      <div class="pc"><b>A favor:</b> máxima largura para conteúdo; familiar para quem vem do Beamer. <b>Contra:</b> a mais convencional das três; o progresso é só uma barra, sem dizer em que bloco se está.</div>
+    </div>
+  </div>
+
+  <!-- ===================== C ===================== -->
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Mapa de blocos</h3>
+      <p>Uma fileira de quadrados, um por bloco da aula, faz três trabalhos: no slide de conteúdo é o progresso (preto = visto, azul = atual, contorno = por vir); na abertura vira a composição, com o bloco atual em campo amarelo; na capa vira o roteiro da aula.</p>
+      <div class="set">
+        <div>
+          <div class="s C">
+            <div class="hd">
+              <span class="lb m">03 · Backpropagation</span>
+              <span class="map"><i class="p"></i><i class="p"></i><i class="c"></i><i></i><i></i><i></i><span class="k m">17 / 42</span></span>
+            </div>
+            <div class="mn">
+              <div class="h">A culpa flui para trás;<br><span class="a">cada peso recebe a sua parte.</span></div>
+              <div class="content-g">
+                <div>
+                  <p class="b">O erro na saída é distribuído pelas camadas, na proporção em que cada conexão contribuiu para ele.</p>
+                  <div class="eq" data-tex="\frac{\partial E}{\partial w_{ij}} = \delta_j \, a_i"></div>
+                  <div class="def"><span class="m">Definição</span>Sinal de erro δ<sub>j</sub>: quanto a unidade j precisa mudar para o erro cair.</div>
+                </div>
+                <div class="steps">
+                  <div class="step"><div class="n">1</div><div class="t">Calcule o erro na saída.</div></div>
+                  <div class="step"><div class="n">2</div><div class="t">Propague δ para trás, camada a camada.</div></div>
+                  <div class="step"><div class="n">3</div><div class="t">Atualize com <code>w -= lr * grad</code>.</div></div>
+                </div>
+              </div>
+            </div>
+            <div class="ft m">Redes Neurais · Aula 04</div>
+          </div>
+          <div class="cap">conteúdo</div>
+        </div>
+        <div class="stack">
+          <div>
+            <div class="s C open">
+              <div class="row">
+                <div><div class="sq p"></div><div class="nm m">História</div></div>
+                <div><div class="sq p"></div><div class="nm m">Arquite&shy;turas</div></div>
+                <div><div class="sq c"><div class="num">03</div></div><div class="nm m c">Backprop</div></div>
+                <div><div class="sq"></div><div class="nm m f">Recor&shy;rentes</div></div>
+                <div><div class="sq"></div><div class="nm m f">Visão</div></div>
+                <div><div class="sq"></div><div class="nm m f">Fecha&shy;mento</div></div>
+              </div>
+              <div class="under"><div class="h">Backpropagation</div><div class="m">Bloco 3 de 6</div></div>
+            </div>
+            <div class="cap">abertura de bloco</div>
+          </div>
+          <div>
+            <div class="s C cover">
+              <div class="mn">
+                <div class="h">Redes Neurais<br><span class="a">de Turing aos LLMs</span></div>
+                <div class="who">Prof. Renato Vicente · IME-USP · 14 set 2026</div>
+              </div>
+              <div class="agenda">
+                <div><div class="sq"></div><div class="nm m">História</div></div>
+                <div><div class="sq"></div><div class="nm m">Arquite&shy;turas</div></div>
+                <div><div class="sq"></div><div class="nm m">Backprop</div></div>
+                <div><div class="sq"></div><div class="nm m">Recor&shy;rentes</div></div>
+                <div><div class="sq"></div><div class="nm m">Visão</div></div>
+                <div><div class="sq"></div><div class="nm m">Fecha&shy;mento</div></div>
+              </div>
+              <div class="logos">
+                <div class="logo" style="width:11cqw;height:6cqw;font-size:1cqw">unidade</div>
+                <div class="usp"><div class="w" style="font-size:1.7cqw;margin-right:1.6cqw;text-align:right">Universidade<br>de São Paulo</div><div class="logo" style="width:9cqw;height:5cqw;font-size:1cqw">logo USP</div></div>
+              </div>
+            </div>
+            <div class="cap">capa</div>
+          </div>
+        </div>
+      </div>
+      <div class="pc"><b>A favor:</b> a mais Bauhaus e a mais útil para quem assiste: a geometria é o próprio mapa da aula, e dispensa um slide de roteiro. <b>Contra:</b> exige declarar os blocos da aula; acima de 8 blocos a fileira precisa virar um contador.</div>
+    </div>
+  </div>
+
+</div>
+
+<div class="rules section">
+  <div class="label">Vale para as três</div>
+  <ul>
+    <li>Palco de 1280 × 720 com margens fixas; todo elemento gráfico carrega informação (orientação, progresso, destaque).</li>
+    <li>Logos só na capa e no encerramento; nos demais slides, orientação em texto mono.</li>
+    <li>Sem sombras, gradientes, cantos arredondados ou texturas.</li>
+  </ul>
+</div>
+
+<script>
+window.addEventListener('load', function () {
+  if (!window.katex) return;
+  document.querySelectorAll('[data-tex]').forEach(function (el) {
+    katex.render(el.getAttribute('data-tex'), el, { displayMode: true, throwOnError: false });
+  });
+});
+</script>
+
+<script>function toggleSelect(){}</script>
+</body></html>

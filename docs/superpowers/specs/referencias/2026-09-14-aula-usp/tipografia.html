@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head><meta charset="utf-8">
+<title>Aula USP · referência: tipografia</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+:root{--bg-primary:#f5f5f7;--bg-secondary:#fff;--bg-tertiary:#e5e5e7;--border:#d1d1d6;--text-primary:#1d1d1f;--text-secondary:#86868b;--accent:#0071e3}
+body{margin:0;padding:32px;font-family:system-ui,-apple-system,sans-serif;background:var(--bg-primary);color:var(--text-primary)}
+h2{margin:0 0 .4rem}.subtitle{color:var(--text-secondary);margin:0 0 1.5rem}
+.label{font-size:.7rem;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.5rem}
+.options{display:flex;flex-direction:column;gap:.75rem}
+.option{background:var(--bg-secondary);border:2px solid var(--border);border-radius:12px;padding:1rem 1.25rem;display:flex;gap:1rem}
+.option .letter{background:var(--bg-tertiary);color:var(--text-secondary);width:1.8rem;height:1.8rem;border-radius:6px;display:flex;align-items:center;justify-content:center;font-weight:600;flex:none}
+.option .content{flex:1}.option .content h3{margin:0 0 .15rem;font-size:.95rem}.option .content p{color:var(--text-secondary);font-size:.85rem;margin:0}
+.section{margin-top:1.5rem}
+.nota-ref{background:#fff;border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:.85rem;margin-bottom:1.5rem}
+</style></head><body>
+<div class="nota-ref">Referência congelada do brainstorming de 2026-09-14 (spec <code>2026-09-14-aula-usp-design.md</code>). Escolha aprovada: <b>B</b> (Geist + Geist Mono).</div>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Mono:wght@400;700&family=Atkinson+Hyperlegible+Next:wght@400;700&family=Geist+Mono:wght@400;700&family=Geist:wght@400;600&family=Inter:wght@400;600&display=swap">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.47/dist/katex.min.css" integrity="sha384-nH0MfJ44wi1dd7w6jinlyBgljjS8EJAh2JBoRad8a3VDw2K69vfaaqm4WnR+gXtA" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.47/dist/katex.min.js" integrity="sha384-CwjPRVHTvLiMBFjEoij+QZViMV5rhTOIp7CJzl24JEqpRDA1sJFHVXXLURktbYYp" crossorigin="anonymous"></script>
+<style>
+.mod .option { align-items: flex-start; cursor: pointer; }
+.mod .content h3 { font-size: 1.05rem; }
+.row { display: grid; grid-template-columns: 2fr 1fr; gap: 14px; margin-top: 12px; align-items: start; }
+.mod .mini { container-type: inline-size; aspect-ratio: 16/9; background: #FFFFFF; border: 1px solid #d1d1d6; position: relative; overflow: hidden; color: #0A0A0A; font-family: var(--sans); }
+.mod .mini .in { position: absolute; inset: 0; padding: 4.4cqw 5.5cqw 5cqw; display: flex; flex-direction: column; }
+.mod .lbl { font: 700 1.1cqw/1 var(--mono); letter-spacing: .2em; text-transform: uppercase; color: #0A0A0A; }
+.mod .h { font-weight: var(--hw); font-size: 3.5cqw; line-height: 1.06; letter-spacing: var(--ht); margin: 1.6cqw 0 2.4cqw; }
+.mod .h .a { color: #1094AB; }
+.mod .g2 { display: grid; grid-template-columns: 1.1fr 1fr; gap: 4cqw; flex: 1; min-height: 0; align-items: start; }
+.mod .mini .body { font-size: 1.9cqw; line-height: 1.42; margin: 0; color: #0A0A0A; }
+.mod .eq { font-size: 1.9cqw; margin: 1.2cqw 0 1.6cqw; }
+.mod .eq .katex-display { margin: 0; text-align: left; }
+.mod .eq .katex-display > .katex { text-align: left; }
+.mod .def { background: #FCB421; font-size: 1.62cqw; line-height: 1.4; padding: 1.3cqw 1.7cqw; }
+.mod .def .lbl { display: block; margin-bottom: .8cqw; font-size: 1cqw; }
+.mod .steps { display: flex; flex-direction: column; gap: 2.2cqw; }
+.mod .step { display: grid; grid-template-columns: 5.2cqw 1fr; align-items: baseline; border-top: .22cqw solid #0A0A0A; padding-top: 1.2cqw; }
+.mod .step .n { font-weight: var(--hw); font-size: 3.6cqw; line-height: 1; letter-spacing: -.02em; }
+.mod .step .t { font-size: 1.9cqw; line-height: 1.35; }
+.mod .step .t code { font-family: var(--mono); font-size: .88em; }
+.mod .foot { position: absolute; left: 5.5cqw; right: 5.5cqw; bottom: 2cqw; display: flex; justify-content: space-between; font: 400 1cqw/1 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: #666666; }
+.mod .prog { position: absolute; left: 0; bottom: 0; height: .5cqw; width: 40%; background: #1094AB; }
+.spec { background: #FFFFFF; border: 1px solid #d1d1d6; padding: 18px 20px; color: #0A0A0A; font-family: var(--sans); }
+.spec .aa { font-weight: var(--hw); font-size: 60px; line-height: 1; letter-spacing: var(--ht); }
+.spec .fam { font: 700 11px/1.35 var(--mono); letter-spacing: .14em; text-transform: uppercase; margin: 10px 0 14px; }
+.spec .leg { font-size: 30px; line-height: 1.15; letter-spacing: .02em; }
+.spec .pt { font-size: 17px; line-height: 1.45; margin: 12px 0; }
+.spec .code { font-family: var(--mono); font-size: 14px; background: #F2F2F2; padding: 8px 10px; margin: 10px 0; }
+.spec .k { font: 400 11px/1.45 var(--mono); color: #666666; }
+.rules { margin-top: 1.5rem; }
+.rules ul { margin: .4rem 0 0 1.2rem; font-size: .85rem; color: var(--text-secondary); line-height: 1.6; }
+</style>
+
+<h2>Tipografia: moderna e fácil de ler</h2>
+<p class="subtitle">Sem letras Bauhaus: a Bauhaus fica na composição (grid, réguas, campos de cor, numerais grandes). Três famílias contemporâneas, cada uma com sua mono, na mesma aula com a paleta B. À direita, teste de confusão à distância: <b>Il1</b>, <b>0O</b>, <b>rn m</b>.</p>
+
+<div class="options mod">
+
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Inter + Geist Mono</h3>
+      <p>A combinação do PSKR. Altura-x grande, desenhada para tela, muito neutra; é a mais testada das três.</p>
+      <div class="row" style="--sans:'Inter',system-ui,sans-serif; --mono:'Geist Mono',ui-monospace,monospace; --hw:600; --ht:-.035em">
+        <div class="mini"><div class="in">
+          <div class="lbl">03 · Backpropagation</div>
+          <div class="h">A culpa flui para trás;<br><span class="a">cada peso recebe a sua parte.</span></div>
+          <div class="g2">
+            <div>
+              <p class="body">O erro na saída é distribuído pelas camadas, na proporção em que cada conexão contribuiu para ele.</p>
+              <div class="eq" data-tex="\frac{\partial E}{\partial w_{ij}} = \delta_j \, a_i"></div>
+              <div class="def"><span class="lbl">Definição</span>Sinal de erro δ<sub>j</sub>: quanto a unidade j precisa mudar para o erro cair.</div>
+            </div>
+            <div class="steps">
+              <div class="step"><div class="n">1</div><div class="t">Calcule o erro na saída.</div></div>
+              <div class="step"><div class="n">2</div><div class="t">Propague δ para trás, camada a camada.</div></div>
+              <div class="step"><div class="n">3</div><div class="t">Atualize com <code>w -= lr * grad</code>.</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="foot"><span>Redes Neurais · Aula 04</span><span>17 / 42</span></div>
+        <div class="prog"></div></div>
+        <div class="spec">
+          <div class="aa">Aa 0123</div>
+          <div class="fam">Inter 600 / 400 · Geist Mono</div>
+          <div class="leg">Il1 0O rn m</div>
+          <div class="pt">Função, ação, índice, pêndulo e cedilha no mesmo tom de texto.</div>
+          <div class="code">for i in range(n): w[i] -= lr * g[i]</div>
+          <div class="k">Rasmus Andersson, 2017 · OFL · duas famílias</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Geist + Geist Mono</h3>
+      <p>Uma família só, com sans e mono irmãs. Segue princípios da tipografia suíça e cita a Univers, a letra da USP, entre suas influências. Um pouco mais geométrica e contemporânea que a Inter.</p>
+      <div class="row" style="--sans:'Geist',system-ui,sans-serif; --mono:'Geist Mono',ui-monospace,monospace; --hw:600; --ht:-.03em">
+        <div class="mini"><div class="in">
+          <div class="lbl">03 · Backpropagation</div>
+          <div class="h">A culpa flui para trás;<br><span class="a">cada peso recebe a sua parte.</span></div>
+          <div class="g2">
+            <div>
+              <p class="body">O erro na saída é distribuído pelas camadas, na proporção em que cada conexão contribuiu para ele.</p>
+              <div class="eq" data-tex="\frac{\partial E}{\partial w_{ij}} = \delta_j \, a_i"></div>
+              <div class="def"><span class="lbl">Definição</span>Sinal de erro δ<sub>j</sub>: quanto a unidade j precisa mudar para o erro cair.</div>
+            </div>
+            <div class="steps">
+              <div class="step"><div class="n">1</div><div class="t">Calcule o erro na saída.</div></div>
+              <div class="step"><div class="n">2</div><div class="t">Propague δ para trás, camada a camada.</div></div>
+              <div class="step"><div class="n">3</div><div class="t">Atualize com <code>w -= lr * grad</code>.</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="foot"><span>Redes Neurais · Aula 04</span><span>17 / 42</span></div>
+        <div class="prog"></div></div>
+        <div class="spec">
+          <div class="aa">Aa 0123</div>
+          <div class="fam">Geist 600 / 400 · Geist Mono</div>
+          <div class="leg">Il1 0O rn m</div>
+          <div class="pt">Função, ação, índice, pêndulo e cedilha no mesmo tom de texto.</div>
+          <div class="code">for i in range(n): w[i] -= lr * g[i]</div>
+          <div class="k">Vercel e Basement Studio, 2023 · OFL · uma família</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Atkinson Hyperlegible Next + Atkinson Hyperlegible Mono</h3>
+      <p>Desenhada pelo Braille Institute para leitores com baixa visão: letras que se confundem ganham formas distintas. É a mais legível de longe; em troca, o desenho é mais particular e menos neutro.</p>
+      <div class="row" style="--sans:'Atkinson Hyperlegible Next',system-ui,sans-serif; --mono:'Atkinson Hyperlegible Mono',ui-monospace,monospace; --hw:700; --ht:-.02em">
+        <div class="mini"><div class="in">
+          <div class="lbl">03 · Backpropagation</div>
+          <div class="h">A culpa flui para trás;<br><span class="a">cada peso recebe a sua parte.</span></div>
+          <div class="g2">
+            <div>
+              <p class="body">O erro na saída é distribuído pelas camadas, na proporção em que cada conexão contribuiu para ele.</p>
+              <div class="eq" data-tex="\frac{\partial E}{\partial w_{ij}} = \delta_j \, a_i"></div>
+              <div class="def"><span class="lbl">Definição</span>Sinal de erro δ<sub>j</sub>: quanto a unidade j precisa mudar para o erro cair.</div>
+            </div>
+            <div class="steps">
+              <div class="step"><div class="n">1</div><div class="t">Calcule o erro na saída.</div></div>
+              <div class="step"><div class="n">2</div><div class="t">Propague δ para trás, camada a camada.</div></div>
+              <div class="step"><div class="n">3</div><div class="t">Atualize com <code>w -= lr * grad</code>.</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="foot"><span>Redes Neurais · Aula 04</span><span>17 / 42</span></div>
+        <div class="prog"></div></div>
+        <div class="spec">
+          <div class="aa">Aa 0123</div>
+          <div class="fam">Atkinson Next 700 / 400 · Atkinson Mono</div>
+          <div class="leg">Il1 0O rn m</div>
+          <div class="pt">Função, ação, índice, pêndulo e cedilha no mesmo tom de texto.</div>
+          <div class="code">for i in range(n): w[i] -= lr * g[i]</div>
+          <div class="k">Braille Institute, 2025 · OFL · uma família</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="rules section">
+  <div class="label">Vale para as três</div>
+  <ul>
+    <li>Equações em KaTeX (Computer Modern), a convenção acadêmica.</li>
+    <li>No palco de 1280 × 720: corpo com no mínimo 24 px; rótulos e rodapé com no mínimo 14 px.</li>
+    <li>Ao lado do logo, "Universidade de São Paulo" em Open Sans, a alternativa livre à Univers indicada pela SCS-USP, qualquer que seja a família da aula.</li>
+  </ul>
+</div>
+
+<script>
+window.addEventListener('load', function () {
+  if (!window.katex) return;
+  document.querySelectorAll('[data-tex]').forEach(function (el) {
+    katex.render(el.getAttribute('data-tex'), el, { displayMode: true, throwOnError: false });
+  });
+});
+</script>
+
+<script>function toggleSelect(){}</script>
+</body></html>

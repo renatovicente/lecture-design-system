@@ -1,0 +1,7 @@
+# ferramentas locais
+.superpowers/
+.gstack/
+
+# dependências e sistema
+node_modules/
+.DS_Store
