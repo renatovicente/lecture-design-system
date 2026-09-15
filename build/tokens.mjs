@@ -11,7 +11,10 @@ export async function lerTokens(caminho = resolve(RAIZ, 'tokens/aula-usp.tokens.
   return JSON.parse(await readFile(caminho, 'utf8'));
 }
 
-const kebab = (s) => s.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase();
+const kebab = (s) => s
+  .replace(/([a-z0-9])([A-Z])/g, '$1-$2')
+  .replace(/([A-Z])([A-Z][a-z])/g, '$1-$2')
+  .toLowerCase();
 
 // "{fonte.sans}" → valor do token referenciado
 function resolver(tokens, valor) {

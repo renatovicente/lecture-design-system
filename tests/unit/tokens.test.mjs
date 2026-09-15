@@ -73,7 +73,7 @@ test('grid, zonas, espaços, réguas e mínimos (4.3 e 4.4)', () => {
   assert.deepEqual(s.contraste, { azulTextoMinimo: 32, amareloLinhaMinima: 4 });
   assert.deepEqual(s.mapa, {
     quadradoCabecalho: 16, espacoCabecalho: 8, quadradoAberturaMax: 160, calhaAbertura: 24,
-    quadradoCapa: 24, numeroProporcao: 0.55, faixaBlocoNdeM: 220,
+    quadradoCapa: 24, numeroProporcao: 0.55, faixaBlocoNDeM: 220,
   });
   assert.deepEqual(s.marca, { uspAltura: 56 });
 });
@@ -86,7 +86,7 @@ test('CSS gerado tem as variáveis esperadas e é determinístico', () => {
     '--tipo-codigo-familia: "Geist Mono", ui-monospace, monospace;', '--tipo-rotulo-caixa: uppercase;',
     '--tipo-leitura-peso-enfase: 600;', '--palco-util: 1152px;', '--espaco-7: 96px;',
     '--zona-conteudo-base: 652px;', '--mapa-quadrado-cabecalho: 16px;', '--mapa-numero-proporcao: 0.55;',
-    '--contraste-azul-texto-minimo: 32px;',
+    '--contraste-azul-texto-minimo: 32px;', '--mapa-faixa-bloco-n-de-m: 220px;',
   ]) assert.ok(css.includes(v), `faltou ${v}`);
 });
 

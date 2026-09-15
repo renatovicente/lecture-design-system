@@ -222,7 +222,7 @@ export const tokens = {
     "calhaAbertura": 24,
     "quadradoCapa": 24,
     "numeroProporcao": 0.55,
-    "faixaBlocoNdeM": 220
+    "faixaBlocoNDeM": 220
   },
   "marca": {
     "uspAltura": 56

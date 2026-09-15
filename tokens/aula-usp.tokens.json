@@ -86,7 +86,7 @@
     "calhaAbertura":       { "$type": "dimension", "$value": { "value": 24, "unit": "px" } },
     "quadradoCapa":        { "$type": "dimension", "$value": { "value": 24, "unit": "px" } },
     "numeroProporcao":     { "$type": "number", "$value": 0.55, "$description": "altura do número do bloco atual em relação ao lado do quadrado" },
-    "faixaBlocoNdeM":      { "$type": "dimension", "$value": { "value": 220, "unit": "px" } }
+    "faixaBlocoNDeM":      { "$type": "dimension", "$value": { "value": 220, "unit": "px" } }
   },
   "marca": {
     "$type": "dimension",
