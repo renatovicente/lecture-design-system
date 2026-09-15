@@ -39,6 +39,7 @@ export function resolverSeguro(raiz, caminhoUrl) {
     return null;
   }
   if (decodificado.includes('\0') || decodificado.includes('\\')) return null;
+  if (decodificado.split('/').some((segmento) => segmento.startsWith('.'))) return null;
   const alvo = resolve(raiz, `.${decodificado.startsWith('/') ? '' : '/'}${decodificado}`);
   return alvo === raiz || alvo.startsWith(raiz + sep) ? alvo : null;
 }
@@ -55,6 +56,12 @@ function localizar(raizAula, pathname) {
 export function criarServidor({ pastaAula }) {
   const raizAula = resolve(pastaAula);
   return createServer(async (pedido, resposta) => {
+    const porta = pedido.socket.localPort;
+    const hostsPermitidos = new Set([`127.0.0.1:${porta}`, `localhost:${porta}`, `[::1]:${porta}`]);
+    if (!hostsPermitidos.has((pedido.headers.host ?? '').toLowerCase())) {
+      resposta.writeHead(403, { 'Content-Type': 'text/plain; charset=utf-8' }).end('proibido');
+      return;
+    }
     let pathname;
     try {
       ({ pathname } = new URL(pedido.url, 'http://localhost'));

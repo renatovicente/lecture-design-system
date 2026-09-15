@@ -19,8 +19,8 @@ before(async () => {
 
 after(() => new Promise((fim) => servidor.close(fim)));
 
-const pedir = (caminho) => new Promise((pronto, falha) => {
-  get({ ...endereco, path: caminho }, (resposta) => {
+const pedir = (caminho, cabecalhos) => new Promise((pronto, falha) => {
+  get({ ...endereco, path: caminho, headers: cabecalhos }, (resposta) => {
     const partes = [];
     resposta.on('data', (parte) => partes.push(parte));
     resposta.on('end', () => pronto({
@@ -57,6 +57,12 @@ test('resolverSeguro aceita caminhos dentro da raiz e recusa travessia, barra in
   assert.equal(resolverSeguro(raiz, '/%E0%A4%A'), null);
 });
 
+test('resolverSeguro recusa segmentos que começam com ponto (dotfiles como .git e .env)', () => {
+  const raiz = resolve('/tmp/aula');
+  assert.equal(resolverSeguro(raiz, '/.git/config'), null);
+  assert.equal(resolverSeguro(raiz, '/img/.oculto'), null);
+});
+
 test('servidor entrega a aula com a tag do runtime trocada', async () => {
   const resposta = await pedir('/');
   assert.equal(resposta.status, 200);
@@ -83,6 +89,19 @@ test('servidor recusa pastas do sistema fora da lista e travessias codificadas',
   assert.equal((await pedir(`${PREFIXO}bin/aula-usp.mjs`)).status, 403);
   assert.equal((await pedir(`${PREFIXO}estilos/..%2f..%2fpackage.json`)).status, 403);
   assert.equal((await pedir('/..%2f..%2fpackage.json')).status, 403);
+});
+
+test('servidor recusa dotfiles como /.git/config com 403', async () => {
+  assert.equal((await pedir('/.git/config')).status, 403);
+});
+
+test('servidor recusa Host diferente do local (DNS rebinding) e aceita localhost', async () => {
+  const rebind = await pedir('/', { Host: 'rebind.attacker.example:8765' });
+  assert.equal(rebind.status, 403);
+  assert.match(rebind.tipo, /^text\/plain/);
+  assert.equal(rebind.corpo, 'proibido');
+  const local = await pedir('/', { Host: `localhost:${endereco.port}` });
+  assert.equal(local.status, 200);
 });
 
 test('servidor responde 404 para arquivo inexistente', async () => {
