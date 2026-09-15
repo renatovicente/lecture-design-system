@@ -13,10 +13,12 @@
     "fontes": "node build/fontes.mjs",
     "marcas": "node build/marcas.mjs",
     "fontes:css": "node build/fontes-css.mjs",
-    "servir": "node bin/aula-usp.mjs servir"
+    "servir": "node bin/aula-usp.mjs servir",
+    "test:integracao": "node --test tests/integracao/*.test.mjs"
   },
   "devDependencies": {
-    "linkedom": "^0.18.13"
+    "linkedom": "^0.18.13",
+    "playwright-core": "^1.63.0"
   },
   "bin": {
     "aula-usp": "bin/aula-usp.mjs"

@@ -8,3 +8,6 @@ node_modules/
 
 # worktrees locais
 .claude/worktrees/
+
+# saídas de teste
+tests/integracao/saida/

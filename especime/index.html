@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Espécime do Aula USP</title>
+<meta name="unidade" content="ime">
+<meta name="disciplina" content="Espécime do Aula USP">
+<meta name="aula" content="M2a">
+<meta name="data" content="2026-09-15">
+<meta name="professor" content="Prof. Renato Vicente">
+<script src="../dist/aula-usp.js"></script>
+</head>
+<body>
+
+<section data-layout="capa">
+  <h1>Espécime Aula USP<br><span class="sinal">layouts e cromo</span></h1>
+</section>
+
+<section data-layout="conteudo" id="o-que-mostra">
+  <h2>O que este espécime mostra</h2>
+  <p class="lide">Os sete layouts, com o cromo gerado a partir das seções.</p>
+  <p>Cada seção vira um slide de 1280 por 720. O sistema cria o cabeçalho, o mapa de blocos, o contador e o rodapé.</p>
+  <ul>
+    <li>Três blocos, cada um aberto por uma abertura.</li>
+    <li>Grades de duas e de três colunas.</li>
+  </ul>
+  <aside class="notas">Estas notas não aparecem no slide.</aside>
+</section>
+
+<section data-layout="abertura" id="blocos">
+  <h2>Blocos</h2>
+  <p class="pergunta">Como o mapa de quadrados orienta quem assiste?</p>
+</section>
+
+<section data-layout="conteudo" id="grade-8-4">
+  <h2>Grade 8-4<br><span class="sinal">texto largo e coluna estreita</span></h2>
+  <div class="colunas" data-grade="8-4">
+    <div>
+      <p>A coluna larga tem oito colunas do grid, com 760 px. Ela recebe o argumento principal do slide.</p>
+    </div>
+    <div>
+      <p>A estreita tem quatro colunas, com 368 px.</p>
+    </div>
+  </div>
+</section>
+
+<section data-layout="afirmacao" id="afirmacao">
+  <p class="afirmacao">Todo elemento gráfico carrega informação: orientação, progresso ou destaque.</p>
+  <p class="fonte">Princípio do Aula USP</p>
+</section>
+
+<section data-layout="abertura" id="figuras-e-demos" data-curto="Figuras">
+  <h2>Figuras e demos</h2>
+  <p class="pergunta">Onde entram imagens e interação?</p>
+</section>
+
+<section data-layout="figura" id="figura">
+  <h2>Uma figura ocupa a zona de conteúdo</h2>
+  <figure>
+    <svg viewBox="0 0 1152 360" role="img" aria-label="Três quadrados: visto, atual e futuro">
+      <rect x="0" y="40" width="280" height="280" fill="#0A0A0A"/>
+      <rect x="436" y="40" width="280" height="280" fill="#1094AB"/>
+      <rect x="873" y="41" width="278" height="278" fill="none" stroke="#0A0A0A" stroke-width="2"/>
+    </svg>
+    <figcaption>Os três estados de um quadrado do mapa: visto, atual e futuro.</figcaption>
+  </figure>
+</section>
+
+<section data-layout="demo" id="demo">
+  <h2>Uma demo ocupa o resto do slide</h2>
+  <div class="demo" data-demo="contador">
+    <img class="estatico" alt="Imagem estática da demo" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'%3E%3Crect width='16' height='9' fill='%23D9D9D9'/%3E%3C/svg%3E">
+  </div>
+</section>
+
+<section data-layout="abertura" id="grades">
+  <h2>Grades</h2>
+  <p class="pergunta">Como o conteúdo se divide em colunas?</p>
+</section>
+
+<section data-layout="conteudo" id="grade-6-6">
+  <h2>Grade 6-6</h2>
+  <div class="colunas" data-grade="6-6">
+    <div><p>Metade da largura útil: 564 px.</p></div>
+    <div><p>A outra metade, depois de uma calha de 24 px.</p></div>
+  </div>
+</section>
+
+<section data-layout="conteudo" id="grade-4-8">
+  <h2>Grade 4-8</h2>
+  <div class="colunas" data-grade="4-8">
+    <div><p>Estreita à esquerda.</p></div>
+    <div><p>Larga à direita, com 760 px.</p></div>
+  </div>
+</section>
+
+<section data-layout="conteudo" id="grade-4-4-4">
+  <h2>Grade 4-4-4</h2>
+  <div class="colunas" data-grade="4-4-4">
+    <div><p>Primeira coluna.</p></div>
+    <div><p>Segunda coluna.</p></div>
+    <div><p>Terceira coluna.</p></div>
+  </div>
+</section>
+
+<section data-layout="encerramento">
+  <h2>O que fica</h2>
+  <ol class="sintese">
+    <li>As seções viram slides.</li>
+    <li>O mapa de blocos vem das aberturas.</li>
+  </ol>
+  <p class="proxima">Próximo marco: o motor de navegação.</p>
+</section>
+
+</body>
+</html>

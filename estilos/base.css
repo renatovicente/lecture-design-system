@@ -1,0 +1,52 @@
+/* Base do Aula USP: caixa, papel e tinta, texto de leitura e o modo folha (spec 4.2 a 4.4). */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  background: var(--cor-papel);
+  color: var(--cor-tinta);
+}
+
+body {
+  font-family: var(--tipo-leitura-familia);
+  font-size: var(--tipo-leitura-tamanho);
+  font-weight: var(--tipo-leitura-peso);
+  line-height: var(--tipo-leitura-entrelinha);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+p,
+ol,
+ul,
+figure {
+  margin: 0;
+}
+
+strong {
+  font-weight: var(--tipo-leitura-peso-enfase);
+}
+
+img,
+svg {
+  display: block;
+}
+
+/* Modo folha (marco 2a): slides um abaixo do outro. O marco 2b troca pelo palco escalado. */
+body.folha {
+  display: grid;
+  justify-content: center;
+  gap: var(--espaco-5);
+  padding: var(--espaco-5);
+}
+
+body.folha .slide {
+  outline: var(--regua-fina) solid var(--cor-linha);
+}
