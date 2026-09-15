@@ -1,0 +1,18 @@
+{
+  "ime": {
+    "nome": "Instituto de Matemática, Estatística e Ciência da Computação",
+    "arquivo": "ime-usp-horizontal-preta.svg",
+    "integraUSP": true,
+    "altura": 88,
+    "protecao": 24,
+    "alturaMinima": 23
+  },
+  "ifusp": {
+    "nome": "Instituto de Física",
+    "arquivo": "ifusp-vertical-preto.png",
+    "integraUSP": false,
+    "altura": 210,
+    "protecao": 42,
+    "alturaMinima": 210
+  }
+}
