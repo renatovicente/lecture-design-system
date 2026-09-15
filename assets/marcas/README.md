@@ -38,7 +38,7 @@ por extenso (página 20), não a antiga.
   elemento comum às duas versões: medindo os pixels de tinta do PNG, o símbolo ocupa as linhas 0
   a 1408 de um total de 2059 (h_s = 1409/2059 = 0,6843, isolado pelo primeiro vão sem tinta antes
   do texto "IFUSP"). Na altura de uso de 128 px, o símbolo ocupa `128 × 0,6843` px, e
-  `protecao = ceil(0,2864 × 0,6843 × 128) = 25` px.
+  `protecao = ceil(0,2864 × 0,6843 × 128) = 26` px.
 
 ## Altura mínima
 

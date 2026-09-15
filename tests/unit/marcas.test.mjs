@@ -92,7 +92,7 @@ test('IFUSP vertical preto: PNG com resolução suficiente', async () => {
 test('IFUSP: altura, proteção e altura mínima da ruling do controlador (F3)', async () => {
   const unidades = JSON.parse(await lerTexto('assets/marcas/unidades.json'));
   assert.equal(unidades.ifusp.altura, 128);
-  assert.equal(unidades.ifusp.protecao, 25);
+  assert.equal(unidades.ifusp.protecao, 26);
   assert.equal(unidades.ifusp.alturaMinima, 75);
 });
 
