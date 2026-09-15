@@ -90,6 +90,15 @@ test('servidor responde 404 para arquivo inexistente', async () => {
   assert.equal((await pedir(`${PREFIXO}estilos/nao-existe.css`)).status, 404);
 });
 
+test('servidor responde 400 a alvo de pedido inválido e continua no ar', async () => {
+  const invalido = await pedir('//');
+  assert.equal(invalido.status, 400);
+  assert.match(invalido.tipo, /^text\/plain/);
+  assert.equal(invalido.corpo, 'pedido inválido');
+  const valido = await pedir('/');
+  assert.equal(valido.status, 200);
+});
+
 test('CLI sem comando válido mostra o uso e sai com código 2', () => {
   const semArgumentos = spawnSync(process.execPath, [BIN], { encoding: 'utf8' });
   assert.equal(semArgumentos.status, 2);

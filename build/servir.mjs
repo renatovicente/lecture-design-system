@@ -55,7 +55,13 @@ function localizar(raizAula, pathname) {
 export function criarServidor({ pastaAula }) {
   const raizAula = resolve(pastaAula);
   return createServer(async (pedido, resposta) => {
-    const { pathname } = new URL(pedido.url, 'http://localhost');
+    let pathname;
+    try {
+      ({ pathname } = new URL(pedido.url, 'http://localhost'));
+    } catch {
+      resposta.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' }).end('pedido inválido');
+      return;
+    }
     const caminho = localizar(raizAula, pathname);
     if (!caminho) {
       resposta.writeHead(403, { 'Content-Type': 'text/plain; charset=utf-8' }).end('proibido');
