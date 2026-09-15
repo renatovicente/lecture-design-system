@@ -195,6 +195,15 @@ test('montar recusa uma aula já montada', () => {
   assert.throws(() => montar(document, { unidades, usp, urlMarcas: 'M', limites }), /aula já montada/);
 });
 
+test('montar aceita uma aula em que o autor escreveu class="slide"', () => {
+  const { document } = montado(`${cabeca('ime')}<body>
+    <section class="slide" data-layout="capa"><h1>Aula</h1></section>
+    <section data-layout="encerramento"><h2>Fim</h2><ol class="sintese"><li>Um.</li></ol></section></body></html>`);
+  const slides = [...document.querySelectorAll('section.slide')];
+  assert.equal(slides.length, 2);
+  assert.equal(slides[0].id, 'capa');
+});
+
 test('slug remove acentos e pontuação; ids repetidos ganham sufixo', () => {
   assert.equal(slug('Por que descer?'), 'por-que-descer');
   assert.equal(slug('Ação & reação'), 'acao-reacao');

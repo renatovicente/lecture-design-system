@@ -44,7 +44,7 @@ function envolverEmArea(doc, secao) {
 }
 
 export function montar(doc, { unidades, usp, urlMarcas, limites }) {
-  if (doc.querySelector('section.slide')) throw new Error('aula já montada');
+  if (doc.documentElement.getAttribute('data-aula-usp') === 'montada') throw new Error('aula já montada');
   const meta = lerMetadados(doc);
   const unidade = Object.hasOwn(unidades, meta.unidade) ? unidades[meta.unidade] : undefined;
   if (!unidade) throw new Error(`unidade desconhecida: "${meta.unidade}"`);
@@ -93,5 +93,6 @@ export function montar(doc, { unidades, usp, urlMarcas, limites }) {
     secao.append(encerramento ? criarFaixaDeMarca(doc, { unidade, usp, urlMarcas }) : criarRodape(doc, rodape));
   });
 
+  doc.documentElement.setAttribute('data-aula-usp', 'montada');
   return { total, modo, blocos: blocos.map(({ numero, titulo, curto, id }) => ({ numero, titulo, curto, id })) };
 }
