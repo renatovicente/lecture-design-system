@@ -16,7 +16,7 @@
 - `montar/` e `motor/` não importam nada de Node: só API padrão do DOM, para rodar no navegador (spec 3.5).
 - Nomes de arquivos, pastas, classes, atributos e identificadores em português, como na spec.
 - Classes do cromo são as de `contrato.classesDoSistema` (mais `area`, acrescentada na Task 2); classes do autor nunca são geradas pelo sistema.
-- Geometria exata (spec 4.4 e 5.4, variáveis de `estilos/tokens.css`): palco 1280 × 720; margens laterais 64; cabeçalho de y = 40 a 64; título a partir de y = 96; conteúdo até y = 652; rodapé em y = 672 (caixa de 14 px cuja linha de base fica em ≈ 688); faixa de marca com base em y = 680; capa e encerramento com conteúdo até y = 520; abertura com o conjunto título + pergunta terminando em y = 652 e topo ≥ 360.
+- Geometria exata (spec 4.4 e 5.4, variáveis de `estilos/tokens.css`): palco 1280 × 720; margens laterais 64; cabeçalho de y = 40 a 64; título a partir de y = 96; conteúdo até y = 652; linha de base do rodapé em y = 688 (a caixa de linha de 16,8 px começa 13 px acima); faixa de marca com base em y = 680; capa e encerramento com conteúdo até y = 520; abertura com o conjunto título + pergunta terminando em y = 652 e topo ≥ 360.
 - Colunas (spec 4.4): `6-6` = 564 + 564; `8-4` = 760 + 368; `4-8` = 368 + 760; `4-4-4` = 368 × 3; calha de 24.
 - Mapa (spec 5.4): cabeçalho com quadrados de 16 espaçados de 8; abertura com lado 160 (144 com 7 blocos, 123 com 8), calha de 24, bloco atual em `amarelo` com número em `tinta` a 55 % do lado; 2 a 8 blocos em fileira, 9 ou mais em contador, 0 ou 1 sem mapa.
 - Cores só pelos tokens: `visto` = `tinta`, `atual` = `azul` no cabeçalho e `amarelo` na abertura, `futuro` = contorno de 2 px em `tinta`.
