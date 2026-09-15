@@ -141,6 +141,26 @@ test('cliques nas laterais: 12 % da largura voltam ou avançam; o centro, links 
   await pagina.close();
 });
 
+test('links para #id/n navegam pelo motor, sem nova entrada no histórico, mesmo dentro de uma faixa lateral', async () => {
+  const { pagina } = await abrir('index.html', { largura: 1600, altura: 900 });
+  const tamanhoInicial = await pagina.evaluate(() => history.length);
+  const caixa = await pagina.evaluate(() => {
+    const link = document.createElement('a');
+    link.href = '#o-que-mostra/1';
+    link.textContent = 'passo';
+    link.style.cssText = 'position:absolute; left:8px; top:300px';
+    document.getElementById('capa').append(link);
+    const { x, y, width, height } = link.getBoundingClientRect();
+    return { x, y, width, height };
+  });
+  assert.ok(caixa.x < 1600 * 0.12, `link fora da faixa esquerda: ${caixa.x}`);
+  await pagina.mouse.click(caixa.x + caixa.width / 2, caixa.y + caixa.height / 2);
+  assert.deepEqual(await situacao(pagina), { ativos: 1, id: 'o-que-mostra', hash: '#o-que-mostra/1', revelados: [true, false] });
+  assert.deepEqual(await teclar(pagina, 'ArrowRight'), { ativos: 1, id: 'o-que-mostra', hash: '#o-que-mostra/2', revelados: [true, true] });
+  assert.equal(await pagina.evaluate(() => history.length), tamanhoInicial);
+  await pagina.close();
+});
+
 test('teclas dentro de um controle de demo não navegam', async () => {
   const { pagina } = await abrir('index.html#demo');
   await pagina.evaluate(() => {

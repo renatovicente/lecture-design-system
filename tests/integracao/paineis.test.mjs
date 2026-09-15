@@ -61,6 +61,16 @@ test('N abre as notas à direita, com 380 px; o palco cabe no que sobra; as nota
   await pagina.close();
 });
 
+test('com as notas abertas, as faixas laterais valem para a largura que sobra ao palco', async () => {
+  const { pagina } = await abrir('index.html#grade-6-6', { largura: 1600, altura: 900 });
+  await pagina.keyboard.press('n');
+  await pagina.mouse.click(1150, 450);
+  assert.equal(await pagina.evaluate(() => document.querySelector('.slide.ativo').id), 'grade-4-8');
+  await pagina.mouse.click(100, 450);
+  assert.equal(await pagina.evaluate(() => document.querySelector('.slide.ativo').id), 'grade-6-6');
+  await pagina.close();
+});
+
 test('Esc abre a visão geral: cartões agrupados por bloco, com número, título e quadrado; clicar navega e fecha', async () => {
   const { pagina } = await abrir('index.html#grade-8-4');
   await pagina.keyboard.press('Escape');

@@ -72,15 +72,16 @@ export function iniciarMotor({ doc, janela, resumo }) {
 
   doc.addEventListener('click', (evento) => {
     const link = evento.target.closest?.('a[href^="#"]');
-    const indice = link ? ids.indexOf(link.getAttribute('href').slice(1)) : -1;
-    if (indice >= 0) {
+    const alvo = link ? lerEndereco(link.getAttribute('href'), ids, passosPorSlide) : null;
+    if (alvo) {
       evento.preventDefault();
-      irPara({ indice, passo: 0 });
+      irPara(alvo);
       return;
     }
     if (evento.target.closest?.(INTERATIVOS)) return;
-    if (evento.clientX < janela.innerWidth * FAIXA_DE_CLIQUE) acoes.get('voltar')();
-    else if (evento.clientX > janela.innerWidth * (1 - FAIXA_DE_CLIQUE)) acoes.get('avancar')();
+    const largura = janela.innerWidth - reservaDireita;
+    if (evento.clientX < largura * FAIXA_DE_CLIQUE) acoes.get('voltar')();
+    else if (evento.clientX > largura * (1 - FAIXA_DE_CLIQUE)) acoes.get('avancar')();
   });
 
   janela.addEventListener('hashchange', () => {
