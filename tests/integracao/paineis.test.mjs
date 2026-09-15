@@ -80,16 +80,18 @@ test('Esc abre a visão geral: cartões agrupados por bloco, com número, títul
       visivel: !raiz.hidden,
       grupos: [...raiz.querySelectorAll('.grupo-titulo')].map((titulo) => titulo.textContent),
       cartoes: raiz.querySelectorAll('.cartao').length,
+      numeros: [...raiz.querySelectorAll('.cartao-numero')].map((numero) => numero.textContent),
       atual: raiz.querySelector('.cartao[aria-current="true"] .cartao-titulo').textContent,
       quadrados: [...raiz.querySelectorAll('.grupo')].map((grupo) => grupo.querySelector('.quadrado')?.className ?? null),
     };
   });
   assert.deepEqual(visao, {
     visivel: true,
-    grupos: ['Introdução', '01 · Blocos', '02 · Figuras e demos', '03 · Grades'],
+    grupos: ['Introdução', '01 · Blocos', '02 · Figuras e demos', '03 · Grades', 'Encerramento'],
     cartoes: 13,
+    numeros: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13'],
     atual: 'Grade 8-4 texto largo e coluna estreita',
-    quadrados: [null, 'quadrado atual', 'quadrado futuro', 'quadrado futuro'],
+    quadrados: [null, 'quadrado atual', 'quadrado futuro', 'quadrado futuro', null],
   });
   await pagina.locator('[data-painel="visao-geral"] .cartao', { hasText: 'Grade 6-6' }).click();
   assert.equal(await pagina.evaluate(() => location.hash), '#grade-6-6');

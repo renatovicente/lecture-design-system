@@ -36,14 +36,17 @@ function preencherVisaoGeral(doc, corpo, motor) {
   corpo.replaceChildren();
   let grupo = null;
   slides.forEach((slide, indice) => {
-    const numero = Number(slide.getAttribute('data-bloco')) || 0;
-    if (!grupo || grupo.numero !== numero) {
-      const titulo = numero ? `${doisDigitos(numero)} · ${resumo.blocos[numero - 1].titulo}` : rot.introducao;
+    const encerramento = slide.getAttribute('data-layout') === 'encerramento';
+    const numero = encerramento ? 0 : Number(slide.getAttribute('data-bloco')) || 0;
+    const chave = encerramento ? 'encerramento' : numero;
+    if (!grupo || grupo.chave !== chave) {
+      const titulo = encerramento ? rot.encerramento
+        : numero ? `${doisDigitos(numero)} · ${resumo.blocos[numero - 1].titulo}` : rot.introducao;
       const cartoes = elemento(doc, 'div', 'cartoes');
       const bloco = elemento(doc, 'div', 'grupo');
       bloco.append(elemento(doc, 'h3', 'grupo-titulo', titulo), cartoes);
       corpo.append(bloco);
-      grupo = { numero, cartoes };
+      grupo = { chave, cartoes };
     }
     const cartao = elemento(doc, 'button', 'cartao');
     cartao.type = 'button';
