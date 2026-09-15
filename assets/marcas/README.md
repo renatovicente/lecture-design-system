@@ -9,7 +9,7 @@ Nunca redesenhar, recolorir, distorcer ou aplicar efeitos.
 |---|---|---|
 | `origem/usp-logo.pdf` | https://scs.usp.br/identidadevisual/wp-content/uploads/2022/08/usp-logo-pdf.pdf | original vetorial da SCS-USP; 1 página, só o logotipo, sem texto |
 | `usp-preto.svg` | convertido de `origem/usp-logo.pdf` por `build/marcas.mjs` | traços intactos; só o viewBox foi enquadrado |
-| `ime-usp-horizontal-preta.svg` | https://www.ime.usp.br/media/identidade_visual/imagens/IME+USP/Preta/SVG/Horizontal_preta.svg | lockup "Assinatura Conjunta USP" (manual do IME, página 20): busto, sigla "IME" e logotipo USP, sem o nome do instituto por extenso |
+| `ime-usp-horizontal-preta.svg` | https://www.ime.usp.br/media/identidade_visual/imagens/IME+USP/Preta/SVG/Horizontal_preta.svg | lockup "Assinatura Conjunta USP" (manual do IME, página 20): busto, sigla "IME" e logotipo USP, sem o nome do instituto por extenso; viewBox enquadrado em 512 268 2600 448 (medido na tinta do desenho, na tela original de 3597×982; só atributos da raiz alterados) |
 | `ifusp-vertical-preto.png` | https://portal.if.usp.br/imprensa/sites/portal.if.usp.br.ifusp/files/logo_IFUSP_2025_VERT_preto.png | só existe em PNG; 1278×2059 px; pedir versão vetorial à comunicação do IF |
 
 O manual de identidade visual do IME consultado é de março de 2021 (MAR2021) e é anterior à
@@ -25,7 +25,9 @@ por extenso (página 20), não a antiga.
 - IME: página 18 do manual ("3.6 Área de Proteção") define a moldura "x" como 1/4 da largura da
   versão vertical de referência (rótulo "4X"); como essa largura corresponde ao diâmetro do
   medalhão do busto, x ≈ 1/4 do diâmetro ≈ 22 px na altura de uso de 88 px, arredondado para a
-  escala de espaçamento de 8 px do design system; 24 px a 88 px.
+  escala de espaçamento de 8 px do design system; 24 px a 88 px. `protecao` 24 e `altura` 88
+  referem-se ao desenho enquadrado (viewBox 512 268 2600 448, ver seção Origem acima), não à tela
+  original de 3597×982 do arquivo baixado.
 - IFUSP: página 6 do manual ("ÁREA DE PRESERVAÇÃO") desenha uma moldura "x" uniforme nos 4 lados
   do logotipo horizontal de referência; medida vetorial exata (via coordenadas do PDF): x = 45,52
   pt, altura do logotipo de referência = 158,96 pt, fração = 0,2864. Como o arquivo baixado é a

@@ -76,6 +76,13 @@ test('lockup IME+USP: SVG sem raster e sem cor', async () => {
   assert.ok(coresSvg(svg).every(escuraOuNeutra), `cores: ${coresSvg(svg)}`);
 });
 
+test('lockup IME+USP: viewBox enquadrado na tinta do desenho (F1)', async () => {
+  const svg = await lerTexto('assets/marcas/ime-usp-horizontal-preta.svg');
+  assert.match(svg, /<svg\b[^>]*\sviewBox="512 268 2600 448"/, 'viewBox deve ser enquadrado em 512 268 2600 448');
+  assert.ok(!/<image\b/.test(svg), 'sem imagem raster embutida');
+  assert.deepEqual(coresSvg(svg), ['#000000', '#FFFFFF', 'none'], `cores: ${coresSvg(svg)}`);
+});
+
 test('IFUSP vertical preto: PNG com resolução suficiente', async () => {
   const png = await ler('assets/marcas/ifusp-vertical-preto.png');
   assert.ok(assinaturaConfere('png', png));

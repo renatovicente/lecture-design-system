@@ -19,6 +19,9 @@ export const ORIGENS = [
     url: 'https://portal.if.usp.br/imprensa/sites/portal.if.usp.br.ifusp/files/logo_IFUSP_2025_VERT_preto.png' },
 ];
 
+// Medido na tinta do desenho (fora o <rect> de fundo): x 512–3111, y 268–715 na tela 3597×982.
+export const CORTE_IME = { x: 512, y: 268, largura: 2600, altura: 448 };
+
 export function assinaturaConfere(tipo, bytes) {
   if (tipo === 'pdf') return bytes.subarray(0, 5).toString('latin1') === '%PDF-';
   if (tipo === 'png') return bytes.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]));
@@ -102,6 +105,11 @@ async function principal() {
     if (!assinaturaConfere(origem.tipo, bytes)) throw new Error(`conteúdo inesperado em ${origem.url}`);
     await writeFile(resolve(MARCAS, origem.destino), bytes);
     console.log(`${origem.destino} · ${bytes.length} bytes`);
+    if (origem.destino === 'ime-usp-horizontal-preta.svg') {
+      const enquadrado = enquadrarSvg(bytes.toString('utf8'), CORTE_IME);
+      await writeFile(resolve(MARCAS, origem.destino), enquadrado);
+      console.log(`${origem.destino} · viewBox enquadrado em ${CORTE_IME.x} ${CORTE_IME.y} ${CORTE_IME.largura} ${CORTE_IME.altura}`);
+    }
   }
   const temporaria = await mkdtemp(join(tmpdir(), 'aula-usp-marcas-'));
   const pdf = resolve(MARCAS, 'origem/usp-logo.pdf');
