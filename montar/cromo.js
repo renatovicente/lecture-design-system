@@ -1,13 +1,7 @@
 // Elementos gerados pelo sistema (spec 5.3 e 5.4). Só API padrão do DOM.
+import { elemento } from '../motor/dom.js';
 
 export const doisDigitos = (numero) => String(numero).padStart(2, '0');
-
-function elemento(doc, tag, classe, texto) {
-  const el = doc.createElement(tag);
-  if (classe) el.className = classe;
-  if (texto !== undefined) el.textContent = texto;
-  return el;
-}
 
 export function criarBlocoNdeM(doc, rot, numero, total) {
   return elemento(doc, 'span', 'bloco-n-de-m', `${rot.bloco} ${numero} ${rot.de} ${total}`);
