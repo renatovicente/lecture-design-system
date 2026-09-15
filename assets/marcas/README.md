@@ -28,13 +28,17 @@ por extenso (página 20), não a antiga.
   escala de espaçamento de 8 px do design system; 24 px a 88 px. `protecao` 24 e `altura` 88
   referem-se ao desenho enquadrado (viewBox 512 268 2600 448, ver seção Origem acima), não à tela
   original de 3597×982 do arquivo baixado.
-- IFUSP: página 6 do manual ("ÁREA DE PRESERVAÇÃO") desenha uma moldura "x" uniforme nos 4 lados
-  do logotipo horizontal de referência; medida vetorial exata (via coordenadas do PDF): x = 45,52
-  pt, altura do logotipo de referência = 158,96 pt, fração = 0,2864. Como o arquivo baixado é a
-  versão vertical (símbolo empilhado sobre "IFUSP"), a fração foi transferida pelo símbolo — o
+- IFUSP (ruling do controlador): o mínimo de 130 px e a área de preservação do manual, página 6,
+  são definidos sobre o logo HORIZONTAL de referência, cuja caixa de tinta mede 404,59 × 158,96 pt
+  (medida vetorial exata, via coordenadas do PDF) com moldura "x" uniforme nos 4 lados de x =
+  45,52 pt ("ÁREA DE PRESERVAÇÃO"), fração = x / 158,96 = 0,2864 da altura desse logo — e a altura
+  desse logo horizontal é a altura do próprio símbolo (busto), sem a faixa de texto "IFUSP" que só
+  existe na versão vertical. Como o arquivo baixado (`ifusp-vertical-preto.png`, 1278×2059 px) é
+  a versão vertical (símbolo empilhado sobre "IFUSP"), a fração foi transferida pelo símbolo — o
   elemento comum às duas versões: medindo os pixels de tinta do PNG, o símbolo ocupa as linhas 0
   a 1408 de um total de 2059 (h_s = 1409/2059 = 0,6843, isolado pelo primeiro vão sem tinta antes
-  do texto "IFUSP"). `protecao = ceil(0,2864 × 0,6843 × 210) = 42` px a 210 px.
+  do texto "IFUSP"). Na altura de uso de 128 px, o símbolo ocupa `128 × 0,6843` px, e
+  `protecao = ceil(0,2864 × 0,6843 × 128) = 25` px.
 
 ## Altura mínima
 
@@ -43,9 +47,12 @@ por extenso (página 20), não a antiga.
   usado (assinatura conjunta IME+USP, página 20) não tem número de redução próprio; por prudência
   usamos o maior dos dois valores horizontais, 23 px. Como a altura de uso (88 px) já é maior que
   23 px, ela não muda.
-- IFUSP: página 6 do manual ("DIMENSÃO MÍNIMA") dá "2 cm" (impresso) e "130 pixels" (digital); a
-  medição vetorial confirma que esse valor é a largura mínima do logotipo de referência (a chave
-  sob a legenda mede 127,76 pt de tinta, a mesma largura nos dois exemplares apesar de alturas
-  diferentes). Convertendo pela proporção do arquivo baixado (1278×2059 px, altura/largura =
-  1,6111): `alturaMinima = ceil(130 × 2059 / 1278) = 210` px. Como a altura de uso da spec
-  (128 px) ficava abaixo da alturaMinima, ela subiu para 210 px, conforme a regra do brief.
+- IFUSP (ruling do controlador): página 6 do manual ("DIMENSÃO MÍNIMA") dá "2 cm" (impresso) e
+  "130 pixels" (digital) para o logotipo HORIZONTAL de referência (caixa de tinta 404,59 × 158,96
+  pt); esses 130 px são a largura mínima desse logo, cuja altura (158,96 pt) é a altura do próprio
+  símbolo. Convertendo para altura mínima do símbolo em px pela escala do próprio mínimo
+  (130 px / 404,59 pt de largura): `130 × 158,96 / 404,59` px de símbolo. Transferindo pela mesma
+  fração h_s = 0,6843 (proporção do PNG vertical 1278×2059 ocupada pelo símbolo, ver Área de
+  proteção acima) para a altura mínima do arquivo vertical:
+  `alturaMinima = ceil(130 × 158,96 / 404,59 / 0,6843) = 75` px. Como a altura de uso (`altura`
+  128 px) é maior que a alturaMinima (75 px), ela não muda.

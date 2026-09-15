@@ -11,8 +11,8 @@
     "nome": "Instituto de Física",
     "arquivo": "ifusp-vertical-preto.png",
     "integraUSP": false,
-    "altura": 210,
-    "protecao": 42,
-    "alturaMinima": 210
+    "altura": 128,
+    "protecao": 25,
+    "alturaMinima": 75
   }
 }

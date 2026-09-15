@@ -89,6 +89,13 @@ test('IFUSP vertical preto: PNG com resolução suficiente', async () => {
   assert.ok(dimensoesPng(png).altura >= 512, `altura ${dimensoesPng(png).altura}`);
 });
 
+test('IFUSP: altura, proteção e altura mínima da ruling do controlador (F3)', async () => {
+  const unidades = JSON.parse(await lerTexto('assets/marcas/unidades.json'));
+  assert.equal(unidades.ifusp.altura, 128);
+  assert.equal(unidades.ifusp.protecao, 25);
+  assert.equal(unidades.ifusp.alturaMinima, 75);
+});
+
 test('unidades.json e usp.json completos e coerentes', async () => {
   const unidades = JSON.parse(await lerTexto('assets/marcas/unidades.json'));
   assert.deepEqual(Object.keys(unidades).sort(), ['ifusp', 'ime']);
