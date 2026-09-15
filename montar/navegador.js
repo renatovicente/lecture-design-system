@@ -1,9 +1,10 @@
 // Entrada do modo navegador em desenvolvimento, importada por montar/carregador.js (spec 3.2).
 // No marco 5, dist/aula-usp.js embute CSS, fontes e marcas; aqui tudo vem por URL.
 import { montar } from './montar.js';
+import { iniciarMotor } from '../motor/motor.js';
 
 const BASE = new URL('../', import.meta.url);
-const ESTILOS = ['estilos/tokens.css', 'estilos/fontes.css', 'estilos/base.css', 'estilos/layouts.css'];
+const ESTILOS = ['estilos/tokens.css', 'estilos/fontes.css', 'estilos/base.css', 'estilos/layouts.css', 'estilos/motor.css'];
 
 function carregarEstilo(caminho) {
   return new Promise((pronto, falha) => {
@@ -35,13 +36,14 @@ try {
     lerJson('contrato/contrato.json'),
     ...ESTILOS.map(carregarEstilo),
   ]);
-  montar(document, {
+  const resumo = montar(document, {
     unidades,
     usp,
     urlMarcas: new URL('assets/marcas', BASE).href,
     limites: { minBlocos: contrato.limites['blocos.min'], maxFileira: contrato.limites['blocos.maxFileira'] },
   });
-  document.body.classList.add('folha');
+  if (new URLSearchParams(location.search).has('folha')) document.body.classList.add('folha');
+  else iniciarMotor({ doc: document, janela: window, resumo });
   void document.body.offsetHeight; // força o layout, que pede as fontes usadas, antes de esperar por elas
   await document.fonts.ready;
   document.body.dataset.montado = 'sim';

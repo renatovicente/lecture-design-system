@@ -1,0 +1,31 @@
+/* Motor (spec 6.1 e 6.4): palco escalado no centro da janela, um slide por vez, passos ocultos sem mover nada. */
+
+body.modo-palco {
+  height: 100vh;
+  overflow: hidden;
+}
+
+.palco {
+  --escala: 1;
+  --centro-x: 50vw;
+  position: fixed;
+  left: var(--centro-x);
+  top: 50%;
+  width: var(--palco-largura);
+  height: var(--palco-altura);
+  transform: translate(-50%, -50%) scale(var(--escala));
+}
+
+.palco > .slide {
+  display: none;
+  position: absolute;
+  inset: 0;
+}
+
+.palco > .slide.ativo {
+  display: block;
+}
+
+.palco [data-passo]:not([data-revelado]) {
+  visibility: hidden;
+}

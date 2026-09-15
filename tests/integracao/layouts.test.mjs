@@ -33,7 +33,7 @@ after(async () => {
 });
 
 function especime(arquivo) {
-  if (!paginas.has(arquivo)) paginas.set(arquivo, abrirAula(navegador, `${servidor.endereco}/${arquivo}`));
+  if (!paginas.has(arquivo)) paginas.set(arquivo, abrirAula(navegador, `${servidor.endereco}/${arquivo}?folha`));
   return paginas.get(arquivo);
 }
 
