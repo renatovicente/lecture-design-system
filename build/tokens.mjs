@@ -41,10 +41,10 @@ export function simplificar(tokens) {
     if (grupoNome.startsWith('$')) continue;
     saida[grupoNome] = {};
     for (const [nome, token, tipo] of filhos(grupo)) {
-      const v = token.$value;
+      const v = resolver(tokens, token.$value);
       if (tipo === 'color') saida[grupoNome][nome] = v.hex;
       else if (tipo === 'dimension') saida[grupoNome][nome] = px(v);
-      else if (tipo === 'number') saida[grupoNome][nome] = v;
+      else if (tipo === 'number' || tipo === 'fontWeight') saida[grupoNome][nome] = v;
       else if (tipo === 'fontFamily') saida[grupoNome][nome] = v;
       else if (tipo === 'typography') {
         const ext = extensao(token);
@@ -69,8 +69,12 @@ export function gerarCss(tokens) {
   for (const [grupo, itens] of Object.entries(s)) {
     for (const [nome, valor] of Object.entries(itens)) {
       const base = `--${kebab(grupo)}-${kebab(nome)}`;
-      if (Array.isArray(valor)) linhas.push([base, familiaCss(valor)]);
-      else if (typeof valor === 'object') {
+      const tipo = tokens[grupo][nome].$type ?? tokens[grupo].$type;
+      if (tipo === 'color') linhas.push([base, valor]);
+      else if (tipo === 'dimension') linhas.push([base, `${valor}px`]);
+      else if (tipo === 'number' || tipo === 'fontWeight') linhas.push([base, String(valor)]);
+      else if (tipo === 'fontFamily') linhas.push([base, familiaCss(valor)]);
+      else if (tipo === 'typography') {
         linhas.push([`${base}-familia`, familiaCss(valor.familia)]);
         linhas.push([`${base}-tamanho`, `${valor.tamanho}px`]);
         linhas.push([`${base}-peso`, String(valor.peso)]);
@@ -78,9 +82,7 @@ export function gerarCss(tokens) {
         linhas.push([`${base}-tracking`, `${valor.tracking}px`]);
         if (valor.caixa) linhas.push([`${base}-caixa`, 'uppercase']);
         if (valor.pesoEnfase) linhas.push([`${base}-peso-enfase`, String(valor.pesoEnfase)]);
-      } else if (typeof valor === 'string') linhas.push([base, valor]);
-      else if (grupo === 'mapa' && nome === 'numeroProporcao') linhas.push([base, String(valor)]);
-      else linhas.push([base, `${valor}px`]);
+      } else throw new Error(`tipo não suportado: ${tipo} em ${grupo}.${nome}`);
     }
   }
   return `/* ${CABECALHO} */\n:root {\n${linhas.map(([k, v]) => `  ${k}: ${v};`).join('\n')}\n}\n`;

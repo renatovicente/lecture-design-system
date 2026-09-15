@@ -101,3 +101,38 @@ test('tokens.js importável coincide com simplificar', async () => {
   assert.deepEqual(mod.tokens, s);
   assert.equal(mod.default, mod.tokens);
 });
+
+test('alias de cor em $value gera o hex resolvido no CSS (F4)', () => {
+  const memoria = {
+    cor: {
+      $type: 'color',
+      tinta: { $value: { colorSpace: 'srgb', components: [0.0392, 0.0392, 0.0392], hex: '#0A0A0A' } },
+      texto: { $value: '{cor.tinta}' },
+    },
+  };
+  assert.equal(simplificar(memoria).cor.texto, '#0A0A0A');
+  assert.match(gerarCss(memoria), /--cor-texto: #0A0A0A;/);
+});
+
+test('token $type number gera valor sem unidade no CSS (F4)', () => {
+  const memoria = { mapa: { proporcao: { $type: 'number', $value: 0.5 } } };
+  assert.equal(simplificar(memoria).mapa.proporcao, 0.5);
+  const css = gerarCss(memoria);
+  assert.match(css, /--mapa-proporcao: 0\.5;/);
+  assert.ok(!css.includes('0.5px'), 'number não deve ganhar sufixo px');
+});
+
+test('referência inexistente em $value lança erro claro (F4)', () => {
+  const memoria = { cor: { $type: 'color', texto: { $value: '{cor.inexistente}' } } };
+  assert.throws(() => simplificar(memoria), /referência não encontrada/);
+});
+
+test('unidade de dimension fora de px lança erro (F4)', () => {
+  const memoria = { espaco: { $type: 'dimension', base: { $value: { value: 4, unit: 'rem' } } } };
+  assert.throws(() => simplificar(memoria), /unidade não suportada: rem/);
+});
+
+test('$type desconhecido lança erro (F4)', () => {
+  const memoria = { estranho: { $type: 'esquisito', valor: { $value: 42 } } };
+  assert.throws(() => simplificar(memoria), /tipo não suportado/);
+});
