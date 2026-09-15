@@ -46,6 +46,7 @@ test('metadados (5.2)', () => {
 
 test('limites da seção 5.3', () => {
   assert.deepEqual(contrato.limites, {
+    'blocos.min': 2, 'blocos.maxFileira': 8,
     'capa.h1.caracteresPorSegmento': 23, 'capa.h1.segmentos': 2, 'capa.h1.linhas': 2,
     'abertura.h2.caracteresPorSegmento': 20, 'abertura.h2.segmentos': 2, 'abertura.h2.linhas': 2,
     'abertura.dataCurto.caracteres': 10, 'abertura.h2.caracteresSemDataCurto': 10,
@@ -112,6 +113,33 @@ test('papéis usam os mínimos dos tokens e têm as exceções da spec (4.3)', (
     assert.equal(contrato.papeis[papel].minimo, tokens.minimo[papel], papel);
   assert.deepEqual(contrato.papeis.excecoes,
     ['.katex *', 'sub', 'sup', 'svg *', '.demo *', '.painel *', '.faixa-de-marca *']);
+});
+
+test('precedência de papéis e p.fonte só em legenda, não em leitura (F6)', () => {
+  assert.equal(contrato.papeis.precedencia, 'seletor-mais-especifico');
+  assert.ok(!contrato.papeis.leitura.seletores.includes('p'), '"p" genérico não deve estar em leitura');
+  assert.ok(contrato.papeis.leitura.seletores.includes('p:not(.fonte)'));
+  assert.ok(contrato.papeis.legenda.seletores.includes('p.fonte'));
+});
+
+test('atributos data-grade, data-demo/opcoes/captura-ms e data-rotulo restritos à classe (F6)', () => {
+  const el = contrato.html.atributos;
+  assert.ok(!('div' in el), '"div" genérico deveria ter sido removido (ficou vazio)');
+  assert.ok(!('aside' in el), '"aside" genérico deveria ter sido removido (ficou vazio)');
+
+  const temChave = (chave) => Object.keys(el).filter((tag) => chave in el[tag]);
+  assert.deepEqual(temChave('data-grade'), ['div.colunas']);
+  assert.deepEqual(temChave('data-demo').sort(), ['div.demo']);
+  assert.deepEqual(temChave('data-opcoes').sort(), ['div.demo']);
+  assert.deepEqual(temChave('data-captura-ms').sort(), ['div.demo']);
+  assert.deepEqual(temChave('data-rotulo').sort(), ['aside.alerta', 'aside.destaque', 'aside.quadro']);
+});
+
+test('lang inline aceita padrão de código de idioma solto; idioma da página continua fixo (F6)', () => {
+  const lang = new RegExp(contrato.html.atributos['*'].lang.padrao);
+  for (const s of ['de', 'pt-BR', 'la']) assert.ok(lang.test(s), `deveria aceitar ${s}`);
+  for (const s of ['portugues!', 'p']) assert.ok(!lang.test(s), `deveria rejeitar ${s}`);
+  assert.deepEqual(contrato.idiomas, ['pt-BR', 'en']);
 });
 
 test('classes do autor e do sistema não se misturam', () => {

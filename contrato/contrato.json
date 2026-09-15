@@ -61,6 +61,8 @@
   },
   "grades": { "12": 1, "6-6": 2, "8-4": 2, "4-8": 2, "4-4-4": 3 },
   "limites": {
+    "blocos.min": 2,
+    "blocos.maxFileira": 8,
     "capa.h1.caracteresPorSegmento": 23,
     "capa.h1.segmentos": 2,
     "capa.h1.linhas": 2,
@@ -93,7 +95,8 @@
     "diagrama.nos": 15
   },
   "papeis": {
-    "leitura": { "minimo": 24, "seletores": ["p", "li", "th", "td", "aside.destaque", "aside.quadro", "aside.alerta", "div.enunciado", "div.resposta", ".metadados-capa"] },
+    "precedencia": "seletor-mais-especifico",
+    "leitura": { "minimo": 24, "seletores": ["p:not(.fonte)", "li", "th", "td", "aside.destaque", "aside.quadro", "aside.alerta", "div.enunciado", "div.resposta", ".metadados-capa"] },
     "codigo":  { "minimo": 20, "seletores": ["pre", "code"] },
     "legenda": { "minimo": 18, "seletores": ["figcaption", "p.fonte"] },
     "rotulo":  { "minimo": 14, "seletores": [".rotulo", ".rodape", ".contador", ".nome-curto", ".bloco-n-de-m"] },
@@ -126,10 +129,13 @@
       "diagrama":  { "em": ["figure"], "fase": 2 }
     },
     "atributos": {
-      "*":       { "class": {}, "data-passo": { "padrao": "^([1-9][0-9]*)?$" }, "lang": { "valores": ["pt-BR", "en"] } },
+      "*":       { "class": {}, "data-passo": { "padrao": "^([1-9][0-9]*)?$" }, "lang": { "padrao": "^[a-zA-Z]{2,3}(-[a-zA-Z0-9]{2,8})*$" } },
       "section": { "data-layout": { "valores": ["capa", "abertura", "conteudo", "afirmacao", "figura", "demo", "encerramento"] }, "id": { "padrao": "^[a-z0-9][a-z0-9-]*$" }, "data-curto": { "layouts": ["abertura"] }, "data-pdf": { "valores": ["passos"] } },
-      "div":     { "data-grade": { "valores": ["12", "6-6", "8-4", "4-8", "4-4-4"] }, "data-demo": { "padrao": "^[a-z][a-z0-9-]*$" }, "data-opcoes": { "json": true }, "data-captura-ms": { "padrao": "^[0-9]+$", "fase": 2 } },
-      "aside":   { "data-rotulo": {} },
+      "div.colunas": { "data-grade": { "valores": ["12", "6-6", "8-4", "4-8", "4-4-4"] } },
+      "div.demo":    { "data-demo": { "padrao": "^[a-z][a-z0-9-]*$" }, "data-opcoes": { "json": true }, "data-captura-ms": { "padrao": "^[0-9]+$", "fase": 2 } },
+      "aside.destaque": { "data-rotulo": {} },
+      "aside.quadro":   { "data-rotulo": {} },
+      "aside.alerta":   { "data-rotulo": {} },
       "figure":  { "data-foto": { "valores": ["pb"] } },
       "img":     { "src": { "padrao": "^(?:img/(?!(?:[^/]*/)*(?:\\.|%2[eE]){2}(?:/|$))[^\\\\]+$|data:image/[a-z0-9.+-]+[;,]|https://)" }, "alt": { "obrigatorio": true } },
       "pre":     { "data-lang": { "valores": ["python", "r", "sql", "javascript", "bash", "json", "latex"] }, "data-linhas": { "padrao": "^[0-9]+(-[0-9]+)?(,[0-9]+(-[0-9]+)?)*$" }, "data-numeros": { "valores": [""] } },
