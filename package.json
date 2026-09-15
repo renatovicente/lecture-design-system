@@ -1,0 +1,14 @@
+{
+  "name": "aula-usp",
+  "version": "0.1.0",
+  "description": "Design system de aulas em HTML para a USP, usado com Claude e GPT.",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "test": "node --test tests/unit/*.test.mjs",
+    "tokens": "node build/tokens.mjs",
+    "fontes": "node build/fontes.mjs",
+    "marcas": "node build/marcas.mjs"
+  }
+}

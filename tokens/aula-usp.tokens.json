@@ -1,0 +1,95 @@
+{
+  "$description": "Tokens do Aula USP no formato do Design Tokens Community Group (2025.10). Fonte única: build/tokens.mjs gera estilos/tokens.css e tokens/tokens.js.",
+  "cor": {
+    "$type": "color",
+    "papel":   { "$value": { "colorSpace": "srgb", "components": [1, 1, 1], "hex": "#FFFFFF" }, "$description": "fundo do palco e do entorno" },
+    "tinta":   { "$value": { "colorSpace": "srgb", "components": [0.0392, 0.0392, 0.0392], "hex": "#0A0A0A" }, "$description": "texto de leitura, réguas, eixos, contornos, quadrados vistos, campo do alerta" },
+    "cinza":   { "$value": { "colorSpace": "srgb", "components": [0.4, 0.4, 0.4], "hex": "#666666" }, "$description": "rodapé, legendas, comentários de código" },
+    "linha":   { "$value": { "colorSpace": "srgb", "components": [0.851, 0.851, 0.851], "hex": "#D9D9D9" }, "$description": "linhas finas de tabela e grade de gráfico; nunca texto" },
+    "azul":    { "$value": { "colorSpace": "srgb", "components": [0.0627, 0.5804, 0.6706], "hex": "#1094AB" }, "$description": "sinal; texto só a partir de 32 px" },
+    "amarelo": { "$value": { "colorSpace": "srgb", "components": [0.9882, 0.7059, 0.1294], "hex": "#FCB421" }, "$description": "campo sob tinta; nunca texto nem linha abaixo de 4 px" }
+  },
+  "fonte": {
+    "$type": "fontFamily",
+    "sans":  { "$value": ["Geist", "system-ui", "sans-serif"] },
+    "mono":  { "$value": ["Geist Mono", "ui-monospace", "monospace"] },
+    "marca": { "$value": ["Open Sans", "sans-serif"] }
+  },
+  "tipo": {
+    "$type": "typography",
+    "capa":         { "$value": { "fontFamily": "{fonte.sans}", "fontSize": { "value": 96, "unit": "px" }, "fontWeight": 600, "lineHeight": 1, "letterSpacing": { "value": -3.36, "unit": "px" } } },
+    "abertura":     { "$value": { "fontFamily": "{fonte.sans}", "fontSize": { "value": 84, "unit": "px" }, "fontWeight": 600, "lineHeight": 1, "letterSpacing": { "value": -2.52, "unit": "px" } } },
+    "afirmacao":    { "$value": { "fontFamily": "{fonte.sans}", "fontSize": { "value": 64, "unit": "px" }, "fontWeight": 600, "lineHeight": 1.08, "letterSpacing": { "value": -1.92, "unit": "px" } } },
+    "titulo":       { "$value": { "fontFamily": "{fonte.sans}", "fontSize": { "value": 44, "unit": "px" }, "fontWeight": 600, "lineHeight": 1.08, "letterSpacing": { "value": -1.32, "unit": "px" } } },
+    "numeral":      { "$value": { "fontFamily": "{fonte.sans}", "fontSize": { "value": 40, "unit": "px" }, "fontWeight": 600, "lineHeight": 1, "letterSpacing": { "value": 0, "unit": "px" } } },
+    "lide":         { "$value": { "fontFamily": "{fonte.sans}", "fontSize": { "value": 32, "unit": "px" }, "fontWeight": 400, "lineHeight": 1.25, "letterSpacing": { "value": 0, "unit": "px" } } },
+    "leitura":      { "$value": { "fontFamily": "{fonte.sans}", "fontSize": { "value": 24, "unit": "px" }, "fontWeight": 400, "lineHeight": 1.42, "letterSpacing": { "value": 0, "unit": "px" } }, "$extensions": { "br.usp.aula": { "pesoEnfase": 600 } } },
+    "codigo":       { "$value": { "fontFamily": "{fonte.mono}", "fontSize": { "value": 20, "unit": "px" }, "fontWeight": 400, "lineHeight": 1.45, "letterSpacing": { "value": 0, "unit": "px" } }, "$extensions": { "br.usp.aula": { "pesoEnfase": 600 } } },
+    "legenda":      { "$value": { "fontFamily": "{fonte.sans}", "fontSize": { "value": 18, "unit": "px" }, "fontWeight": 400, "lineHeight": 1.35, "letterSpacing": { "value": 0, "unit": "px" } } },
+    "rotulo":       { "$value": { "fontFamily": "{fonte.mono}", "fontSize": { "value": 14, "unit": "px" }, "fontWeight": 700, "lineHeight": 1.2, "letterSpacing": { "value": 2.24, "unit": "px" } }, "$extensions": { "br.usp.aula": { "caixa": "alta" } } },
+    "rodape":       { "$value": { "fontFamily": "{fonte.mono}", "fontSize": { "value": 14, "unit": "px" }, "fontWeight": 400, "lineHeight": 1.2, "letterSpacing": { "value": 2.24, "unit": "px" } }, "$extensions": { "br.usp.aula": { "caixa": "alta" } } },
+    "rotuloGrande": { "$value": { "fontFamily": "{fonte.mono}", "fontSize": { "value": 20, "unit": "px" }, "fontWeight": 700, "lineHeight": 1.2, "letterSpacing": { "value": 3.2, "unit": "px" } }, "$extensions": { "br.usp.aula": { "caixa": "alta" } } },
+    "marcaUsp":     { "$value": { "fontFamily": "{fonte.marca}", "fontSize": { "value": 20, "unit": "px" }, "fontWeight": 600, "lineHeight": 1.15, "letterSpacing": { "value": 0, "unit": "px" } } }
+  },
+  "minimo": {
+    "$type": "dimension",
+    "leitura": { "$value": { "value": 24, "unit": "px" } },
+    "codigo":  { "$value": { "value": 20, "unit": "px" } },
+    "legenda": { "$value": { "value": 18, "unit": "px" } },
+    "rotulo":  { "$value": { "value": 14, "unit": "px" } }
+  },
+  "palco": {
+    "$type": "dimension",
+    "largura": { "$value": { "value": 1280, "unit": "px" } },
+    "altura":  { "$value": { "value": 720, "unit": "px" } },
+    "margem":  { "$value": { "value": 64, "unit": "px" } },
+    "coluna":  { "$value": { "value": 74, "unit": "px" } },
+    "calha":   { "$value": { "value": 24, "unit": "px" } },
+    "util":    { "$value": { "value": 1152, "unit": "px" } }
+  },
+  "zona": {
+    "$type": "dimension",
+    "cabecalhoTopo":         { "$value": { "value": 40, "unit": "px" } },
+    "cabecalhoBase":         { "$value": { "value": 64, "unit": "px" } },
+    "tituloTopo":            { "$value": { "value": 96, "unit": "px" } },
+    "conteudoBase":          { "$value": { "value": 652, "unit": "px" } },
+    "rodapeBase":            { "$value": { "value": 688, "unit": "px" } },
+    "marcaBase":             { "$value": { "value": 680, "unit": "px" } },
+    "capaConteudoBase":      { "$value": { "value": 520, "unit": "px" } },
+    "aberturaTituloTopoMin": { "$value": { "value": 360, "unit": "px" } }
+  },
+  "espaco": {
+    "$type": "dimension",
+    "1": { "$value": { "value": 8, "unit": "px" } },
+    "2": { "$value": { "value": 16, "unit": "px" } },
+    "3": { "$value": { "value": 24, "unit": "px" } },
+    "4": { "$value": { "value": 32, "unit": "px" } },
+    "5": { "$value": { "value": 48, "unit": "px" } },
+    "6": { "$value": { "value": 64, "unit": "px" } },
+    "7": { "$value": { "value": 96, "unit": "px" } }
+  },
+  "regua": {
+    "$type": "dimension",
+    "fina":   { "$value": { "value": 1, "unit": "px" } },
+    "normal": { "$value": { "value": 2, "unit": "px" } },
+    "forte":  { "$value": { "value": 4, "unit": "px" } }
+  },
+  "contraste": {
+    "$type": "dimension",
+    "azulTextoMinimo":    { "$value": { "value": 32, "unit": "px" }, "$description": "texto em azul só a partir deste tamanho" },
+    "amareloLinhaMinima": { "$value": { "value": 4, "unit": "px" }, "$description": "traço em amarelo só a partir desta espessura" }
+  },
+  "mapa": {
+    "quadradoCabecalho":   { "$type": "dimension", "$value": { "value": 16, "unit": "px" } },
+    "espacoCabecalho":     { "$type": "dimension", "$value": { "value": 8, "unit": "px" } },
+    "quadradoAberturaMax": { "$type": "dimension", "$value": { "value": 160, "unit": "px" } },
+    "calhaAbertura":       { "$type": "dimension", "$value": { "value": 24, "unit": "px" } },
+    "quadradoCapa":        { "$type": "dimension", "$value": { "value": 24, "unit": "px" } },
+    "numeroProporcao":     { "$type": "number", "$value": 0.55, "$description": "altura do número do bloco atual em relação ao lado do quadrado" },
+    "faixaBlocoNdeM":      { "$type": "dimension", "$value": { "value": 220, "unit": "px" } }
+  },
+  "marca": {
+    "$type": "dimension",
+    "uspAltura": { "$value": { "value": 56, "unit": "px" } }
+  }
+}
