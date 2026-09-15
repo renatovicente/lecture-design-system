@@ -11,9 +11,14 @@
     "test": "node --test tests/unit/*.test.mjs",
     "tokens": "node build/tokens.mjs",
     "fontes": "node build/fontes.mjs",
-    "marcas": "node build/marcas.mjs"
+    "marcas": "node build/marcas.mjs",
+    "fontes:css": "node build/fontes-css.mjs",
+    "servir": "node bin/aula-usp.mjs servir"
   },
   "devDependencies": {
     "linkedom": "^0.18.13"
+  },
+  "bin": {
+    "aula-usp": "bin/aula-usp.mjs"
   }
 }
