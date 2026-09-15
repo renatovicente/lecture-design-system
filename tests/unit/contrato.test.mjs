@@ -148,6 +148,13 @@ test('padrões de atributo compilam e aceitam o que devem', () => {
   assert.ok(linhas.test('3-5,8') && linhas.test('7'));
   assert.ok(!linhas.test('3-') && !linhas.test('a'));
   const src = new RegExp(contrato.html.atributos.img.src.padrao);
-  assert.ok(src.test('img/cajal.jpg') && src.test('data:image/png;base64,AAA') && src.test('https://x.org/a.png'));
-  assert.ok(!src.test('../fora.png') && !src.test('http://x.org/a.png'));
+  for (const s of ['img/cajal.jpg', 'img/sub/a.png', 'img/..a.png', 'data:image/png;base64,AAA',
+    'data:image/svg+xml,<svg/>', 'https://x.org/a.png']) assert.ok(src.test(s), `deveria aceitar ${s}`);
+  for (const s of ['img/../x.png', 'img/a/../../b.png', 'img/%2e%2e/x.png', 'img/%2E%2E/x.png',
+    'img/..', 'img/a\\b.png', 'data:text/html,<b>', 'http://x.org/a.png', '../fora.png'])
+    assert.ok(!src.test(s), `deveria rejeitar ${s}`);
+
+  const href = new RegExp(contrato.html.atributos.a.href.padrao);
+  for (const s of ['#culpa', 'https://usp.br']) assert.ok(href.test(s), `deveria aceitar ${s}`);
+  for (const s of ['http://usp.br', 'javascript:alert(1)', 'culpa']) assert.ok(!href.test(s), `deveria rejeitar ${s}`);
 });
