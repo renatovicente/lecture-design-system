@@ -186,6 +186,8 @@ test('sem aberturas: nenhum mapa, nenhum roteiro e rótulo de introdução', () 
 
 test('unidade desconhecida gera erro claro', () => {
   assert.throws(() => montado(AULA_IME().replace('content="ime"', 'content="fea"')), /unidade desconhecida: "fea"/);
+  assert.throws(() => montado(AULA_IME().replace('content="ime"', 'content="constructor"')),
+    /unidade desconhecida: "constructor"/);
 });
 
 test('slug remove acentos e pontuação; ids repetidos ganham sufixo', () => {
@@ -196,6 +198,23 @@ test('slug remove acentos e pontuação; ids repetidos ganham sufixo', () => {
     <section data-layout="conteudo"><h2>Repetido</h2><p>A.</p></section>
     <section data-layout="conteudo"><h2>Repetido</h2><p>B.</p></section></body></html>`);
   assert.deepEqual([...document.querySelectorAll('section.slide')].map((s) => s.id), ['repetido', 'repetido-2']);
+});
+
+test('id gerado não repete id de elemento fora das seções (ex.: marker de SVG)', () => {
+  const { document } = montado(`${cabeca('ime')}<body>
+    <section data-layout="figura"><h2>Seta</h2><figure><svg viewBox="0 0 10 10"><defs><marker id="seta">`
+    + `<path d="M0 0L10 5L0 10z"/></marker></defs><line x1="0" y1="5" x2="9" y2="5" marker-end="url(#seta)"/></svg>`
+    + `</figure></section></body></html>`);
+  assert.equal(document.querySelector('section.slide').id, 'seta-2');
+  assert.equal(document.querySelectorAll('#seta').length, 1);
+});
+
+test('capa e encerramento com id do autor mantêm o id (spec 6.3)', () => {
+  const { document } = montado(`${cabeca('ime')}<body>
+    <section data-layout="capa" id="inicio"><h1>Título</h1></section>
+    <section data-layout="encerramento" id="fim"><h2>Fim</h2><ol class="sintese"><li>Um.</li></ol></section>
+  </body></html>`);
+  assert.deepEqual([...document.querySelectorAll('section.slide')].map((s) => s.id), ['inicio', 'fim']);
 });
 
 test('toda classe gerada pelo sistema está em contrato.classesDoSistema', () => {

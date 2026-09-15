@@ -16,8 +16,8 @@ export function secoesDaAula(doc) {
   return [...doc.body.children].filter((el) => el.nodeName === 'SECTION' && el.hasAttribute('data-layout'));
 }
 
-function atribuirIds(secoes) {
-  const usados = new Set(secoes.map((secao) => secao.getAttribute('id')).filter(Boolean));
+function atribuirIds(doc, secoes) {
+  const usados = new Set([...doc.querySelectorAll('[id]')].map((el) => el.getAttribute('id')));
   secoes.forEach((secao, i) => {
     if (secao.getAttribute('id')) return;
     const layout = secao.getAttribute('data-layout');
@@ -44,11 +44,11 @@ function envolverEmArea(doc, secao) {
 
 export function montar(doc, { unidades, usp, urlMarcas, limites }) {
   const meta = lerMetadados(doc);
-  const unidade = unidades[meta.unidade];
+  const unidade = Object.hasOwn(unidades, meta.unidade) ? unidades[meta.unidade] : undefined;
   if (!unidade) throw new Error(`unidade desconhecida: "${meta.unidade}"`);
   const rot = rotulosPara(meta.lang);
   const secoes = secoesDaAula(doc);
-  atribuirIds(secoes);
+  atribuirIds(doc, secoes);
   const { blocos, blocoDaSecao, modo } = derivarBlocos(secoes, limites);
   for (const bloco of blocos) bloco.id = secoes[bloco.indice].getAttribute('id');
   const total = secoes.length;
