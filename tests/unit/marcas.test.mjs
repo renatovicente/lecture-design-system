@@ -116,6 +116,12 @@ test('unidades.json e usp.json completos e coerentes', async () => {
   assert.ok(Number.isInteger(usp.protecao) && usp.protecao > 0);
 });
 
+test('.gitattributes marca pdf, png e woff2 como binários (F7)', async () => {
+  const texto = await lerTexto('.gitattributes');
+  for (const linha of ['*.pdf binary', '*.png binary', '*.woff2 binary'])
+    assert.ok(texto.includes(linha), `.gitattributes sem "${linha}"`);
+});
+
 test('README das marcas cita as origens e as páginas dos manuais', async () => {
   const readme = await lerTexto('assets/marcas/README.md');
   for (const trecho of ['scs.usp.br', 'ime.usp.br', 'portal.if.usp.br', 'Área de proteção', 'Altura mínima'])
