@@ -27,7 +27,7 @@ const TIPOS = {
 export function reescreverRuntime(html) {
   return html.replace(
     /<script\b[^>]*\bsrc="[^"]*\/aula-usp\.js"[^>]*>\s*<\/script>/,
-    `<script type="module" src="${PREFIXO}montar/navegador.js"></script>`,
+    `<script src="${PREFIXO}montar/carregador.js"></script>`,
   );
 }
 

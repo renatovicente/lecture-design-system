@@ -1,4 +1,4 @@
-// Entrada do modo navegador em desenvolvimento, servida por `aula-usp servir` (spec 3.2).
+// Entrada do modo navegador em desenvolvimento, importada por montar/carregador.js (spec 3.2).
 // No marco 5, dist/aula-usp.js embute CSS, fontes e marcas; aqui tudo vem por URL.
 import { montar } from './montar.js';
 
@@ -22,11 +22,13 @@ async function lerJson(caminho) {
   return resposta.json();
 }
 
-const ocultar = document.createElement('style');
-ocultar.textContent = 'body { visibility: hidden; }';
-document.head.append(ocultar);
+function documentoLido() {
+  if (document.readyState !== 'loading') return Promise.resolve();
+  return new Promise((pronto) => document.addEventListener('DOMContentLoaded', pronto, { once: true }));
+}
 
 try {
+  await documentoLido();
   const [unidades, usp, contrato] = await Promise.all([
     lerJson('assets/marcas/unidades.json'),
     lerJson('assets/marcas/usp.json'),
@@ -51,5 +53,5 @@ try {
   document.body.prepend(aviso);
   console.error(erro);
 } finally {
-  ocultar.remove();
+  document.querySelector('style[data-aula-usp="ocultar"]')?.remove();
 }

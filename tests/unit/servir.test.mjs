@@ -35,7 +35,7 @@ test('reescreverRuntime troca a tag do CDN, com integrity e quebra de linha, pel
   const html = '<head><script src="https://cdn.jsdelivr.net/npm/aula-usp@1.0.0/dist/aula-usp.js"\n'
     + '        integrity="sha384-abc" crossorigin="anonymous"></script>\n<script src="demos/exemplo.js"></script></head>';
   const saida = reescreverRuntime(html);
-  assert.ok(saida.includes(`<script type="module" src="${PREFIXO}montar/navegador.js"></script>`));
+  assert.ok(saida.includes(`<script src="${PREFIXO}montar/carregador.js"></script>`));
   assert.ok(!saida.includes('cdn.jsdelivr.net'));
   assert.ok(!saida.includes('integrity'));
   assert.ok(saida.includes('<script src="demos/exemplo.js"></script>'));
@@ -67,7 +67,7 @@ test('servidor entrega a aula com a tag do runtime trocada', async () => {
   const resposta = await pedir('/');
   assert.equal(resposta.status, 200);
   assert.match(resposta.tipo, /^text\/html/);
-  assert.ok(resposta.corpo.includes(`src="${PREFIXO}montar/navegador.js"`));
+  assert.ok(resposta.corpo.includes(`<script src="${PREFIXO}montar/carregador.js"></script>`));
   assert.ok(!resposta.corpo.includes('cdn.jsdelivr.net'));
 });
 

@@ -190,6 +190,11 @@ test('unidade desconhecida gera erro claro', () => {
     /unidade desconhecida: "constructor"/);
 });
 
+test('montar recusa uma aula já montada', () => {
+  const { document } = montado(AULA_IME());
+  assert.throws(() => montar(document, { unidades, usp, urlMarcas: 'M', limites }), /aula já montada/);
+});
+
 test('slug remove acentos e pontuação; ids repetidos ganham sufixo', () => {
   assert.equal(slug('Por que descer?'), 'por-que-descer');
   assert.equal(slug('Ação & reação'), 'acao-reacao');

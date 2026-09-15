@@ -4,10 +4,8 @@ import assert from 'node:assert/strict';
 import { mkdir, readFile, readdir, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { chromium } from 'playwright-core';
-import { criarServidor } from '../../build/servir.mjs';
+import { RAIZ, iniciarChrome, servirPasta, abrirAula } from './utilitarios.mjs';
 
-const RAIZ = new URL('../../', import.meta.url);
 const SAIDA = fileURLToPath(new URL('saida/', import.meta.url));
 const lerJson = async (caminho) => JSON.parse(await readFile(new URL(caminho, RAIZ), 'utf8'));
 const unidades = await lerJson('assets/marcas/unidades.json');
@@ -20,42 +18,22 @@ const TRANSPARENTE = 'rgba(0, 0, 0, 0)';
 
 let servidor;
 let navegador;
-let endereco;
 const paginas = new Map();
 
 before(async () => {
-  servidor = criarServidor({ pastaAula: fileURLToPath(new URL('especime/', RAIZ)) });
-  await new Promise((pronto) => servidor.listen(0, '127.0.0.1', pronto));
-  endereco = `http://127.0.0.1:${servidor.address().port}`;
-  navegador = await chromium.launch(process.env.CHROME_PATH
-    ? { executablePath: process.env.CHROME_PATH }
-    : { channel: 'chrome' });
+  servidor = await servirPasta('especime/');
+  navegador = await iniciarChrome();
   await rm(SAIDA, { recursive: true, force: true });
   await mkdir(SAIDA, { recursive: true });
 });
 
 after(async () => {
   await navegador?.close();
-  await new Promise((fim) => servidor.close(fim));
+  await servidor?.fechar();
 });
 
-async function abrir(arquivo) {
-  const pagina = await navegador.newPage({ viewport: { width: 1400, height: 900 } });
-  const erros = [];
-  pagina.on('pageerror', (erro) => erros.push(erro.message));
-  pagina.on('console', (mensagem) => {
-    if (mensagem.type() === 'error' && !mensagem.location().url.endsWith('/favicon.ico')) erros.push(mensagem.text());
-  });
-  await pagina.goto(`${endereco}/${arquivo}`);
-  await pagina.waitForFunction(() => document.body.dataset.montado !== undefined);
-  const estado = await pagina.evaluate(() => [document.body.dataset.montado, document.querySelector('pre.painel')?.textContent]);
-  assert.equal(estado[0], 'sim', estado[1]);
-  await pagina.evaluate(() => document.fonts.ready);
-  return { pagina, erros };
-}
-
 function especime(arquivo) {
-  if (!paginas.has(arquivo)) paginas.set(arquivo, abrir(arquivo));
+  if (!paginas.has(arquivo)) paginas.set(arquivo, abrirAula(navegador, `${servidor.endereco}/${arquivo}`));
   return paginas.get(arquivo);
 }
 

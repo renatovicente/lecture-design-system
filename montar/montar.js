@@ -44,6 +44,7 @@ function envolverEmArea(doc, secao) {
 }
 
 export function montar(doc, { unidades, usp, urlMarcas, limites }) {
+  if (doc.querySelector('section.slide')) throw new Error('aula já montada');
   const meta = lerMetadados(doc);
   const unidade = Object.hasOwn(unidades, meta.unidade) ? unidades[meta.unidade] : undefined;
   if (!unidade) throw new Error(`unidade desconhecida: "${meta.unidade}"`);
