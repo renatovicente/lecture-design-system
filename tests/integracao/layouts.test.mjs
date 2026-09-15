@@ -1,7 +1,7 @@
 // Geometria dos layouts no Chrome, sobre os espécimes servidos por `aula-usp servir` (spec 4.4, 4.5, 5.4 e 11.2).
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdir, readFile, readdir } from 'node:fs/promises';
+import { mkdir, readFile, readdir, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright-core';
@@ -30,6 +30,7 @@ before(async () => {
   navegador = await chromium.launch(process.env.CHROME_PATH
     ? { executablePath: process.env.CHROME_PATH }
     : { channel: 'chrome' });
+  await rm(SAIDA, { recursive: true, force: true });
   await mkdir(SAIDA, { recursive: true });
 });
 
