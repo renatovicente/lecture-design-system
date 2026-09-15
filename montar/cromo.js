@@ -1,6 +1,6 @@
 // Elementos gerados pelo sistema (spec 5.3 e 5.4). Só API padrão do DOM.
 
-export const pad2 = (numero) => String(numero).padStart(2, '0');
+export const doisDigitos = (numero) => String(numero).padStart(2, '0');
 
 function elemento(doc, tag, classe, texto) {
   const el = doc.createElement(tag);
@@ -60,7 +60,7 @@ export function criarFileira(doc, blocos, estados) {
     const item = doc.createElement('li');
     item.setAttribute('data-estado', estados[k]);
     const quadrado = elemento(doc, 'span', `quadrado ${estados[k]}`);
-    if (estados[k] === 'atual') quadrado.append(elemento(doc, 'span', 'numero-bloco', pad2(bloco.numero)));
+    if (estados[k] === 'atual') quadrado.append(elemento(doc, 'span', 'numero-bloco', doisDigitos(bloco.numero)));
     item.append(quadrado, elemento(doc, 'span', 'nome-curto', bloco.curto));
     fileira.append(item);
   });

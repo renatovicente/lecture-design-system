@@ -2,7 +2,8 @@
 import { lerMetadados, formatarData } from './metadados.js';
 import { derivarBlocos, estadosDosQuadrados, textoDeTitulo } from './blocos.js';
 import {
-  criarCabecalho, criarRodape, criarMetadadosCapa, criarRoteiro, criarFileira, criarFaixaDeMarca, criarBlocoNdeM, pad2,
+  criarCabecalho, criarRodape, criarMetadadosCapa, criarRoteiro, criarFileira, criarFaixaDeMarca, criarBlocoNdeM,
+  doisDigitos,
 } from './cromo.js';
 import { rotulosPara } from '../motor/rotulos.js';
 
@@ -78,7 +79,7 @@ export function montar(doc, { unidades, usp, urlMarcas, limites }) {
     const encerramento = layout === 'encerramento';
     let rotulo = rot.introducao;
     if (encerramento) rotulo = rot.encerramento;
-    else if (numero !== null) rotulo = `${pad2(numero)} · ${blocos[numero - 1].titulo}`;
+    else if (numero !== null) rotulo = `${doisDigitos(numero)} · ${blocos[numero - 1].titulo}`;
     secao.prepend(criarCabecalho(doc, {
       rotulo,
       blocos,
