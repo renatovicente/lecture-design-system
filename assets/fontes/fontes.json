@@ -1,0 +1,112 @@
+[
+  {
+    "familia": "Geist",
+    "estilo": "italic",
+    "pesos": [
+      400
+    ],
+    "subconjunto": "latin-ext",
+    "unicodeRange": "U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF",
+    "arquivo": "geist-italico-latin-ext.woff2",
+    "bytes": 8216,
+    "sha256": "6bcb5ddfa70fceac41afc296eae9f2df20d10505fab26db6dc35371ac305f94a",
+    "origem": "https://fonts.gstatic.com/s/geist/v5/gyBjhwUxId8gMEwZAluvzlxA9ojEVKDQ3qnW41A_sbCKgoD1JQ.woff2"
+  },
+  {
+    "familia": "Geist",
+    "estilo": "italic",
+    "pesos": [
+      400
+    ],
+    "subconjunto": "latin",
+    "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD",
+    "arquivo": "geist-italico-latin.woff2",
+    "bytes": 13484,
+    "sha256": "423902bb17c9deb847b769881178b90e39e01e2374970fffd979e9108f704493",
+    "origem": "https://fonts.gstatic.com/s/geist/v5/gyBjhwUxId8gMEwZAluvzlxA9ojEVKDQ3qnY41A_sbCKgoA.woff2"
+  },
+  {
+    "familia": "Geist",
+    "estilo": "normal",
+    "pesos": [
+      400,
+      600
+    ],
+    "subconjunto": "latin-ext",
+    "unicodeRange": "U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF",
+    "arquivo": "geist-normal-latin-ext.woff2",
+    "bytes": 16540,
+    "sha256": "58a6b173d5ca1dec92166ea3c6cb1a84a4144556d10928ac14e8e6b40e4787bd",
+    "origem": "https://fonts.gstatic.com/s/geist/v5/gyByhwUxId8gMEwSGFWNOITddY4.woff2"
+  },
+  {
+    "familia": "Geist",
+    "estilo": "normal",
+    "pesos": [
+      400,
+      600
+    ],
+    "subconjunto": "latin",
+    "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD",
+    "arquivo": "geist-normal-latin.woff2",
+    "bytes": 29288,
+    "sha256": "9b6f5ff45b278c744b5f379a2c4ecbaf858a842b8eaf82ac8d21b699ca16c608",
+    "origem": "https://fonts.gstatic.com/s/geist/v5/gyByhwUxId8gMEwcGFWNOITd.woff2"
+  },
+  {
+    "familia": "Geist Mono",
+    "estilo": "normal",
+    "pesos": [
+      400,
+      600,
+      700
+    ],
+    "subconjunto": "latin-ext",
+    "unicodeRange": "U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF",
+    "arquivo": "geist-mono-normal-latin-ext.woff2",
+    "bytes": 14712,
+    "sha256": "745994b5cd950ec201b66526375f057d540847cccfc70f4f24f5f571d26d3923",
+    "origem": "https://fonts.gstatic.com/s/geistmono/v6/or3nQ6H-1_WfwkMZI_qYFrkdmhHkjkotbA.woff2"
+  },
+  {
+    "familia": "Geist Mono",
+    "estilo": "normal",
+    "pesos": [
+      400,
+      600,
+      700
+    ],
+    "subconjunto": "latin",
+    "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD",
+    "arquivo": "geist-mono-normal-latin.woff2",
+    "bytes": 23108,
+    "sha256": "5f3d6ad60f29d6cb708414ec6887163d63bf197377ef5417d2483ff31ace6c3b",
+    "origem": "https://fonts.gstatic.com/s/geistmono/v6/or3nQ6H-1_WfwkMZI_qYFrcdmhHkjko.woff2"
+  },
+  {
+    "familia": "Open Sans",
+    "estilo": "normal",
+    "pesos": [
+      600
+    ],
+    "subconjunto": "latin-ext",
+    "unicodeRange": "U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF",
+    "arquivo": "open-sans-normal-latin-ext.woff2",
+    "bytes": 10736,
+    "sha256": "b259fb4729601a66a23e9052418b0ababad546c99a6d9c1bf3a469ed005763e3",
+    "origem": "https://fonts.gstatic.com/s/opensans/v44/memSYaGs126MiZpBA-UvWbX2vVnXBbObj2OVZyOOSr4dVJWUgsgH1x4uaVIUwaEQbjB_mQ.woff2"
+  },
+  {
+    "familia": "Open Sans",
+    "estilo": "normal",
+    "pesos": [
+      600
+    ],
+    "subconjunto": "latin",
+    "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD",
+    "arquivo": "open-sans-normal-latin.woff2",
+    "bytes": 13468,
+    "sha256": "6d030a368703b1104f229bdb0f73bf653134a95d9d68e06a7c1a52549f594cc3",
+    "origem": "https://fonts.gstatic.com/s/opensans/v44/memSYaGs126MiZpBA-UvWbX2vVnXBbObj2OVZyOOSr4dVJWUgsgH1x4gaVIUwaEQbjA.woff2"
+  }
+]

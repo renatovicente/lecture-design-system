@@ -1,0 +1,63 @@
+/* cyrillic */
+@font-face {
+  font-family: 'Geist';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/geist/v5/italico-cirilico.woff2) format('woff2');
+  unicode-range: U+0301, U+0400-045F;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Geist';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/geist/v5/italico-latin-ext.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5;
+}
+/* latin */
+@font-face {
+  font-family: 'Geist';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/geist/v5/italico-latin.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Geist';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/geist/v5/normal-latin-ext.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5;
+}
+/* latin */
+@font-face {
+  font-family: 'Geist';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/geist/v5/normal-latin.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Geist';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/geist/v5/normal-latin-ext.woff2) format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5;
+}
+/* latin */
+@font-face {
+  font-family: 'Geist';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/geist/v5/normal-latin.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131;
+}
