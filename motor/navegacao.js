@@ -17,7 +17,8 @@ const TECLAS = {
 };
 
 export function acaoDaTecla({ key, ctrlKey = false, metaKey = false, altKey = false }) {
-  if (ctrlKey || metaKey || altKey) return null;
+  const altGr = ctrlKey && altKey && key.length === 1;
+  if ((ctrlKey || metaKey || altKey) && !altGr) return null;
   if (/^[1-8]$/.test(key)) return `bloco-${key}`;
   return Object.hasOwn(TECLAS, key) ? TECLAS[key] : null;
 }
