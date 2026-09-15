@@ -39,7 +39,7 @@ svg {
   display: block;
 }
 
-/* Modo folha (marco 2a): slides um abaixo do outro. O marco 2b troca pelo palco escalado. */
+/* Modo folha (?folha na URL): slides um abaixo do outro, sem motor. */
 body.folha {
   display: grid;
   justify-content: center;
