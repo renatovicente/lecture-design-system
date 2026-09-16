@@ -2,10 +2,14 @@
 
 const REFERENCIAS = ['href', 'clip-path', 'marker-start', 'marker-end', 'fill', 'stroke'];
 
-function reescrever(valor, mapa) {
-  const direta = /^#(.+)$/.exec(valor);
-  if (direta) return mapa.has(direta[1]) ? `#${mapa.get(direta[1])}` : valor;
-  return valor.replace(/url\((['"]?)#([^'")]+)\1\)/g, (todo, aspas, id) => (mapa.has(id) ? `url(${aspas}#${mapa.get(id)}${aspas})` : todo));
+function reescrever(valor, mapa, atributo) {
+  // Direct #id reference only for href (fill and stroke carry hex colors, never bare #id)
+  if (atributo === 'href') {
+    const direta = /^#(.+)$/.exec(valor);
+    if (direta) return mapa.has(direta[1]) ? `#${mapa.get(direta[1])}` : valor;
+  }
+  // url(...) reference for all attributes in REFERENCIAS, tolerating whitespace
+  return valor.replace(/url\(\s*(['"]?)\s*#([^'")\s]+)\s*\1\s*\)/g, (todo, aspas, id) => (mapa.has(id) ? `url(${aspas}#${mapa.get(id)}${aspas})` : todo));
 }
 
 export function copiarSlide(slide, sufixo) {
@@ -22,7 +26,7 @@ export function copiarSlide(slide, sufixo) {
       for (const atributo of REFERENCIAS) {
         const valor = elemento.getAttribute(atributo);
         if (!valor) continue;
-        const novo = reescrever(valor, mapa);
+        const novo = reescrever(valor, mapa, atributo);
         if (novo !== valor) elemento.setAttribute(atributo, novo);
       }
     }

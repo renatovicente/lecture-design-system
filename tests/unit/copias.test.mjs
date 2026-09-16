@@ -44,3 +44,44 @@ test('um slide sem ids nenhum é copiado como está', () => {
   const copia = copiarSlide(original, 'p4');
   assert.equal(copia.outerHTML, original.outerHTML);
 });
+
+test('url(...) com espaços ao redor do #id é reescrito, com quotes preservadas', () => {
+  const original = slide(`<section class="slide" id="fig"><div class="area"><svg viewBox="0 0 10 10">
+    <defs><marker id="seta"></marker><clipPath id="corte"></clipPath></defs>
+    <line clip-path="url( #corte )" marker-start="url( '#seta' )"></line>
+  </svg></div></section>`);
+  const copia = copiarSlide(original, 'p5');
+  assert.equal(copia.querySelector('line').getAttribute('clip-path'), 'url(#corte-p5)');
+  assert.equal(copia.querySelector('line').getAttribute('marker-start'), "url('#seta-p5')");
+});
+
+test('url(...) com aspas duplas é reescrito', () => {
+  const original = slide(`<section class="slide" id="fig"><div class="area"><svg viewBox="0 0 10 10">
+    <defs><marker id="seta"></marker></defs>
+    <line marker-end='url("#seta")'></line>
+  </svg></div></section>`);
+  const copia = copiarSlide(original, 'p6');
+  assert.equal(copia.querySelector('line').getAttribute('marker-end'), 'url("#seta-p6")');
+});
+
+test('fill e stroke com cores não são reescritos mesmo que id tenha formato de cor', () => {
+  const original = slide(`<section class="slide" id="fig"><div class="area">
+    <svg viewBox="0 0 10 10"><rect id="0A0A0A" fill="#0A0A0A" stroke="#FF00FF"></rect></svg>
+  </div></section>`);
+  const copia = copiarSlide(original, 'p7');
+  assert.equal(copia.querySelector('rect').getAttribute('fill'), '#0A0A0A');
+  assert.equal(copia.querySelector('rect').getAttribute('stroke'), '#FF00FF');
+  assert.equal(copia.querySelector('rect').getAttribute('id'), '0A0A0A-p7');
+});
+
+test('ids com prefixo comum são reescritos sem cruzamento', () => {
+  const original = slide(`<section class="slide" id="fig"><div class="area">
+    <svg viewBox="0 0 10 10">
+      <defs><marker id="seta"></marker><marker id="seta-extra"></marker></defs>
+      <line marker-end="url(#seta)" marker-start="url(#seta-extra)"></line>
+    </svg>
+  </div></section>`);
+  const copia = copiarSlide(original, 'p8');
+  assert.equal(copia.querySelector('line').getAttribute('marker-end'), 'url(#seta-p8)');
+  assert.equal(copia.querySelector('line').getAttribute('marker-start'), 'url(#seta-extra-p8)');
+});
