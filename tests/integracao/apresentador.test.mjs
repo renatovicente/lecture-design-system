@@ -146,3 +146,34 @@ test('no apresentador, toda classe do documento está no contrato', async () => 
   await popup.close();
   await pagina.close();
 });
+
+test('na janela do apresentador, clicar nas notas não navega', async () => {
+  const { pagina } = await abrir('index.html');
+  const popup = await abrirApresentador(pagina);
+  const antes = await posicao(popup);
+  const slideAntes = await slideAtivo(pagina);
+  const alvo = await popup.evaluate(() => {
+    const notas = document.querySelector('.notas-apresentador').getBoundingClientRect();
+    return { x: Math.round(notas.right - 4), y: Math.round(notas.top + 8), limite: innerWidth * 0.88 };
+  });
+  assert.ok(alvo.x > alvo.limite, `o clique precisa cair na faixa da direita: ${alvo.x} não passa de ${alvo.limite}`);
+  await popup.mouse.click(alvo.x, alvo.y);
+  assert.equal(await posicao(popup), antes);
+  assert.equal(await slideAtivo(pagina), slideAntes);
+  await popup.close();
+  await pagina.close();
+});
+
+test('a miniatura mostra o slide inteiro, sem cortar o rodapé', async () => {
+  const { pagina } = await abrir('index.html');
+  const popup = await abrirApresentador(pagina);
+  const medida = await popup.evaluate(() => {
+    const quadro = document.querySelector('[data-miniatura="atual"] .quadro-miniatura');
+    const slide = quadro.querySelector('.slide');
+    return { util: quadro.clientHeight, escalada: slide.getBoundingClientRect().height };
+  });
+  assert.ok(medida.escalada <= medida.util + 0.5,
+    `o slide escalado (${medida.escalada}) passa da área útil do quadro (${medida.util})`);
+  await popup.close();
+  await pagina.close();
+});

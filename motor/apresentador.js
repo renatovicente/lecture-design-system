@@ -4,9 +4,9 @@ import { copiarSlide } from './copias.js';
 import { gruposDePassos, aplicarPassos } from './passos.js';
 import { estadosDosQuadrados } from '../montar/blocos.js';
 import { instalarSincronia } from './sincronia.js';
+import { LARGURA_DO_PALCO, ALTURA_DO_PALCO } from './motor.js';
 
 const INTERVALO_DE_OLA = 2000;
-const LARGURA_DO_PALCO = 1280;
 
 export function modoApresentador(janela) {
   return new URLSearchParams(janela.location.search).has('apresentador');
@@ -102,7 +102,8 @@ export function instalarApresentador(motor) {
 
   function ajustarEscalas() {
     for (const quadro of [atual.quadro, proxima.quadro]) {
-      quadro.style.setProperty('--escala-miniatura', String(quadro.clientWidth / LARGURA_DO_PALCO));
+      const escala = Math.min(quadro.clientWidth / LARGURA_DO_PALCO, quadro.clientHeight / ALTURA_DO_PALCO);
+      quadro.style.setProperty('--escala-miniatura', String(escala));
     }
   }
 

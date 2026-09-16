@@ -3,8 +3,8 @@ import { gruposDePassos, aplicarPassos } from './passos.js';
 import { acaoDaTecla, avancar, voltar, lerEndereco, escreverEndereco } from './navegacao.js';
 import { rotulosPara } from './rotulos.js';
 
-const LARGURA_DO_PALCO = 1280;
-const ALTURA_DO_PALCO = 720;
+export const LARGURA_DO_PALCO = 1280;
+export const ALTURA_DO_PALCO = 720;
 const FAIXA_DE_CLIQUE = 0.12;
 const CONTROLES = 'input, select, textarea, [contenteditable]';
 const INTERATIVOS = 'a, button, input, select, textarea, label, [contenteditable], .demo, [data-painel]';
@@ -89,6 +89,7 @@ export function iniciarMotor({ doc, janela, resumo }) {
       return;
     }
     if (evento.target.closest?.(INTERATIVOS)) return;
+    if (doc.body.classList.contains('modo-apresentador')) return; // lá a janela é painel, não palco: clique não navega
     const largura = janela.innerWidth - reservaDireita;
     if (evento.clientX < largura * FAIXA_DE_CLIQUE) acoes.get('voltar')();
     else if (evento.clientX > largura * (1 - FAIXA_DE_CLIQUE)) acoes.get('avancar')();
