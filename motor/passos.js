@@ -23,3 +23,7 @@ export function aplicarPassos(grupos, revelados) {
     }
   });
 }
+
+export function passosRevelados(grupos) {
+  return grupos.filter((grupo) => grupo[0].hasAttribute('data-revelado')).length;
+}

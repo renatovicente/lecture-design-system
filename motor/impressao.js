@@ -2,7 +2,7 @@
 // troca as demos pela imagem e esconde os painéis; restaurar desfaz tudo.
 import { elemento } from './dom.js';
 import { copiarSlide } from './copias.js';
-import { gruposDePassos, aplicarPassos } from './passos.js';
+import { gruposDePassos, aplicarPassos, passosRevelados } from './passos.js';
 
 const PASSOS_NO_PDF = 'passos';
 
@@ -45,7 +45,11 @@ export function instalarImpressao(motor, { demos, paineis, api }) {
 
   function preparar() {
     if (salvo) return;
-    salvo = { estado: motor.estado(), painel: paineis?.aberto() ?? null };
+    salvo = {
+      estado: motor.estado(),
+      painel: paineis?.aberto() ?? null,
+      contagens: motor.slides.map((slide) => passosRevelados(gruposDePassos(slide))),
+    };
     paineis?.fechar();
     trocarDemos();
     for (const slide of motor.slides) {
@@ -67,10 +71,10 @@ export function instalarImpressao(motor, { demos, paineis, api }) {
     if (!salvo) return;
     for (const extra of doc.querySelectorAll('[data-copia], .captura-demo, .demo-substituta')) extra.remove();
     doc.body.classList.remove('imprimindo');
-    const { estado, painel } = salvo;
+    const { estado, painel, contagens } = salvo;
     salvo = null;
     motor.slides.forEach((slide, indice) => {
-      aplicarPassos(gruposDePassos(slide), indice === estado.indice ? estado.passo : 0);
+      aplicarPassos(gruposDePassos(slide), indice === estado.indice ? estado.passo : contagens[indice]);
     });
     if (painel) paineis?.abrir(painel);
   }
