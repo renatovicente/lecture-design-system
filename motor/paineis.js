@@ -101,7 +101,10 @@ export function instalarPaineis(motor) {
   function fechar() {
     if (!aberto) return;
     paineis[aberto].painel.hidden = true;
-    if (aberto === 'notas') motor.reservarDireita(0);
+    if (aberto === 'notas') {
+      motor.reservarDireita(0);
+      aviso.hidden = true;
+    }
     aberto = null;
   }
 
@@ -134,8 +137,8 @@ export function instalarPaineis(motor) {
     aberto: () => aberto,
     avisar(texto) {
       aviso.textContent = texto;
-      aviso.hidden = false;
       abrir('notas');
+      aviso.hidden = false;
     },
   };
 }

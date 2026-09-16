@@ -110,10 +110,29 @@ test('com o pop-up bloqueado, as notas abrem com o aviso', async () => {
   await pagina.keyboard.press('p');
   const aviso = await pagina.evaluate(() => {
     const painel = document.querySelector('[data-painel="notas"]');
-    return { visivel: !painel.hidden, texto: painel.querySelector('.aviso')?.textContent };
+    const elementoAviso = painel.querySelector('.aviso');
+    return { visivel: !painel.hidden, avisoVisivel: !elementoAviso?.hidden, texto: elementoAviso?.textContent };
   });
   assert.equal(aviso.visivel, true);
+  assert.equal(aviso.avisoVisivel, true);
   assert.match(aviso.texto, /bloqueou a janela do apresentador/);
+  await pagina.close();
+});
+
+test('depois do aviso de pop-up bloqueado, fechar e reabrir as notas (N duas vezes) mostra as notas do slide sem o aviso', async () => {
+  const { pagina } = await abrir('index.html#o-que-mostra');
+  await pagina.evaluate(() => { window.open = () => null; });
+  await pagina.keyboard.press('p');
+  await pagina.keyboard.press('n');
+  await pagina.keyboard.press('n');
+  const notas = await pagina.evaluate(() => {
+    const painel = document.querySelector('[data-painel="notas"]');
+    const elementoAviso = painel.querySelector('.aviso');
+    return { visivel: !painel.hidden, avisoVisivel: !elementoAviso?.hidden, corpo: painel.querySelector('.painel-corpo').textContent.trim() };
+  });
+  assert.equal(notas.visivel, true);
+  assert.equal(notas.avisoVisivel, false);
+  assert.equal(notas.corpo, 'Estas notas não aparecem no slide.');
   await pagina.close();
 });
 

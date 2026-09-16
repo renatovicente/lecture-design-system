@@ -22,6 +22,7 @@ test('acaoDaTecla ignora teclas fora da tabela, 0, 9, nomes do protótipo e comb
 test('acaoDaTecla aceita caracteres digitados com AltGr (Ctrl+Alt no Windows)', () => {
   assert.equal(acaoDaTecla({ key: '?', ctrlKey: true, altKey: true }), 'ajuda');
   assert.equal(acaoDaTecla({ key: 'ArrowRight', ctrlKey: true, altKey: true }), null);
+  assert.equal(acaoDaTecla({ key: '?', ctrlKey: true, altKey: true, metaKey: true }), null);
 });
 
 test('avancar revela passos pendentes antes de trocar de slide e para no último estado', () => {
