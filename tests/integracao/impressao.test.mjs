@@ -87,21 +87,26 @@ test('no espécime, o slide com data-pdf="passos" acrescenta as páginas dos seu
   await pagina.close();
 });
 
-test('img.estatico na impressão preenche a largura da caixa da demo', async () => {
+test('img.estatico na impressão preenche a caixa da demo, sem cortar nem distorcer', async () => {
   const { pagina } = await abrirAula(navegador, `${servidorDaFixture.endereco}/`);
   await pagina.evaluate(() => window.AulaUSP.prepararImpressao());
   await pagina.emulateMedia({ media: 'print' });
   const medidas = await pagina.evaluate(() => {
-    const caixa = document.querySelector('#com-estatico .demo');
-    const imagem = caixa.querySelector(':scope > img.estatico');
+    const caixa = document.querySelector('#com-estatico .demo').getBoundingClientRect();
+    const imagem = document.querySelector('#com-estatico .demo > img.estatico');
+    const retImagem = imagem.getBoundingClientRect();
     return {
-      larguraImagem: imagem.getBoundingClientRect().width,
-      larguraCaixa: caixa.getBoundingClientRect().width,
+      largura: retImagem.width,
+      altura: retImagem.height,
+      larguraCaixa: caixa.width,
+      alturaCaixa: caixa.height,
+      objectFit: getComputedStyle(imagem).objectFit,
     };
   });
   assert.ok(
-    Math.abs(medidas.larguraImagem - medidas.larguraCaixa) < 0.5,
-    `largura da imagem (${medidas.larguraImagem}) difere da largura da caixa da demo (${medidas.larguraCaixa})`,
+    Math.abs(medidas.largura - medidas.larguraCaixa) < 0.5 && Math.abs(medidas.altura - medidas.alturaCaixa) < 0.5,
+    `caixa da imagem (${medidas.largura}×${medidas.altura}) difere da caixa da demo (${medidas.larguraCaixa}×${medidas.alturaCaixa})`,
   );
+  assert.equal(medidas.objectFit, 'contain');
   await pagina.close();
 });
