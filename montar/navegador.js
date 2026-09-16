@@ -3,6 +3,7 @@
 import { montar } from './montar.js';
 import { iniciarMotor } from '../motor/motor.js';
 import { instalarPaineis } from '../motor/paineis.js';
+import { instalarDemos } from '../motor/demos.js';
 
 const BASE = new URL('../', import.meta.url);
 const ESTILOS = ['estilos/tokens.css', 'estilos/fontes.css', 'estilos/base.css', 'estilos/layouts.css', 'estilos/motor.css'];
@@ -44,7 +45,12 @@ try {
     limites: { minBlocos: contrato.limites['blocos.min'], maxFileira: contrato.limites['blocos.maxFileira'] },
   });
   if (new URLSearchParams(location.search).has('folha')) document.body.classList.add('folha');
-  else instalarPaineis(iniciarMotor({ doc: document, janela: window, resumo }));
+  else {
+    const api = window.AulaUSP ?? (window.AulaUSP = {});
+    const motor = iniciarMotor({ doc: document, janela: window, resumo });
+    instalarPaineis(motor);
+    instalarDemos(motor, api);
+  }
   void document.body.offsetHeight; // força o layout, que pede as fontes usadas, antes de esperar por elas
   await document.fonts.ready;
   document.body.dataset.montado = 'sim';

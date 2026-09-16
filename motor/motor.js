@@ -34,6 +34,10 @@ export function iniciarMotor({ doc, janela, resumo }) {
   }
 
   function irPara(alvo) {
+    if (!Number.isInteger(alvo?.indice) || !Number.isInteger(alvo?.passo)) {
+      janela.console.warn('Aula USP: posição inválida.', alvo);
+      return;
+    }
     const indice = Math.max(0, Math.min(slides.length - 1, alvo.indice));
     const passo = Math.max(0, Math.min(passosPorSlide[indice], alvo.passo));
     if (estado && estado.indice === indice && estado.passo === passo) return;
@@ -45,7 +49,13 @@ export function iniciarMotor({ doc, janela, resumo }) {
     aplicarPassos(grupos[indice], passo);
     estado = { indice, passo };
     janela.history.replaceState(null, '', escreverEndereco(estado, ids));
-    for (const ouvinte of ouvintes) ouvinte(estado, anterior);
+    for (const ouvinte of ouvintes) {
+      try {
+        ouvinte(estado, anterior);
+      } catch (erro) {
+        janela.console.error('Aula USP: um ouvinte de navegação falhou.', erro);
+      }
+    }
   }
 
   acoes.set('avancar', () => irPara(avancar(estado, passosPorSlide)));
@@ -62,7 +72,7 @@ export function iniciarMotor({ doc, janela, resumo }) {
 
   janela.addEventListener('keydown', (evento) => {
     const alvo = evento.target;
-    if (alvo?.closest?.(`.demo, ${CONTROLES}`)) return;
+    if (alvo?.closest?.(CONTROLES)) return;
     if (evento.key === ' ' && alvo?.closest?.('button')) return;
     const acao = acoes.get(acaoDaTecla(evento));
     if (!acao) return;

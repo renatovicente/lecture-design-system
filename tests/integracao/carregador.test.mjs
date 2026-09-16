@@ -20,11 +20,12 @@ test('o corpo fica escondido durante a leitura, AulaUSP.demo enfileira e a monta
   const { pagina, erros } = await abrirAula(navegador, `${servidor.endereco}/`);
   const estado = await pagina.evaluate(() => ({
     durante: window.visibilidadeDuranteALeitura,
+    demoNaLeitura: window.tipoDeDemoNaLeitura,
     depois: getComputedStyle(document.body).visibility,
     estiloDeOcultar: document.querySelectorAll('style[data-aula-usp]').length,
-    fila: window.AulaUSP.filaDeDemos.map((registro) => registro.nome),
+    fila: window.AulaUSP.filaDeDemos.length,
   }));
-  assert.deepEqual(estado, { durante: 'hidden', depois: 'visible', estiloDeOcultar: 0, fila: ['fixture'] });
+  assert.deepEqual(estado, { durante: 'hidden', demoNaLeitura: 'function', depois: 'visible', estiloDeOcultar: 0, fila: 0 });
   assert.deepEqual(erros, []);
   await pagina.close();
 });

@@ -68,7 +68,7 @@
 
 <section data-layout="demo" id="demo">
   <h2>Uma demo ocupa o resto do slide</h2>
-  <div class="demo" data-demo="contador">
+  <div class="demo" data-demo="contador" data-opcoes='{"passo": 5}'>
     <img class="estatico" alt="Imagem estática da demo" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'%3E%3Crect width='16' height='9' fill='%23D9D9D9'/%3E%3C/svg%3E">
   </div>
 </section>
@@ -111,6 +111,36 @@
   </ol>
   <p class="proxima">Próximo marco: demos, apresentador e impressão.</p>
 </section>
+
+<script>
+AulaUSP.demo('contador', {
+  montar(raiz, opcoes) {
+    this.passo = opcoes.passo ?? 1;
+    this.valor = 0;
+    this.saida = document.createElement('output');
+    const botao = document.createElement('button');
+    botao.type = 'button';
+    botao.textContent = 'somar';
+    botao.addEventListener('click', () => {
+      this.valor += this.passo;
+      this.mostrar();
+    });
+    raiz.append(botao, this.saida);
+    this.mostrar();
+  },
+  mostrar() {
+    this.saida.textContent = String(this.valor);
+  },
+  iniciar() {
+    this.entradas = (this.entradas ?? 0) + 1;
+    this.saida.dataset.entradas = String(this.entradas);
+    delete this.saida.dataset.parado;
+  },
+  parar() {
+    this.saida.dataset.parado = 'sim';
+  },
+});
+</script>
 
 </body>
 </html>
