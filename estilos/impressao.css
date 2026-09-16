@@ -52,6 +52,7 @@
   text-transform: var(--tipo-rotulo-caixa);
 }
 
+.demo > img.estatico,
 .captura-demo {
   width: 100%;
   height: auto;

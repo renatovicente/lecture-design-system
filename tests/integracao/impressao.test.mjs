@@ -86,3 +86,22 @@ test('no espécime, o slide com data-pdf="passos" acrescenta as páginas dos seu
   ]), [15, 2]);
   await pagina.close();
 });
+
+test('img.estatico na impressão preenche a largura da caixa da demo', async () => {
+  const { pagina } = await abrirAula(navegador, `${servidorDaFixture.endereco}/`);
+  await pagina.evaluate(() => window.AulaUSP.prepararImpressao());
+  await pagina.emulateMedia({ media: 'print' });
+  const medidas = await pagina.evaluate(() => {
+    const caixa = document.querySelector('#com-estatico .demo');
+    const imagem = caixa.querySelector(':scope > img.estatico');
+    return {
+      larguraImagem: imagem.getBoundingClientRect().width,
+      larguraCaixa: caixa.getBoundingClientRect().width,
+    };
+  });
+  assert.ok(
+    Math.abs(medidas.larguraImagem - medidas.larguraCaixa) < 0.5,
+    `largura da imagem (${medidas.larguraImagem}) difere da largura da caixa da demo (${medidas.larguraCaixa})`,
+  );
+  await pagina.close();
+});
