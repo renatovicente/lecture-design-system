@@ -7,7 +7,7 @@ test('acaoDaTecla traduz as teclas da spec 6.2', () => {
   const casos = {
     ArrowRight: 'avancar', ' ': 'avancar', PageDown: 'avancar', ArrowLeft: 'voltar', PageUp: 'voltar',
     Home: 'primeiro', End: 'ultimo', Escape: 'escape', n: 'notas', N: 'notas', f: 'tela-cheia', F: 'tela-cheia',
-    '?': 'ajuda', 1: 'bloco-1', 8: 'bloco-8',
+    '?': 'ajuda', p: 'apresentador', P: 'apresentador', 1: 'bloco-1', 8: 'bloco-8',
   };
   for (const [key, acao] of Object.entries(casos)) assert.equal(acaoDaTecla({ key }), acao, key);
 });
@@ -55,10 +55,10 @@ test('endereço #id e #id/n: leitura, limite de passos, id desconhecido e escrit
 
 test('os rótulos do motor existem nos dois idiomas, com a mesma tabela de teclas', () => {
   for (const idioma of ['pt-BR', 'en']) {
-    for (const chave of ['notas', 'semNotas', 'visaoGeral', 'ajuda', 'tecla', 'acao']) {
+    for (const chave of ['notas', 'semNotas', 'visaoGeral', 'ajuda', 'tecla', 'acao', 'apresentador', 'apresentadorBloqueado', 'atual', 'proximo', 'fimDaAula', 'slide', 'passo', 'iniciarCronometro', 'pausarCronometro', 'zerarCronometro', 'demoInterativa']) {
       assert.equal(typeof ROTULOS[idioma][chave], 'string', `${idioma}.${chave}`);
     }
-    assert.equal(ROTULOS[idioma].teclas.length, 10, idioma);
+    assert.equal(ROTULOS[idioma].teclas.length, 11, idioma);
     assert.ok(ROTULOS[idioma].teclas.every((linha) => linha.length === 2 && linha.every(Boolean)), idioma);
   }
 });

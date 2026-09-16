@@ -26,7 +26,7 @@ body.modo-palco {
   display: block;
 }
 
-.palco [data-passo]:not([data-revelado]) {
+body.modo-palco [data-passo]:not([data-revelado]) {
   visibility: hidden;
 }
 
@@ -149,4 +149,148 @@ body.modo-palco {
   font-family: var(--tipo-codigo-familia);
   font-weight: var(--tipo-codigo-peso-enfase);
   white-space: nowrap;
+}
+
+/* Janela do apresentador (spec 6.6): miniaturas fiéis à esquerda, notas e controles à direita. */
+
+body.modo-apresentador .palco {
+  display: none;
+}
+
+.apresentador {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  grid-template-rows: auto auto 1fr;
+  grid-template-areas:
+    "atual painel"
+    "proxima painel"
+    ". painel";
+  gap: var(--espaco-3);
+  padding: var(--espaco-3);
+  background: var(--cor-papel);
+  color: var(--cor-tinta);
+  font-family: var(--fonte-sans);
+}
+
+.miniatura[data-miniatura="atual"] { grid-area: atual; }
+.miniatura[data-miniatura="proxima"] { grid-area: proxima; width: 60%; }
+
+.miniatura > .rotulo {
+  display: block;
+  margin-bottom: var(--espaco-1);
+  font-family: var(--tipo-rotulo-familia);
+  font-size: var(--tipo-rotulo-tamanho);
+  font-weight: var(--tipo-rotulo-peso);
+  letter-spacing: var(--tipo-rotulo-tracking);
+  text-transform: var(--tipo-rotulo-caixa);
+}
+
+.quadro-miniatura {
+  --escala-miniatura: 0.5;
+  position: relative;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border: var(--regua-normal) solid var(--cor-linha);
+}
+
+.quadro-miniatura > .slide {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform: scale(var(--escala-miniatura));
+  transform-origin: top left;
+}
+
+.quadro-miniatura .demo > img.estatico {
+  display: block;
+}
+
+.fim-da-aula {
+  padding: var(--espaco-3);
+  font-family: var(--tipo-rotulo-familia);
+  font-size: var(--tipo-rotulo-tamanho);
+  letter-spacing: var(--tipo-rotulo-tracking);
+  text-transform: var(--tipo-rotulo-caixa);
+  color: var(--cor-cinza);
+}
+
+.painel-apresentador {
+  grid-area: painel;
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-3);
+  min-height: 0;
+}
+
+.posicao {
+  font-family: var(--tipo-rotulo-familia);
+  font-size: var(--tipo-rotulo-grande-tamanho);
+  font-weight: var(--tipo-rotulo-grande-peso);
+  letter-spacing: var(--tipo-rotulo-grande-tracking);
+  text-transform: var(--tipo-rotulo-grande-caixa);
+}
+
+.painel-apresentador .mapa {
+  display: flex;
+  gap: var(--mapa-espaco-cabecalho);
+}
+
+.painel-apresentador .quadrado {
+  width: var(--mapa-quadrado-cabecalho);
+  height: var(--mapa-quadrado-cabecalho);
+}
+
+.cronometro {
+  display: flex;
+  align-items: center;
+  gap: var(--espaco-2);
+  font-family: var(--tipo-codigo-familia);
+  font-size: var(--tipo-codigo-tamanho);
+}
+
+.cronometro .tempo {
+  font-size: var(--tipo-numeral-tamanho);
+  font-weight: var(--tipo-numeral-peso);
+  font-variant-numeric: tabular-nums;
+}
+
+.cronometro .relogio {
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+  color: var(--cor-cinza);
+}
+
+.cronometro button {
+  padding: var(--espaco-1) var(--espaco-2);
+  border: var(--regua-normal) solid var(--cor-tinta);
+  background: var(--cor-papel);
+  color: var(--cor-tinta);
+  font: inherit;
+  font-size: var(--tipo-rotulo-tamanho);
+  text-transform: var(--tipo-rotulo-caixa);
+  letter-spacing: var(--tipo-rotulo-tracking);
+  cursor: pointer;
+}
+
+.notas-apresentador {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  font-size: 24px;
+  line-height: 1.4;
+}
+
+.notas-apresentador > * + * {
+  margin-top: var(--espaco-2);
+}
+
+.aviso {
+  margin-bottom: var(--espaco-3);
+  padding: var(--espaco-2);
+  background: var(--cor-amarelo);
+  color: var(--cor-tinta);
+  font-size: 18px;
+  line-height: 1.4;
 }

@@ -4,6 +4,7 @@ import { montar } from './montar.js';
 import { iniciarMotor } from '../motor/motor.js';
 import { instalarPaineis } from '../motor/paineis.js';
 import { instalarDemos } from '../motor/demos.js';
+import { instalarApresentador, instalarAberturaDoApresentador, modoApresentador } from '../motor/apresentador.js';
 
 const BASE = new URL('../', import.meta.url);
 const ESTILOS = ['estilos/tokens.css', 'estilos/fontes.css', 'estilos/base.css', 'estilos/layouts.css', 'estilos/motor.css'];
@@ -48,8 +49,13 @@ try {
   else {
     const api = window.AulaUSP ?? (window.AulaUSP = {});
     const motor = iniciarMotor({ doc: document, janela: window, resumo });
-    instalarPaineis(motor);
-    instalarDemos(motor, api);
+    if (modoApresentador(window)) {
+      instalarApresentador(motor);
+    } else {
+      const paineis = instalarPaineis(motor);
+      instalarDemos(motor, api);
+      instalarAberturaDoApresentador(motor, paineis);
+    }
   }
   void document.body.offsetHeight; // força o layout, que pede as fontes usadas, antes de esperar por elas
   await document.fonts.ready;

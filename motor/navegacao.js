@@ -11,13 +11,15 @@ const TECLAS = {
   Escape: 'escape',
   n: 'notas',
   N: 'notas',
+  p: 'apresentador',
+  P: 'apresentador',
   f: 'tela-cheia',
   F: 'tela-cheia',
   '?': 'ajuda',
 };
 
 export function acaoDaTecla({ key, ctrlKey = false, metaKey = false, altKey = false }) {
-  const altGr = ctrlKey && altKey && key.length === 1;
+  const altGr = ctrlKey && altKey && !metaKey && key.length === 1;
   if ((ctrlKey || metaKey || altKey) && !altGr) return null;
   if (/^[1-8]$/.test(key)) return `bloco-${key}`;
   return Object.hasOwn(TECLAS, key) ? TECLAS[key] : null;

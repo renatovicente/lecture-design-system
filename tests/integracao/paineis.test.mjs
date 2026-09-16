@@ -111,7 +111,7 @@ test('? abre a ajuda com a tabela de teclas; Esc fecha o painel aberto e, sem pa
       primeira: raiz.querySelector('tbody th').textContent,
     };
   });
-  assert.deepEqual(ajuda, { visivel: true, cabecalho: ['Tecla', 'Ação'], linhas: 10, primeira: '→, espaço, PageDown' });
+  assert.deepEqual(ajuda, { visivel: true, cabecalho: ['Tecla', 'Ação'], linhas: 11, primeira: '→, espaço, PageDown' });
   await pagina.keyboard.press('Escape');
   assert.equal((await painel(pagina, 'ajuda')).visivel, false);
   await pagina.keyboard.press('Escape');

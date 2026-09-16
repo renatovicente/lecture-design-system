@@ -88,6 +88,9 @@ export function instalarPaineis(motor) {
     ajuda: criarPainel(doc, 'ajuda', rot.ajuda),
   };
   preencherAjuda(doc, paineis.ajuda.corpo, rot);
+  const aviso = elemento(doc, 'p', 'aviso');
+  aviso.hidden = true;
+  paineis.notas.painel.insertBefore(aviso, paineis.notas.corpo);
   let aberto = null;
 
   function atualizar() {
@@ -103,6 +106,7 @@ export function instalarPaineis(motor) {
   }
 
   function abrir(nome) {
+    if (!Object.hasOwn(paineis, nome)) throw new Error(`painel desconhecido: "${nome}"`);
     fechar();
     aberto = nome;
     atualizar();
@@ -124,5 +128,14 @@ export function instalarPaineis(motor) {
     motor.irPara({ indice: Number(cartao.getAttribute('data-indice')), passo: 0 });
   });
 
-  return { abrir, fechar, aberto: () => aberto };
+  return {
+    abrir,
+    fechar,
+    aberto: () => aberto,
+    avisar(texto) {
+      aviso.textContent = texto;
+      aviso.hidden = false;
+      abrir('notas');
+    },
+  };
 }
