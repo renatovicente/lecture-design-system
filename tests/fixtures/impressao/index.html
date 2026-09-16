@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Fixture de impressão</title>
+<meta name="unidade" content="ime">
+<meta name="disciplina" content="Fixture de impressão">
+<meta name="aula" content="1">
+<meta name="data" content="2026-09-15">
+<meta name="professor" content="Prof. Renato Vicente">
+<script src="../dist/aula-usp.js"></script>
+</head>
+<body>
+
+<section data-layout="capa">
+  <h1>Impressão</h1>
+</section>
+
+<section data-layout="conteudo" id="passos" data-pdf="passos">
+  <h2>Dois passos, três páginas</h2>
+  <ul>
+    <li data-passo>Primeiro.</li>
+    <li data-passo>Segundo.</li>
+  </ul>
+</section>
+
+<section data-layout="demo" id="com-estatico">
+  <h2>Demo com imagem estática</h2>
+  <div class="demo" data-demo="estatica">
+    <img class="estatico" alt="Imagem estática da demo" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'%3E%3Crect width='16' height='9' fill='%23D9D9D9'/%3E%3C/svg%3E">
+  </div>
+</section>
+
+<section data-layout="demo" id="com-captura">
+  <h2>Demo que sabe se fotografar</h2>
+  <div class="demo" data-demo="capturavel"></div>
+</section>
+
+<section data-layout="demo" id="sem-imagem">
+  <h2>Demo sem imagem</h2>
+  <div class="demo" data-demo="crua"></div>
+</section>
+
+<section data-layout="encerramento">
+  <h2>Fim</h2>
+  <ol class="sintese">
+    <li>Seis slides e duas cópias dão oito páginas.</li>
+  </ol>
+</section>
+
+<script>
+AulaUSP.demo('estatica', { montar() {} });
+AulaUSP.demo('capturavel', {
+  montar(raiz) {
+    raiz.append(document.createElement('canvas'));
+  },
+  capturar() {
+    return 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'16\' height=\'9\'%3E%3Crect width=\'16\' height=\'9\' fill=\'%231094AB\'/%3E%3C/svg%3E';
+  },
+});
+AulaUSP.demo('crua', { montar() {} });
+</script>
+
+</body>
+</html>

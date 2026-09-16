@@ -1,0 +1,58 @@
+/* Impressão e PDF (spec 6.9 e 8.4): um slide ou estado por página, sem painéis nem janelas do motor. */
+
+@page {
+  size: 1280px 720px;
+  margin: 0;
+}
+
+@media print {
+  body.modo-palco {
+    height: auto;
+    overflow: visible;
+  }
+
+  .palco {
+    position: static;
+    width: auto;
+    height: auto;
+    transform: none;
+  }
+
+  .palco > .slide {
+    display: block;
+    position: relative;
+    break-after: page;
+  }
+
+  .palco > .slide:last-child {
+    break-after: auto;
+  }
+
+  [data-painel],
+  .apresentador {
+    display: none;
+  }
+
+  .demo > img.estatico {
+    display: block;
+  }
+
+  .demo > *:not(img.estatico):not(.captura-demo):not(.demo-substituta) {
+    display: none;
+  }
+}
+
+.demo-substituta {
+  padding: var(--espaco-2) var(--espaco-3);
+  border: var(--regua-normal) solid var(--cor-tinta);
+  font-family: var(--tipo-rotulo-familia);
+  font-size: var(--tipo-rotulo-tamanho);
+  font-weight: var(--tipo-rotulo-peso);
+  letter-spacing: var(--tipo-rotulo-tracking);
+  text-transform: var(--tipo-rotulo-caixa);
+}
+
+.captura-demo {
+  width: 100%;
+  height: auto;
+}

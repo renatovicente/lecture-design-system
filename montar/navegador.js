@@ -5,9 +5,10 @@ import { iniciarMotor } from '../motor/motor.js';
 import { instalarPaineis } from '../motor/paineis.js';
 import { instalarDemos } from '../motor/demos.js';
 import { instalarApresentador, instalarAberturaDoApresentador, modoApresentador } from '../motor/apresentador.js';
+import { instalarImpressao } from '../motor/impressao.js';
 
 const BASE = new URL('../', import.meta.url);
-const ESTILOS = ['estilos/tokens.css', 'estilos/fontes.css', 'estilos/base.css', 'estilos/layouts.css', 'estilos/motor.css'];
+const ESTILOS = ['estilos/tokens.css', 'estilos/fontes.css', 'estilos/base.css', 'estilos/layouts.css', 'estilos/motor.css', 'estilos/impressao.css'];
 
 function carregarEstilo(caminho) {
   return new Promise((pronto, falha) => {
@@ -53,8 +54,9 @@ try {
       instalarApresentador(motor);
     } else {
       const paineis = instalarPaineis(motor);
-      instalarDemos(motor, api);
+      const demos = instalarDemos(motor, api);
       instalarAberturaDoApresentador(motor, paineis);
+      instalarImpressao(motor, { demos, paineis, api });
     }
   }
   void document.body.offsetHeight; // força o layout, que pede as fontes usadas, antes de esperar por elas
