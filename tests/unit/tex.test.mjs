@@ -27,6 +27,9 @@ test('texParaTexto e textoSemTex trocam o TeX por texto sem barras nem chaves', 
   assert.equal(texParaTexto('\\mathbf{w}^\\top x'), 'w^top x');
   assert.equal(texParaTexto('\\frac{1}{N}\\sum_i x_i'), '1/N sum_i x_i');
   assert.equal(texParaTexto('\\text{taxa } \\eta'), 'taxa eta');
+  assert.equal(texParaTexto('\\|w\\|^2'), '|w|^2');
+  assert.equal(texParaTexto('\\{1, 2\\}'), '1, 2');
+  assert.equal(texParaTexto('50\\%'), '50%');
   assert.equal(textoSemTex('O papel de \\(\\eta\\) no passo'), 'O papel de eta no passo');
 });
 

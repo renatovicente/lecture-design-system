@@ -56,6 +56,7 @@ export function texParaTexto(tex) {
     .replace(/\\frac\s*\{([^{}]*)\}\s*\{([^{}]*)\}/g, '$1/$2')
     .replace(/\\(?:[,;:! ]|qquad|quad)/g, ' ')
     .replace(/\\([a-zA-Z]+)/g, (_, nome) => (COMANDOS_SEM_TEXTO.has(nome) ? ' ' : ` ${nome}`))
+    .replace(/\\/g, '')
     .replace(/[{}]/g, '')
     .replace(/\s+/g, ' ')
     .replace(/([_^]) /g, '$1')
