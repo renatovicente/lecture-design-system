@@ -63,7 +63,7 @@
   height: var(--espaco-1);
   margin-right: var(--espaco-2);
   vertical-align: middle;
-  background: var(--cor-tinta);
+  background: currentColor; /* tinta fora de campo, papel dentro de aside.alerta */
 }
 
 .area :is(ol.passos, ol.sintese) {
@@ -75,7 +75,7 @@
   padding-top: var(--espaco-2);
   padding-left: var(--espaco-6);
   text-indent: calc(-1 * var(--espaco-6));
-  border-top: var(--regua-normal) solid var(--cor-tinta);
+  border-top: var(--regua-normal) solid currentColor; /* tinta fora de campo, papel dentro de aside.alerta */
 }
 
 .area :is(ol.passos, ol.sintese) > li + li {
