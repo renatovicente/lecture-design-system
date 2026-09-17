@@ -50,6 +50,13 @@ test('renderizarTex não toca TeX em pre, code, script e svg, e renderiza as not
   assert.deepEqual([raiz.querySelector('pre').textContent, raiz.querySelector('code').textContent], ['\\(x\\)', '\\(y\\)']);
 });
 
+test('renderizarTex junta o texto que o linkedom divide em cada referência de caractere, como &lt; e &amp;', () => {
+  const raiz = corpo('<p>Se \\(x &lt; y\\) então</p><div>\\[ \\begin{aligned} a &amp;= b \\\\ c &amp;= d \\end{aligned} \\]</div>');
+  assert.deepEqual(renderizarTex(raiz, { katex }), []);
+  assert.equal(raiz.querySelector('p > span.katex').getAttribute('data-tex'), 'x < y');
+  assert.equal(raiz.querySelector('div > div.equacao').getAttribute('data-tex'), ' \\begin{aligned} a &= b \\\\ c &= d \\end{aligned} ');
+});
+
 test('\\passo{n}{…} vira um elemento com data-passo dentro de cada célula do aligned', () => {
   const raiz = corpo('<div>\\[ \\begin{aligned} a &= b \\\\ \\passo{1}{c} &\\passo{1}{= d} \\\\ \\passo{2}{e} &\\passo{2}{= f} \\end{aligned} \\]</div>');
   assert.deepEqual(renderizarTex(raiz, { katex }), []);

@@ -138,6 +138,8 @@ function renderizarSegmento(doc, katex, segmento, erros) {
 export function renderizarTex(raiz, { katex }) {
   const doc = raiz.ownerDocument ?? raiz;
   const erros = [];
+  // O linkedom divide o texto em cada referência de caractere (&lt;, &amp;); juntar os nós mantém cada trecho de TeX inteiro.
+  raiz.normalize();
   for (const no of textosComTex(raiz)) {
     const segmentos = segmentosDeTex(no.nodeValue);
     if (segmentos.every((segmento) => segmento.tipo === 'texto')) continue;
