@@ -110,3 +110,12 @@ test('img.estatico na impressão preenche a caixa da demo, sem cortar nem distor
   assert.equal(medidas.objectFit, 'contain');
   await pagina.close();
 });
+
+test('todo slide mantém o ajuste de cor exato na impressão, para as cores de fundo sobreviverem com "gráficos de plano de fundo" desligado', async () => {
+  const { pagina } = await abrirAula(navegador, `${servidorDaFixture.endereco}/`);
+  await pagina.evaluate(() => window.AulaUSP.prepararImpressao());
+  await pagina.emulateMedia({ media: 'print' });
+  const ajuste = await pagina.evaluate(() => getComputedStyle(document.querySelector('#passos li')).printColorAdjust);
+  assert.equal(ajuste, 'exact');
+  await pagina.close();
+});

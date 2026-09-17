@@ -28,6 +28,13 @@
     break-after: auto;
   }
 
+  /* A caixa "Gráficos de plano de fundo" do diálogo de impressão do Chrome vem desligada por padrão
+     (spec 8.4); sem isto, os campos, o alerta e os destaques de tabela perdem a cor de fundo. */
+  .slide {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
   [data-painel],
   .apresentador {
     display: none;
