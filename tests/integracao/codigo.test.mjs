@@ -33,9 +33,12 @@ test('espécime de código: 9 slides com blocos nas sete linguagens, todos em li
       slides: document.querySelectorAll('section.slide').length,
       linguagens: [...new Set(blocos.map((pre) => pre.getAttribute('data-lang')))].sort(),
       semLinhas: blocos.filter((pre) => !pre.firstElementChild?.classList.contains('linha')).length,
+      // O transbordo de código não aparece na caixa da linha, só em scrollWidth: é assim que o marco 4 tem de medir.
+      linhasLargas: [...document.querySelectorAll('pre[data-lang] .linha')].filter((linha) => linha.scrollWidth > linha.clientWidth).length,
     };
   });
   assert.equal(medida.slides, 9);
+  assert.equal(medida.linhasLargas, 0, 'nenhuma linha do espécime passa da largura do bloco');
   assert.deepEqual(medida.linguagens, ['bash', 'javascript', 'json', 'latex', 'python', 'r', 'sql']);
   assert.equal(medida.semLinhas, 0);
   assert.deepEqual(erros, []);
