@@ -114,6 +114,7 @@ function localizar(raizAula, pathname) {
 
 export function criarServidor({ pastaAula }) {
   const raizAula = resolve(pastaAula);
+  modulosResolvidos(); // falha aqui, e não como 404 em cada aula, quando falta um módulo da lista
   return createServer(async (pedido, resposta) => {
     const porta = pedido.socket.localPort;
     const hostsPermitidos = new Set([`127.0.0.1:${porta}`, `localhost:${porta}`, `[::1]:${porta}`]);

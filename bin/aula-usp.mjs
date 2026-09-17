@@ -31,7 +31,12 @@ function servir(argumentos) {
     ehPasta = false;
   }
   if (!ehPasta) sair(`pasta não encontrada: ${pasta}`);
-  const servidor = criarServidor({ pastaAula: pasta });
+  let servidor;
+  try {
+    servidor = criarServidor({ pastaAula: pasta });
+  } catch (erro) {
+    sair(`falha de ambiente: ${erro.message}\nrode npm install na pasta do sistema`);
+  }
   servidor.on('error', (erro) => sair(`não foi possível servir: ${erro.message}`));
   servidor.listen(opcoes.porta, '127.0.0.1', () => {
     console.log(`servindo ${pasta} em http://127.0.0.1:${servidor.address().port}/`);
