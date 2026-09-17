@@ -2,9 +2,12 @@ import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { get } from 'node:http';
 import { spawnSync } from 'node:child_process';
-import { resolve } from 'node:path';
+import { readFileSync } from 'node:fs';
+import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { reescreverRuntime, resolverSeguro, criarServidor, PREFIXO } from '../../build/servir.mjs';
+import {
+  reescreverRuntime, resolverSeguro, criarServidor, mapaDeImportacao, PREFIXO, MODULOS_DO_NAVEGADOR,
+} from '../../build/servir.mjs';
 
 const FIXTURE = fileURLToPath(new URL('../fixtures/servir/', import.meta.url));
 const BIN = fileURLToPath(new URL('../../bin/aula-usp.mjs', import.meta.url));
@@ -39,6 +42,15 @@ test('reescreverRuntime troca a tag do CDN, com integrity e quebra de linha, pel
   assert.ok(!saida.includes('cdn.jsdelivr.net'));
   assert.ok(!saida.includes('integrity'));
   assert.ok(saida.includes('<script src="demos/exemplo.js"></script>'));
+});
+
+test('reescreverRuntime põe o mapa de importação antes da entrada de desenvolvimento', () => {
+  const saida = reescreverRuntime('<head><script src="https://cdn.jsdelivr.net/npm/aula-usp@1.0.0/dist/aula-usp.js" '
+    + 'integrity="sha384-abc" crossorigin="anonymous"></script></head>');
+  const mapa = /<script type="importmap">(.*?)<\/script>/.exec(saida);
+  assert.ok(mapa, 'sem mapa de importação');
+  assert.deepEqual(JSON.parse(mapa[1]), mapaDeImportacao());
+  assert.ok(mapa.index < saida.indexOf(`${PREFIXO}montar/carregador.js`));
 });
 
 test('reescreverRuntime não mexe em HTML sem a tag do runtime', () => {
@@ -87,22 +99,54 @@ test('servidor entrega arquivos da aula e do sistema com o tipo certo', async ()
   assert.ok(componente.corpo.includes('export function renderizarTex'));
 });
 
-test('servidor entrega o KaTeX da pasta dist do pacote, com módulo, folha de estilo e fontes', async () => {
-  const modulo = await pedir(`${PREFIXO}bibliotecas/katex/katex.mjs`);
-  assert.equal(modulo.status, 200);
-  assert.match(modulo.tipo, /^text\/javascript/);
-  const css = await pedir(`${PREFIXO}bibliotecas/katex/katex.min.css`);
+test('mapa de importação leva cada módulo do navegador a /_aula-usp/modulos/, e o servidor entrega cada um como JavaScript', async () => {
+  const { imports } = mapaDeImportacao();
+  assert.deepEqual(Object.keys(imports), MODULOS_DO_NAVEGADOR);
+  assert.equal(imports.katex, `${PREFIXO}modulos/katex/dist/katex.mjs`);
+  assert.equal(imports['@shikijs/langs/python'], `${PREFIXO}modulos/@shikijs/langs/dist/python.mjs`);
+  for (const [especificador, endereco] of Object.entries(imports)) {
+    const modulo = await pedir(endereco);
+    assert.equal(modulo.status, 200, especificador);
+    assert.match(modulo.tipo, /^text\/javascript/, especificador);
+  }
+});
+
+test('os módulos do navegador fecham o grafo: todo nome que eles importam por dentro está na lista', () => {
+  const IMPORTACAO = /\b(?:import|export)\s*(?:[\w*{},\s]+\s*from\s*)?['"]([^'"]+)['"]|\bimport\(\s*['"]([^'"]+)['"]\s*\)/g;
+  const pendentes = MODULOS_DO_NAVEGADOR.map((especificador) => fileURLToPath(import.meta.resolve(especificador)));
+  const vistos = new Set();
+  const foraDaLista = new Set();
+  while (pendentes.length) {
+    const arquivo = pendentes.pop();
+    if (vistos.has(arquivo)) continue;
+    vistos.add(arquivo);
+    const fonte = readFileSync(arquivo, 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+    for (const [, estatico, dinamico] of fonte.matchAll(IMPORTACAO)) {
+      const especificador = estatico ?? dinamico;
+      if (especificador.startsWith('.')) pendentes.push(resolve(dirname(arquivo), especificador));
+      else if (!MODULOS_DO_NAVEGADOR.includes(especificador)) foraDaLista.add(especificador);
+    }
+  }
+  assert.deepEqual([...foraDaLista], []);
+  assert.ok(vistos.size > MODULOS_DO_NAVEGADOR.length, `só ${vistos.size} arquivos percorridos`);
+});
+
+test('servidor entrega a folha de estilo e as fontes do KaTeX pela pasta do pacote', async () => {
+  const css = await pedir(`${PREFIXO}modulos/katex/dist/katex.min.css`);
   assert.equal(css.status, 200);
+  assert.match(css.tipo, /^text\/css/);
   assert.ok(css.corpo.includes('KaTeX_Main'));
-  const fonte = await pedir(`${PREFIXO}bibliotecas/katex/fonts/KaTeX_Main-Regular.woff2`);
+  const fonte = await pedir(`${PREFIXO}modulos/katex/dist/fonts/KaTeX_Main-Regular.woff2`);
   assert.equal(fonte.status, 200);
   assert.equal(fonte.tipo, 'font/woff2');
 });
 
-test('servidor recusa biblioteca fora da lista e caminho que sai da pasta dist', async () => {
-  assert.equal((await pedir(`${PREFIXO}bibliotecas/linkedom/package.json`)).status, 403);
-  assert.equal((await pedir(`${PREFIXO}bibliotecas/katex/..%2fpackage.json`)).status, 403);
-  assert.equal((await pedir(`${PREFIXO}bibliotecas/katex/..%2f..%2f..%2fpackage.json`)).status, 403);
+test('servidor recusa pacote fora da lista e caminho que sai da pasta do pacote', async () => {
+  assert.equal((await pedir(`${PREFIXO}modulos/linkedom/package.json`)).status, 403);
+  assert.equal((await pedir(`${PREFIXO}modulos/@shikijs/core/package.json`)).status, 403);
+  assert.equal((await pedir(`${PREFIXO}modulos/katex/..%2fpackage.json`)).status, 403);
+  assert.equal((await pedir(`${PREFIXO}modulos/katex/..%2f..%2f..%2fpackage.json`)).status, 403);
+  assert.equal((await pedir(`${PREFIXO}bibliotecas/katex/katex.mjs`)).status, 403);
 });
 
 test('servidor recusa pastas do sistema fora da lista e travessias codificadas', async () => {

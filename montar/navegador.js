@@ -51,8 +51,8 @@ try {
   // A matemática entra antes do motor: cada \passo vira data-passo, que o motor conta ao iniciar (spec 6.4).
   if (TEX.test(document.body.textContent)) {
     const [{ default: katex }] = await Promise.all([
-      import(new URL('bibliotecas/katex/katex.mjs', BASE).href),
-      carregarEstilo('bibliotecas/katex/katex.min.css'),
+      import('katex'),
+      carregarEstilo('modulos/katex/dist/katex.min.css'),
     ]);
     for (const erro of renderizarTex(document.body, { katex })) {
       console.error(`Aula USP: TeX inválido em ${erro.trecho}: ${erro.mensagem}`);

@@ -24,6 +24,9 @@
     "aula-usp": "bin/aula-usp.mjs"
   },
   "dependencies": {
+    "@shikijs/engine-javascript": "4.4.3",
+    "@shikijs/langs": "4.4.3",
+    "@shikijs/primitive": "4.4.3",
     "katex": "0.18.7"
   }
 }
