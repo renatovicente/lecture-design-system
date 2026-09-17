@@ -67,12 +67,13 @@ export function textoSemTex(texto) {
 }
 
 // Tira as cores que \color, \textcolor, \colorbox, \fcolorbox e atalhos como \red deixam no HTML (spec 4.2).
+// No MathML, o \fcolorbox escreve a cor no atalho border; as bordas do HTML visível vêm em propriedades longas, que ficam.
 function semCores(html) {
   return html
     .replace(/\s(?:mathcolor|mathbackground)="[^"]*"/g, '')
     .replace(/\sstyle="([^"]*)"/g, (_, css) => {
       const limpo = css.split(';').filter((declaracao) => declaracao.trim()
-        && !/^\s*(?:color|background-color|border-color)\s*:/i.test(declaracao));
+        && !/^\s*(?:color|background-color|border-color|border)\s*:/i.test(declaracao));
       return limpo.length ? ` style="${limpo.join(';')};"` : '';
     });
 }

@@ -70,11 +70,13 @@ test('TeX inválido e comando não permitido viram alerta com o trecho e voltam 
 });
 
 test('as cores de \\color, \\textcolor, \\colorbox, \\fcolorbox e \\red não chegam ao HTML', () => {
-  const raiz = corpo('<p>\\(\\color{red}{a} + \\textcolor{#FF0000}{b} + \\colorbox{yellow}{c} + \\fcolorbox{red}{blue}{d} + \\red{e}\\)</p>');
+  const raiz = corpo('<p>\\(\\color{red}{a} + \\textcolor{#FF0000}{b} + \\colorbox{yellow}{c} + \\fcolorbox{red}{blue}{d} + \\red{e} + \\fbox{f}\\)</p>');
   assert.deepEqual(renderizarTex(raiz, { katex }), []);
   const estilos = [...raiz.querySelectorAll('[style]')].map((elemento) => elemento.getAttribute('style'));
-  assert.ok(estilos.length > 0);
-  assert.deepEqual(estilos.filter((estilo) => /(?:^|;)\s*(?:color|background-color|border-color)\s*:/i.test(estilo)), []);
+  assert.deepEqual(estilos.filter((estilo) => /(?:^|;)\s*(?:color|background-color|border-color|border)\s*:/i.test(estilo)), []);
+  // O MathML do \fcolorbox escreve a cor no atalho border: nenhum estilo pode citar as cores usadas.
+  assert.deepEqual(estilos.filter((estilo) => /red|blue|yellow|#ff0000/i.test(estilo)), []);
+  assert.ok(estilos.some((estilo) => /border-width\s*:/.test(estilo)), 'a borda do \\fbox, que não tem cor, fica');
   assert.equal(raiz.querySelectorAll('[mathcolor], [mathbackground]').length, 0);
 });
 
