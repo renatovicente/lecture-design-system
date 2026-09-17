@@ -4,17 +4,12 @@ import assert from 'node:assert/strict';
 import { mkdir, readFile, readdir, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { RAIZ, iniciarChrome, servirPasta, abrirAula } from './utilitarios.mjs';
+import { RAIZ, iniciarChrome, servirPasta, abrirAula, perto, TINTA, AZUL, AMARELO, TRANSPARENTE } from './utilitarios.mjs';
 
 const SAIDA = fileURLToPath(new URL('saida/', import.meta.url));
 const lerJson = async (caminho) => JSON.parse(await readFile(new URL(caminho, RAIZ), 'utf8'));
 const unidades = await lerJson('assets/marcas/unidades.json');
 const usp = await lerJson('assets/marcas/usp.json');
-
-const TINTA = 'rgb(10, 10, 10)';
-const AZUL = 'rgb(16, 148, 171)';
-const AMARELO = 'rgb(252, 180, 33)';
-const TRANSPARENTE = 'rgba(0, 0, 0, 0)';
 
 let servidor;
 let navegador;
@@ -36,8 +31,6 @@ function especime(arquivo) {
   if (!paginas.has(arquivo)) paginas.set(arquivo, abrirAula(navegador, `${servidor.endereco}/${arquivo}?folha`));
   return paginas.get(arquivo);
 }
-
-const perto = (obtido, esperado, descricao) => assert.ok(Math.abs(obtido - esperado) <= 0.5, `${descricao}: ${obtido} em vez de ${esperado}`);
 
 function caixas(pagina, id, seletor) {
   return pagina.evaluate(([idSlide, sel]) => {

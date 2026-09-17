@@ -1,10 +1,7 @@
 // Janela do apresentador no Chrome (spec 6.6 e 11.2): miniaturas, sincronia nos dois sentidos e pop-up bloqueado.
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
-import { RAIZ, iniciarChrome, servirPasta, abrirAula, esperarMontagem } from './utilitarios.mjs';
-
-const contrato = JSON.parse(await readFile(new URL('contrato/contrato.json', RAIZ), 'utf8'));
+import { iniciarChrome, servirPasta, abrirAula, esperarMontagem, classesForaDoContrato } from './utilitarios.mjs';
 
 let servidor;
 let navegador;
@@ -139,10 +136,7 @@ test('depois do aviso de pop-up bloqueado, fechar e reabrir as notas (N duas vez
 test('no apresentador, toda classe do documento está no contrato', async () => {
   const { pagina } = await abrir('index.html');
   const popup = await abrirApresentador(pagina);
-  const classes = await popup.evaluate(() => [...new Set([...document.querySelectorAll('[class]')]
-    .flatMap((elemento) => [...elemento.classList]))]);
-  const conhecidas = new Set([...Object.keys(contrato.html.classes), ...contrato.svg.classes, ...contrato.classesDoSistema]);
-  assert.deepEqual(classes.filter((nome) => !conhecidas.has(nome)), []);
+  assert.deepEqual(await classesForaDoContrato(popup), []);
   await popup.close();
   await pagina.close();
 });

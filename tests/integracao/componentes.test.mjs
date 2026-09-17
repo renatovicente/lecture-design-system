@@ -1,16 +1,7 @@
 // Blocos de corpo no Chrome, sobre especime/componentes.html servido por `aula-usp servir` (spec 4.3, 7.1 e 11.2).
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
-import { RAIZ, iniciarChrome, servirPasta, abrirAula } from './utilitarios.mjs';
-
-const contrato = JSON.parse(await readFile(new URL('contrato/contrato.json', RAIZ), 'utf8'));
-
-const TINTA = 'rgb(10, 10, 10)';
-const PAPEL = 'rgb(255, 255, 255)';
-const AMARELO = 'rgb(252, 180, 33)';
-const LINHA = 'rgb(217, 217, 217)';
-const TRANSPARENTE = 'rgba(0, 0, 0, 0)';
+import { iniciarChrome, servirPasta, abrirAula, classesForaDoContrato, perto, TINTA, PAPEL, AMARELO, LINHA, TRANSPARENTE } from './utilitarios.mjs';
 
 let servidor;
 let navegador;
@@ -28,18 +19,13 @@ after(async () => {
 
 // Uma página em modo folha serve aos testes de geometria: nela os passos aparecem revelados.
 const folha = () => (folhaAberta ??= abrirAula(navegador, `${servidor.endereco}/componentes.html?folha`));
-const perto = (obtido, esperado, descricao) => assert.ok(Math.abs(obtido - esperado) <= 0.5, `${descricao}: ${obtido} em vez de ${esperado}`);
 
 test('espécime de componentes: 15 slides montados sem erros, e toda classe do documento está no contrato', async () => {
   const { pagina, erros } = await folha();
-  const { slides, classes } = await pagina.evaluate(() => ({
-    slides: document.querySelectorAll('section.slide').length,
-    classes: [...new Set([...document.querySelectorAll('[class]')].flatMap((elemento) => [...elemento.classList]))],
-  }));
+  const slides = await pagina.evaluate(() => document.querySelectorAll('section.slide').length);
   assert.equal(slides, 15);
   assert.deepEqual(erros, []);
-  const conhecidas = new Set([...Object.keys(contrato.html.classes), ...contrato.svg.classes, ...contrato.classesDoSistema]);
-  assert.deepEqual(classes.filter((nome) => !conhecidas.has(nome)), []);
+  assert.deepEqual(await classesForaDoContrato(pagina), []);
 });
 
 test('campos: destaque em amarelo, quadro com contorno de 2 px e alerta em tinta, com o rótulo vindo de data-rotulo', async () => {

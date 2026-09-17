@@ -1,10 +1,7 @@
 // Painéis do motor no Chrome (spec 6.5): notas (N), visão geral (Esc) e ajuda (?).
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
-import { RAIZ, iniciarChrome, servirPasta, abrirAula } from './utilitarios.mjs';
-
-const contrato = JSON.parse(await readFile(new URL('contrato/contrato.json', RAIZ), 'utf8'));
+import { iniciarChrome, servirPasta, abrirAula, classesForaDoContrato } from './utilitarios.mjs';
 
 let servidor;
 let navegador;
@@ -147,9 +144,6 @@ test('painéis em inglês numa aula com lang="en"', async () => {
 test('com os painéis abertos, toda classe do documento continua no contrato', async () => {
   const { pagina } = await abrir('index.html#grade-8-4');
   await pagina.keyboard.press('Escape');
-  const classes = await pagina.evaluate(() => [...new Set([...document.querySelectorAll('[class]')]
-    .flatMap((elemento) => [...elemento.classList]))]);
-  const conhecidas = new Set([...Object.keys(contrato.html.classes), ...contrato.svg.classes, ...contrato.classesDoSistema]);
-  assert.deepEqual(classes.filter((nome) => !conhecidas.has(nome)), []);
+  assert.deepEqual(await classesForaDoContrato(pagina), []);
   await pagina.close();
 });

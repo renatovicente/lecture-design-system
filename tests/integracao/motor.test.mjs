@@ -1,10 +1,7 @@
 // Motor no Chrome (spec 6.1 a 6.4 e 11.2): palco escalado, teclado, passos, endereço, saltos de bloco e cliques.
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
-import { RAIZ, iniciarChrome, servirPasta, abrirAula, esperarMontagem } from './utilitarios.mjs';
-
-const contrato = JSON.parse(await readFile(new URL('contrato/contrato.json', RAIZ), 'utf8'));
+import { iniciarChrome, servirPasta, abrirAula, esperarMontagem, classesForaDoContrato } from './utilitarios.mjs';
 
 let servidor;
 let navegador;
@@ -185,10 +182,7 @@ test('F alterna a tela cheia', async () => {
 
 test('com o motor ativo, toda classe do documento é do autor ou está em contrato.classesDoSistema', async () => {
   const { pagina } = await abrir('index.html');
-  const classes = await pagina.evaluate(() => [...new Set([...document.querySelectorAll('[class]')]
-    .flatMap((elemento) => [...elemento.classList]))]);
-  const conhecidas = new Set([...Object.keys(contrato.html.classes), ...contrato.svg.classes, ...contrato.classesDoSistema]);
-  assert.deepEqual(classes.filter((nome) => !conhecidas.has(nome)), []);
+  assert.deepEqual(await classesForaDoContrato(pagina), []);
   await pagina.close();
 });
 
