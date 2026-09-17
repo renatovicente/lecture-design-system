@@ -17,7 +17,7 @@ test('rotularExercicios dá ao enunciado e à resposta os rótulos do idioma da 
 });
 
 test('ehNumerica aceita número com sinal, separador de milhar, decimal, % e R$', () => {
-  for (const texto of ['42', '-3,14', '+0.5', '−7', '1.234,56', '1,234.56', '1 234', '12%', '12,5 %', 'R$ 1.200,00', 'R$100', ' 3 ', '0,001']) {
+  for (const texto of ['42', '-3,14', '+0.5', '−7', '1.234,56', '1,234.56', '1 234', '12%', '12,5 %', 'R$ 1.200,00', 'R$100', ' 3 ', '0,001', '-R$ 1.234,50']) {
     assert.equal(ehNumerica(texto), true, texto);
   }
 });
@@ -60,4 +60,14 @@ test('tabela fora de section não é tocada', () => {
   const doc = aula('<table><tbody><tr><td>1</td></tr></tbody></table><section><p>Texto.</p></section>');
   marcarCelulasNumericas(doc);
   assert.deepEqual(numericas(doc), []);
+});
+
+test('tabela sem thead/tbody explícitos ainda marca as células numéricas (spec 3.1: montar não pode divergir entre navegador e build)', () => {
+  const doc = aula(`<section><table>
+    <tr><th>modelo</th><th>erro</th></tr>
+    <tr><td>A</td><td>12,5%</td></tr>
+    <tr><td>B</td><td>9,1%</td></tr>
+  </table></section>`);
+  marcarCelulasNumericas(doc);
+  assert.deepEqual(numericas(doc), ['12,5%', '9,1%']);
 });
