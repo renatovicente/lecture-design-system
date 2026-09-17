@@ -1,0 +1,111 @@
+/* Blocos de corpo (spec 7.1): campos, exercício, listas, tabela, figura e texto em linha, em px lógicos do palco. */
+
+/* ---------- campos e exercício ---------- */
+
+.area :is(aside.destaque, aside.quadro, aside.alerta, div.enunciado) {
+  padding: var(--espaco-2) var(--espaco-3);
+}
+
+.area aside.destaque {
+  background: var(--cor-amarelo);
+  color: var(--cor-tinta);
+}
+
+.area :is(aside.quadro, div.enunciado) {
+  border: var(--regua-normal) solid var(--cor-tinta);
+}
+
+.area aside.alerta {
+  background: var(--cor-tinta);
+  color: var(--cor-papel);
+}
+
+.area :is(aside.destaque, aside.quadro, aside.alerta, div.enunciado, div.resposta)[data-rotulo]::before {
+  content: attr(data-rotulo);
+  display: block;
+  margin-bottom: var(--espaco-1);
+  font-family: var(--tipo-rotulo-familia);
+  font-size: var(--tipo-rotulo-tamanho);
+  font-weight: var(--tipo-rotulo-peso);
+  line-height: var(--tipo-rotulo-entrelinha);
+  letter-spacing: var(--tipo-rotulo-tracking);
+  text-transform: var(--tipo-rotulo-caixa);
+}
+
+.area :is(aside.destaque, aside.quadro, aside.alerta, div.enunciado, div.resposta) > * + * {
+  margin-top: var(--espaco-2);
+}
+
+.area div.exercicio > * + * {
+  margin-top: var(--espaco-3);
+}
+
+/* ---------- listas ---------- */
+
+.area :is(ul, ol.passos, ol.sintese) {
+  list-style: none;
+  padding: 0;
+}
+
+.area ul > li {
+  padding-left: var(--espaco-3);
+  text-indent: calc(-1 * var(--espaco-3));
+}
+
+.area ul > li + li {
+  margin-top: var(--espaco-1);
+}
+
+.area ul > li::before {
+  content: "";
+  display: inline-block;
+  width: var(--espaco-1);
+  height: var(--espaco-1);
+  margin-right: var(--espaco-2);
+  vertical-align: middle;
+  background: var(--cor-tinta);
+}
+
+.area :is(ol.passos, ol.sintese) {
+  counter-reset: passo;
+}
+
+.area :is(ol.passos, ol.sintese) > li {
+  counter-increment: passo;
+  padding-top: var(--espaco-2);
+  padding-left: var(--espaco-6);
+  text-indent: calc(-1 * var(--espaco-6));
+  border-top: var(--regua-normal) solid var(--cor-tinta);
+}
+
+.area :is(ol.passos, ol.sintese) > li + li {
+  margin-top: var(--espaco-3);
+}
+
+.area :is(ol.passos, ol.sintese) > li::before {
+  content: counter(passo);
+  display: inline-block;
+  width: var(--espaco-6);
+  text-indent: 0;
+  font-family: var(--tipo-numeral-familia);
+  font-size: var(--tipo-numeral-tamanho);
+  font-weight: var(--tipo-numeral-peso);
+  line-height: var(--tipo-numeral-entrelinha);
+  letter-spacing: var(--tipo-numeral-tracking);
+}
+
+.area :is(ul, ol.passos, ol.sintese) > li > * {
+  text-indent: 0;
+}
+
+/* ---------- texto em linha ---------- */
+
+.area :not(pre) > code {
+  font-family: var(--tipo-codigo-familia);
+  font-size: 0.88em; /* spec 7.1 */
+}
+
+.area :is(sub, sup) {
+  font-size: 0.8em; /* spec 4.3 */
+  line-height: 0;
+}

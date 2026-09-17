@@ -38,7 +38,7 @@
   color: var(--cor-azul);
 }
 
-/* Ritmo entre blocos de corpo; a forma de cada bloco é do marco 3. */
+/* Ritmo entre blocos de corpo; a forma de cada bloco está em componentes.css. */
 .slide[data-layout="conteudo"] > .area > :not(h2, .lide) + *,
 .colunas > div > * + * {
   margin-top: var(--espaco-3);

@@ -8,7 +8,7 @@ import { instalarApresentador, instalarAberturaDoApresentador, modoApresentador 
 import { instalarImpressao } from '../motor/impressao.js';
 
 const BASE = new URL('../', import.meta.url);
-const ESTILOS = ['estilos/tokens.css', 'estilos/fontes.css', 'estilos/base.css', 'estilos/layouts.css', 'estilos/motor.css', 'estilos/impressao.css'];
+const ESTILOS = ['estilos/tokens.css', 'estilos/fontes.css', 'estilos/base.css', 'estilos/layouts.css', 'estilos/componentes.css', 'estilos/motor.css', 'estilos/impressao.css'];
 
 function carregarEstilo(caminho) {
   return new Promise((pronto, falha) => {

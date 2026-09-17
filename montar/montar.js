@@ -6,6 +6,7 @@ import {
   doisDigitos,
 } from './cromo.js';
 import { rotulosPara } from '../motor/rotulos.js';
+import { rotularExercicios } from './corpo.js';
 
 export function slug(texto) {
   return texto.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase()
@@ -51,6 +52,7 @@ export function montar(doc, { unidades, usp, urlMarcas, limites }) {
   const rot = rotulosPara(meta.lang);
   const secoes = secoesDaAula(doc);
   atribuirIds(doc, secoes);
+  rotularExercicios(doc, rot);
   const { blocos, blocoDaSecao, modo } = derivarBlocos(secoes, limites);
   for (const bloco of blocos) bloco.id = secoes[bloco.indice].getAttribute('id');
   const total = secoes.length;
