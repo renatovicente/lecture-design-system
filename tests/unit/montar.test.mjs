@@ -51,11 +51,12 @@ test('toda seção vira slide com índice, modo do mapa, bloco e id', () => {
   });
 });
 
-test('a montagem rotula exercícios no idioma da aula', () => {
+test('a montagem rotula exercícios no idioma da aula e marca células numéricas', () => {
   const html = AULA_IME('en').replace('<p>Texto.</p><aside',
-    '<div class="exercicio"><div class="enunciado">How much?</div><div class="resposta">Two.</div></div><aside');
+    '<div class="exercicio"><div class="enunciado">How much?</div><div class="resposta">Two.</div></div><table><tbody><tr><td>12,5</td><td>n/a</td></tr></tbody></table><aside');
   const { document } = montado(html);
   assert.deepEqual([...document.querySelectorAll('.enunciado, .resposta')].map((parte) => parte.getAttribute('data-rotulo')), ['Exercise', 'Answer']);
+  assert.deepEqual([...document.querySelectorAll('td')].map((celula) => celula.className), ['numerica', '']);
 });
 
 test('conteúdo do autor vai para div.area, com o TeX intacto; notas ficam fora', () => {

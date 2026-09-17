@@ -160,3 +160,48 @@ test('a resposta do exercício é passo no palco e sai revelada na impressão', 
   assert.equal(await visibilidade(), 'visible');
   assert.deepEqual(erros, []);
 });
+
+test('tabela: réguas de 4 px no topo e na base, de 2 px sob o cabeçalho e de 1 px entre linhas; números à direita, alinhados pela borda', async () => {
+  const { pagina } = await folha();
+  const medida = await pagina.evaluate(() => {
+    const tabela = document.querySelector('#tabela table');
+    const estilo = getComputedStyle(tabela);
+    const celula = (elemento) => {
+      const e = getComputedStyle(elemento);
+      return { alinhamento: e.textAlign, peso: e.fontWeight, fundo: e.backgroundColor, algarismos: e.fontVariantNumeric };
+    };
+    const direitaDoTexto = (elemento) => {
+      const faixa = document.createRange();
+      faixa.selectNodeContents(elemento);
+      return faixa.getBoundingClientRect().right;
+    };
+    const linhas = [...tabela.querySelectorAll('tbody tr')];
+    const entreLinhas = getComputedStyle(linhas[1].children[1]);
+    return {
+      largura: tabela.getBoundingClientRect().width,
+      reguas: [estilo.borderTopWidth, estilo.borderBottomWidth, estilo.borderTopColor, estilo.borderBottomColor],
+      sobCabecalho: getComputedStyle(tabela.querySelector('thead th')).borderBottomWidth,
+      entreLinhas: `${entreLinhas.borderTopWidth} ${entreLinhas.borderTopColor}`,
+      cabecalho: [...tabela.querySelectorAll('thead th')].map((th) => `${celula(th).alinhamento} ${celula(th).peso}`),
+      primeiraLinha: [...linhas[0].children].map(celula),
+      bordasDasEpocas: new Set(linhas.map((linha) => direitaDoTexto(linha.children[1]).toFixed(2))).size,
+      linhaEmDestaque: [...tabela.querySelector('tr.destaque').children].map((elemento) => celula(elemento).fundo),
+      celulaEmDestaque: celula(tabela.querySelector('td.destaque')).fundo,
+      naColuna: [document.querySelector('#tabela-na-coluna table').getBoundingClientRect().width, document.querySelectorAll('#tabela-na-coluna .colunas > div')[1].getBoundingClientRect().width],
+      cabecalhoNaColuna: [...document.querySelectorAll('#tabela-na-coluna thead th')].map((th) => getComputedStyle(th).textAlign),
+    };
+  });
+  assert.equal(medida.largura, 1152);
+  assert.deepEqual(medida.reguas, ['4px', '4px', TINTA, TINTA]);
+  assert.equal(medida.sobCabecalho, '2px');
+  assert.equal(medida.entreLinhas, `1px ${LINHA}`);
+  assert.deepEqual(medida.cabecalho, ['left 600', 'right 600', 'right 600', 'right 600', 'right 600', 'right 600']);
+  const [modelo, ...numeros] = medida.primeiraLinha;
+  assert.deepEqual([modelo.alinhamento, modelo.peso], ['left', '400']);
+  for (const numero of numeros) assert.deepEqual([numero.alinhamento, numero.algarismos, numero.fundo], ['right', 'tabular-nums', TRANSPARENTE]);
+  assert.equal(medida.bordasDasEpocas, 1, 'os números da coluna terminam na mesma borda');
+  assert.deepEqual(medida.linhaEmDestaque, Array(6).fill(AMARELO));
+  assert.equal(medida.celulaEmDestaque, AMARELO);
+  assert.equal(medida.naColuna[0], medida.naColuna[1], 'numa coluna, a tabela ocupa a largura da coluna');
+  assert.deepEqual(medida.cabecalhoNaColuna, ['right', 'left'], 'coluna com "diverge" não alinha o cabeçalho à direita');
+});

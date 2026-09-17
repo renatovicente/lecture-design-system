@@ -109,3 +109,34 @@
   font-size: 0.8em; /* spec 4.3 */
   line-height: 0;
 }
+
+/* ---------- tabela ---------- */
+
+.area table {
+  width: 100%;
+  border-collapse: collapse;
+  border-top: var(--regua-forte) solid var(--cor-tinta);
+  border-bottom: var(--regua-forte) solid var(--cor-tinta);
+}
+
+.area :is(th, td) {
+  padding: var(--espaco-1) var(--espaco-2);
+  font-weight: var(--tipo-leitura-peso);
+  text-align: left;
+  vertical-align: baseline;
+  border-top: var(--regua-fina) solid var(--cor-linha);
+}
+
+.area thead :is(th, td) {
+  font-weight: var(--tipo-leitura-peso-enfase);
+  border-bottom: var(--regua-normal) solid var(--cor-tinta);
+}
+
+.area :is(th, td).numerica {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.area :is(tr.destaque > *, td.destaque) {
+  background: var(--cor-amarelo);
+}
