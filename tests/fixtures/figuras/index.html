@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Figuras extremas</title>
+<meta name="unidade" content="ime">
+<meta name="disciplina" content="Fixture de figuras">
+<meta name="aula" content="3a">
+<meta name="data" content="2026-09-16">
+<meta name="professor" content="Prof. Renato Vicente">
+<script src="../../../dist/aula-usp.js"></script>
+</head>
+<body>
+
+<section data-layout="capa">
+  <h1>Figuras extremas</h1>
+</section>
+
+<section data-layout="abertura" id="imagens">
+  <h2>Imagens</h2>
+</section>
+
+<section data-layout="figura" id="img-larga">
+  <h2>Imagem mais larga que a zona</h2>
+  <figure>
+    <img alt="Faixa cinza de 3000 por 600" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='3000' height='600' viewBox='0 0 3000 600'%3E%3Crect width='3000' height='600' fill='%23D9D9D9'/%3E%3C/svg%3E">
+    <figcaption>Limitada pela largura.</figcaption>
+  </figure>
+</section>
+
+<section data-layout="figura" id="sem-legenda">
+  <h2>Imagem grande sem legenda</h2>
+  <figure>
+    <img alt="Retângulo cinza de 2400 por 1600" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='2400' height='1600' viewBox='0 0 2400 1600'%3E%3Crect width='2400' height='1600' fill='%23D9D9D9'/%3E%3C/svg%3E">
+  </figure>
+</section>
+
+<section data-layout="abertura" id="vetores">
+  <h2>Vetores</h2>
+</section>
+
+<section data-layout="figura" id="svg-alto">
+  <h2>SVG mais alto que a zona</h2>
+  <figure>
+    <svg viewBox="0 0 400 800" role="img" aria-label="Retângulo alto"><rect width="400" height="800" fill="#D9D9D9"/></svg>
+    <figcaption>Limitado pela altura, sem centralizar.</figcaption>
+  </figure>
+</section>
+
+<section data-layout="figura" id="svg-minusculo">
+  <h2>SVG com viewBox minúsculo</h2>
+  <figure>
+    <svg viewBox="0 0 16 9" role="img" aria-label="Retângulo de 16 por 9"><rect width="16" height="9" fill="#D9D9D9"/></svg>
+    <figcaption>Vetor é ampliado até a zona.</figcaption>
+  </figure>
+</section>
+
+<section data-layout="encerramento">
+  <h2>Fim</h2>
+  <ol class="sintese"><li>Cada mídia cabe pela dimensão que limita.</li></ol>
+</section>
+
+</body>
+</html>

@@ -205,3 +205,77 @@ test('tabela: réguas de 4 px no topo e na base, de 2 px sob o cabeçalho e de 1
   assert.equal(medida.naColuna[0], medida.naColuna[1], 'numa coluna, a tabela ocupa a largura da coluna');
   assert.deepEqual(medida.cabecalhoNaColuna, ['right', 'left'], 'coluna com "diverge" não alinha o cabeçalho à direita');
 });
+
+test('figuras: imagem pequena sem ampliação, foto grande contida na zona, SVG na largura da coluna, legenda 16 px abaixo', async () => {
+  const { pagina } = await folha();
+  const { pequena, foto, corpo } = await pagina.evaluate(() => {
+    const caixa = (elemento) => {
+      const slide = elemento.closest('section').getBoundingClientRect();
+      const r = elemento.getBoundingClientRect();
+      return { x: r.left - slide.left, largura: r.width, altura: r.height, topo: r.top - slide.top, base: r.bottom - slide.top };
+    };
+    const figura = (id) => {
+      const slide = document.getElementById(id);
+      const midia = slide.querySelector('figure > img, figure > svg');
+      const legenda = slide.querySelector('figcaption');
+      return {
+        midia: caixa(midia),
+        legenda: caixa(legenda),
+        estiloDaLegenda: `${getComputedStyle(legenda).fontSize} ${getComputedStyle(legenda).color}`,
+        filtro: getComputedStyle(midia).filter,
+      };
+    };
+    return {
+      pequena: figura('imagem-pequena'),
+      foto: figura('foto-em-cinza'),
+      corpo: { ...figura('figura-no-corpo'), coluna: caixa(document.querySelectorAll('#figura-no-corpo .colunas > div')[1]) },
+    };
+  });
+  assert.deepEqual([pequena.midia.x, pequena.midia.largura, pequena.midia.altura], [64, 320, 180]);
+  perto(pequena.legenda.topo - pequena.midia.base, 16, 'legenda da imagem pequena');
+  assert.equal(pequena.estiloDaLegenda, '18px rgb(102, 102, 102)');
+  assert.equal(foto.filtro, 'grayscale(1)');
+  assert.equal(foto.midia.x, 64);
+  assert.ok(Math.abs(foto.midia.largura / foto.midia.altura - 1.5) < 0.01, 'a foto mantém a proporção de 3 por 2');
+  perto(foto.legenda.base, 652, 'a foto ocupa a zona até a base do conteúdo');
+  assert.deepEqual([corpo.midia.x, corpo.midia.largura], [corpo.coluna.x, corpo.coluna.largura]);
+  perto(corpo.midia.altura, (corpo.coluna.largura * 320) / 760, 'altura do SVG pela proporção do viewBox');
+  perto(corpo.legenda.topo - corpo.midia.base, 16, 'legenda do SVG');
+});
+
+test('figuras extremas: cada mídia cabe pela dimensão que a limita, sem distorcer, alinhada à esquerda e com a legenda colada', async (t) => {
+  const fixtures = await servirPasta('tests/fixtures/figuras/');
+  t.after(() => fixtures.fechar());
+  const { pagina, erros } = await abrirAula(navegador, `${fixtures.endereco}/index.html?folha`);
+  t.after(() => pagina.close());
+  const medidas = await pagina.evaluate(() => [...document.querySelectorAll('section[data-layout="figura"]')].map((slide) => {
+    const s = slide.getBoundingClientRect();
+    const midia = slide.querySelector('figure > img, figure > svg');
+    const legenda = slide.querySelector('figcaption');
+    const r = midia.getBoundingClientRect();
+    const viewBox = midia.getAttribute('viewBox')?.split(' ').map(Number);
+    return {
+      id: slide.id,
+      x: r.left - s.left,
+      largura: r.width,
+      altura: r.height,
+      base: r.bottom - s.top,
+      proporcao: viewBox ? viewBox[2] / viewBox[3] : midia.naturalWidth / midia.naturalHeight,
+      topoDaLegenda: legenda ? legenda.getBoundingClientRect().top - s.top : null,
+      baseDaLegenda: legenda ? legenda.getBoundingClientRect().bottom - s.top : null,
+    };
+  }));
+  assert.deepEqual(erros, []);
+  assert.equal(medidas.length, 4);
+  for (const m of medidas) {
+    assert.equal(m.x, 64, `${m.id}: alinhada à esquerda`);
+    assert.ok(Math.abs(m.largura / m.altura - m.proporcao) < 0.01, `${m.id}: proporção ${m.largura / m.altura} em vez de ${m.proporcao}`);
+    assert.ok(m.largura <= 1152.5, `${m.id}: largura ${m.largura}`);
+    if (m.topoDaLegenda !== null) perto(m.topoDaLegenda - m.base, 16, `${m.id}: legenda colada`);
+  }
+  const porId = Object.fromEntries(medidas.map((m) => [m.id, m]));
+  perto(porId['img-larga'].largura, 1152, 'a imagem larga é limitada pela largura');
+  perto(porId['sem-legenda'].base, 652, 'sem legenda, a imagem vai até a base da zona');
+  perto(porId['svg-alto'].baseDaLegenda, 652, 'o SVG alto é limitado pela altura');
+  perto(porId['svg-minusculo'].baseDaLegenda, 652, 'o SVG de viewBox minúsculo é ampliado até a zona');
+});

@@ -140,3 +140,31 @@
 .area :is(tr.destaque > *, td.destaque) {
   background: var(--cor-amarelo);
 }
+
+/* ---------- figura ---------- */
+
+.area figure > :is(img, svg) {
+  max-width: 100%;
+  height: auto;
+}
+
+.area figcaption {
+  margin-top: var(--espaco-2);
+}
+
+.area figure[data-foto="pb"] img {
+  filter: grayscale(1);
+}
+
+.slide[data-layout="figura"] figure {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.slide[data-layout="figura"] figure > :is(img, svg) {
+  flex: 0 1 auto;
+  min-height: 0;
+}
