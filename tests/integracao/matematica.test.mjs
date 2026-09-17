@@ -132,6 +132,7 @@ test('TeX inválido e comando não permitido viram alerta no lugar, com a mensag
   for (const alerta of medida.alertas) assert.deepEqual(alerta.campo, [TINTA, PAPEL]);
   assert.deepEqual(medida.cores, [TINTA]);
   assert.equal(medida.pre, '\\(nao e matematica\\)');
+  assert.deepEqual(await classesForaDoContrato(pagina), []);
   assert.equal(erros.length, 3);
   assert.ok(erros.every((erro) => erro.startsWith('Aula USP: TeX inválido em ')), JSON.stringify(erros));
   assert.match(erros[1], /comando não permitido no TeX$/);
