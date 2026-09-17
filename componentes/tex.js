@@ -13,6 +13,8 @@ const FORA = 'pre, code, script, style, textarea, svg, [data-tex]';
 // uma cor que ninguém escreve deixa o módulo transformar esse texto vermelho num erro.
 const COR_DE_ERRO = '#010203';
 const MACROS = { '\\passo': '\\htmlData{passo=#1}{#2}' };
+// Número de passo: a regra de motor/passos.js. O KaTeX não apara o valor, então \passo{ 1 } também é inválido.
+const NUMERO_DE_PASSO = /^[1-9][0-9]*$/;
 
 const COMANDOS_SEM_TEXTO = new Set([
   'text', 'textrm', 'textbf', 'textit', 'mathrm', 'mathbf', 'mathit', 'mathsf', 'mathtt', 'mathcal', 'mathbb',
@@ -88,6 +90,9 @@ function htmlDoKatex(katex, tex, tipo) {
     trust: (contexto) => contexto.command === '\\htmlData',
   });
   if (html.toLowerCase().includes(COR_DE_ERRO)) throw new Error('comando não permitido no TeX');
+  for (const [, numero] of html.matchAll(/data-passo="([^"]*)"/g)) {
+    if (!NUMERO_DE_PASSO.test(numero)) throw new Error(`número de passo inválido em \\passo: "${numero}"`);
+  }
   return semCores(html);
 }
 

@@ -65,6 +65,14 @@ test('\\passo{n}{…} vira um elemento com data-passo dentro de cada célula do 
   assert.deepEqual([...raiz.querySelectorAll('[data-passo]')].map((passo) => passo.getAttribute('data-passo')), ['1', '2', '1', '2']);
 });
 
+test('\\passo com número que não é inteiro positivo vira alerta: o motor revelaria os passos fora de ordem', () => {
+  const raiz = corpo('<p>\\(\\passo{ 1 }{a}\\) \\(\\passo{0}{b}\\) \\(\\passo{a}{c}\\) \\(\\passo{}{d}\\) \\(\\passo{12}{e}\\)</p>');
+  const erros = renderizarTex(raiz, { katex });
+  assert.deepEqual(erros.map((erro) => erro.trecho), ['\\(\\passo{ 1 }{a}\\)', '\\(\\passo{0}{b}\\)', '\\(\\passo{a}{c}\\)', '\\(\\passo{}{d}\\)']);
+  assert.equal(erros[0].mensagem, 'número de passo inválido em \\passo: " 1 "');
+  assert.deepEqual([...raiz.querySelectorAll('[data-passo]')].map((passo) => passo.getAttribute('data-passo')), ['12']);
+});
+
 test('TeX inválido e comando não permitido viram alerta com o trecho e voltam como erro', () => {
   const raiz = corpo('<p>Erro \\(\\frac{a}{\\) e \\(\\href{https://usp.br}{a}\\).</p><div>\\[ \\naoexiste \\]</div>');
   const erros = renderizarTex(raiz, { katex });
