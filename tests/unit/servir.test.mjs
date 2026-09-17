@@ -87,6 +87,24 @@ test('servidor entrega arquivos da aula e do sistema com o tipo certo', async ()
   assert.ok(componente.corpo.includes('export function renderizarTex'));
 });
 
+test('servidor entrega o KaTeX da pasta dist do pacote, com módulo, folha de estilo e fontes', async () => {
+  const modulo = await pedir(`${PREFIXO}bibliotecas/katex/katex.mjs`);
+  assert.equal(modulo.status, 200);
+  assert.match(modulo.tipo, /^text\/javascript/);
+  const css = await pedir(`${PREFIXO}bibliotecas/katex/katex.min.css`);
+  assert.equal(css.status, 200);
+  assert.ok(css.corpo.includes('KaTeX_Main'));
+  const fonte = await pedir(`${PREFIXO}bibliotecas/katex/fonts/KaTeX_Main-Regular.woff2`);
+  assert.equal(fonte.status, 200);
+  assert.equal(fonte.tipo, 'font/woff2');
+});
+
+test('servidor recusa biblioteca fora da lista e caminho que sai da pasta dist', async () => {
+  assert.equal((await pedir(`${PREFIXO}bibliotecas/linkedom/package.json`)).status, 403);
+  assert.equal((await pedir(`${PREFIXO}bibliotecas/katex/..%2fpackage.json`)).status, 403);
+  assert.equal((await pedir(`${PREFIXO}bibliotecas/katex/..%2f..%2f..%2fpackage.json`)).status, 403);
+});
+
 test('servidor recusa pastas do sistema fora da lista e travessias codificadas', async () => {
   assert.equal((await pedir(`${PREFIXO}package.json`)).status, 403);
   assert.equal((await pedir(`${PREFIXO}bin/aula-usp.mjs`)).status, 403);

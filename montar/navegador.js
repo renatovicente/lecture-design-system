@@ -6,8 +6,10 @@ import { instalarPaineis } from '../motor/paineis.js';
 import { instalarDemos } from '../motor/demos.js';
 import { instalarApresentador, instalarAberturaDoApresentador, modoApresentador } from '../motor/apresentador.js';
 import { instalarImpressao } from '../motor/impressao.js';
+import { renderizarTex } from '../componentes/tex.js';
 
 const BASE = new URL('../', import.meta.url);
+const TEX = /\\\(|\\\[/;
 const ESTILOS = ['estilos/tokens.css', 'estilos/fontes.css', 'estilos/base.css', 'estilos/layouts.css', 'estilos/componentes.css', 'estilos/motor.css', 'estilos/impressao.css'];
 
 function carregarEstilo(caminho) {
@@ -46,6 +48,16 @@ try {
     urlMarcas: new URL('assets/marcas', BASE).href,
     limites: { minBlocos: contrato.limites['blocos.min'], maxFileira: contrato.limites['blocos.maxFileira'] },
   });
+  // A matemática entra antes do motor: cada \passo vira data-passo, que o motor conta ao iniciar (spec 6.4).
+  if (TEX.test(document.body.textContent)) {
+    const [{ default: katex }] = await Promise.all([
+      import(new URL('bibliotecas/katex/katex.mjs', BASE).href),
+      carregarEstilo('bibliotecas/katex/katex.min.css'),
+    ]);
+    for (const erro of renderizarTex(document.body, { katex })) {
+      console.error(`Aula USP: TeX inválido em ${erro.trecho}: ${erro.mensagem}`);
+    }
+  }
   if (new URLSearchParams(location.search).has('folha')) document.body.classList.add('folha');
   else {
     const api = window.AulaUSP ?? (window.AulaUSP = {});

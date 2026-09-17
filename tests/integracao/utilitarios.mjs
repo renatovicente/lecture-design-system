@@ -23,6 +23,7 @@ const classesConhecidas = new Set([...Object.keys(contrato.html.classes), ...con
 // Classes do documento (autor ou sistema) que não estão em contrato.classesDoSistema nem no vocabulário: deve dar sempre [].
 export async function classesForaDoContrato(pagina) {
   const classes = await pagina.evaluate(() => [...new Set([...document.querySelectorAll('[class]')]
+    .filter((elemento) => !elemento.closest('.katex, .katex-display'))
     .flatMap((elemento) => [...elemento.classList]))]);
   return classes.filter((nome) => !classesConhecidas.has(nome));
 }

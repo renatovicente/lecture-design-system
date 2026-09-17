@@ -8,6 +8,8 @@ import { fileURLToPath } from 'node:url';
 export const RAIZ_SISTEMA = fileURLToPath(new URL('..', import.meta.url)).replace(/[\\/]$/, '');
 export const PREFIXO = '/_aula-usp/';
 export const PASTAS_DO_SISTEMA = ['estilos', 'montar', 'motor', 'componentes', 'assets', 'tokens', 'contrato'];
+// Bibliotecas de terceiros servidas em desenvolvimento, cada uma presa à pasta dist do pacote; no marco 5 elas vêm embutidas.
+export const BIBLIOTECAS = { katex: 'node_modules/katex/dist' };
 
 const TIPOS = {
   '.html': 'text/html; charset=utf-8',
@@ -47,6 +49,11 @@ export function resolverSeguro(raiz, caminhoUrl) {
 function localizar(raizAula, pathname) {
   if (pathname.startsWith(PREFIXO)) {
     const [pasta, ...resto] = pathname.slice(PREFIXO.length).split('/');
+    if (pasta === 'bibliotecas') {
+      const [biblioteca, ...arquivo] = resto;
+      if (!Object.hasOwn(BIBLIOTECAS, biblioteca)) return null;
+      return resolverSeguro(resolve(RAIZ_SISTEMA, BIBLIOTECAS[biblioteca]), `/${arquivo.join('/')}`);
+    }
     if (!PASTAS_DO_SISTEMA.includes(pasta)) return null;
     return resolverSeguro(resolve(RAIZ_SISTEMA, pasta), `/${resto.join('/')}`);
   }

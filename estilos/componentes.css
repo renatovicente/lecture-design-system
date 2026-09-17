@@ -168,3 +168,31 @@
   flex: 0 1 auto;
   min-height: 0;
 }
+
+/* ---------- matemática ---------- */
+
+.area .katex {
+  font-size: 1.1em; /* spec 4.3 */
+}
+
+.area .equacao > .katex-display {
+  margin: 0;
+  text-align: left;
+}
+
+.area .equacao > .katex-display > .katex {
+  text-align: left;
+}
+
+.area .tex-invalido {
+  padding: 0 var(--espaco-1);
+  background: var(--cor-tinta);
+  color: var(--cor-papel);
+  font-family: var(--tipo-codigo-familia);
+  font-size: 0.88em; /* spec 7.1, como o código em linha */
+}
+
+.area div.tex-invalido {
+  padding: var(--espaco-2) var(--espaco-3);
+  font-size: var(--tipo-codigo-tamanho);
+}
