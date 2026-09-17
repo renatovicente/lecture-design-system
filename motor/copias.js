@@ -3,12 +3,12 @@
 const REFERENCIAS = ['href', 'clip-path', 'marker-start', 'marker-end', 'fill', 'stroke'];
 
 function reescrever(valor, mapa, atributo) {
-  // Direct #id reference only for href (fill and stroke carry hex colors, never bare #id)
+  // Referência direta (#id) só no href: em fill e stroke, o que vem depois do # é cor hexadecimal, não id.
   if (atributo === 'href') {
     const direta = /^#(.+)$/.exec(valor);
     if (direta) return mapa.has(direta[1]) ? `#${mapa.get(direta[1])}` : valor;
   }
-  // url(...) reference for all attributes in REFERENCIAS, tolerating whitespace
+  // Referência em url(...) vale para todos os atributos de REFERENCIAS, com ou sem espaços dentro dos parênteses.
   return valor.replace(/url\(\s*(['"]?)\s*#([^'")\s]+)\s*\1\s*\)/g, (todo, aspas, id) => (mapa.has(id) ? `url(${aspas}#${mapa.get(id)}${aspas})` : todo));
 }
 
