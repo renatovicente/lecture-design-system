@@ -59,6 +59,13 @@ test('o destacador cobre as linguagens do contrato: palavras-chave em negrito, o
   }
 });
 
+test('etiqueta de JSDoc é negrito dentro de um comentário, e continua comentário', () => {
+  const pedacos = destacador.linhas('/**\n * @param {number} w peso\n */\nfunction f(w) { return w; }', 'javascript').flat();
+  const doTipo = (tipo) => pedacos.filter((pedaco) => pedaco.tipo === tipo).map((pedaco) => pedaco.texto.trim());
+  assert.deepEqual(doTipo('palavra-chave'), ['function', 'return']);
+  assert.deepEqual(doTipo('comentario'), ['/**', '*', '@param', '{number} w peso', '*/']);
+});
+
 test('renderizarCodigo troca o texto de pre[data-lang] por linhas, marca as de data-linhas e mantém as vazias do meio', () => {
   const raiz = corpo('<pre data-lang="python" data-linhas="1,3">\nx = 1  # um\n\nif x:\n    y = 2\n\n</pre>');
   assert.deepEqual(renderizarCodigo(raiz, { destacador }), []);

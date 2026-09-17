@@ -58,7 +58,8 @@ export function criarDestacador({ createShikiPrimitive, codeToTokensBase, create
     linhas: (codigo, linguagem) => codeToTokensBase(primitivo, codigo, { lang: linguagem, theme: TEMA.name })
       .map((linha) => linha.map((token) => ({
         texto: token.content,
-        tipo: token.fontStyle & NEGRITO ? 'palavra-chave' : token.color?.toUpperCase() === cinza ? 'comentario' : null,
+        // A cor vem antes do peso: uma etiqueta de JSDoc é negrito dentro de um comentário, e continua comentário.
+        tipo: token.color.toUpperCase() === cinza ? 'comentario' : token.fontStyle & NEGRITO ? 'palavra-chave' : null,
       }))),
   };
 }
