@@ -2,7 +2,7 @@
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  iniciarChrome, servirPasta, abrirAula, classesForaDoContrato, perto, TINTA, CINZA, AMARELO, TRANSPARENTE,
+  iniciarChrome, servirPasta, abrirAula, classesForaDoContrato, perto, TINTA, CINZA, PAPEL, AMARELO, TRANSPARENTE,
 } from './utilitarios.mjs';
 
 let servidor;
@@ -145,6 +145,32 @@ test('linguagem fora da lista vira linhas sem destaque, com a mensagem no consol
   assert.equal(medida.cru, 'sem data-lang, fica como está');
   assert.deepEqual(erros, ['Aula USP: código com linguagem fora da lista em data-lang: "cobol"']);
   assert.deepEqual(await classesForaDoContrato(pagina), []);
+});
+
+test('código dentro de um campo segue a cor do campo: nada de cinza sobre amarelo nem tinta sobre tinta', async (t) => {
+  const fixtures = await servirPasta('tests/fixtures/codigo/');
+  t.after(() => fixtures.fechar());
+  const { pagina } = await abrirAula(navegador, `${fixtures.endereco}/index.html?folha`);
+  t.after(() => pagina.close());
+  const medida = await pagina.evaluate(() => {
+    const estilo = (seletor, pseudo) => getComputedStyle(document.querySelector(seletor), pseudo ?? null);
+    return {
+      destaque: [
+        estilo('#em-campos aside.destaque pre').color,
+        estilo('#em-campos aside.destaque pre').borderTopColor,
+        estilo('#em-campos aside.destaque .linha:not(.marcada) .comentario').color,
+        estilo('#em-campos aside.destaque .linha:not(.marcada)', '::before').color,
+        estilo('#em-campos aside.destaque .marcada .comentario').color,
+      ],
+      alerta: [
+        estilo('#em-campos aside.alerta pre').color,
+        estilo('#em-campos aside.alerta pre').borderTopColor,
+        estilo('#em-campos aside.alerta .comentario').color,
+      ],
+    };
+  });
+  assert.deepEqual(medida.destaque, [TINTA, TINTA, TINTA, TINTA, TINTA], 'no campo amarelo, tudo em tinta');
+  assert.deepEqual(medida.alerta, [PAPEL, PAPEL, PAPEL], 'no campo escuro, tudo em papel');
 });
 
 test('carga sob demanda: só as gramáticas das linguagens usadas; sem pre[data-lang], nada do Shiki; sem TeX, nada do KaTeX', async (t) => {

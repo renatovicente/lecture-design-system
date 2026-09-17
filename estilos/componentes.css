@@ -203,13 +203,12 @@
 .area pre {
   margin: 0;
   padding: var(--espaco-1) var(--espaco-1) 0;
-  border-top: var(--regua-normal) solid var(--cor-tinta);
+  border-top: var(--regua-normal) solid currentColor; /* tinta fora de campo, papel dentro do alerta */
   font-family: var(--tipo-codigo-familia);
   font-size: var(--tipo-codigo-tamanho);
   font-weight: var(--tipo-codigo-peso);
   line-height: var(--tipo-codigo-entrelinha);
   letter-spacing: var(--tipo-codigo-tracking);
-  color: var(--cor-tinta);
   counter-reset: linha;
 }
 
@@ -241,8 +240,15 @@
   color: var(--cor-cinza);
 }
 
+/* Dentro de um campo, comentário e número seguem a cor do campo; :where deixa a linha marcada passar na frente. */
+.area :where(aside.destaque, aside.alerta) pre .comentario,
+.area :where(aside.destaque, aside.alerta) pre[data-numeros] .linha::before {
+  color: inherit;
+}
+
 .area pre .marcada {
   background: var(--cor-amarelo);
+  color: var(--cor-tinta);
 }
 
 /* Sobre amarelo, só tinta (spec 4.2): na linha marcada, comentário e número deixam o cinza. */
