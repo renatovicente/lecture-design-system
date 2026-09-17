@@ -464,7 +464,7 @@ MSG
 
 - [ ] **Step 8: Escrever as fixtures das onze regras**
 
-A spec 11.1 pede `tests/fixtures/validador/<regra>/bom.html` e `ruim.html` por regra. O teste roda só a regra da pasta, então cada arquivo traz o mínimo que aquela regra precisa ver — mas **sempre como documento inteiro**: o `linkedom` não enche `document.body` a partir de um fragmento que começa em ``.
+A spec 11.1 pede `tests/fixtures/validador/<regra>/bom.html` e `ruim.html` por regra. O teste roda só a regra da pasta, então cada arquivo traz o mínimo que aquela regra precisa ver — mas **sempre como documento inteiro**: o `linkedom` não enche `document.body` a partir de um fragmento que começa em `<body>`.
 
 Todas as fixtures deste passo usam o mesmo cabeçalho, aqui chamado de `«CABEÇA»`:
 
@@ -472,10 +472,10 @@ Todas as fixtures deste passo usam o mesmo cabeçalho, aqui chamado de `«CABEÇ
 <!DOCTYPE html><html lang="pt-BR"><head>
 <meta name="unidade" content="ime"><meta name="disciplina" content="Teste"><meta name="aula" content="1">
 <meta name="data" content="2026-09-17"><meta name="professor" content="Prof.">
-</head>
+</head><body>
 ```
 
-e terminam com `</html>`. Escreva os 22 arquivos, cada um com «CABEÇA», o corpo abaixo e o fecho:
+e terminam com `</body></html>`. Escreva os 22 arquivos, cada um com «CABEÇA», o corpo abaixo e o fecho:
 
 `tests/fixtures/validador/estrutura.primeiro-slide/bom.html`
 ```html
