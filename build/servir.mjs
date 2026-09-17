@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 
 export const RAIZ_SISTEMA = fileURLToPath(new URL('..', import.meta.url)).replace(/[\\/]$/, '');
 export const PREFIXO = '/_aula-usp/';
-export const PASTAS_DO_SISTEMA = ['estilos', 'montar', 'motor', 'assets', 'tokens', 'contrato'];
+export const PASTAS_DO_SISTEMA = ['estilos', 'montar', 'motor', 'componentes', 'assets', 'tokens', 'contrato'];
 
 const TIPOS = {
   '.html': 'text/html; charset=utf-8',

@@ -2,7 +2,9 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { parseHTML } from 'linkedom';
+import katex from 'katex';
 import { textoDeTitulo, derivarBlocos, estadosDosQuadrados } from '../../montar/blocos.js';
+import { renderizarTex } from '../../componentes/tex.js';
 
 const contrato = JSON.parse(readFileSync(new URL('../../contrato/contrato.json', import.meta.url), 'utf8'));
 const LIMITES = { minBlocos: contrato.limites['blocos.min'], maxFileira: contrato.limites['blocos.maxFileira'] };
@@ -13,6 +15,15 @@ test('textoDeTitulo troca <br> por espaço e junta o texto dos filhos', () => {
     + '<span class="sinal">descemos no sentido oposto.</span></h2></section>');
   assert.equal(textoDeTitulo(secao.querySelector('h2')), 'O gradiente aponta a subida; descemos no sentido oposto.');
   assert.equal(textoDeTitulo(null), '');
+});
+
+test('textoDeTitulo troca o TeX, cru ou já renderizado, por texto sem barras nem chaves', () => {
+  const [secao] = secoes('<section data-layout="abertura"><h2>O papel de \\(\\eta\\)<br><span class="sinal">e de \\(\\nabla E\\)</span></h2></section>');
+  const titulo = secao.querySelector('h2');
+  assert.equal(textoDeTitulo(titulo), 'O papel de eta e de nabla E');
+  renderizarTex(titulo, { katex });
+  assert.equal(titulo.querySelectorAll('.katex').length, 2);
+  assert.equal(textoDeTitulo(titulo), 'O papel de eta e de nabla E');
 });
 
 test('derivarBlocos numera as aberturas e marca a introdução como null', () => {

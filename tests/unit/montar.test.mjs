@@ -59,6 +59,15 @@ test('a montagem rotula exercícios no idioma da aula e marca células numérica
   assert.deepEqual([...document.querySelectorAll('td')].map((celula) => celula.className), ['numerica', '']);
 });
 
+test('título de abertura com TeX dá id, rótulo do cabeçalho e aria-label sem barras', () => {
+  const { document, resumo } = montado(AULA_IME().replace('<h2>Backpropagation</h2>', '<h2>O papel de \\(\\eta\\)</h2>'));
+  assert.equal(resumo.blocos[1].titulo, 'O papel de eta');
+  assert.equal(resumo.blocos[1].id, 'o-papel-de-eta');
+  const culpa = document.getElementById('culpa');
+  assert.equal(culpa.querySelector('.cabecalho .rotulo').textContent, '02 · O papel de eta');
+  assert.equal(culpa.querySelectorAll('.cabecalho .quadrado')[1].getAttribute('aria-label'), 'Bloco 2: O papel de eta');
+});
+
 test('conteúdo do autor vai para div.area, com o TeX intacto; notas ficam fora', () => {
   const { document } = montado(AULA_IME());
   const intro = document.getElementById('por-que-descer');

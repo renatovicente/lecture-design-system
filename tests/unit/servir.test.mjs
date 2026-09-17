@@ -82,6 +82,9 @@ test('servidor entrega arquivos da aula e do sistema com o tipo certo', async ()
   const js = await pedir(`${PREFIXO}montar/montar.js`);
   assert.equal(js.status, 200);
   assert.match(js.tipo, /^text\/javascript/);
+  const componente = await pedir(`${PREFIXO}componentes/tex.js`);
+  assert.equal(componente.status, 200);
+  assert.ok(componente.corpo.includes('export function renderizarTex'));
 });
 
 test('servidor recusa pastas do sistema fora da lista e travessias codificadas', async () => {
