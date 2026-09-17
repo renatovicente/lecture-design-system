@@ -22,5 +22,8 @@
   },
   "bin": {
     "aula-usp": "bin/aula-usp.mjs"
+  },
+  "dependencies": {
+    "katex": "0.18.7"
   }
 }

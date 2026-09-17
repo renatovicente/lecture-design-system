@@ -28,6 +28,11 @@ test('ehNumerica recusa texto, data, unidade e número mal formado', () => {
   }
 });
 
+test('célula escrita em TeX não é numérica: fica à esquerda, como texto', () => {
+  assert.equal(ehNumerica('\\(0{,}5\\)'), false);
+  assert.equal(ehNumerica('\\(10^3\\)'), false);
+});
+
 test('marca células numéricas e alinha o cabeçalho da coluna que só tem números, com célula vazia neutra', () => {
   const doc = aula(`<section><table>
     <thead><tr><th>modelo</th><th>erro</th><th>nota</th><th>casos</th><th>2026</th></tr></thead>
