@@ -84,3 +84,35 @@ test('uma regra de outro grupo não roda', () => {
   const marcada = [{ nome: 'composicao.transbordo', *aplicar() { yield { mensagem: 'não deveria rodar.' }; } }];
   assert.deepEqual(rodar(BASE, marcada), []);
 });
+
+const FIXTURES = new URL('tests/fixtures/validador/', RAIZ);
+const IMPLEMENTADAS = new Map(estrutura.map((regra) => [regra.nome, regra]));
+
+// Uma pasta por regra (spec 11.1): bom.html não acusa nada, ruim.html acusa a regra da pasta.
+for (const nome of readdirSync(FIXTURES).sort()) {
+  test(`fixture de ${nome}`, () => {
+    const regra = IMPLEMENTADAS.get(nome);
+    assert.ok(regra, `a pasta ${nome} não tem regra implementada`);
+    const bom = rodar(readFileSync(new URL(`${nome}/bom.html`, FIXTURES), 'utf8'), [regra]);
+    assert.deepEqual(bom, [], `bom.html de ${nome} acusou ${bom.map((a) => a.mensagem).join(' / ')}`);
+    const ruim = rodar(readFileSync(new URL(`${nome}/ruim.html`, FIXTURES), 'utf8'), [regra]);
+    assert.ok(ruim.length > 0, `ruim.html de ${nome} não acusou nada`);
+    assert.ok(ruim.every((achado) => achado.regra === nome));
+  });
+}
+
+test('toda regra implementada existe no contrato e tem fixture', () => {
+  for (const regra of IMPLEMENTADAS.values()) {
+    assert.ok(contrato.regras[regra.nome], `${regra.nome} não está no contrato`);
+    assert.ok(existsSync(new URL(`${regra.nome}/ruim.html`, FIXTURES)), `${regra.nome} sem fixture`);
+  }
+});
+
+test('toda regra de estrutura do contrato está implementada', () => {
+  const doContrato = Object.entries(contrato.regras)
+    .filter(([nome, regra]) => nome.startsWith('estrutura.') && regra.grupo === 'estatica' && regra.fase === 1)
+    .map(([nome]) => nome);
+  const faltando = doContrato.filter((nome) => !IMPLEMENTADAS.has(nome));
+  // estrutura.obrigatorio e estrutura.fora-do-layout chegam na Task 2, com o casador de sequência.
+  assert.deepEqual(faltando, ['estrutura.obrigatorio', 'estrutura.fora-do-layout']);
+});
