@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Código no Aula USP</title>
+<meta name="unidade" content="ime">
+<meta name="disciplina" content="Espécime do Aula USP">
+<meta name="aula" content="3c">
+<meta name="data" content="2026-09-17">
+<meta name="professor" content="Prof. Renato Vicente">
+<script src="../dist/aula-usp.js"></script>
+</head>
+<body>
+
+<section data-layout="capa">
+  <h1>Código com destaque<br><span class="sinal">em sete linguagens</span></h1>
+</section>
+
+<section data-layout="abertura" id="descida" data-curto="Descida">
+  <h2>Descida do gradiente</h2>
+  <p class="pergunta">O que muda nos pesos de um passo para o outro?</p>
+</section>
+
+<section data-layout="conteudo" id="linhas-marcadas">
+  <h2>Linhas marcadas e numeradas</h2>
+<pre data-lang="python" data-linhas="6-7" data-numeros>
+import numpy as np
+
+def descida(w, x, y, eta=0.1, passos=100):
+    """Ajusta w por mínimos quadrados."""
+    for _ in range(passos):
+        erro = x @ w - y  # resíduo de cada exemplo
+        w = w - eta * x.T @ erro / len(y)
+    return w
+</pre>
+  <aside class="notas">As linhas marcadas são o passo; o resto só prepara o laço.</aside>
+</section>
+
+<section data-layout="abertura" id="outras-linguagens" data-curto="Linguagens">
+  <h2>Outras linguagens</h2>
+  <p class="pergunta">Como o mesmo destaque vale para R, SQL, JavaScript, Bash, JSON e LaTeX?</p>
+</section>
+
+<section data-layout="conteudo" id="r-e-sql">
+  <h2>R e SQL lado a lado</h2>
+  <div class="colunas" data-grade="6-6">
+    <div>
+<pre data-lang="r" data-linhas="4">
+# média móvel de k pontos
+media_movel &lt;- function(x, k = 3) {
+  janelas &lt;- embed(x, k)
+  rowMeans(janelas)  # uma média por janela
+}
+</pre>
+    </div>
+    <div>
+<pre data-lang="sql" data-linhas="2" data-numeros>
+SELECT turma, AVG(nota) AS media
+FROM provas  -- só a P1
+WHERE nota IS NOT NULL
+GROUP BY turma
+ORDER BY media DESC;
+</pre>
+    </div>
+  </div>
+</section>
+
+<section data-layout="conteudo" id="javascript-e-bash">
+  <h2>JavaScript e Bash</h2>
+<pre data-lang="javascript" data-linhas="3-4">
+const passo = (w, g, eta = 0.1) =&gt; w - eta * g;
+let w = 1;
+
+for (let t = 0; t &lt; 3; t++) w = passo(w, 2 * w);
+console.log(w);  // 0.512
+</pre>
+  <p>O mesmo laço, rodado para cada arquivo de dados:</p>
+<pre data-lang="bash">
+for f in dados/*.csv; do
+  node treino.js "$f"  # um modelo por arquivo
+done
+</pre>
+</section>
+
+<section data-layout="conteudo" id="json-e-latex">
+  <h2>JSON e LaTeX</h2>
+  <div class="colunas" data-grade="6-6">
+    <div>
+<pre data-lang="json">
+{
+  "taxa": 0.1,
+  "passos": 100,
+  "normalizar": true
+}
+</pre>
+    </div>
+    <div>
+<pre data-lang="latex" data-linhas="2">
+\begin{equation}
+  w_{t+1} = w_t - \eta \nabla E(w_t)
+\end{equation}
+% eta: taxa de aprendizado
+</pre>
+    </div>
+  </div>
+</section>
+
+<section data-layout="conteudo" id="dezesseis-linhas">
+  <h2>No limite: 16 linhas</h2>
+<pre data-lang="python" data-linhas="8-11" data-numeros>
+def perceptron(x, y, epocas=10, eta=1.0):
+    """Treina um perceptron com rótulos -1 e +1."""
+    w = np.zeros(x.shape[1])
+    b = 0.0
+    for epoca in range(epocas):
+        erros = 0
+        for xi, yi in zip(x, y):
+            if yi * (xi @ w + b) &lt;= 0:  # classificou errado
+                w = w + eta * yi * xi
+                b = b + eta * yi
+                erros += 1
+        if erros == 0:
+            break
+    return w, b
+
+pesos, vies = perceptron(x_treino, y_treino, epocas=20)
+</pre>
+</section>
+
+<section data-layout="encerramento">
+  <h2>O que fica</h2>
+  <ol class="sintese">
+    <li>Palavras-chave em peso, comentários em cinza.</li>
+    <li>A linha marcada é a ênfase do código.</li>
+  </ol>
+  <p class="proxima">Próximo marco: o validador.</p>
+</section>
+
+</body>
+</html>

@@ -197,3 +197,56 @@
   padding: var(--espaco-2) var(--espaco-3);
   font-size: var(--tipo-codigo-tamanho);
 }
+
+/* ---------- código ---------- */
+
+.area pre {
+  margin: 0;
+  padding: var(--espaco-1) var(--espaco-1) 0;
+  border-top: var(--regua-normal) solid var(--cor-tinta);
+  font-family: var(--tipo-codigo-familia);
+  font-size: var(--tipo-codigo-tamanho);
+  font-weight: var(--tipo-codigo-peso);
+  line-height: var(--tipo-codigo-entrelinha);
+  letter-spacing: var(--tipo-codigo-tracking);
+  color: var(--cor-tinta);
+  counter-reset: linha;
+}
+
+/* Cada linha cobre a largura do bloco, recuo incluído, para o campo amarelo; entre elas fica a quebra de linha do código. */
+.area pre .linha {
+  display: inline-block;
+  width: calc(100% + 2 * var(--espaco-1));
+  min-height: 1lh; /* a linha vazia também ocupa uma linha */
+  margin-inline: calc(-1 * var(--espaco-1));
+  padding-inline: var(--espaco-1);
+  vertical-align: top;
+}
+
+.area pre .palavra-chave {
+  font-weight: var(--tipo-codigo-peso-enfase);
+}
+
+.area pre .comentario {
+  color: var(--cor-cinza);
+}
+
+.area pre[data-numeros] .linha::before {
+  counter-increment: linha;
+  content: counter(linha);
+  display: inline-block;
+  min-width: 2ch;
+  margin-right: 2ch;
+  text-align: right;
+  color: var(--cor-cinza);
+}
+
+.area pre .marcada {
+  background: var(--cor-amarelo);
+}
+
+/* Sobre amarelo, só tinta (spec 4.2): na linha marcada, comentário e número deixam o cinza. */
+.area pre .marcada .comentario,
+.area pre[data-numeros] .marcada::before {
+  color: var(--cor-tinta);
+}

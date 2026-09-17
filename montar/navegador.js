@@ -7,6 +7,7 @@ import { instalarDemos } from '../motor/demos.js';
 import { instalarApresentador, instalarAberturaDoApresentador, modoApresentador } from '../motor/apresentador.js';
 import { instalarImpressao } from '../motor/impressao.js';
 import { renderizarTex } from '../componentes/tex.js';
+import { criarDestacador, renderizarCodigo } from '../componentes/codigo.js';
 
 const BASE = new URL('../', import.meta.url);
 const TEX = /\\\(|\\\[/;
@@ -56,6 +57,22 @@ try {
     ]);
     for (const erro of renderizarTex(document.body, { katex })) {
       console.error(`Aula USP: TeX inválido em ${erro.trecho}: ${erro.mensagem}`);
+    }
+  }
+  // O código também entra antes do motor; só as gramáticas das linguagens usadas na aula são importadas (spec 3.2).
+  const blocosDeCodigo = [...document.querySelectorAll('pre[data-lang]')];
+  if (blocosDeCodigo.length > 0) {
+    const usadas = [...new Set(blocosDeCodigo.map((pre) => pre.getAttribute('data-lang')))]
+      .filter((linguagem) => contrato.linguagens.includes(linguagem));
+    const [{ createShikiPrimitive, codeToTokensBase }, { createJavaScriptRegexEngine }, ...modulosDasGramaticas] = await Promise.all([
+      import('@shikijs/primitive'),
+      import('@shikijs/engine-javascript'),
+      ...usadas.map((linguagem) => import(`@shikijs/langs/${linguagem}`)),
+    ]);
+    const gramaticas = Object.fromEntries(usadas.map((linguagem, k) => [linguagem, modulosDasGramaticas[k].default]));
+    const destacador = criarDestacador({ createShikiPrimitive, codeToTokensBase, createJavaScriptRegexEngine, gramaticas });
+    for (const erro of renderizarCodigo(document.body, { destacador })) {
+      console.error(`Aula USP: código com ${erro.mensagem}`);
     }
   }
   if (new URLSearchParams(location.search).has('folha')) document.body.classList.add('folha');

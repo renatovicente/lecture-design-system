@@ -8,6 +8,7 @@ import { criarServidor } from '../../build/servir.mjs';
 export const RAIZ = new URL('../../', import.meta.url);
 
 export const TINTA = 'rgb(10, 10, 10)';
+export const CINZA = 'rgb(102, 102, 102)';
 export const PAPEL = 'rgb(255, 255, 255)';
 export const AMARELO = 'rgb(252, 180, 33)';
 export const AZUL = 'rgb(16, 148, 171)';
@@ -56,11 +57,13 @@ export async function esperarMontagem(pagina) {
 export async function abrirAula(navegador, url, { largura = 1400, altura = 900 } = {}) {
   const pagina = await navegador.newPage({ viewport: { width: largura, height: altura } });
   const erros = [];
+  const pedidos = [];
+  pagina.on('request', (pedido) => pedidos.push(pedido.url()));
   pagina.on('pageerror', (erro) => erros.push(erro.message));
   pagina.on('console', (mensagem) => {
     if (mensagem.type() === 'error' && !mensagem.location().url.endsWith('/favicon.ico')) erros.push(mensagem.text());
   });
   await pagina.goto(url);
   await esperarMontagem(pagina);
-  return { pagina, erros };
+  return { pagina, erros, pedidos };
 }
