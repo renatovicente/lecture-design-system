@@ -32,7 +32,7 @@ test('espécime de matemática: 8 slides com 16 equações, fontes do KaTeX carr
   assert.deepEqual(await classesForaDoContrato(pagina), []);
 });
 
-test('matemática a 1,1 × o texto ao redor; em destaque, alinhada à esquerda, sem margem, com o número na margem direita', async () => {
+test('matemática a 1,1 × o texto ao redor e sem o espaçamento do título; em destaque, alinhada à esquerda, sem margem, com o número na margem direita', async () => {
   const { pagina } = await folha();
   const medida = await pagina.evaluate(() => {
     const destaque = document.getElementById('em-destaque');
@@ -41,6 +41,7 @@ test('matemática a 1,1 × o texto ao redor; em destaque, alinhada à esquerda, 
     const partes = [...equacao.querySelector('.katex-html').children];
     const inline = document.querySelector('#no-texto p .katex');
     return {
+      espacamentoNoTitulo: getComputedStyle(document.querySelector('#o-papel-de-eta h2 .katex')).letterSpacing,
       tamanhoEmLinha: parseFloat(getComputedStyle(inline).fontSize),
       tamanhoDoTexto: parseFloat(getComputedStyle(inline.parentElement).fontSize),
       tamanhoEmDestaque: parseFloat(getComputedStyle(equacao.querySelector('.katex')).fontSize),
@@ -49,6 +50,7 @@ test('matemática a 1,1 × o texto ao redor; em destaque, alinhada à esquerda, 
       numero: partes.at(-1).classList.contains('katex-tag') ? partes.at(-1).getBoundingClientRect().right - slide.left : null,
     };
   });
+  assert.equal(medida.espacamentoNoTitulo, 'normal');
   perto(medida.tamanhoEmLinha, 1.1 * medida.tamanhoDoTexto, 'matemática em linha');
   perto(medida.tamanhoEmDestaque, 26.4, 'matemática em destaque');
   assert.equal(medida.margem, '0px');

@@ -173,6 +173,7 @@
 
 .area .katex {
   font-size: 1.1em; /* spec 4.3 */
+  letter-spacing: normal; /* a matemática não herda o espaçamento negativo dos títulos (spec 4.3) */
 }
 
 .area .equacao > .katex-display {
