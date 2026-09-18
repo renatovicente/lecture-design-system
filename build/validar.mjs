@@ -5,13 +5,11 @@ import { resolve, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseHTML } from 'linkedom';
 import { validar, contar } from '../validador/validar.js';
-import { regras as estrutura } from '../validador/regras/estrutura.js';
-import { regras as conteudo } from '../validador/regras/conteudo.js';
+import { REGRAS_ESTATICAS } from '../validador/regras/index.js';
 
 export const RAIZ_SISTEMA = fileURLToPath(new URL('..', import.meta.url));
 
-// A ordem é a ordem das mensagens dentro de um slide: primeiro o que é da aula, depois o conteúdo.
-export const REGRAS_ESTATICAS = [...estrutura, ...conteudo];
+export { REGRAS_ESTATICAS };
 
 export function caminhoDaAula(alvo) {
   const absoluto = resolve(alvo);

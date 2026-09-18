@@ -1,0 +1,99 @@
+// Regras de vocabulário (spec 5.5 e 9.2): elementos, classes e atributos do contrato, e mais nada.
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { parseHTML } from 'linkedom';
+import { validar } from '../../validador/validar.js';
+import { regras as vocabulario } from '../../validador/regras/vocabulario.js';
+
+const RAIZ = new URL('../../', import.meta.url);
+const contrato = JSON.parse(readFileSync(new URL('contrato/contrato.json', RAIZ), 'utf8'));
+
+const CABECA = `<!DOCTYPE html><html lang="pt-BR"><head>
+<meta name="unidade" content="ime"><meta name="disciplina" content="Teste"><meta name="aula" content="1">
+<meta name="data" content="2026-09-17"><meta name="professor" content="Prof.">
+</head><body>`;
+
+const aula = (corpo) => `${CABECA}\n${corpo}\n</body></html>`;
+const slide = (dentro) => aula(`<section data-layout="conteudo" id="a">\n${dentro}\n</section>`);
+
+function rodar(html) {
+  const { document } = parseHTML(html);
+  return validar(document, { contrato, regras: vocabulario, grupo: 'estatica' });
+}
+
+const mensagens = (html) => rodar(html).map((achado) => achado.mensagem);
+
+test('o que está no contrato passa', () => {
+  assert.deepEqual(mensagens(slide('<h2>T</h2>\n<p class="lide">Lide.</p>\n<p>Corpo.</p>')), []);
+});
+
+test('elemento fora do vocabulário e elemento proibido', () => {
+  assert.deepEqual(mensagens(slide('<h2>T</h2>\n<blockquote>Citação.</blockquote>')), ['<blockquote> não está no vocabulário no corpo.']);
+  assert.deepEqual(mensagens(slide('<h2>T</h2>\n<iframe src="https://x"></iframe>')), ['<iframe> é proibido no corpo da aula.']);
+});
+
+test('elemento fora do vocabulário não tem os atributos enumerados depois', () => {
+  // Uma regra, um dono: acusar o elemento e cada atributo dele faria quatro mensagens de um erro só.
+  assert.equal(mensagens(slide('<h2>T</h2>\n<iframe src="https://x" width="10"></iframe>')).length, 1);
+});
+
+test('classe inventada, classe do sistema, classe no elemento errado e fora do pai', () => {
+  assert.deepEqual(mensagens(slide('<h2>T</h2>\n<p class="bonito">C.</p>')), ['classe "bonito" não existe no contrato.']);
+  assert.deepEqual(mensagens(slide('<h2>T</h2>\n<p class="rodape">C.</p>')), ['"rodape" é classe do sistema: o autor não a escreve no fonte.']);
+  assert.deepEqual(mensagens(slide('<h2>T</h2>\n<div class="lide">C.</div>')), ['classe "lide" não vale em <div>, só em <p>.']);
+  assert.deepEqual(mensagens(slide('<h2>T</h2>\n<div class="enunciado"><p>E.</p></div>')), ['classe "enunciado" só vale dentro de div.exercicio.']);
+});
+
+test('atributo fora do contrato, com valor fora da lista, e com JSON inválido', () => {
+  assert.deepEqual(mensagens(slide('<h2>T</h2>\n<p tabindex="0">C.</p>')), ['atributo "tabindex" não vale em <p>.']);
+  assert.deepEqual(
+    mensagens(slide('<h2>T</h2>\n<div class="colunas" data-grade="7-5"><div><p>A</p></div><div><p>B</p></div></div>')),
+    ['data-grade com valor fora do contrato: "7-5".'],
+  );
+  assert.deepEqual(
+    mensagens(slide('<h2>T</h2>\n<div class="demo" data-demo="x" data-opcoes="{passo: 5}"></div>')),
+    ['data-opcoes com valor não é JSON válido.'],
+  );
+});
+
+// A section só foi varrida depois que a sondagem mostrou que os atributos dela não tinham dono.
+test('os atributos da própria section são conferidos', () => {
+  assert.deepEqual(
+    mensagens(aula('<section data-layout="conteudo" id="a" data-curto="X"><h2>T</h2><p>C.</p></section>')),
+    ['atributo "data-curto" só vale no layout abertura.'],
+  );
+  assert.deepEqual(
+    mensagens(aula('<section data-layout="conteudo" id="Maiúsculo"><h2>T</h2><p>C.</p></section>')),
+    ['id com valor fora da forma esperada: "Maiúsculo".'],
+  );
+});
+
+test('atributo de evento e estilo em linha', () => {
+  assert.deepEqual(mensagens(slide('<h2>T</h2>\n<p onclick="alert(1)">C.</p>')), ['atributo "onclick" é proibido no corpo da aula.']);
+  assert.deepEqual(mensagens(slide('<h2>T</h2>\n<p style="color: red">C.</p>')), ['estilo em linha em <p>.']);
+  assert.deepEqual(mensagens(slide('<h2>T</h2>\n<p>C.</p>\n<style>p { color: red }</style>')), ['elemento <style> no corpo da aula.']);
+});
+
+test('o vocabulário do SVG é outro, e o próprio svg conta como SVG', () => {
+  const figura = (dentro) => slide(`<h2>T</h2>\n<figure><svg viewBox="0 0 10 10" role="img" aria-label="d">${dentro}</svg></figure>`);
+  assert.deepEqual(mensagens(figura('<rect fill="#0A0A0A" width="5" height="5"/>')), []);
+  assert.deepEqual(mensagens(figura('<rect fill="#FF0000" width="5" height="5"/>')), ['fill="#FF0000" não é cor do contrato.']);
+  assert.deepEqual(mensagens(figura('<foreignObject width="5" height="5"/>')), ['<foreignObject> é proibido no corpo da aula.']);
+});
+
+test('amarelo e azul em SVG seguem a regra de cor da spec 4.2', () => {
+  const svg = (dentro) => slide(`<h2>T</h2>\n<figure><svg viewBox="0 0 10 10">${dentro}</svg></figure>`);
+  assert.deepEqual(mensagens(svg('<text fill="#FCB421" font-size="40">oi</text>')), ['amarelo em texto de SVG.']);
+  assert.deepEqual(mensagens(svg('<line stroke="#FCB421" stroke-width="2" x1="0" y1="0" x2="5" y2="5"/>')), ['amarelo em traço de 2 px (mín. 4).']);
+  assert.deepEqual(mensagens(svg('<line stroke="#FCB421" stroke-width="4" x1="0" y1="0" x2="5" y2="5"/>')), []);
+  assert.deepEqual(mensagens(svg('<text fill="#1094AB" font-size="20">oi</text>')), ['azul em texto de 20 px (mín. 32).']);
+  assert.deepEqual(mensagens(svg('<text fill="#1094AB" font-size="32">oi</text>')), []);
+});
+
+test('script dentro da section', () => {
+  assert.deepEqual(
+    mensagens(slide('<h2>T</h2>\n<p>C.</p>\n<script>var x = 1;</script>')),
+    ['script dentro da section: registros de demo ficam fora dos slides.'],
+  );
+});
