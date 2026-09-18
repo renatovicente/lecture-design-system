@@ -109,6 +109,30 @@ test('data-passo só com espaço em branco continua sem número', () => {
   assert.equal(achados[0].mensagem, 'o slide mistura 1 passo sem número com 1 numerado.');
 });
 
+// Achado da revisão final: hasAttribute não é "tem valor" (mesma lição do data-passo acima).
+test('data-curto vazio ou só com espaço não escapa de estrutura.nome-curto', () => {
+  const tituloLongo = BASE.replace('<h2>Um</h2>', '<h2>Retropropagação</h2>');
+  const vazio = tituloLongo.replace('id="bloco-um">', 'id="bloco-um" data-curto="">');
+  assert.equal(rodar(vazio).filter((a) => a.regra === 'estrutura.nome-curto').length, 1);
+  const soEspaco = tituloLongo.replace('id="bloco-um">', 'id="bloco-um" data-curto="   ">');
+  assert.equal(rodar(soEspaco).filter((a) => a.regra === 'estrutura.nome-curto').length, 1);
+  const comValor = tituloLongo.replace('id="bloco-um">', 'id="bloco-um" data-curto="Retro">');
+  assert.deepEqual(rodar(comValor).filter((a) => a.regra === 'estrutura.nome-curto'), []);
+});
+
+// Achado da revisão final: nomeDoLayout devolve uma oração, não um nome; a mensagem sem layout
+// não pode encaixá-la onde o molde espera um nome entre aspas.
+test('estrutura.id-ausente escreve a mensagem por extenso, com e sem layout', () => {
+  const comLayout = rodar(BASE.replace('id="conteudo">', '>')).find((a) => a.regra === 'estrutura.id-ausente');
+  assert.equal(comLayout.mensagem, 'slide de layout "conteudo" sem id.');
+  const semLayout = rodar(aula(
+    '<section data-layout="capa"><h1>Capa</h1></section>\n'
+    + '<section><h2>Sem layout.</h2></section>\n'
+    + '<section data-layout="encerramento"><h2>Fim</h2><ol class="sintese"><li>Um.</li></ol></section>',
+  )).find((a) => a.regra === 'estrutura.id-ausente');
+  assert.equal(semLayout.mensagem, 'section sem data-layout e sem id.');
+});
+
 import { regras as conteudo } from '../../validador/regras/conteudo.js';
 import { itensDoConteudo } from '../../validador/sequencia.js';
 
@@ -190,6 +214,18 @@ test('as notas podem estar em qualquer posição do slide', () => {
   assert.deepEqual(achados.filter((a) => a.severidade === 'erro'), []);
 });
 
+// Achado da revisão final: sempreOpcional só filtra no nível da própria section (teste acima);
+// dentro de qualquer outro elemento, uma nota deslocada é conteúdo real e cai fora do layout —
+// caso contrário, o montar a exibiria no slide e o validador diria que faltam notas.
+test('nota dentro de uma coluna não é permitida: sempreOpcional não vale além da própria section', () => {
+  const notaNaColuna = slide(
+    '  <h2>Título</h2>\n'
+    + '  <div class="colunas" data-grade="6-6"><div><aside class="notas">Deslocada.</aside><p>A.</p></div><div><p>B.</p></div></div>\n',
+  );
+  const achados = rodar(notaNaColuna, todas).filter((a) => a.regra === 'estrutura.fora-do-layout');
+  assert.deepEqual(achados.map((a) => a.mensagem), ['<aside> não é permitido dentro de <div>.']);
+});
+
 // Deslocamento não é ausência: o casador de uma passada só mandava acrescentar o que já estava no slide.
 test('elemento deslocado acusa fora de ordem, e nunca ausência', () => {
   const achados = rodar(slide('  <p class="lide">Lide.</p>\n  <h2>Título</h2>\n  <p>Corpo.</p>\n'), todas);
@@ -255,16 +291,22 @@ test('misturar colunas com blocos soltos acusa o que está em minoria', () => {
 const FIXTURES = new URL('tests/fixtures/validador/', RAIZ);
 const IMPLEMENTADAS = new Map(todas.map((regra) => [regra.nome, regra]));
 
-// Uma pasta por regra (spec 11.1): bom.html não acusa nada, ruim.html acusa a regra da pasta.
+// Uma pasta por regra (spec 11.1): roda TODAS as regras sobre a fixture e filtra pela regra da
+// pasta — bom.html não produz nenhum achado dela, ruim.html produz pelo menos um. Rodar só a
+// regra da pasta (como antes) tornava "ruim.html só acusa a própria regra" tautológico (com uma
+// regra só no ar, todo achado só pode ser dela) e nunca testava bom.html contra mais nada. Não
+// exigimos bom.html limpo para as OUTRAS regras: fixtures mínimas legitimamente disparam
+// estrutura.blocos ou estrutura.notas-ausentes, e cobrar isso viraria uma aula inteira por pasta.
 for (const nome of readdirSync(FIXTURES).sort()) {
   test(`fixture de ${nome}`, () => {
     const regra = IMPLEMENTADAS.get(nome);
     assert.ok(regra, `a pasta ${nome} não tem regra implementada`);
-    const bom = rodar(readFileSync(new URL(`${nome}/bom.html`, FIXTURES), 'utf8'), [regra]);
-    assert.deepEqual(bom, [], `bom.html de ${nome} acusou ${bom.map((a) => a.mensagem).join(' / ')}`);
-    const ruim = rodar(readFileSync(new URL(`${nome}/ruim.html`, FIXTURES), 'utf8'), [regra]);
-    assert.ok(ruim.length > 0, `ruim.html de ${nome} não acusou nada`);
-    assert.ok(ruim.every((achado) => achado.regra === nome));
+    const bom = rodar(readFileSync(new URL(`${nome}/bom.html`, FIXTURES), 'utf8'), todas)
+      .filter((achado) => achado.regra === nome);
+    assert.deepEqual(bom, [], `bom.html de ${nome} acusou da própria regra: ${bom.map((a) => a.mensagem).join(' / ')}`);
+    const ruim = rodar(readFileSync(new URL(`${nome}/ruim.html`, FIXTURES), 'utf8'), todas)
+      .filter((achado) => achado.regra === nome);
+    assert.ok(ruim.length > 0, `ruim.html de ${nome} não acusou nada da própria regra`);
   });
 }
 

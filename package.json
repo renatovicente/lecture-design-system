@@ -16,10 +16,6 @@
     "servir": "node bin/aula-usp.mjs servir",
     "test:integracao": "node --test tests/integracao/*.test.mjs"
   },
-  "devDependencies": {
-    "linkedom": "^0.18.13",
-    "playwright-core": "^1.63.0"
-  },
   "bin": {
     "aula-usp": "bin/aula-usp.mjs"
   },
@@ -27,6 +23,8 @@
     "@shikijs/engine-javascript": "4.4.3",
     "@shikijs/langs": "4.4.3",
     "@shikijs/primitive": "4.4.3",
-    "katex": "0.18.7"
+    "katex": "0.18.7",
+    "linkedom": "^0.18.13",
+    "playwright-core": "^1.63.0"
   }
 }

@@ -1,7 +1,7 @@
 // Cola de Node do validador (spec 8.1 e 9.3): lê a aula do disco e devolve os achados.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawn } from 'node:child_process';
 import { mkdtempSync, writeFileSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -15,6 +15,20 @@ function aulaTemporaria(html) {
   const pasta = mkdtempSync(join(tmpdir(), 'aula-usp-'));
   writeFileSync(join(pasta, 'index.html'), html);
   return pasta;
+}
+
+// Repete uma abertura com título longo e sem data-curto (um erro de estrutura.nome-curto por
+// slide) até passar de sobra dos 64 KiB que expõem o truncamento de process.exit() num cano.
+function aulaGrande(quantos) {
+  let corpo = '<section data-layout="capa"><h1>Capa</h1></section>\n';
+  for (let i = 0; i < quantos; i++) {
+    corpo += `<section data-layout="abertura"><h2>Título bem longo número ${i}, sem data-curto</h2></section>\n`;
+  }
+  corpo += '<section data-layout="encerramento"><h2>Fim</h2><ol class="sintese"><li>Um.</li></ol></section>\n';
+  return `<!DOCTYPE html><html lang="pt-BR"><head>
+<meta name="unidade" content="ime"><meta name="disciplina" content="Teste"><meta name="aula" content="1">
+<meta name="data" content="2026-09-17"><meta name="professor" content="Prof."></head><body>
+${corpo}</body></html>`;
 }
 
 const BOA = `<!DOCTYPE html><html lang="pt-BR"><head>
@@ -122,12 +136,31 @@ test('caminho que não existe ainda sai com 2 e "não encontrei"', () => {
   }
 });
 
-test('bin/aula-usp.mjs não importa build/servir.mjs no topo do módulo', () => {
-  // import estático rodaria a leitura de contrato.json em build/servir.mjs:13 antes de qualquer
-  // try/catch do comando, transformando um contrato quebrado em stack trace e saída 1 em vez da
-  // saída 2 da spec 8.1 — exatamente o bug que esta rodada corrige. Um teste de comportamento
-  // exigiria uma segunda cópia do sistema em disco com um contrato quebrado; este guard de
-  // código-fonte é o substituto barato e honesto.
+test('bin/aula-usp.mjs não importa build/servir.mjs nem build/validar.mjs no topo do módulo', () => {
+  // import estático rodaria a leitura de disco desses módulos (contrato.json nos dois; linkedom
+  // em build/validar.mjs) antes de qualquer try/catch do comando, transformando um arquivo do
+  // sistema ou uma dependência ausente em stack trace e saída 1 em vez da saída 2 da spec 8.1 — o
+  // bug que ce7a824 corrigiu para servir.mjs e esta rodada corrige para validar.mjs, a mesma
+  // dependência que faltar derruba a CLI. Um teste de comportamento exigiria uma segunda cópia do
+  // sistema em disco sem a dependência; este guard de código-fonte é o substituto barato e honesto.
   const fonte = readFileSync(CLI, 'utf8');
   assert.doesNotMatch(fonte, /^\s*import\b.*build\/servir\.mjs/m);
+  assert.doesNotMatch(fonte, /^\s*import\b.*build\/validar\.mjs/m);
+});
+
+test('--json não trunca em 64 KiB quando a saída é lida por um cano', async () => {
+  // process.exit() descarta escrita pendente em stdout; num cano, isso corta o JSON no meio.
+  // Um teste pequeno passaria com o bug presente — por isso a aula tem que gerar achados de
+  // sobra, e a checagem é por conteúdo (JSON.parse + contagem), não por tamanho aproximado.
+  const pasta = aulaTemporaria(aulaGrande(180));
+  const { achados: esperados } = validarArquivo(pasta);
+  const filho = spawn('node', [CLI, 'validar', pasta, '--json'], { stdio: ['ignore', 'pipe', 'pipe'] });
+  const pedacos = [];
+  filho.stdout.on('data', (pedaco) => pedacos.push(pedaco));
+  const [codigo] = await new Promise((resolvido) => filho.on('close', (...args) => resolvido(args)));
+  const saida = Buffer.concat(pedacos);
+  assert.ok(saida.byteLength > 65536, `a saída precisa passar de 64 KiB para exercer o bug: ${saida.byteLength} bytes`);
+  const achados = JSON.parse(saida.toString('utf8'));
+  assert.deepEqual(achados, esperados);
+  assert.equal(codigo, 1);
 });

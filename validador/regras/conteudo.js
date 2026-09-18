@@ -22,8 +22,11 @@ function semOpcionais(elemento, contrato) {
 }
 
 // Fora de uma sequência, os filhos vêm em qualquer ordem: o casamento é por conjunto, não por posição.
+// sempreOpcional (aside.notas) só é filtrado no nível da própria section (conferir, abaixo): dentro de
+// qualquer outro elemento a nota não está em blocosDeCorpo, então cai em "não é permitido" por conta
+// própria — sem isso, uma nota mal colocada numa coluna passava muda e ainda era renderizada no slide.
 function conferirFilhos(elemento, seletor, regra, contrato) {
-  const itens = semOpcionais(elemento, contrato);
+  const itens = itensDoConteudo(elemento);
   if (regra.sequencia) return casarSequencia(itens, regra.sequencia, contrato);
   const entradas = entradasDeFilhos(seletor, regra);
   const faltando = [];

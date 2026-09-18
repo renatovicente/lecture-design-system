@@ -114,8 +114,13 @@ export const regras = [
     nome: 'estrutura.id-ausente',
     *aplicar({ slides }) {
       for (const secao of slides) {
-        if (!secao.getAttribute('id') && !SEM_ID.includes(secao.getAttribute('data-layout'))) {
-          yield { ...onde(slides, secao), mensagem: `slide de layout ${nomeDoLayout(secao)} sem id.` };
+        const layout = secao.getAttribute('data-layout');
+        if (!secao.getAttribute('id') && !SEM_ID.includes(layout)) {
+          // nomeDoLayout devolve uma oração ("uma section sem data-layout") pensada para continuar uma
+          // frase (ver primeiro-slide/ultimo-slide); aqui o molde é outro, então a mensagem é escrita
+          // por extenso nos dois casos, em vez de encaixar a oração onde um nome era esperado.
+          const mensagem = layout ? `slide de layout "${layout}" sem id.` : 'section sem data-layout e sem id.';
+          yield { ...onde(slides, secao), mensagem };
         }
       }
     },
@@ -125,7 +130,10 @@ export const regras = [
     *aplicar({ slides, contrato }) {
       const limite = contrato.limites['abertura.h2.caracteresSemDataCurto'];
       for (const secao of slides) {
-        if (secao.getAttribute('data-layout') !== 'abertura' || secao.hasAttribute('data-curto')) continue;
+        // hasAttribute não é "tem valor" (mesma lição de data-passo=" "): data-curto="" ou só espaço
+        // não conta, senão a abertura escapa da regra e montar/blocos.js volta a usar o título inteiro.
+        const curto = secao.getAttribute('data-curto');
+        if (secao.getAttribute('data-layout') !== 'abertura' || (curto !== null && curto.trim() !== '')) continue;
         const titulo = textoDeTitulo(secao.querySelector('h2'));
         if (titulo.length > limite) {
           yield { ...onde(slides, secao), mensagem: `abertura com título de ${titulo.length} caracteres (máx. ${limite}) e sem data-curto.` };

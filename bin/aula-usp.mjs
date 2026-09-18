@@ -1,12 +1,13 @@
 #!/usr/bin/env node
 // CLI do Aula USP (spec 8.1). Neste marco, `servir` e `validar`.
 import { statSync } from 'node:fs';
-// build/servir.mjs só é importado dentro de `servir` (import dinâmico): esse módulo lê e
-// faz parse de contrato/contrato.json no escopo do módulo, e um import estático rodaria essa
-// leitura antes de qualquer try/catch dos comandos — um contrato quebrado viraria stack trace e
-// saída 1 para os dois comandos (a spec 8.1 pede saída 2), mesmo em `validar`, que nem usa o
-// servidor de desenvolvimento.
-import { validarArquivo } from '../build/validar.mjs';
+import { resolve, join } from 'node:path';
+// build/servir.mjs e build/validar.mjs só são importados dentro do comando que precisa de cada um
+// (import dinâmico): os dois leem disco no escopo do próprio módulo (contrato/contrato.json, e
+// build/validar.mjs ainda importa linkedom), e um import estático rodaria essa leitura antes de
+// qualquer try/catch — uma dependência ou um arquivo do sistema ausente viraria stack trace e saída 1
+// para o comando (a spec 8.1 pede saída 2). A regra vale para os dois módulos de build/: nada que leia
+// disco ou dependência externa no escopo do módulo entra na CLI por import estático.
 import { linhaDe, cabecalhoDe } from '../validador/validar.js';
 
 const USO = 'uso: aula-usp servir <pasta> [--porta 8765]\n       aula-usp validar <pasta> [--json]';
@@ -53,17 +54,22 @@ async function servir(argumentos) {
   });
 }
 
-function validarComando(argumentos) {
+async function validarComando(argumentos) {
   const { opcoes, posicionais } = lerArgumentos(argumentos);
   const [alvo] = posicionais;
   if (!alvo) sair(USO);
   let resultado;
   try {
+    const { validarArquivo } = await import('../build/validar.mjs');
     resultado = validarArquivo(alvo);
   } catch (erro) {
-    // ENOENT é caminho errado; qualquer outra falha (HTML ilegível, contrato ou unidades
-    // quebrados) não é "não encontrei" — é o ambiente que está com problema.
-    if (erro.code === 'ENOENT') sair(`não encontrei a aula em ${alvo}: ${erro.message}`);
+    // "não encontrei" só quando o caminho ausente é o da própria aula (o alvo, ou o index.html
+    // dentro dele); ENOENT de qualquer outro arquivo — contrato, unidades, ou a própria dependência
+    // ausente do import acima — é o ambiente que está com problema, não um engano de caminho.
+    const alvoAbsoluto = resolve(alvo);
+    const ehCaminhoDaAula = erro.code === 'ENOENT'
+      && (erro.path === alvoAbsoluto || erro.path === join(alvoAbsoluto, 'index.html'));
+    if (ehCaminhoDaAula) sair(`não encontrei a aula em ${alvo}: ${erro.message}`);
     else sair(`falha de ambiente: ${erro.message}`);
   }
   const { achados, erros } = resultado;
@@ -72,7 +78,9 @@ function validarComando(argumentos) {
     for (const achado of achados) console.log(linhaDe(achado));
     console.log(cabecalhoDe(achados));
   }
-  process.exit(erros > 0 ? 1 : 0);
+  // process.exitCode, não process.exit: process.exit descarta escrita pendente em stdout, e num
+  // cano (o jeito que --json costuma ser consumido) o JSON grande sai truncado.
+  process.exitCode = erros > 0 ? 1 : 0;
 }
 
 const [comando, ...argumentos] = process.argv.slice(2);
