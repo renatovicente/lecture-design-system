@@ -1,7 +1,11 @@
 #!/usr/bin/env node
 // CLI do Aula USP (spec 8.1). Neste marco, `servir` e `validar`.
 import { statSync } from 'node:fs';
-import { criarServidor } from '../build/servir.mjs';
+// build/servir.mjs só é importado dentro de `servir` (import dinâmico): esse módulo lê e
+// faz parse de contrato/contrato.json no escopo do módulo, e um import estático rodaria essa
+// leitura antes de qualquer try/catch dos comandos — um contrato quebrado viraria stack trace e
+// saída 1 para os dois comandos (a spec 8.1 pede saída 2), mesmo em `validar`, que nem usa o
+// servidor de desenvolvimento.
 import { validarArquivo } from '../build/validar.mjs';
 import { linhaDe, cabecalhoDe } from '../validador/validar.js';
 
@@ -18,12 +22,14 @@ function lerArgumentos(argumentos) {
   for (let i = 0; i < argumentos.length; i++) {
     if (argumentos[i] === '--porta') opcoes.porta = Number(argumentos[++i]);
     else if (argumentos[i] === '--json') opcoes.json = true;
+    else if (argumentos[i].startsWith('--')) sair(USO); // flag desconhecida: melhor recusar que ignorar em silêncio
     else posicionais.push(argumentos[i]);
   }
+  if (posicionais.length > 1) sair(USO); // um alvo só; mais de um é engano do autor, não uma lista
   return { opcoes, posicionais };
 }
 
-function servir(argumentos) {
+async function servir(argumentos) {
   const { opcoes, posicionais } = lerArgumentos(argumentos);
   const [pasta] = posicionais;
   if (!pasta || !Number.isInteger(opcoes.porta) || opcoes.porta < 0 || opcoes.porta > 65535) sair(USO);
@@ -36,6 +42,7 @@ function servir(argumentos) {
   if (!ehPasta) sair(`pasta não encontrada: ${pasta}`);
   let servidor;
   try {
+    const { criarServidor } = await import('../build/servir.mjs');
     servidor = criarServidor({ pastaAula: pasta });
   } catch (erro) {
     sair(`falha de ambiente: ${erro.message}\nrode npm install na pasta do sistema`);
@@ -54,7 +61,10 @@ function validarComando(argumentos) {
   try {
     resultado = validarArquivo(alvo);
   } catch (erro) {
-    sair(`não encontrei a aula em ${alvo}: ${erro.message}`);
+    // ENOENT é caminho errado; qualquer outra falha (HTML ilegível, contrato ou unidades
+    // quebrados) não é "não encontrei" — é o ambiente que está com problema.
+    if (erro.code === 'ENOENT') sair(`não encontrei a aula em ${alvo}: ${erro.message}`);
+    else sair(`falha de ambiente: ${erro.message}`);
   }
   const { achados, erros } = resultado;
   if (opcoes.json) console.log(JSON.stringify(achados, null, 2));

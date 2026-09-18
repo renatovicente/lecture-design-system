@@ -2,7 +2,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { mkdtempSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, writeFileSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -90,4 +90,44 @@ test('pasta sem index.html sai com 2', () => {
 test('um arquivo também pode ser validado direto', () => {
   const saida = execFileSync('node', [CLI, 'validar', join(RAIZ, 'especime/matematica.html')], { encoding: 'utf8' });
   assert.match(saida, /0 erros/);
+});
+
+test('uma flag desconhecida sai com 2 e imprime o uso', () => {
+  try {
+    execFileSync('node', [CLI, 'validar', aulaTemporaria(BOA), '--formato=texto'], { encoding: 'utf8' });
+    assert.fail('deveria ter saído com 2');
+  } catch (erro) {
+    assert.equal(erro.status, 2);
+    assert.match(erro.stderr, /uso: aula-usp servir/);
+  }
+});
+
+test('um segundo posicional sai com 2', () => {
+  try {
+    execFileSync('node', [CLI, 'validar', aulaTemporaria(BOA), aulaTemporaria(BOA)], { encoding: 'utf8' });
+    assert.fail('deveria ter saído com 2');
+  } catch (erro) {
+    assert.equal(erro.status, 2);
+    assert.match(erro.stderr, /uso: aula-usp servir/);
+  }
+});
+
+test('caminho que não existe ainda sai com 2 e "não encontrei"', () => {
+  try {
+    execFileSync('node', [CLI, 'validar', join(RAIZ, 'especime/nao-existe.html')], { encoding: 'utf8' });
+    assert.fail('deveria ter saído com 2');
+  } catch (erro) {
+    assert.equal(erro.status, 2);
+    assert.match(erro.stderr, /não encontrei/);
+  }
+});
+
+test('bin/aula-usp.mjs não importa build/servir.mjs no topo do módulo', () => {
+  // import estático rodaria a leitura de contrato.json em build/servir.mjs:13 antes de qualquer
+  // try/catch do comando, transformando um contrato quebrado em stack trace e saída 1 em vez da
+  // saída 2 da spec 8.1 — exatamente o bug que esta rodada corrige. Um teste de comportamento
+  // exigiria uma segunda cópia do sistema em disco com um contrato quebrado; este guard de
+  // código-fonte é o substituto barato e honesto.
+  const fonte = readFileSync(CLI, 'utf8');
+  assert.doesNotMatch(fonte, /^\s*import\b.*build\/servir\.mjs/m);
 });
