@@ -1,14 +1,12 @@
 // Regras de limite (spec 5.2, 5.3 e 9.2): o que cabe no slide, contado no fonte.
 // Os números vêm todos de contrato.limites; o código só sabe contar.
 import { onde, trechoDe, plural } from '../validar.js';
-import { textoSemTex } from '../../componentes/tex.js';
+import { textoSemTex, textosDe } from '../../componentes/tex.js';
 import { codigoDoBloco } from '../../componentes/codigo.js';
 
-// Fora da contagem de palavras (spec 5.3): TeX vira uma palavra, código e notas não contam.
-const FORA_DA_CONTAGEM = 'pre, code, aside.notas';
-
 // Segmentos de um título são os trechos entre <br> (spec 5.3), lidos pelo que aparece: o TeX conta
-// pelo texto renderizado, não pelo fonte, senão \frac{1}{2} valeria doze caracteres.
+// pelo texto renderizado, não pelo fonte, senão \frac{1}{2} valeria doze caracteres. Um <br> solto ou
+// no final não cria segmento vazio: título é "quantas linhas têm texto", não "quantas quebras têm".
 export function segmentosDoTitulo(elemento) {
   if (!elemento) return [];
   const segmentos = [[]];
@@ -16,13 +14,17 @@ export function segmentosDoTitulo(elemento) {
     if (no.nodeType === 1 && no.nodeName === 'BR') segmentos.push([]);
     else segmentos.at(-1).push(no.textContent ?? '');
   }
-  return segmentos.map((partes) => textoSemTex(partes.join('')).trim());
+  return segmentos.map((partes) => textoSemTex(partes.join('')).trim()).filter(Boolean);
 }
 
+// Palavras são as sequências separadas por espaço nos nós de texto (spec 5.3): soma por nó, nunca
+// pelo textContent do galho inteiro, porque dois elementos vizinhos sem espaço no fonte (ou os dois
+// lados de um <br>) colariam num token só e a conta viria baixa. Código e notas não contam; TeX vira
+// uma palavra (o texto renderizado, via textoSemTex).
 export function palavrasDe(elemento) {
   const copia = elemento.cloneNode(true);
-  for (const fora of copia.querySelectorAll(FORA_DA_CONTAGEM)) fora.remove();
-  return textoSemTex(copia.textContent).split(/\s+/).filter(Boolean).length;
+  for (const notas of copia.querySelectorAll('aside.notas')) notas.remove();
+  return textosDe(copia).reduce((total, no) => total + textoSemTex(no.nodeValue).split(/\s+/).filter(Boolean).length, 0);
 }
 
 function textoDe(elemento) {
@@ -39,7 +41,7 @@ const COMPRIMENTOS = [
   ['limites.proxima', 'p.proxima', 'proxima.caracteres', 'a próxima aula'],
 ];
 
-function* porComprimento(nome, seletor, chave, rotulo, { slides, contrato }) {
+function* porComprimento(seletor, chave, rotulo, { slides, contrato }) {
   const limite = contrato.limites[chave];
   for (const secao of slides) {
     for (const elemento of secao.querySelectorAll(seletor)) {
@@ -106,7 +108,7 @@ export const regras = [
   },
   ...COMPRIMENTOS.map(([nome, seletor, chave, rotulo]) => ({
     nome,
-    aplicar: (contexto) => porComprimento(nome, seletor, chave, rotulo, contexto),
+    aplicar: (contexto) => porComprimento(seletor, chave, rotulo, contexto),
   })),
   {
     nome: 'limites.palavras-corpo',
@@ -114,7 +116,11 @@ export const regras = [
       const limite = contrato.limites['corpo.palavras'];
       for (const secao of slides) {
         if (secao.getAttribute('data-layout') !== 'conteudo') continue;
-        const palavras = palavrasDe(secao) - segmentosDoTitulo(tituloDoSlide(secao).elemento).join(' ').split(/\s+/).filter(Boolean).length;
+        // Por construção, não por subtração: tira o título e o lide (cada um com limite próprio) e
+        // conta só o que sobra. Subtrair a contagem do título dava conta errada quando ele tinha <br>.
+        const corpo = secao.cloneNode(true);
+        for (const fora of corpo.querySelectorAll('h1, h2, p.lide')) fora.remove();
+        const palavras = palavrasDe(corpo);
         if (palavras > limite) {
           yield { ...onde(slides, secao), mensagem: `${plural(palavras, 'palavra', 'palavras')} no corpo (máx. ${limite}).` };
         }
@@ -244,9 +250,21 @@ export const regras = [
           if (dados > maxLinhas) {
             yield { ...onde(slides, secao), mensagem: `tabela com ${plural(dados, 'linha', 'linhas')} de dados (máx. ${maxLinhas}).` };
           }
-          // A largura é a maior linha, contando colspan: é o que ocupa coluna de verdade.
-          const colunas = linhas.reduce((maximo, linha) => Math.max(maximo, [...linha.children]
-            .reduce((soma, celula) => soma + (Number.parseInt(celula.getAttribute('colspan') ?? '1', 10) || 1), 0)), 0);
+          // A largura é a maior linha simulando a grade: colspan da própria linha, mais os slots que
+          // ela herda de rowspan de linhas anteriores ainda ativos (rowspan não some na linha de baixo).
+          let pendentes = [];
+          let colunas = 0;
+          for (const linha of linhas) {
+            const propria = [...linha.children]
+              .reduce((soma, celula) => soma + (Number.parseInt(celula.getAttribute('colspan') ?? '1', 10) || 1), 0);
+            colunas = Math.max(colunas, pendentes.length + propria);
+            pendentes = pendentes.map((restam) => restam - 1).filter((restam) => restam > 0);
+            for (const celula of linha.children) {
+              const rowspan = Number.parseInt(celula.getAttribute('rowspan') ?? '1', 10) || 1;
+              const colspan = Number.parseInt(celula.getAttribute('colspan') ?? '1', 10) || 1;
+              if (rowspan > 1) for (let i = 0; i < colspan; i += 1) pendentes.push(rowspan - 1);
+            }
+          }
           if (colunas > maxColunas) {
             yield { ...onde(slides, secao), mensagem: `tabela com ${plural(colunas, 'coluna', 'colunas')} (máx. ${maxColunas}).` };
           }

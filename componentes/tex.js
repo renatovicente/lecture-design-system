@@ -97,19 +97,23 @@ function htmlDoKatex(katex, tex, tipo) {
   return semCores(html);
 }
 
-export function textosComTex(raiz) {
+// Nós de texto de raiz, na mesma exclusão de FORA. Base de textosComTex e de quem soma palavras por
+// nó em vez de pelo textContent do galho inteiro: dois elementos vizinhos sem espaço no fonte não
+// grudam quando cada nó de texto é contado à parte.
+export function textosDe(raiz) {
   const nos = [];
   const andar = (no) => {
     for (const filho of no.childNodes) {
-      if (filho.nodeType === 3) {
-        if (filho.nodeValue.includes('\\(') || filho.nodeValue.includes('\\[')) nos.push(filho);
-      } else if (filho.nodeType === 1 && !filho.matches(FORA)) {
-        andar(filho);
-      }
+      if (filho.nodeType === 3) nos.push(filho);
+      else if (filho.nodeType === 1 && !filho.matches(FORA)) andar(filho);
     }
   };
   andar(raiz);
   return nos;
+}
+
+export function textosComTex(raiz) {
+  return textosDe(raiz).filter((no) => no.nodeValue.includes('\\(') || no.nodeValue.includes('\\['));
 }
 
 function renderizarSegmento(doc, katex, segmento, erros) {

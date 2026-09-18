@@ -114,3 +114,84 @@ test('metadado longo demais', () => {
   assert.deepEqual(mensagens(aula('<section data-layout="capa"><h1>Capa</h1></section>').replace('content="Teste"', `content="${repetir('disciplina', 7)}"`)),
     ['a meta "disciplina" tem 76 caracteres (máx. 60).']);
 });
+
+// Fix round 1 (revisão pós-Task 2): três críticos medidos pelo controlador.
+
+test('palavrasDe soma por nó de texto, sem colar elementos vizinhos sem espaço', () => {
+  // <br> não deixa texto: "Uma" e "Duas Tres" são dois nós de texto, não um "UmaDuas Tres" colado.
+  const { document: comBr } = parseHTML(slide('<p>Uma<br>Duas Tres</p>'));
+  assert.equal(palavrasDe(comBr.querySelector('p')), 3);
+  // Sem espaço no fonte entre </h2> e <p>, textContent do galho inteiro colaria "T" com "palavra".
+  const { document: grudado } = parseHTML(slide('<h2>T</h2><p>palavra</p>'));
+  assert.equal(palavrasDe(grudado.querySelector('section')), 2);
+});
+
+test('palavras-corpo conta só os blocos de corpo: nem o lide nem a estrutura do título entram na conta', () => {
+  // No limite com um lide no meio: o lide tem limite próprio (limites.lide) e não deveria comer o
+  // orçamento do corpo.
+  assert.deepEqual(mensagens(slide(`<h2>T</h2>\n<p class="lide">Lide.</p>\n<p>${repetir('palavra', 90)}</p>`)), []);
+  // Título em duas linhas: a contagem por construção descarta o <h2> inteiro, então a forma interna
+  // do título (quantos <br> tem) não pode mascarar um corpo realmente acima do limite.
+  assert.deepEqual(
+    mensagens(slide(`<h2>Um<br>Dois</h2>\n<p>${repetir('palavra', 91)}</p>`)),
+    ['91 palavras no corpo (máx. 90).'],
+  );
+});
+
+test('tabela: rowspan soma à linha que herda a coluna', () => {
+  // Linha 1 tem 2 células (uma com rowspan=2); linha 2 tem 6 células soltas mas herda a coluna da
+  // linha 1, então a largura real é 7, não max(2, 6) = 6.
+  const html = slide(`<h2>T</h2>\n<table><tbody><tr><td rowspan="2">a</td><td>b</td></tr><tr>${repetir('<td>c</td>', 6)}</tr></tbody></table>`);
+  assert.deepEqual(mensagens(html), ['tabela com 7 colunas (máx. 6).']);
+});
+
+test('título com <br> solto ou no final não cria segmento fantasma', () => {
+  const { document } = parseHTML(slide('<h2>Um<br>Dois<br></h2>'));
+  assert.deepEqual(segmentosDoTitulo(document.querySelector('h2')), ['Um', 'Dois']);
+  assert.deepEqual(mensagens(slide('<h2>Um<br>Dois<br></h2>\n<p>C.</p>')), []);
+});
+
+test('limites de contagem: exatamente no limite passa, um a mais acusa', () => {
+  assert.deepEqual(mensagens(slide(`<h2>T</h2>\n<p>${repetir('palavra', 90)}</p>`)), []);
+  assert.deepEqual(mensagens(slide(`<h2>T</h2>\n<p>${repetir('palavra', 91)}</p>`)), ['91 palavras no corpo (máx. 90).']);
+
+  assert.deepEqual(
+    mensagens(slide(`<h2>T</h2>\n<div class="colunas" data-grade="6-6"><div><p>${repetir('palavra', 60)}</p></div><div><p>B</p></div></div>`)),
+    [],
+  );
+  assert.deepEqual(
+    mensagens(slide(`<h2>T</h2>\n<div class="colunas" data-grade="6-6"><div><p>${repetir('palavra', 61)}</p></div><div><p>B</p></div></div>`)),
+    ['61 palavras numa coluna (máx. 60).'],
+  );
+
+  assert.deepEqual(mensagens(slide(`<h2>T</h2>\n<ul>${repetir('<li>Item.</li>', 5)}</ul>`)), []);
+  assert.deepEqual(mensagens(slide(`<h2>T</h2>\n<ul>${repetir('<li>Item.</li>', 6)}</ul>`)), ['lista com 6 itens (máx. 5).']);
+
+  const fim = (dentro) => aula(`<section data-layout="encerramento"><h2>Fim</h2><ol class="sintese">${dentro}</ol></section>`);
+  assert.deepEqual(mensagens(fim(repetir('<li>Item.</li>', 3))), []);
+  assert.deepEqual(mensagens(fim(repetir('<li>Item.</li>', 4))), ['síntese com 4 itens (máx. 3).']);
+});
+
+test('limites de código e tabela: exatamente no limite passa, um a mais acusa', () => {
+  const linhas = (n) => Array.from({ length: n }, (_, k) => `x${k} = 1`).join('\n');
+  assert.deepEqual(mensagens(slide(`<h2>T</h2>\n<pre data-lang="python">${linhas(16)}</pre>`)), []);
+  assert.deepEqual(mensagens(slide(`<h2>T</h2>\n<pre data-lang="python">${linhas(17)}</pre>`)), ['bloco com 17 linhas de código (máx. 16).']);
+
+  assert.deepEqual(mensagens(slide(`<h2>T</h2>\n<pre data-lang="python">x = "${'a'.repeat(58)}"</pre>`)), []);
+  assert.deepEqual(
+    mensagens(slide(`<h2>T</h2>\n<pre data-lang="python">x = "${'a'.repeat(59)}"</pre>`)),
+    ['linha de código com 65 colunas (máx. 64).'],
+  );
+
+  assert.deepEqual(mensagens(slide(`<h2>T</h2>\n<table><tbody>${repetir('<tr><td>a</td></tr>', 8)}</tbody></table>`)), []);
+  assert.deepEqual(
+    mensagens(slide(`<h2>T</h2>\n<table><tbody>${repetir('<tr><td>a</td></tr>', 9)}</tbody></table>`)),
+    ['tabela com 9 linhas de dados (máx. 8).'],
+  );
+
+  assert.deepEqual(mensagens(slide(`<h2>T</h2>\n<table><tbody><tr>${repetir('<td>a</td>', 6)}</tr></tbody></table>`)), []);
+  assert.deepEqual(
+    mensagens(slide(`<h2>T</h2>\n<table><tbody><tr>${repetir('<td>a</td>', 7)}</tr></tbody></table>`)),
+    ['tabela com 7 colunas (máx. 6).'],
+  );
+});
