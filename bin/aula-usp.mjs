@@ -1,9 +1,11 @@
 #!/usr/bin/env node
-// CLI do Aula USP. Neste marco, só o comando `servir`.
+// CLI do Aula USP (spec 8.1). Neste marco, `servir` e `validar`.
 import { statSync } from 'node:fs';
 import { criarServidor } from '../build/servir.mjs';
+import { validarArquivo } from '../build/validar.mjs';
+import { linhaDe, cabecalhoDe } from '../validador/validar.js';
 
-const USO = 'uso: aula-usp servir <pasta> [--porta 8765]';
+const USO = 'uso: aula-usp servir <pasta> [--porta 8765]\n       aula-usp validar <pasta> [--json]';
 
 function sair(mensagem) {
   console.error(mensagem);
@@ -15,6 +17,7 @@ function lerArgumentos(argumentos) {
   const posicionais = [];
   for (let i = 0; i < argumentos.length; i++) {
     if (argumentos[i] === '--porta') opcoes.porta = Number(argumentos[++i]);
+    else if (argumentos[i] === '--json') opcoes.json = true;
     else posicionais.push(argumentos[i]);
   }
   return { opcoes, posicionais };
@@ -43,6 +46,26 @@ function servir(argumentos) {
   });
 }
 
+function validarComando(argumentos) {
+  const { opcoes, posicionais } = lerArgumentos(argumentos);
+  const [alvo] = posicionais;
+  if (!alvo) sair(USO);
+  let resultado;
+  try {
+    resultado = validarArquivo(alvo);
+  } catch (erro) {
+    sair(`não encontrei a aula em ${alvo}: ${erro.message}`);
+  }
+  const { achados, erros } = resultado;
+  if (opcoes.json) console.log(JSON.stringify(achados, null, 2));
+  else {
+    for (const achado of achados) console.log(linhaDe(achado));
+    console.log(cabecalhoDe(achados));
+  }
+  process.exit(erros > 0 ? 1 : 0);
+}
+
 const [comando, ...argumentos] = process.argv.slice(2);
 if (comando === 'servir') servir(argumentos);
+else if (comando === 'validar') validarComando(argumentos);
 else sair(USO);
