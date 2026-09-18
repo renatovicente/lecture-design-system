@@ -1,7 +1,7 @@
 // Regras de limite (spec 5.2, 5.3 e 9.2): o que cabe no slide, contado no fonte.
 // Os números vêm todos de contrato.limites; o código só sabe contar.
 import { onde, trechoDe, plural } from '../validar.js';
-import { textoSemTex, textosDe } from '../../componentes/tex.js';
+import { textoSemTex } from '../../componentes/tex.js';
 import { codigoDoBloco } from '../../componentes/codigo.js';
 
 // Segmentos de um título são os trechos entre <br> (spec 5.3), lidos pelo que aparece: o TeX conta
@@ -17,14 +17,39 @@ export function segmentosDoTitulo(elemento) {
   return segmentos.map((partes) => textoSemTex(partes.join('')).trim()).filter(Boolean);
 }
 
-// Palavras são as sequências separadas por espaço nos nós de texto (spec 5.3): soma por nó, nunca
-// pelo textContent do galho inteiro, porque dois elementos vizinhos sem espaço no fonte (ou os dois
-// lados de um <br>) colariam num token só e a conta viria baixa. Código e notas não contam; TeX vira
-// uma palavra (o texto renderizado, via textoSemTex).
+// Fora da contagem de palavras (spec 5.3): TeX não conta pelo fonte (conta pelo texto renderizado,
+// abaixo), pre/code/aside.notas ficam de fora. Lista própria daqui, não a exclusão de matemática de
+// componentes/tex.js: lá svg também fica fora (TeX nunca aparece dentro de um SVG), mas aqui não —
+// palavra dentro de um <text> de SVG é palavra do slide como outra qualquer.
+const FORA_DA_CONTAGEM = 'pre, code, aside.notas';
+
+// Elementos inline (spec 4.2): entrar ou sair deles não separa palavra, então "pa<strong>la</strong>
+// vra" é uma palavra só, como o leitor vê. Todo o resto separa — <br> incluso, que não tem filhos —
+// porque a fronteira que interessa é a de bloco, não a de nó de texto.
+const INLINE = new Set(['strong', 'em', 'sub', 'sup', 'a', 'span']);
+
+// Monta o texto para contar palavras, pondo um espaço só ao entrar/sair de um elemento que não é
+// inline. É por isso que "<h2>T</h2><p>corpo" sem espaço no fonte ainda separa "T" de "corpo" (dois
+// blocos), e "pa<strong>la</strong>vra" não separa "pa" de "vra" (strong é inline).
+function textoDeContagem(elemento) {
+  let texto = '';
+  const andar = (no) => {
+    if (no.nodeType === 3) { texto += no.nodeValue; return; }
+    if (no.nodeType !== 1 || no.matches(FORA_DA_CONTAGEM)) return;
+    const inline = INLINE.has(no.nodeName.toLowerCase());
+    if (!inline) texto += ' ';
+    for (const filho of no.childNodes) andar(filho);
+    if (!inline) texto += ' ';
+  };
+  for (const filho of elemento.childNodes) andar(filho);
+  return texto;
+}
+
+// Palavras são as sequências separadas por espaço nos nós de texto (spec 5.3): o texto vem de
+// textoDeContagem, que já resolve a fronteira de bloco acima — nunca do textContent do galho
+// inteiro, que colaria dois blocos vizinhos sem espaço no fonte num token só.
 export function palavrasDe(elemento) {
-  const copia = elemento.cloneNode(true);
-  for (const notas of copia.querySelectorAll('aside.notas')) notas.remove();
-  return textosDe(copia).reduce((total, no) => total + textoSemTex(no.nodeValue).split(/\s+/).filter(Boolean).length, 0);
+  return textoSemTex(textoDeContagem(elemento)).split(/\s+/).filter(Boolean).length;
 }
 
 function textoDe(elemento) {
@@ -64,6 +89,25 @@ function tituloDoSlide(secao) {
   const layout = secao.getAttribute('data-layout');
   const regra = TITULOS[layout] ?? TITULOS.outros;
   return { regra, elemento: secao.querySelector(`:scope > ${regra.seletor}`) };
+}
+
+// Quantas linhas depois desta ainda vêm na mesma seção (thead/tbody/tfoot, ou a tabela toda se não
+// houver uma): rowspan="0" (HTML) é "até o fim da seção", não uma linha a mais.
+function linhasRestantesNaSecao(tabela, linha) {
+  const secao = linha.closest('thead, tbody, tfoot') ?? tabela;
+  const linhasDaSecao = [...secao.querySelectorAll(':scope > tr')];
+  return linhasDaSecao.length - linhasDaSecao.indexOf(linha) - 1;
+}
+
+// Quantas linhas depois desta uma célula ainda ocupa: sem o atributo, nenhuma (é a própria linha só);
+// rowspan="0" ocupa até o fim da seção; um número válido ocupa rowspan - 1; qualquer outra coisa
+// (ausente, inválida ou negativa) é o padrão do HTML, 1, ou seja, nenhuma a mais.
+function restamDoRowspan(tabela, linha, celula) {
+  const bruto = celula.getAttribute('rowspan');
+  if (bruto === null) return 0;
+  const numero = Number.parseInt(bruto, 10);
+  if (numero === 0) return linhasRestantesNaSecao(tabela, linha);
+  return (Number.isNaN(numero) || numero < 1 ? 1 : numero) - 1;
 }
 
 export const regras = [
@@ -260,9 +304,9 @@ export const regras = [
             colunas = Math.max(colunas, pendentes.length + propria);
             pendentes = pendentes.map((restam) => restam - 1).filter((restam) => restam > 0);
             for (const celula of linha.children) {
-              const rowspan = Number.parseInt(celula.getAttribute('rowspan') ?? '1', 10) || 1;
               const colspan = Number.parseInt(celula.getAttribute('colspan') ?? '1', 10) || 1;
-              if (rowspan > 1) for (let i = 0; i < colspan; i += 1) pendentes.push(rowspan - 1);
+              const restam = restamDoRowspan(tabela, linha, celula);
+              if (restam > 0) for (let i = 0; i < colspan; i += 1) pendentes.push(restam);
             }
           }
           if (colunas > maxColunas) {

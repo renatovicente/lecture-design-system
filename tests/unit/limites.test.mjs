@@ -117,13 +117,34 @@ test('metadado longo demais', () => {
 
 // Fix round 1 (revisão pós-Task 2): três críticos medidos pelo controlador.
 
-test('palavrasDe soma por nó de texto, sem colar elementos vizinhos sem espaço', () => {
+test('palavrasDe separa por fronteira de bloco, não por nó de texto: inline não separa, bloco separa', () => {
   // <br> não deixa texto: "Uma" e "Duas Tres" são dois nós de texto, não um "UmaDuas Tres" colado.
   const { document: comBr } = parseHTML(slide('<p>Uma<br>Duas Tres</p>'));
   assert.equal(palavrasDe(comBr.querySelector('p')), 3);
-  // Sem espaço no fonte entre </h2> e <p>, textContent do galho inteiro colaria "T" com "palavra".
+  // Sem espaço no fonte entre </h2> e <p>, é bloco: "T" e "palavra" não colam mesmo assim.
   const { document: grudado } = parseHTML(slide('<h2>T</h2><p>palavra</p>'));
   assert.equal(palavrasDe(grudado.querySelector('section')), 2);
+  // strong é inline: não introduz separador, então a palavra interrompida continua uma só.
+  const { document: inline } = parseHTML(slide('<p>pa<strong>la</strong>vra</p>'));
+  assert.equal(palavrasDe(inline.querySelector('p')), 1);
+});
+
+test('palavras em <text> de SVG contam no orçamento do corpo', () => {
+  // svg não é exclusão de contagem de palavra (só é exclusão de TeX, em componentes/tex.js): rótulo
+  // de SVG é texto do slide como outro qualquer.
+  const rotulo = (n) => `<svg><text>${repetir('legenda', n)}</text></svg>`;
+  assert.deepEqual(
+    mensagens(slide(`<h2>T</h2>\n<p>${repetir('palavra', 85)}</p>\n${rotulo(15)}`)),
+    ['100 palavras no corpo (máx. 90).'],
+  );
+  assert.deepEqual(mensagens(slide(`<h2>T</h2>\n<p>${repetir('palavra', 80)}</p>\n${rotulo(10)}`)), []);
+});
+
+test('palavrasDe continua sem contar aside.notas, pre e code', () => {
+  const { document } = parseHTML(slide(
+    '<p>uma <code>x = 1</code> duas</p><pre data-lang="python">y = 2</pre><aside class="notas">nota longa aqui</aside>',
+  ));
+  assert.equal(palavrasDe(document.querySelector('section')), 2);
 });
 
 test('palavras-corpo conta só os blocos de corpo: nem o lide nem a estrutura do título entram na conta', () => {
@@ -142,6 +163,17 @@ test('tabela: rowspan soma à linha que herda a coluna', () => {
   // Linha 1 tem 2 células (uma com rowspan=2); linha 2 tem 6 células soltas mas herda a coluna da
   // linha 1, então a largura real é 7, não max(2, 6) = 6.
   const html = slide(`<h2>T</h2>\n<table><tbody><tr><td rowspan="2">a</td><td>b</td></tr><tr>${repetir('<td>c</td>', 6)}</tr></tbody></table>`);
+  assert.deepEqual(mensagens(html), ['tabela com 7 colunas (máx. 6).']);
+});
+
+test('tabela: rowspan="0" mede até o fim da seção', () => {
+  // rowspan="0" (HTML) é "até o fim da seção", não 1: a linha 2 (uma célula só) não revela a
+  // largura sozinha, mas a linha 3 (seis células), ainda herdando a coluna da linha 1, revela.
+  const html = slide(`<h2>T</h2>\n<table><tbody>`
+    + `<tr><td rowspan="0">a</td><td>b</td></tr>`
+    + `<tr><td>c</td></tr>`
+    + `<tr>${repetir('<td>d</td>', 6)}</tr>`
+    + `</tbody></table>`);
   assert.deepEqual(mensagens(html), ['tabela com 7 colunas (máx. 6).']);
 });
 
