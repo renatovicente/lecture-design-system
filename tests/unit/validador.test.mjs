@@ -317,9 +317,20 @@ test('toda regra implementada existe no contrato e tem fixture', () => {
   }
 });
 
-test('toda regra de estrutura do contrato está implementada', () => {
+// Ruling 2: matematica.simbolo-fora-do-tex fica para o marco 5, junto com saida.glifo-ausente, os
+// dois lendo validador/cobertura.json. É a única exceção nomeada; o marco 5 apaga esta linha ao
+// implementar a regra, e o teste volta a cobrir as 47.
+const ADIADAS_DE_PROPOSITO = new Set(['matematica.simbolo-fora-do-tex']);
+
+test('toda regra estática de fase 1 do contrato está implementada', () => {
+  // Cobria só "estrutura.": dava para apagar limites.tabela do registro (ou qualquer outra das 28
+  // regras deste marco) e a suíte passava. Agora cobre o grupo e a fase inteiros, como o código→
+  // contrato e o código→fixture já cobrem (acima).
   const doContrato = Object.entries(contrato.regras)
-    .filter(([nome, regra]) => nome.startsWith('estrutura.') && regra.grupo === 'estatica' && regra.fase === 1)
+    .filter(([, regra]) => regra.grupo === 'estatica' && regra.fase === 1)
     .map(([nome]) => nome);
-  assert.deepEqual(doContrato.filter((nome) => !IMPLEMENTADAS.has(nome)), []);
+  assert.deepEqual(
+    doContrato.filter((nome) => !IMPLEMENTADAS.has(nome) && !ADIADAS_DE_PROPOSITO.has(nome)),
+    [],
+  );
 });
