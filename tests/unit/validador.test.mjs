@@ -29,9 +29,9 @@ const BASE = aula(`<section data-layout="capa"><h1>Capa</h1></section>
 <section data-layout="abertura" id="bloco-dois"><h2>Dois</h2></section>
 <section data-layout="encerramento"><h2>Fim</h2><ol class="sintese"><li>Um.</li></ol></section>`);
 
-function rodar(html, regras = estrutura) {
+function rodar(html, regras = estrutura, grupo = 'estatica') {
   const { document } = parseHTML(html);
-  return validar(document, { contrato, regras, grupo: 'estatica', unidades });
+  return validar(document, { contrato, regras, grupo, unidades });
 }
 
 test('a aula de base não tem erro nenhum', () => {
@@ -136,7 +136,7 @@ test('estrutura.id-ausente escreve a mensagem por extenso, com e sem layout', ()
 import { itensDoConteudo } from '../../validador/sequencia.js';
 // O registro é a única lista de regras (spec 9.3); uma segunda lista aqui já divergiu dele uma vez
 // (as fixtures de limites do marco 4b-2 chegaram e o teste continuou sem elas até isto ser corrigido).
-import { REGRAS_ESTATICAS as todas } from '../../validador/regras/index.js';
+import { REGRAS_ESTATICAS as todas, REGRAS_DE_CARGA as carga } from '../../validador/regras/index.js';
 
 function slide(corpo) {
   return BASE.replace('  <h2>Título</h2>\n  <p class="lide">Lide.</p>\n  <p>Corpo.</p>\n', corpo);
@@ -299,6 +299,7 @@ test('data-curto comprido fora da abertura só é acusado por vocabulario.atribu
 
 const FIXTURES = new URL('tests/fixtures/validador/', RAIZ);
 const IMPLEMENTADAS = new Map(todas.map((regra) => [regra.nome, regra]));
+const DE_CARGA = new Map(carga.map((regra) => [regra.nome, regra]));
 
 // Uma pasta por regra (spec 11.1): roda TODAS as regras sobre a fixture e filtra pela regra da
 // pasta — bom.html não produz nenhum achado dela, ruim.html produz pelo menos um. Rodar só a
@@ -306,8 +307,23 @@ const IMPLEMENTADAS = new Map(todas.map((regra) => [regra.nome, regra]));
 // regra só no ar, todo achado só pode ser dela) e nunca testava bom.html contra mais nada. Não
 // exigimos bom.html limpo para as OUTRAS regras: fixtures mínimas legitimamente disparam
 // estrutura.blocos ou estrutura.notas-ausentes, e cobrar isso viraria uma aula inteira por pasta.
+//
+// As pastas do grupo de carga (marco 4c) moram na mesma pasta e seguem o mesmo molde, mas a regra
+// só acusa com os recursos que o carregador entrega (KaTeX, disco, scripts) — recursos que esta
+// varredura não tem e não simula. bom.html e ruim.html aqui diferem no que o carregador *encontraria*
+// no navegador ou no build, não no que a regra vê nesta chamada: sem recursos, os dois ficam limpos,
+// e a única coisa que este teste confirma é que a regra existe e está registrada em REGRAS_DE_CARGA.
 for (const nome of readdirSync(FIXTURES).sort()) {
   test(`fixture de ${nome}`, () => {
+    if (DE_CARGA.has(nome)) {
+      const bom = rodar(readFileSync(new URL(`${nome}/bom.html`, FIXTURES), 'utf8'), carga, 'carga')
+        .filter((achado) => achado.regra === nome);
+      const ruim = rodar(readFileSync(new URL(`${nome}/ruim.html`, FIXTURES), 'utf8'), carga, 'carga')
+        .filter((achado) => achado.regra === nome);
+      assert.deepEqual(bom, [], `bom.html de ${nome} acusou sem recursos carregados: ${bom.map((a) => a.mensagem).join(' / ')}`);
+      assert.deepEqual(ruim, [], `ruim.html de ${nome} acusou sem recursos carregados: ${ruim.map((a) => a.mensagem).join(' / ')}`);
+      return;
+    }
     const regra = IMPLEMENTADAS.get(nome);
     assert.ok(regra, `a pasta ${nome} não tem regra implementada`);
     const bom = rodar(readFileSync(new URL(`${nome}/bom.html`, FIXTURES), 'utf8'), todas)

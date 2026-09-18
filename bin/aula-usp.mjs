@@ -61,7 +61,7 @@ async function validarComando(argumentos) {
   let resultado;
   try {
     const { validarArquivo } = await import('../build/validar.mjs');
-    resultado = validarArquivo(alvo);
+    resultado = await validarArquivo(alvo);
   } catch (erro) {
     // "não encontrei" só quando o caminho ausente é o da própria aula (o alvo, ou o index.html
     // dentro dele); ENOENT de qualquer outro arquivo — contrato, unidades, ou a própria dependência

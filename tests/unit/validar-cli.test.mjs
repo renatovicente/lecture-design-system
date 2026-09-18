@@ -41,24 +41,24 @@ const BOA = `<!DOCTYPE html><html lang="pt-BR"><head>
 <section data-layout="encerramento"><h2>Fim</h2><ol class="sintese"><li>Um.</li></ol></section>
 </body></html>`;
 
-test('o espécime passa sem erro nas regras estáticas de estrutura', () => {
-  const { erros } = validarArquivo(join(RAIZ, 'especime/index.html'));
+test('o espécime passa sem erro nas regras estáticas de estrutura', async () => {
+  const { erros } = await validarArquivo(join(RAIZ, 'especime/index.html'));
   assert.equal(erros, 0);
 });
 
-test('todos os decks do espécime passam sem erro', () => {
+test('todos os decks do espécime passam sem erro', async () => {
   for (const nome of ['index', 'componentes', 'matematica', 'codigo', 'ifusp', 'muitos-blocos']) {
-    const { achados, erros } = validarArquivo(join(RAIZ, `especime/${nome}.html`));
+    const { achados, erros } = await validarArquivo(join(RAIZ, `especime/${nome}.html`));
     assert.equal(erros, 0, `${nome}.html: ${achados.filter((a) => a.severidade === 'erro').map((a) => a.mensagem).join(' / ')}`);
   }
 });
 
-test('só muitos-blocos.html tem avisos, e são os que aquele deck existe para exercer', () => {
+test('só muitos-blocos.html tem avisos, e são os que aquele deck existe para exercer', async () => {
   for (const nome of ['index', 'componentes', 'matematica', 'codigo', 'ifusp']) {
-    const { achados } = validarArquivo(join(RAIZ, `especime/${nome}.html`));
+    const { achados } = await validarArquivo(join(RAIZ, `especime/${nome}.html`));
     assert.deepEqual(achados, [], `${nome}.html deveria estar limpo`);
   }
-  const { achados } = validarArquivo(join(RAIZ, 'especime/muitos-blocos.html'));
+  const { achados } = await validarArquivo(join(RAIZ, 'especime/muitos-blocos.html'));
   assert.deepEqual(new Set(achados.map((a) => a.regra)), new Set(['estrutura.blocos', 'estrutura.id-ausente']));
 });
 
@@ -89,6 +89,22 @@ test('--json devolve a lista com os campos da spec 9.1', () => {
     assert.deepEqual(Object.keys(achado), ['severidade', 'slide', 'id', 'regra', 'mensagem', 'acao', 'trecho']);
     assert.equal(achado.regra, 'estrutura.nome-curto');
     assert.equal(achado.slide, 3);
+  }
+});
+
+test('o grupo de carga roda no build: TeX inválido, imagem ausente e demo sem registro', () => {
+  const pasta = aulaTemporaria(BOA.replace('<section data-layout="encerramento">',
+    '<section data-layout="conteudo" id="carga"><h2>Carga</h2>'
+    + '<p>Erro: \\( \\frac{1 \\)</p>'
+    + '<figure><img src="img/sumiu.png" alt="a"></figure>'
+    + '<aside class="notas">N.</aside></section>\n<section data-layout="encerramento">'));
+  try {
+    execFileSync('node', [CLI, 'validar', pasta, '--json'], { encoding: 'utf8' });
+    assert.fail('deveria ter saído com 1');
+  } catch (erro) {
+    const regras = JSON.parse(erro.stdout).map((achado) => achado.regra);
+    assert.ok(regras.includes('matematica.tex-invalido'), regras.join(', '));
+    assert.ok(regras.includes('recursos.imagem'), regras.join(', '));
   }
 });
 
@@ -154,7 +170,7 @@ test('--json não trunca em 64 KiB quando a saída é lida por um cano', async (
   // Um teste pequeno passaria com o bug presente — por isso a aula tem que gerar achados de
   // sobra, e a checagem é por conteúdo (JSON.parse + contagem), não por tamanho aproximado.
   const pasta = aulaTemporaria(aulaGrande(180));
-  const { achados: esperados } = validarArquivo(pasta);
+  const { achados: esperados } = await validarArquivo(pasta);
   const filho = spawn('node', [CLI, 'validar', pasta, '--json'], { stdio: ['ignore', 'pipe', 'pipe'] });
   const pedacos = [];
   filho.stdout.on('data', (pedaco) => pedacos.push(pedaco));
@@ -170,24 +186,24 @@ test('--json não trunca em 64 KiB quando a saída é lida por um cano', async (
 // o linkedom preserva a grafia do autor, um navegador normaliza para minúsculas e, dentro de SVG,
 // restaura a grafia canônica do contrato. Sem isso, <div Class="colunas"> não bate com o seletor
 // "div.colunas" que estrutura.colunas e o casador de sequência usam (medido no marco 4b).
-test('atributo com grafia diferente do autor (Class) valida exatamente como a mesma aula em minúsculas', () => {
+test('atributo com grafia diferente do autor (Class) valida exatamente como a mesma aula em minúsculas', async () => {
   const original = readFileSync(join(RAIZ, 'especime/index.html'), 'utf8');
   assert.match(original, /<div class="colunas" data-grade="8-4">/);
   const comClasseMaiuscula = original.replace('<div class="colunas" data-grade="8-4">', '<div Class="colunas" data-grade="8-4">');
   assert.notEqual(comClasseMaiuscula, original);
-  const { achados: esperados } = validarArquivo(join(RAIZ, 'especime/index.html'));
+  const { achados: esperados } = await validarArquivo(join(RAIZ, 'especime/index.html'));
   assert.deepEqual(esperados, []); // a base da comparação: o espécime original já é limpo
-  const { achados } = validarArquivo(aulaTemporaria(comClasseMaiuscula));
+  const { achados } = await validarArquivo(aulaTemporaria(comClasseMaiuscula));
   assert.deepEqual(achados, esperados);
 });
 
-test('<svg VIEWBOX> continua funcionando, e a grafia final é viewBox, a do contrato', () => {
+test('<svg VIEWBOX> continua funcionando, e a grafia final é viewBox, a do contrato', async () => {
   const original = readFileSync(join(RAIZ, 'especime/index.html'), 'utf8');
   assert.match(original, /viewBox="0 0 1152 360"/);
   const comViewboxMaiusculo = original.replace('viewBox="0 0 1152 360"', 'VIEWBOX="0 0 1152 360"');
   assert.notEqual(comViewboxMaiusculo, original);
   const pasta = aulaTemporaria(comViewboxMaiusculo);
-  const { achados } = validarArquivo(pasta);
+  const { achados } = await validarArquivo(pasta);
   assert.deepEqual(achados, []);
   const documento = lerAula(join(pasta, 'index.html'), contrato);
   const svg = documento.querySelector('svg');

@@ -1,11 +1,13 @@
-// Cola de Node do validador (spec 9.3): lê a aula do disco, monta o contexto e roda o grupo estático.
+// Cola de Node do validador (spec 9.3): lê a aula do disco, monta o contexto e roda o grupo estático
+// e, sobre o mesmo documento, o de carga (etapa 1: KaTeX, disco e scripts, via build/carregar.mjs).
 // O validador em si não sabe de arquivos: aqui é o único lugar com node:fs e linkedom.
 import { readFileSync, statSync } from 'node:fs';
-import { resolve, join } from 'node:path';
+import { resolve, join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseHTML } from 'linkedom';
 import { validar, contar } from '../validador/validar.js';
-import { REGRAS_ESTATICAS } from '../validador/regras/index.js';
+import { REGRAS_ESTATICAS, REGRAS_DE_CARGA } from '../validador/regras/index.js';
+import { carregarNoNode } from './carregar.mjs';
 
 export const RAIZ_SISTEMA = fileURLToPath(new URL('..', import.meta.url));
 
@@ -55,10 +57,18 @@ export function lerAula(caminho, contrato) {
   return document;
 }
 
-export function validarArquivo(alvo, { regras = REGRAS_ESTATICAS, raizDoSistema = RAIZ_SISTEMA } = {}) {
+// async porque o grupo de carga precisa do await import('katex') abaixo: carregar o KaTeX só aqui,
+// e não no topo do módulo, evita o custo para quem importa este arquivo só por lerAula (dois testes
+// de validar-cli.test.mjs fazem isso).
+export async function validarArquivo(alvo, { regras = REGRAS_ESTATICAS, raizDoSistema = RAIZ_SISTEMA } = {}) {
   const caminho = caminhoDaAula(alvo);
   const contrato = JSON.parse(readFileSync(join(raizDoSistema, 'contrato/contrato.json'), 'utf8'));
   const unidades = JSON.parse(readFileSync(join(raizDoSistema, 'assets/marcas/unidades.json'), 'utf8'));
-  const achados = validar(lerAula(caminho, contrato), { contrato, regras, grupo: 'estatica', unidades });
+  const doc = lerAula(caminho, contrato);
+  const daEstatica = validar(doc, { contrato, regras, grupo: 'estatica', unidades });
+  const { default: katex } = await import('katex');
+  const recursos = carregarNoNode(doc, { pastaDaAula: dirname(caminho), katex });
+  const deCarga = validar(doc, { contrato, regras: REGRAS_DE_CARGA, grupo: 'carga', recursos });
+  const achados = [...daEstatica, ...deCarga];
   return { achados, ...contar(achados) };
 }

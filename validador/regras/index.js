@@ -6,5 +6,8 @@ import { regras as conteudo } from './conteudo.js';
 import { regras as vocabulario } from './vocabulario.js';
 import { regras as limites } from './limites.js';
 import { regras as recursos } from './recursos.js';
+import { regras as carga } from './carga.js';
 
 export const REGRAS_ESTATICAS = [...estrutura, ...conteudo, ...vocabulario, ...limites, ...recursos];
+
+export const REGRAS_DE_CARGA = carga;
