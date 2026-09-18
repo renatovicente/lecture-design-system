@@ -150,6 +150,9 @@ export const regras = [
     *aplicar({ slides, contrato }) {
       const limite = contrato.limites['abertura.dataCurto.caracteres'];
       for (const secao of slides) {
+        // Fora da abertura o dono é vocabulario.atributo (layout errado); aqui só o comprimento,
+        // só onde data-curto é válido — um data-curto fora de lugar não pode ganhar dois avisos.
+        if (secao.getAttribute('data-layout') !== 'abertura') continue;
         const curto = secao.getAttribute('data-curto');
         if (curto !== null && curto.trim().length > limite) {
           yield { ...onde(slides, secao), mensagem: `data-curto com ${curto.trim().length} caracteres (máx. ${limite}).` };

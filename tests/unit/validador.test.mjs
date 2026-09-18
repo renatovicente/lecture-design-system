@@ -288,6 +288,15 @@ test('misturar colunas com blocos soltos acusa o que está em minoria', () => {
   );
 });
 
+// Achado da revisão final (Minor, item 8): um data-curto comprido fora da abertura era acusado duas
+// vezes — por vocabulario.atributo (layout errado) e por limites.nome-curto (comprimento), que varria
+// toda section, não só abertura. Um dono só: vocabulario.atributo, que já sabe de layout.
+test('data-curto comprido fora da abertura só é acusado por vocabulario.atributo', () => {
+  const fora = aula('<section data-layout="conteudo" id="a" data-curto="Retropropagação"><h2>T</h2><p>C.</p></section>');
+  const regras = rodar(fora, todas).map((achado) => achado.regra);
+  assert.deepEqual(regras.filter((nome) => nome === 'vocabulario.atributo' || nome === 'limites.nome-curto'), ['vocabulario.atributo']);
+});
+
 const FIXTURES = new URL('tests/fixtures/validador/', RAIZ);
 const IMPLEMENTADAS = new Map(todas.map((regra) => [regra.nome, regra]));
 

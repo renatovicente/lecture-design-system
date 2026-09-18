@@ -79,6 +79,18 @@ test('TeX dentro de pre e de code é exemplo, não matemática', () => {
   assert.deepEqual(mensagens(slide('<h2>T</h2>\n<p>Escreva <code>$x^2$</code> assim.</p>')), []);
 });
 
+// Achado da revisão final (Minor, item 8): recursos.alt conferia hasAttribute('alt') por lógica
+// própria; contrato.html.atributos.img.alt.obrigatorio já é esse dado, e ninguém lia. Ler o contrato
+// prova que a regra segue o dado: desligar a obrigatoriedade lá desliga a regra, sem tocar no código.
+test('recursos.alt lê a obrigatoriedade do contrato, não decide sozinha', () => {
+  const semAlt = slide('<h2>T</h2>\n<figure><img src="img/a.png"></figure>');
+  assert.deepEqual(mensagens(semAlt), ['imagem sem alt.']);
+  const outroContrato = structuredClone(contrato);
+  outroContrato.html.atributos.img.alt.obrigatorio = false;
+  const { document } = parseHTML(semAlt);
+  assert.deepEqual(validar(document, { contrato: outroContrato, regras: recursos, grupo: 'estatica' }), []);
+});
+
 test('imagem sem alt, imagem de fora e linguagem fora da lista', () => {
   assert.deepEqual(mensagens(slide('<h2>T</h2>\n<figure><img src="img/a.png"></figure>')), ['imagem sem alt.']);
   assert.deepEqual(mensagens(slide('<h2>T</h2>\n<figure><img src="https://exemplo.org/a.png" alt="a"></figure>')),

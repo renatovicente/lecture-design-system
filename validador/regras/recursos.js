@@ -60,7 +60,9 @@ export const regras = [
   },
   {
     nome: 'recursos.alt',
-    *aplicar({ slides }) {
+    *aplicar({ slides, contrato }) {
+      // contrato.html.atributos.img.alt.obrigatorio é o dado; o código só lê, não decide sozinho.
+      if (!contrato.html.atributos.img.alt.obrigatorio) return;
       for (const secao of slides) {
         for (const imagem of secao.querySelectorAll('img')) {
           if (!imagem.hasAttribute('alt')) {
