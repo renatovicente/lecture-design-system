@@ -2,7 +2,7 @@
 // os ids são únicos e nenhum slide mistura passos numerados com passos sem número.
 import { onde, trechoDe, plural } from '../validar.js';
 import { textoDeTitulo } from '../../montar/blocos.js';
-import { segmentosDeTex } from '../../componentes/tex.js';
+import { segmentosDeTex, textosComTex } from '../../componentes/tex.js';
 
 const COM_NOTAS = ['conteudo', 'afirmacao', 'figura', 'demo'];
 const SEM_ID = ['capa', 'encerramento'];
@@ -72,8 +72,8 @@ export const regras = [
       for (const secao of slides) {
         for (const colunas of secao.querySelectorAll('div.colunas')) {
           const grade = colunas.getAttribute('data-grade');
+          if (!Object.hasOwn(contrato.grades, grade)) continue; // grade fora do contrato é vocabulario.atributo, no marco 4b
           const esperadas = contrato.grades[grade];
-          if (!esperadas) continue; // grade fora do contrato é vocabulario.atributo, no marco 4b
           const filhos = colunas.children.length;
           if (filhos !== esperadas) {
             yield {
@@ -138,12 +138,15 @@ export const regras = [
     *aplicar({ slides }) {
       for (const secao of slides) {
         const valores = [...secao.querySelectorAll('[data-passo]')].map((el) => el.getAttribute('data-passo'));
-        // \passo{n}{…} no TeX do fonte também é passo numerado, e só o validador o vê antes do KaTeX renderizar.
-        const noTex = segmentosDeTex(secao.textContent)
+        // \passo{n}{…} no TeX do fonte também é passo numerado, e só o validador o vê antes do KaTeX renderizar;
+        // anda pelos nós de texto como o renderizador (textosComTex), para não contar como passo de verdade
+        // um \passo mostrado como exemplo dentro de pre/code/script/style/svg, onde TeX nunca é matemática.
+        const noTex = textosComTex(secao)
+          .flatMap((no) => segmentosDeTex(no.data))
           .filter((segmento) => segmento.tipo !== 'texto')
           .reduce((total, segmento) => total + (segmento.tex.match(PASSO_NO_TEX)?.length ?? 0), 0);
-        const semNumero = valores.filter((valor) => valor === '').length;
-        const numerados = valores.filter((valor) => valor !== '').length + noTex;
+        const semNumero = valores.filter((valor) => valor.trim() === '').length;
+        const numerados = (valores.length - semNumero) + noTex;
         if (semNumero > 0 && numerados > 0) {
           yield {
             ...onde(slides, secao),

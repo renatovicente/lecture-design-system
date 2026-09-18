@@ -1,5 +1,5 @@
 // Núcleo do validador (spec 9.1 e 9.3) e as regras de estrutura (spec 9.2).
-import test from 'node:test';
+import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import { parseHTML } from 'linkedom';
@@ -83,6 +83,30 @@ test('o slide do fonte é a section filha do corpo, com data-layout ou sem', () 
 test('uma regra de outro grupo não roda', () => {
   const marcada = [{ nome: 'composicao.transbordo', *aplicar() { yield { mensagem: 'não deveria rodar.' }; } }];
   assert.deepEqual(rodar(BASE, marcada), []);
+});
+
+// Achado 1 da revisão: um \passo mostrado como exemplo dentro de <pre> não é matemática de verdade
+// (a spec já exclui TeX de pre/code/script/style/svg da renderização); a regra não pode contá-lo como passo numerado.
+test('\\passo dentro de <pre> é exemplo de sintaxe, não passo numerado de verdade', () => {
+  const achados = rodar(aula(
+    '<section data-layout="conteudo" id="a">\n'
+    + '<p data-passo>Passo sem número.</p>\n'
+    + '<pre data-lang="latex">Exemplo: \\[ \\passo{1}{x = 1} \\]</pre>\n'
+    + '</section>',
+  )).filter((a) => a.regra === 'estrutura.passos-mistos');
+  assert.deepEqual(achados, []);
+});
+
+// Achado 2 da revisão: data-passo só com espaço não é um número; tem que continuar no balde "sem número".
+test('data-passo só com espaço em branco continua sem número', () => {
+  const achados = rodar(aula(
+    '<section data-layout="conteudo" id="a">\n'
+    + '<p data-passo=" ">Passo sem número, com espaço.</p>\n'
+    + '<p data-passo="1">Passo numerado.</p>\n'
+    + '</section>',
+  )).filter((a) => a.regra === 'estrutura.passos-mistos');
+  assert.equal(achados.length, 1);
+  assert.equal(achados[0].mensagem, 'o slide mistura 1 passo sem número com 1 numerado.');
 });
 
 const FIXTURES = new URL('tests/fixtures/validador/', RAIZ);

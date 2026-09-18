@@ -97,7 +97,7 @@ function htmlDoKatex(katex, tex, tipo) {
   return semCores(html);
 }
 
-function textosComTex(raiz) {
+export function textosComTex(raiz) {
   const nos = [];
   const andar = (no) => {
     for (const filho of no.childNodes) {
