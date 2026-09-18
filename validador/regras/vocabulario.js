@@ -118,6 +118,12 @@ export const regras = [
           yield { ...onde(slides, secao), mensagem: `<${proibido}> é proibido no corpo da aula.`, trecho: trechoDe(elemento) };
           continue;
         }
+        // Spec 5.5: SVG inline só dentro de figure. svg está no vocabulário do corpo (o casaNome
+        // abaixo não pega isso sozinho): é o único elemento cuja posição, não só a presença, importa.
+        if (nome === 'svg' && !elemento.closest('figure')) {
+          yield { ...onde(slides, secao), mensagem: '<svg> só pode ficar dentro de <figure>.', trecho: trechoDe(elemento) };
+          continue;
+        }
         const lista = emSvg(elemento) ? contrato.svg.elementos : contrato.html.elementos;
         if (!casaNome(nome, lista)) {
           const onde_ = emSvg(elemento) ? 'no SVG' : 'no corpo';

@@ -38,6 +38,19 @@ test('elemento fora do vocabulário não tem os atributos enumerados depois', ()
   assert.equal(mensagens(slide('<h2>T</h2>\n<iframe src="https://x" width="10"></iframe>')).length, 1);
 });
 
+// Achado da revisão final (Important 5, spec 5.5: "SVG inline, só dentro de figure"): svg está no
+// vocabulário do corpo, então nada conferia onde ele fica — um <svg> solto num <p> ou <li> passava.
+test('svg só vale dentro de figure', () => {
+  assert.deepEqual(
+    mensagens(slide('<h2>T</h2>\n<figure><svg viewBox="0 0 10 10" role="img" aria-label="d"><rect fill="#0A0A0A" width="5" height="5"/></svg></figure>')),
+    [],
+  );
+  assert.deepEqual(
+    mensagens(slide('<h2>T</h2>\n<p>Texto <svg viewBox="0 0 10 10"><rect fill="#0A0A0A" width="5" height="5"/></svg></p>')),
+    ['<svg> só pode ficar dentro de <figure>.'],
+  );
+});
+
 test('classe inventada, classe do sistema, classe no elemento errado e fora do pai', () => {
   assert.deepEqual(mensagens(slide('<h2>T</h2>\n<p class="bonito">C.</p>')), ['classe "bonito" não existe no contrato.']);
   assert.deepEqual(mensagens(slide('<h2>T</h2>\n<p class="rodape">C.</p>')), ['"rodape" é classe do sistema: o autor não a escreve no fonte.']);
