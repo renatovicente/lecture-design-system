@@ -28,8 +28,9 @@ export function validar(doc, { contrato, regras, grupo, fase = 1, ...dados }) {
   doc.body.normalize(); // o linkedom parte o texto em cada entidade; sem juntar, o TeX do fonte não é achado
   const slides = slidesDoFonte(doc.body);
   // O que vier além do que o motor conhece vai para as regras: é assim que o marco 4c injeta cobertura
-  // de glifos e imagens carregadas sem mexer aqui.
-  const contexto = { doc, slides, contrato, ...dados };
+  // de glifos e imagens carregadas sem mexer aqui. fase também vai: uma regra que só existe a partir
+  // da fase 2 (ou que tem entradas do contrato marcadas fase:2) precisa saber qual fase está rodando.
+  const contexto = { doc, slides, contrato, fase, ...dados };
   const achados = [];
   regras.forEach((regra, ordem) => {
     const definicao = contrato.regras[regra.nome];

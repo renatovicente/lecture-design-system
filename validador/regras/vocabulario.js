@@ -24,6 +24,23 @@ function casaNome(nome, lista) {
   return lista.find((candidato) => candidato.toLowerCase() === nome);
 }
 
+// Mesmo problema, para atributos: o linkedom preserva a grafia do autor em atributos (ao contrário de
+// um navegador, que normaliza para minúsculas no parser, com tabela própria para SVG); <p Class="lide">
+// ou <svg VIEWBOX="..."> não batem com uma busca por nome exato. Acha o atributo comparando sem caixa;
+// quem chama lê .value ou só testa a presença — undefined quando o elemento não tem esse atributo.
+function atributoDe(elemento, nomeCanonico) {
+  for (const atributo of elemento.attributes) {
+    if (atributo.name.toLowerCase() === nomeCanonico) return atributo;
+  }
+  return undefined;
+}
+
+// classList lê o atributo "class" pelo nome exato; puxa por atributoDe para não perder classes
+// escritas como Class="..." ou CLASS="...".
+function classesDe(elemento) {
+  return atributoDe(elemento, 'class')?.value.trim().split(/\s+/).filter(Boolean) ?? [];
+}
+
 // A própria section entra: data-layout, id, data-curto e data-pdf são atributos do autor como os outros.
 function* elementosDoCorpo(slides) {
   for (const secao of slides) {
@@ -49,18 +66,24 @@ function valorInvalido(valor, regra) {
   if (regra.valores && !regra.valores.includes(valor)) return `valor fora do contrato: "${valor}"`;
   if (regra.padrao && !new RegExp(regra.padrao).test(valor)) return `valor fora da forma esperada: "${valor}"`;
   if (regra.json) {
+    let interpretado;
     try {
-      JSON.parse(valor);
+      interpretado = JSON.parse(valor);
     } catch {
       return 'valor não é JSON válido';
+    }
+    // data-opcoes alimenta montar(raiz, opcoes) como objeto (spec 6.7); "42" e "[1,2,3]" são JSON
+    // válido mas não um conjunto de opções, e quebrariam a demo em tempo de execução sem avisar aqui.
+    if (typeof interpretado !== 'object' || interpretado === null || Array.isArray(interpretado)) {
+      return 'valor não é um objeto JSON';
     }
   }
   return null;
 }
 
 function numeroDoAtributo(elemento, nome, padrao) {
-  const valor = elemento.getAttribute(nome);
-  if (valor === null) return padrao;
+  const valor = atributoDe(elemento, nome)?.value;
+  if (valor === undefined) return padrao;
   const numero = Number.parseFloat(valor);
   return Number.isNaN(numero) ? padrao : numero;
 }
@@ -88,10 +111,10 @@ export const regras = [
   },
   {
     nome: 'vocabulario.classe',
-    *aplicar({ slides, contrato }) {
+    *aplicar({ slides, contrato, fase }) {
       const doSistema = new Set(contrato.classesDoSistema);
       for (const { secao, elemento } of elementosDoCorpo(slides)) {
-        for (const classe of elemento.classList) {
+        for (const classe of classesDe(elemento)) {
           if (emSvg(elemento)) {
             if (!contrato.svg.classes.includes(classe)) {
               yield { ...onde(slides, secao), mensagem: `classe "${classe}" não existe no vocabulário do SVG.`, trecho: trechoDe(elemento) };
@@ -103,7 +126,7 @@ export const regras = [
             continue;
           }
           const regra = contrato.html.classes[classe];
-          if (!regra || regra.fase > 1) {
+          if (!regra || regra.fase > fase) {
             yield { ...onde(slides, secao), mensagem: `classe "${classe}" não existe no contrato.`, trecho: trechoDe(elemento) };
             continue;
           }
@@ -121,14 +144,16 @@ export const regras = [
   },
   {
     nome: 'vocabulario.atributo',
-    *aplicar({ slides, contrato }) {
+    *aplicar({ slides, contrato, fase }) {
       for (const { secao, elemento } of elementosDoCorpo(slides)) {
         const nome = nomeDe(elemento);
         // Elemento que nem está no vocabulário já foi acusado; enumerar os atributos dele é ruído.
         if (elemento !== secao && !emSvg(elemento) && !contrato.html.elementos.includes(nome)) continue;
         const permitidos = emSvg(elemento) ? null : atributosPermitidos(elemento, contrato);
         for (const atributo of elemento.attributes) {
-          const chave = atributo.name;
+          // O contrato só conhece grafia minúscula; um navegador já normaliza o nome do atributo no
+          // parser, o linkedom não — daí comparar por atributo.name puro perderia Class, VIEWBOX etc.
+          const chave = atributo.name.toLowerCase();
           if (chave === 'class' || chave === 'style' || DE_OUTRA_REGRA.has(chave)) continue;
           if (contrato.proibidos.prefixosDeAtributo.some((prefixo) => chave.startsWith(prefixo))) {
             yield { ...onde(slides, secao), mensagem: `atributo "${chave}" é proibido no corpo da aula.`, trecho: trechoDe(elemento) };
@@ -140,7 +165,7 @@ export const regras = [
           }
           if (emSvg(elemento)) {
             const doElemento = contrato.svg.atributosPorElemento[nome] ?? [];
-            if (!contrato.svg.atributos.includes(chave) && !doElemento.includes(chave)) {
+            if (!casaNome(chave, contrato.svg.atributos) && !casaNome(chave, doElemento)) {
               yield { ...onde(slides, secao), mensagem: `atributo "${chave}" não está no vocabulário do SVG.`, trecho: trechoDe(elemento) };
               continue;
             }
@@ -150,11 +175,11 @@ export const regras = [
             continue;
           }
           const regra = permitidos.get(chave);
-          if (!regra || regra.fase > 1) {
+          if (!regra || regra.fase > fase) {
             yield { ...onde(slides, secao), mensagem: `atributo "${chave}" não vale em <${nome}>.`, trecho: trechoDe(elemento) };
             continue;
           }
-          if (regra.layouts && !regra.layouts.includes(secao.getAttribute('data-layout'))) {
+          if (regra.layouts && !regra.layouts.includes(atributoDe(secao, 'data-layout')?.value)) {
             yield { ...onde(slides, secao), mensagem: `atributo "${chave}" só vale no layout ${regra.layouts.join(' ou ')}.`, trecho: trechoDe(elemento) };
             continue;
           }
@@ -170,7 +195,7 @@ export const regras = [
       for (const { secao, elemento } of elementosDoCorpo(slides)) {
         if (nomeDe(elemento) === 'style') {
           yield { ...onde(slides, secao), mensagem: 'elemento <style> no corpo da aula.', trecho: trechoDe(elemento) };
-        } else if (elemento.hasAttribute('style')) {
+        } else if (atributoDe(elemento, 'style')) {
           yield { ...onde(slides, secao), mensagem: `estilo em linha em <${nomeDe(elemento)}>.`, trecho: trechoDe(elemento) };
         }
       }
@@ -182,9 +207,11 @@ export const regras = [
       for (const { secao, elemento } of elementosDoCorpo(slides)) {
         if (!emSvg(elemento)) continue;
         for (const chave of ['fill', 'stroke']) {
-          const valor = elemento.getAttribute(chave);
-          if (valor === null) continue;
-          if (!contrato.svg.cores.includes(valor.toUpperCase()) && !contrato.svg.cores.includes(valor)) {
+          const valor = atributoDe(elemento, chave)?.value;
+          if (valor === undefined) continue;
+          // "none" é a única palavra-chave da lista (o resto é hexadecimal); os tokens hex já são
+          // comparados em maiúsculas, então "none" também merece aceitar qualquer caixa do autor.
+          if (!contrato.svg.cores.includes(valor.toUpperCase()) && !contrato.svg.cores.includes(valor.toLowerCase())) {
             yield { ...onde(slides, secao), mensagem: `${chave}="${valor}" não é cor do contrato.`, trecho: trechoDe(elemento) };
           }
         }
@@ -197,12 +224,12 @@ export const regras = [
       for (const { secao, elemento } of elementosDoCorpo(slides)) {
         if (!emSvg(elemento)) continue;
         const nome = nomeDe(elemento);
-        const preenchimento = elemento.getAttribute('fill')?.toUpperCase();
+        const preenchimento = atributoDe(elemento, 'fill')?.value.toUpperCase();
         if (preenchimento === AMARELO && (nome === 'text' || nome === 'tspan')) {
           yield { ...onde(slides, secao), mensagem: 'amarelo em texto de SVG.', trecho: trechoDe(elemento) };
           continue;
         }
-        const traco = elemento.getAttribute('stroke')?.toUpperCase();
+        const traco = atributoDe(elemento, 'stroke')?.value.toUpperCase();
         if (traco !== AMARELO) continue;
         const largura = numeroDoAtributo(elemento, 'stroke-width', 1);
         if (largura < MINIMO_TRACO_AMARELO) {
@@ -218,7 +245,7 @@ export const regras = [
         if (!emSvg(elemento)) continue;
         const nome = nomeDe(elemento);
         if (nome !== 'text' && nome !== 'tspan') continue;
-        if (elemento.getAttribute('fill')?.toUpperCase() !== AZUL) continue;
+        if (atributoDe(elemento, 'fill')?.value.toUpperCase() !== AZUL) continue;
         const tamanho = numeroDoAtributo(elemento, 'font-size', 16);
         if (tamanho < MINIMO_AZUL) {
           yield { ...onde(slides, secao), mensagem: `azul em texto de ${tamanho} px (mín. ${MINIMO_AZUL}).`, trecho: trechoDe(elemento) };

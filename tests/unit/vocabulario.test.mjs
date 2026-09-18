@@ -17,12 +17,12 @@ const CABECA = `<!DOCTYPE html><html lang="pt-BR"><head>
 const aula = (corpo) => `${CABECA}\n${corpo}\n</body></html>`;
 const slide = (dentro) => aula(`<section data-layout="conteudo" id="a">\n${dentro}\n</section>`);
 
-function rodar(html) {
+function rodar(html, opcoes = {}) {
   const { document } = parseHTML(html);
-  return validar(document, { contrato, regras: vocabulario, grupo: 'estatica' });
+  return validar(document, { contrato, regras: vocabulario, grupo: 'estatica', ...opcoes });
 }
 
-const mensagens = (html) => rodar(html).map((achado) => achado.mensagem);
+const mensagens = (html, opcoes) => rodar(html, opcoes).map((achado) => achado.mensagem);
 
 test('o que está no contrato passa', () => {
   assert.deepEqual(mensagens(slide('<h2>T</h2>\n<p class="lide">Lide.</p>\n<p>Corpo.</p>')), []);
@@ -95,5 +95,57 @@ test('script dentro da section', () => {
   assert.deepEqual(
     mensagens(slide('<h2>T</h2>\n<p>C.</p>\n<script>var x = 1;</script>')),
     ['script dentro da section: registros de demo ficam fora dos slides.'],
+  );
+});
+
+// Achado da revisão da Tarefa 1: o linkedom preserva a grafia do autor em atributos (ao contrário de
+// um navegador, que normaliza no parser); comparar por nome exato perde Class, esconde o layout real
+// da section, ou rejeita um atributo de SVG que só existe com outra caixa no contrato.
+test('atributo com grafia diferente da do contrato ainda é reconhecido, pela comparação sem caixa', () => {
+  assert.deepEqual(mensagens(slide('<h2>T</h2>\n<p Class="palco">C.</p>')), ['"palco" é classe do sistema: o autor não a escreve no fonte.']);
+  assert.deepEqual(mensagens(aula('<section Data-Layout="conteudo" id="a"><h2>T</h2><p>C.</p></section>')), []);
+  assert.deepEqual(mensagens(slide('<h2>T</h2>\n<figure><svg VIEWBOX="0 0 10 10" role="img" aria-label="d"></svg></figure>')), []);
+  assert.deepEqual(mensagens(slide('<h2>T</h2>\n<p OnClick="x">C.</p>')), ['atributo "onclick" é proibido no corpo da aula.']);
+});
+
+// A mesma comparação sem caixa vale para as regras que leem fill/stroke/style por fora do laço de
+// vocabulario.atributo: sem isso, vocabulario.atributo passaria a aceitar Fill/Style como conhecidos
+// (corretamente) e a regra dona do valor (cor-svg/style) continuaria cega para a grafia do autor —
+// pior que antes, silêncio em vez de mensagem confusa.
+test('vocabulario.style e vocabulario.cor-svg também reconhecem o atributo com outra grafia', () => {
+  assert.deepEqual(mensagens(slide('<h2>T</h2>\n<p Style="color: red">C.</p>')), ['estilo em linha em <p>.']);
+  assert.deepEqual(
+    mensagens(slide('<h2>T</h2>\n<figure><svg viewBox="0 0 10 10"><rect Fill="#FF0000" width="5" height="5"/></svg></figure>')),
+    ['fill="#FF0000" não é cor do contrato.'],
+  );
+});
+
+test('fase chega ao contexto da regra: classe e atributo de fase 2 só valem quando fase 2 é pedida', () => {
+  const grafico = slide('<h2>T</h2>\n<figure class="grafico"></figure>');
+  assert.deepEqual(mensagens(grafico), ['classe "grafico" não existe no contrato.']);
+  assert.deepEqual(mensagens(grafico, { fase: 2 }), []);
+
+  const captura = slide('<h2>T</h2>\n<div class="demo" data-demo="x" data-captura-ms="500"></div>');
+  assert.deepEqual(mensagens(captura), ['atributo "data-captura-ms" não vale em <div>.']);
+  assert.deepEqual(mensagens(captura, { fase: 2 }), []);
+});
+
+test('fill="none" em qualquer caixa é aceito, como os tokens hexadecimais', () => {
+  assert.deepEqual(mensagens(slide('<h2>T</h2>\n<figure><svg viewBox="0 0 10 10"><rect fill="NONE" width="5" height="5"/></svg></figure>')), []);
+  assert.deepEqual(mensagens(slide('<h2>T</h2>\n<figure><svg viewBox="0 0 10 10"><rect fill="None" width="5" height="5"/></svg></figure>')), []);
+});
+
+test('data-opcoes exige um objeto JSON, não qualquer JSON válido', () => {
+  assert.deepEqual(
+    mensagens(slide('<h2>T</h2>\n<div class="demo" data-demo="x" data-opcoes="42"></div>')),
+    ['data-opcoes com valor não é um objeto JSON.'],
+  );
+  assert.deepEqual(
+    mensagens(slide('<h2>T</h2>\n<div class="demo" data-demo="x" data-opcoes="[1,2,3]"></div>')),
+    ['data-opcoes com valor não é um objeto JSON.'],
+  );
+  assert.deepEqual(
+    mensagens(slide(`<h2>T</h2>\n<div class="demo" data-demo="x" data-opcoes='{"passo":5}'></div>`)),
+    [],
   );
 });
