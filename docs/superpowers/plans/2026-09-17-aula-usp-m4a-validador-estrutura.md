@@ -1383,7 +1383,7 @@ test('validar sem argumento explica o uso e sai com 2', () => {
 - [ ] **Step 9: Rodar os dois conjuntos**
 
 Rode: `node --test tests/unit/*.test.mjs`
-Espere: 156 + 35 + 8 = 199 testes passando.
+Espere: 156 + 42 + 8 = 206 testes passando. (Os 42 do arquivo do validador incluem os dois da correção da tarefa 1 e os sete do redesenho do casador.)
 
 Rode: `node --test tests/integracao/validador.test.mjs`
 Espere: 2 testes passando.
