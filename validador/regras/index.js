@@ -4,5 +4,6 @@
 import { regras as estrutura } from './estrutura.js';
 import { regras as conteudo } from './conteudo.js';
 import { regras as vocabulario } from './vocabulario.js';
+import { regras as limites } from './limites.js';
 
-export const REGRAS_ESTATICAS = [...estrutura, ...conteudo, ...vocabulario];
+export const REGRAS_ESTATICAS = [...estrutura, ...conteudo, ...vocabulario, ...limites];

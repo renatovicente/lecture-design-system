@@ -135,9 +135,10 @@ test('estrutura.id-ausente escreve a mensagem por extenso, com e sem layout', ()
 
 import { regras as conteudo } from '../../validador/regras/conteudo.js';
 import { regras as vocabulario } from '../../validador/regras/vocabulario.js';
+import { regras as limites } from '../../validador/regras/limites.js';
 import { itensDoConteudo } from '../../validador/sequencia.js';
 
-const todas = [...estrutura, ...conteudo, ...vocabulario];
+const todas = [...estrutura, ...conteudo, ...vocabulario, ...limites];
 
 function slide(corpo) {
   return BASE.replace('  <h2>Título</h2>\n  <p class="lide">Lide.</p>\n  <p>Corpo.</p>\n', corpo);
