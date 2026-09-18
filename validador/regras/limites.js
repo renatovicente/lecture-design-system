@@ -14,7 +14,8 @@ export function segmentosDoTitulo(elemento) {
     if (no.nodeType === 1 && no.nodeName === 'BR') segmentos.push([]);
     else segmentos.at(-1).push(no.textContent ?? '');
   }
-  return segmentos.map((partes) => textoSemTex(partes.join('')).trim()).filter(Boolean);
+  // Quebra de linha e indentação do fonte colapsam num espaço só na tela (spec 5.3 mede o renderizado).
+  return segmentos.map((partes) => textoSemTex(partes.join('')).replace(/\s+/g, ' ').trim()).filter(Boolean);
 }
 
 // Fora da contagem de palavras (spec 5.3): TeX não conta pelo fonte (conta pelo texto renderizado,
@@ -56,8 +57,10 @@ export function palavrasDe(elemento) {
     .reduce((soma, segmento) => soma + segmento.texto.split(/\s+/).filter(Boolean).length, 0);
 }
 
+// Mesma razão do colapso em segmentosDoTitulo: o fonte em várias linhas não pode contar quebra e
+// indentação que o navegador nunca mostra.
 function textoDe(elemento) {
-  return textoSemTex(elemento.textContent).trim();
+  return textoSemTex(elemento.textContent).replace(/\s+/g, ' ').trim();
 }
 
 // Cada alvo de limite de comprimento: seletor, chave do limite e como a mensagem chama a coisa.

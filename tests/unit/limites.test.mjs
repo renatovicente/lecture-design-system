@@ -57,6 +57,25 @@ test('cada layout tem o seu limite de título', () => {
     ['título com 21 caracteres num segmento (máx. 20).']);
 });
 
+// Achado da revisão final (Important 2): o fonte em várias linhas indentadas traz quebra + espaços
+// que o navegador colapsa num espaço só; contar o fonte cru acusa um título ou um lide corretos.
+test('título em três linhas indentadas no fonte: o espaço que o navegador colapsa não conta', () => {
+  const h2 = (partes) => `<h2>${partes.map((parte) => `\n        ${parte}`).join('')}\n      </h2>`;
+  // 46 caracteres renderizados (15+1+15+1+14); no fonte cru, com quebra e indentação, seriam 62.
+  assert.deepEqual(mensagens(slide(`${h2(['a'.repeat(15), 'a'.repeat(15), 'a'.repeat(14)])}\n<p>C.</p>`)), []);
+  // 51 caracteres renderizados: um a mais que o limite de 50, com ou sem indentação no fonte.
+  assert.deepEqual(
+    mensagens(slide(`${h2(['a'.repeat(15), 'a'.repeat(15), 'a'.repeat(19)])}\n<p>C.</p>`)),
+    ['título com 51 caracteres num segmento (máx. 50).'],
+  );
+});
+
+test('lide em duas linhas indentadas no fonte: mesma regra de espaço colapsado dos limites de comprimento', () => {
+  const lide = `\n        ${'a'.repeat(60)}\n        ${'a'.repeat(59)}\n      `;
+  // 120 caracteres renderizados (60+1+59), exatamente no limite; no fonte cru seriam 128.
+  assert.deepEqual(mensagens(slide(`<h2>T</h2>\n<p class="lide">${lide}</p>\n<p>C.</p>`)), []);
+});
+
 test('palavras do corpo e da coluna, sem contar código nem notas', () => {
   const { document } = parseHTML(slide('<p>uma duas três</p><pre data-lang="python">x = 1</pre><aside class="notas">nota longa aqui</aside>'));
   assert.equal(palavrasDe(document.querySelector('section')), 3);
