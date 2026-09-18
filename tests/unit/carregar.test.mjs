@@ -52,6 +52,29 @@ test('capturar: também é definição, não só capturar()', () => {
   assert.deepEqual(demos.get('c'), { capturar: true });
 });
 
+test("['capturar'](...) — propriedade computada — também é definição", () => {
+  const demos = demosDosScripts(script("AulaUSP.demo('d', { montar() {}, ['capturar']() { return 'x'; } });"));
+  assert.deepEqual(demos.get('d'), { capturar: true });
+});
+
+// Round 2 da revisão: uma chave { ou } desbalanceada dentro de uma string do corpo (não um erro de
+// digitação no fonte — uma string de verdade pode ter esse caractere) não pode fazer o casamento de
+// chaves inventar um erro. Apagar o registro faria recursos.demo-sem-registro (erro) acusar uma
+// demo que está registrada — pior do que um capturar impreciso.
+test('uma { desbalanceada dentro de uma string do corpo não derruba o registro', () => {
+  const demos = demosDosScripts(script(
+    "AulaUSP.demo('e', { montar() { const s = '{'; }, capturar() { return 'x'; } });",
+  ));
+  assert.deepEqual(demos.get('e'), { capturar: true });
+});
+
+test('uma } desbalanceada dentro de uma string do corpo não trunca antes do capturar real', () => {
+  const demos = demosDosScripts(script(
+    "AulaUSP.demo('f', { montar() { const s = '}'; }, capturar() { return 'x'; } });",
+  ));
+  assert.deepEqual(demos.get('f'), { capturar: true });
+});
+
 test('duas demos no mesmo script aparecem as duas', () => {
   const demos = demosDosScripts(script(
     "AulaUSP.demo('um', { montar() {} });\nAulaUSP.demo('dois', { montar() {}, capturar() { return 'x'; } });",
@@ -77,6 +100,19 @@ test('uma string com // dentro (uma URL, como um capturar() real do sistema) nã
     + ' });';
   const demos = demosDosScripts(script(js));
   assert.deepEqual(demos.get('capturavel'), { capturar: true });
+});
+
+// Buraco aceito (round 2 da revisão), não corrigido de propósito: um literal de regex com aspas
+// dentro (aqui, /'/) dessincroniza o rastreador de string de apagarComentarios, e uma resincronia
+// posterior (aqui, o apóstrofo de "it's") faz o resto do comentário /* … */ parecer código comum —
+// um AulaUSP.demo(...) genuinamente comentado é lido como se estivesse ao vivo. A asserção abaixo
+// prende o valor ERRADO de propósito: NÃO é o comportamento desejado, é o estado atual, registrado
+// para o dia em que alguém tentar consertar (aí este teste avisa, em vez de continuar quieto). Ver
+// o comentário sobre apagarComentarios em build/carregar.mjs para o porquê de ficar assim por ora.
+test('buraco aceito: regex com aspas desincroniza e um comentário genuíno depois lê como ao vivo', () => {
+  const js = "const p = /'/;\n/* it's fine: AulaUSP.demo('ghost', { montar() {} }); */\n";
+  const demos = demosDosScripts(script(js));
+  assert.deepEqual(demos.get('ghost'), { capturar: false }); // errado: 'ghost' está comentado, não deveria existir aqui
 });
 
 function pastaTemporaria() {

@@ -9,16 +9,32 @@ import { compilarTex, segmentosDeTex, textosComTex } from '../componentes/tex.js
 // contrato (minúsculas, dígitos e hífen).
 const CHAMADA = /AulaUSP\.demo\(\s*(['"])([a-z][a-z0-9-]*)\1\s*,/g;
 
-// capturar(...) ou capturar: ..., uma definição — não uma menção qualquer, como num comentário.
-const DEFINE_CAPTURAR = /\bcapturar\s*[:(]/;
+// capturar(...), capturar: ... ou ['capturar'](...) — uma definição, não uma menção qualquer.
+const DEFINE_CAPTURAR = /\bcapturar\s*[:(]|\[\s*['"]capturar['"]\s*\]\s*[:(]/;
+
+// O fechamento heurístico do regex antigo (linha própria antes do ")"), de reserva para quando o
+// casamento de chaves não resolve — ver fimDeReserva.
+const FECHAMENTO_HEURISTICO = /\n\s*\}\s*\)/;
 
 // Apaga comentários (/* … */ e // …) trocando cada caractere, menos a quebra de linha, por um
 // espaço: o texto sai do mesmo tamanho, então todo índice de `bruto` continua valendo na cópia —
-// dá para comparar o mesmo trecho dos dois textos e saber se ele caiu dentro de um comentário. As
-// strings não são tocadas (ficam com aspas e conteúdo originais): é onde mora o nome da demo, e é
-// por isso que o laço pula por cima delas inteiras de uma vez — um "//" dentro de uma string (uma
-// URL como 'http://…', que aparece de verdade num capturar() do sistema) não é comentário nenhum.
-function apagarComentarios(texto) {
+// dá para comparar o mesmo trecho dos dois textos e saber se ele caiu dentro de um comentário.
+// Nas strings, o laço sempre pula por cima de uma vez (um "//" dentro de uma URL como 'http://…',
+// que aparece de verdade num capturar() do sistema, não é comentário nenhum) — apagarStrings decide
+// só se o conteúdo pulado fica no texto (o passo 1, que lê o nome da demo, precisa disso: o nome
+// mora numa string) ou também vira espaço (o casamento de chaves de fimDoObjeto, para quem um {
+// ou } dentro de uma string, como `const s = '{';`, não pode contar como chave de verdade).
+//
+// Buraco aceito, por instrução do controlador, e não corrigido aqui: um literal de regex com aspas
+// dentro (ex.: const p = /['"]/;) engana este rastreador — ele lê a aspa do regex como abertura de
+// string e só resincroniza na próxima aspa que achar, seja lá onde for; um AulaUSP.demo(...)
+// comentado que caia dentro desse trecho sequestrado volta a parecer ao vivo. Corrigir isso de
+// verdade exigiria distinguir divisão de início de regex sem um parser de JavaScript de verdade — o
+// mesmo parser que a spec 9.3 evitou de propósito (rodar o script do autor no build é o oposto de
+// um pré-voo seguro). Quando há Chrome, a Task 4 deste marco lê o registro de demos da página viva,
+// não deste scanner (instrução já registrada para essa task) — este caminho aqui é só o substituto
+// para quando não há Chrome. tests/unit/carregar.test.mjs fixa esse comportamento com um teste.
+function apagarComentarios(texto, { apagarStrings = false } = {}) {
   let saida = '';
   let i = 0;
   while (i < texto.length) {
@@ -38,7 +54,8 @@ function apagarComentarios(texto) {
       let j = i + 1;
       while (j < texto.length && texto[j] !== aspas) j += texto[j] === '\\' ? 2 : 1;
       j = Math.min(j + 1, texto.length);
-      saida += texto.slice(i, j);
+      const trecho = texto.slice(i, j);
+      saida += apagarStrings ? trecho.replace(/[^\n]/g, ' ') : trecho;
       i = j;
     } else {
       saida += texto[i];
@@ -49,7 +66,8 @@ function apagarComentarios(texto) {
 }
 
 // O } que fecha o { em `indice`, contando profundidade — não "o próximo }\s*)", frágil: um });
-// dentro de montar() (ex.: configurar({ opcao: 1 })) fecharia o casamento antes da hora.
+// dentro de montar() (ex.: configurar({ opcao: 1 })) fecharia o casamento antes da hora. -1 quando
+// não resolve (chave sem par até o fim do script); fimDeReserva decide o que fazer nesse caso.
 function fimDoObjeto(texto, indice) {
   let profundidade = 0;
   for (let i = indice; i < texto.length; i += 1) {
@@ -59,20 +77,35 @@ function fimDoObjeto(texto, indice) {
   return -1;
 }
 
+// Quando o casamento de chaves não resolve, cai para a âncora do regex antigo (um } numa linha
+// própria antes de um ")"); se nem essa âncora existe, o corpo vai até o fim do script. Um scanner
+// inseguro não pode inventar um erro: qualquer uma das duas reservas é imprecisa (capturar() pode
+// ficar de fora do corpo, ou sobrar código de outro registro dentro dele) mas nunca apaga o
+// registro — apagar faria recursos.demo-sem-registro (erro) acusar uma demo que está registrada,
+// pior que um recursos.demo-sem-estatico (aviso) errado.
+function fimDeReserva(texto, indice) {
+  const heuristica = FECHAMENTO_HEURISTICO.exec(texto.slice(indice));
+  return heuristica ? indice + heuristica.index + heuristica[0].indexOf('}') : texto.length - 1;
+}
+
 export function demosDosScripts(doc) {
   const demos = new Map();
   for (const script of doc.querySelectorAll('script:not([src])')) {
     const bruto = script.textContent;
     const semComentarios = apagarComentarios(bruto);
+    const paraChaves = apagarComentarios(bruto, { apagarStrings: true });
     for (const chamada of bruto.matchAll(CHAMADA)) {
       // A mesma posição, sem comentários, tem que ser o mesmo texto; se não é, a chamada caiu
       // dentro de um /* … */ ou // — comentada, portanto não é um registro de verdade.
       if (semComentarios.slice(chamada.index, chamada.index + chamada[0].length) !== chamada[0]) continue;
-      const inicioDoObjeto = semComentarios.indexOf('{', chamada.index + chamada[0].length);
-      if (inicioDoObjeto === -1) continue; // sem { depois da vírgula: registro incompleto
-      const fim = fimDoObjeto(semComentarios, inicioDoObjeto);
-      if (fim === -1) continue; // chave sem par: não dá para saber onde o registro termina
-      const corpo = semComentarios.slice(inicioDoObjeto, fim + 1);
+      const inicioDoObjeto = paraChaves.indexOf('{', chamada.index + chamada[0].length);
+      if (inicioDoObjeto === -1) continue; // sem { depois da vírgula: registro incompleto, nada a fazer
+      const fim = fimDoObjeto(paraChaves, inicioDoObjeto);
+      const fimFinal = fim === -1 ? fimDeReserva(paraChaves, inicioDoObjeto) : fim;
+      // paraChaves só decide ONDE termina o registro (índices batem nos dois textos, mesmo
+      // tamanho); o que DEFINE_CAPTURAR lê vem de semComentarios, com as strings intactas — senão
+      // ['capturar']() nunca seria achado, porque a própria palavra "capturar" estaria apagada.
+      const corpo = semComentarios.slice(inicioDoObjeto, fimFinal + 1);
       demos.set(chamada[2], { capturar: DEFINE_CAPTURAR.test(corpo) });
     }
   }
