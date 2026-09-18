@@ -1,7 +1,7 @@
 // Regras de limite (spec 5.2, 5.3 e 9.2): o que cabe no slide, contado no fonte.
 // Os números vêm todos de contrato.limites; o código só sabe contar.
 import { onde, trechoDe, plural } from '../validar.js';
-import { textoSemTex } from '../../componentes/tex.js';
+import { textoSemTex, segmentosDeTex } from '../../componentes/tex.js';
 import { codigoDoBloco } from '../../componentes/codigo.js';
 
 // Segmentos de um título são os trechos entre <br> (spec 5.3), lidos pelo que aparece: o TeX conta
@@ -45,11 +45,15 @@ function textoDeContagem(elemento) {
   return texto;
 }
 
-// Palavras são as sequências separadas por espaço nos nós de texto (spec 5.3): o texto vem de
-// textoDeContagem, que já resolve a fronteira de bloco acima — nunca do textContent do galho
-// inteiro, que colaria dois blocos vizinhos sem espaço no fonte num token só.
+// Palavras são as sequências separadas por espaço nos nós de texto, sem contar TeX (spec 5.3): ao
+// contrário do título (abaixo), aqui o TeX não vira texto renderizado — os segmentos de TeX são
+// descartados, não convertidos, senão uma equação de dez símbolos vira dez palavras do orçamento.
+// O texto vem de textoDeContagem, que já resolve a fronteira de bloco acima — nunca do textContent
+// do galho inteiro, que colaria dois blocos vizinhos sem espaço no fonte num token só.
 export function palavrasDe(elemento) {
-  return textoSemTex(textoDeContagem(elemento)).split(/\s+/).filter(Boolean).length;
+  return segmentosDeTex(textoDeContagem(elemento))
+    .filter((segmento) => segmento.tipo === 'texto')
+    .reduce((soma, segmento) => soma + segmento.texto.split(/\s+/).filter(Boolean).length, 0);
 }
 
 function textoDe(elemento) {

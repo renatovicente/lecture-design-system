@@ -140,6 +140,22 @@ test('palavras em <text> de SVG contam no orçamento do corpo', () => {
   assert.deepEqual(mensagens(slide(`<h2>T</h2>\n<p>${repetir('palavra', 80)}</p>\n${rotulo(10)}`)), []);
 });
 
+test('palavrasDe não conta TeX (spec 5.3, "sem contar TeX"): equação em destaque não pesa no orçamento', () => {
+  // Mesmo exemplo medido na revisão final: convertida pelo texto renderizado, esta equação valeria
+  // dez palavras; descartada, vale zero. 88 de prosa + a equação cabe no limite de 90; 91 de prosa
+  // estoura o limite com ou sem equação, porque TeX nunca deveria ter entrado na conta.
+  const equacao = '\\[ \\hat{y} = \\sigma(\\sum_{i=1}^{n} w_i x_i + b) \\]';
+  assert.deepEqual(mensagens(slide(`<h2>T</h2>\n<p>${repetir('palavra', 88)}</p>\n<p>${equacao}</p>`)), []);
+  assert.deepEqual(
+    mensagens(slide(`<h2>T</h2>\n<p>${repetir('palavra', 91)}</p>\n<p>${equacao}</p>`)),
+    ['91 palavras no corpo (máx. 90).'],
+  );
+  assert.deepEqual(
+    mensagens(slide(`<h2>T</h2>\n<p>${repetir('palavra', 91)}</p>`)),
+    ['91 palavras no corpo (máx. 90).'],
+  );
+});
+
 test('palavrasDe continua sem contar aside.notas, pre e code', () => {
   const { document } = parseHTML(slide(
     '<p>uma <code>x = 1</code> duas</p><pre data-lang="python">y = 2</pre><aside class="notas">nota longa aqui</aside>',
