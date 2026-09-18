@@ -81,7 +81,11 @@ function semCores(html) {
     });
 }
 
-function htmlDoKatex(katex, tex, tipo) {
+// Compila um segmento de TeX exatamente como o sistema compila (spec 6.4): macros do contrato,
+// trust restrito a \htmlData, o sentinela de cor para comando recusado e a checagem de \passo — os
+// quatro por igual, para quem compila fora do navegador (build/carregar.mjs) nunca aceitar TeX que
+// o navegador recusaria. Lança com a mensagem do problema; quem chama decide o que fazer com ela.
+export function compilarTex(katex, tex, tipo) {
   const html = katex.renderToString(tex, {
     displayMode: tipo === 'destaque',
     throwOnError: true,
@@ -121,7 +125,7 @@ function renderizarSegmento(doc, katex, segmento, erros) {
   const destaque = segmento.tipo === 'destaque';
   try {
     const molde = doc.createElement('template');
-    molde.innerHTML = htmlDoKatex(katex, segmento.tex, segmento.tipo);
+    molde.innerHTML = compilarTex(katex, segmento.tex, segmento.tipo);
     const html = molde.content.firstChild;
     if (!destaque) {
       html.setAttribute('data-tex', segmento.tex);

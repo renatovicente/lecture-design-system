@@ -65,6 +65,8 @@ export async function validarArquivo(alvo, { regras = REGRAS_ESTATICAS, raizDoSi
   const contrato = JSON.parse(readFileSync(join(raizDoSistema, 'contrato/contrato.json'), 'utf8'));
   const unidades = JSON.parse(readFileSync(join(raizDoSistema, 'assets/marcas/unidades.json'), 'utf8'));
   const doc = lerAula(caminho, contrato);
+  // Nesta ordem: validar() normaliza doc.body como efeito colateral (validador/validar.js:28), e
+  // carregarNoNode (build/carregar.mjs:texInvalido) depende disso já ter acontecido.
   const daEstatica = validar(doc, { contrato, regras, grupo: 'estatica', unidades });
   const { default: katex } = await import('katex');
   const recursos = carregarNoNode(doc, { pastaDaAula: dirname(caminho), katex });

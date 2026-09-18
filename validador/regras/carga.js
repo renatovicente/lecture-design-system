@@ -34,6 +34,10 @@ export const regras = [
     },
   },
   {
+    // div.demo[data-demo] nos dois seletores abaixo: um div.demo sem data-demo nenhum não bate com
+    // nenhum dos dois, e o contrato não marca data-demo como obrigatório — vocabulario.atributo
+    // também não acusa a ausência. Um PDF vazio assim sai sem achado nenhum (não é regressão desta
+    // task; a spec pede exatamente estas quatro regras).
     nome: 'recursos.demo-sem-registro',
     *aplicar({ slides, recursos }) {
       if (!recursos?.demos) return;

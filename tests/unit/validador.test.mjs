@@ -2,9 +2,12 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync, existsSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { parseHTML } from 'linkedom';
+import katex from 'katex';
 import { validar, linhaDe, contar, cabecalhoDe, slidesDoFonte } from '../../validador/validar.js';
 import { regras as estrutura } from '../../validador/regras/estrutura.js';
+import { carregarNoNode } from '../../build/carregar.mjs';
 
 const RAIZ = new URL('../../', import.meta.url);
 const contrato = JSON.parse(readFileSync(new URL('contrato/contrato.json', RAIZ), 'utf8'));
@@ -29,9 +32,9 @@ const BASE = aula(`<section data-layout="capa"><h1>Capa</h1></section>
 <section data-layout="abertura" id="bloco-dois"><h2>Dois</h2></section>
 <section data-layout="encerramento"><h2>Fim</h2><ol class="sintese"><li>Um.</li></ol></section>`);
 
-function rodar(html, regras = estrutura, grupo = 'estatica') {
+function rodar(html, regras = estrutura) {
   const { document } = parseHTML(html);
-  return validar(document, { contrato, regras, grupo, unidades });
+  return validar(document, { contrato, regras, grupo: 'estatica', unidades });
 }
 
 test('a aula de base não tem erro nenhum', () => {
@@ -309,19 +312,27 @@ const DE_CARGA = new Map(carga.map((regra) => [regra.nome, regra]));
 // estrutura.blocos ou estrutura.notas-ausentes, e cobrar isso viraria uma aula inteira por pasta.
 //
 // As pastas do grupo de carga (marco 4c) moram na mesma pasta e seguem o mesmo molde, mas a regra
-// só acusa com os recursos que o carregador entrega (KaTeX, disco, scripts) — recursos que esta
-// varredura não tem e não simula. bom.html e ruim.html aqui diferem no que o carregador *encontraria*
-// no navegador ou no build, não no que a regra vê nesta chamada: sem recursos, os dois ficam limpos,
-// e a única coisa que este teste confirma é que a regra existe e está registrada em REGRAS_DE_CARGA.
+// só acusa com recursos de verdade — então a varredura monta recursos de verdade, com o próprio
+// carregarNoNode do build, tendo a pasta da fixture como pastaDaAula (é por isso que recursos.imagem
+// e recursos.demo-sem-estatico têm um img/existe.png de verdade ao lado do bom.html e do ruim.html:
+// uma fixture que não pode acusar nada não prova nada). Roda como o build roda: normaliza antes de
+// texInvalido, senão TeX partido por uma referência de caractere passaria batido (validar.js:28).
+function rodarComCarga(nome, arquivo) {
+  const { document } = parseHTML(readFileSync(new URL(`${nome}/${arquivo}`, FIXTURES), 'utf8'));
+  document.body.normalize();
+  const pastaDaAula = fileURLToPath(new URL(`${nome}/`, FIXTURES));
+  const recursos = carregarNoNode(document, { pastaDaAula, katex });
+  return validar(document, { contrato, regras: carga, grupo: 'carga', recursos })
+    .filter((achado) => achado.regra === nome);
+}
+
 for (const nome of readdirSync(FIXTURES).sort()) {
   test(`fixture de ${nome}`, () => {
     if (DE_CARGA.has(nome)) {
-      const bom = rodar(readFileSync(new URL(`${nome}/bom.html`, FIXTURES), 'utf8'), carga, 'carga')
-        .filter((achado) => achado.regra === nome);
-      const ruim = rodar(readFileSync(new URL(`${nome}/ruim.html`, FIXTURES), 'utf8'), carga, 'carga')
-        .filter((achado) => achado.regra === nome);
-      assert.deepEqual(bom, [], `bom.html de ${nome} acusou sem recursos carregados: ${bom.map((a) => a.mensagem).join(' / ')}`);
-      assert.deepEqual(ruim, [], `ruim.html de ${nome} acusou sem recursos carregados: ${ruim.map((a) => a.mensagem).join(' / ')}`);
+      const bom = rodarComCarga(nome, 'bom.html');
+      const ruim = rodarComCarga(nome, 'ruim.html');
+      assert.deepEqual(bom, [], `bom.html de ${nome} acusou com recursos de verdade: ${bom.map((a) => a.mensagem).join(' / ')}`);
+      assert.ok(ruim.length > 0, `ruim.html de ${nome} não acusou nada da própria regra, mesmo com recursos de verdade`);
       return;
     }
     const regra = IMPLEMENTADAS.get(nome);
