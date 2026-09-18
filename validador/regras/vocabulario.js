@@ -81,8 +81,25 @@ function valorInvalido(valor, regra) {
   return null;
 }
 
-function numeroDoAtributo(elemento, nome, padrao) {
-  const valor = atributoDe(elemento, nome)?.value;
+// fill, stroke, stroke-width e font-size são herdados em SVG: um <g fill="..."> pinta os <text> de
+// dentro, e um <text> sem font-size herda o do ancestral (spec 4.2 mede o valor que chega à tela, não
+// o que o elemento escreve). Sobe pelos ancestrais dentro do próprio <svg> até achar quem define o
+// atributo; o marco 4c vai precisar da mesma ideia para medir a cor e o tamanho já renderizados.
+function atributoHerdado(elemento, nome) {
+  for (let no = elemento; no; no = no.parentElement) {
+    const valor = atributoDe(no, nome)?.value;
+    if (valor !== undefined) return valor;
+    if (nomeDe(no) === 'svg') return undefined;
+  }
+  return undefined;
+}
+
+function corHerdada(elemento, nome) {
+  return atributoHerdado(elemento, nome)?.toUpperCase();
+}
+
+function numeroHerdado(elemento, nome, padrao) {
+  const valor = atributoHerdado(elemento, nome);
   if (valor === undefined) return padrao;
   const numero = Number.parseFloat(valor);
   return Number.isNaN(numero) ? padrao : numero;
@@ -224,14 +241,14 @@ export const regras = [
       for (const { secao, elemento } of elementosDoCorpo(slides)) {
         if (!emSvg(elemento)) continue;
         const nome = nomeDe(elemento);
-        const preenchimento = atributoDe(elemento, 'fill')?.value.toUpperCase();
+        const preenchimento = corHerdada(elemento, 'fill');
         if (preenchimento === AMARELO && (nome === 'text' || nome === 'tspan')) {
           yield { ...onde(slides, secao), mensagem: 'amarelo em texto de SVG.', trecho: trechoDe(elemento) };
           continue;
         }
-        const traco = atributoDe(elemento, 'stroke')?.value.toUpperCase();
+        const traco = corHerdada(elemento, 'stroke');
         if (traco !== AMARELO) continue;
-        const largura = numeroDoAtributo(elemento, 'stroke-width', 1);
+        const largura = numeroHerdado(elemento, 'stroke-width', 1);
         if (largura < MINIMO_TRACO_AMARELO) {
           yield { ...onde(slides, secao), mensagem: `amarelo em traço de ${largura} px (mín. ${MINIMO_TRACO_AMARELO}).`, trecho: trechoDe(elemento) };
         }
@@ -245,8 +262,8 @@ export const regras = [
         if (!emSvg(elemento)) continue;
         const nome = nomeDe(elemento);
         if (nome !== 'text' && nome !== 'tspan') continue;
-        if (atributoDe(elemento, 'fill')?.value.toUpperCase() !== AZUL) continue;
-        const tamanho = numeroDoAtributo(elemento, 'font-size', 16);
+        if (corHerdada(elemento, 'fill') !== AZUL) continue;
+        const tamanho = numeroHerdado(elemento, 'font-size', 16);
         if (tamanho < MINIMO_AZUL) {
           yield { ...onde(slides, secao), mensagem: `azul em texto de ${tamanho} px (mín. ${MINIMO_AZUL}).`, trecho: trechoDe(elemento) };
         }

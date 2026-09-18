@@ -91,6 +91,21 @@ test('amarelo e azul em SVG seguem a regra de cor da spec 4.2', () => {
   assert.deepEqual(mensagens(svg('<text fill="#1094AB" font-size="32">oi</text>')), []);
 });
 
+// Achado da revisão final (Important 1): fill, stroke, stroke-width e font-size são herdados em SVG
+// (spec 4.2 fala do valor renderizado). Ler só o atributo do próprio elemento dá falso negativo (cor
+// herdada em texto não tinha dono) e falso positivo (font-size herdado era ignorado, medindo pelo
+// padrão de 16 px sem razão).
+test('cor e tamanho de SVG sobem pelos ancestrais até achar quem define o atributo', () => {
+  const svg = (dentro) => slide(`<h2>T</h2>\n<figure><svg viewBox="0 0 10 10">${dentro}</svg></figure>`);
+  assert.deepEqual(mensagens(svg('<g fill="#FCB421"><text>oi</text></g>')), ['amarelo em texto de SVG.']);
+  assert.deepEqual(mensagens(svg('<g font-size="40"><text fill="#1094AB">oi</text></g>')), []);
+  // <text font-size> + <tspan fill> é o jeito idiomático de colorir um trecho de uma linha.
+  assert.deepEqual(mensagens(svg('<text font-size="40"><tspan fill="#1094AB">oi</tspan></text>')), []);
+  assert.deepEqual(mensagens(svg('<text fill="#1094AB">oi</text>')), ['azul em texto de 16 px (mín. 32).']);
+  assert.deepEqual(mensagens(svg('<g stroke-width="6"><line stroke="#FCB421" x1="0" y1="0" x2="5" y2="5"/></g>')), []);
+  assert.deepEqual(mensagens(svg('<g fill="#1094AB"><text font-size="20">oi</text></g>')), ['azul em texto de 20 px (mín. 32).']);
+});
+
 test('script dentro da section', () => {
   assert.deepEqual(
     mensagens(slide('<h2>T</h2>\n<p>C.</p>\n<script>var x = 1;</script>')),
