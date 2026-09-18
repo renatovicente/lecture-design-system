@@ -504,7 +504,7 @@ Onde a tabela diz `«slide: X»`, o corpo é `<section data-layout="conteudo" id
 
 - [ ] **Step 9: Rodar a varredura e commitar**
 
-Rode: `npm test` — 232 (224 + 8 pastas novas, uma por pasta na varredura de fixtures).
+Rode: `npm test` — 232 (224 + 8 pastas novas, uma por pasta na varredura de fixtures). A rodada de correção da tarefa 1 acrescentou mais 5 testes, então as contagens das tarefas 2 e 3 partem de 237.
 
 ```bash
 git add validador tests/unit/vocabulario.test.mjs tests/fixtures/validador build/validar.mjs
@@ -949,7 +949,7 @@ export const REGRAS_ESTATICAS = [...estrutura, ...conteudo, ...vocabulario, ...l
 - [ ] **Step 4: Rodar e ver passar**
 
 Rode: `node --test tests/unit/limites.test.mjs` — 11 testes.
-Rode: `npm test` — 243 (232 + 11).
+Rode: `npm test` — 248 (237 + 11).
 
 - [ ] **Step 5: Escrever as vinte fixtures**
 
@@ -980,7 +980,7 @@ Mesmo molde da Task 1. Onde a tabela pede texto longo, escreva a palavra indicad
 
 - [ ] **Step 6: Rodar e commitar**
 
-Rode: `npm test` — 263 (243 + 20 pastas novas).
+Rode: `npm test` — 268 (248 + 20 pastas novas).
 
 ```bash
 git add validador tests/unit/limites.test.mjs tests/fixtures/validador
@@ -1034,7 +1034,7 @@ export function textosComTex(raiz) {
 
 Isto existe porque `matematica.cifrao-suspeito` precisa ver texto **sem** TeX: um parágrafo com `$x^2$` e nenhum `\(` nunca seria visitado pelo `textosComTex` de hoje. Duas varreduras com duas listas de exclusão divergem; uma lista, dois filtros, não.
 
-Rode: `npm test` — 263, sem mudança. `renderizarTex` continua usando `textosComTex` e não muda de comportamento.
+Rode: `npm test` — 268, sem mudança. `renderizarTex` continua usando `textosComTex` e não muda de comportamento.
 
 - [ ] **Step 2: As macros de cor do KaTeX entram no contrato**
 
@@ -1231,7 +1231,7 @@ export const REGRAS_ESTATICAS = [...estrutura, ...conteudo, ...vocabulario, ...l
 - [ ] **Step 5: Rodar e ver passar**
 
 Rode: `node --test tests/unit/recursos.test.mjs` — 8 testes.
-Rode: `npm test` — 271 (263 + 8).
+Rode: `npm test` — 276 (268 + 8).
 
 - [ ] **Step 6: Escrever as cinco fixtures**
 
@@ -1271,7 +1271,7 @@ test('cada deck do espécime valida com o que a spec espera', () => {
 
 - [ ] **Step 8: Rodar tudo e commitar**
 
-Rode: `npm test` — 276 (271 + 5 pastas de fixture). O teste de integração conta à parte.
+Rode: `npm test` — 281 (276 + 5 pastas de fixture). O teste de integração conta à parte.
 Rode, um comando por arquivo: `node --test tests/integracao/validador.test.mjs` (3) e, porque `componentes/tex.js` mudou, `node --test tests/integracao/matematica.test.mjs` (6) e `node --test tests/unit/tex.test.mjs`.
 
 ```bash
