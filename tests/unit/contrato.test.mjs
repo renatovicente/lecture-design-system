@@ -112,7 +112,7 @@ test('papéis usam os mínimos dos tokens e têm as exceções da spec (4.3)', (
   for (const papel of ['leitura', 'codigo', 'legenda', 'rotulo'])
     assert.equal(contrato.papeis[papel].minimo, tokens.minimo[papel], papel);
   assert.deepEqual(contrato.papeis.excecoes,
-    ['.katex *', 'sub', 'sup', 'svg *', '.demo *', '.painel *', '.faixa-de-marca *']);
+    ['.katex *', 'sub', 'sup', 'svg *', '.demo *', '.painel *', '.faixa-de-marca *', 'figcaption code', 'p.fonte code']);
 });
 
 test('precedência de papéis e p.fonte só em legenda, não em leitura (F6)', () => {

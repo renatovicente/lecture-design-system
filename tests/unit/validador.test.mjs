@@ -139,7 +139,7 @@ test('estrutura.id-ausente escreve a mensagem por extenso, com e sem layout', ()
 import { itensDoConteudo } from '../../validador/sequencia.js';
 // O registro é a única lista de regras (spec 9.3); uma segunda lista aqui já divergiu dele uma vez
 // (as fixtures de limites do marco 4b-2 chegaram e o teste continuou sem elas até isto ser corrigido).
-import { REGRAS_ESTATICAS as todas, REGRAS_DE_CARGA as carga } from '../../validador/regras/index.js';
+import { REGRAS_ESTATICAS as todas, REGRAS_DE_CARGA as carga, REGRAS_DE_COMPOSICAO as composicao } from '../../validador/regras/index.js';
 
 function slide(corpo) {
   return BASE.replace('  <h2>Título</h2>\n  <p class="lide">Lide.</p>\n  <p>Corpo.</p>\n', corpo);
@@ -303,6 +303,7 @@ test('data-curto comprido fora da abertura só é acusado por vocabulario.atribu
 const FIXTURES = new URL('tests/fixtures/validador/', RAIZ);
 const IMPLEMENTADAS = new Map(todas.map((regra) => [regra.nome, regra]));
 const DE_CARGA = new Map(carga.map((regra) => [regra.nome, regra]));
+const DE_COMPOSICAO = new Map(composicao.map((regra) => [regra.nome, regra]));
 
 // Uma pasta por regra (spec 11.1): roda TODAS as regras sobre a fixture e filtra pela regra da
 // pasta — bom.html não produz nenhum achado dela, ruim.html produz pelo menos um. Rodar só a
@@ -326,6 +327,17 @@ function rodarComCarga(nome, arquivo) {
     .filter((achado) => achado.regra === nome);
 }
 
+// As pastas do grupo de composição (marco 4c) também moram aqui e seguem o mesmo molde, mas a
+// regra só existe para o documento renderizado: getBoundingClientRect() e getComputedStyle() não
+// têm com que responder sobre um documento que o linkedom nunca dispôs nem pintou — nem bom.html
+// nem ruim.html podem acusar nada aqui, do jeito que a fixture de carga acima acusa com recursos de
+// verdade. A pasta serve à spec 11.1 (uma fixture por regra) e aos exemplos do marco 6; quem mede
+// de verdade é tests/integracao/composicao.test.mjs, dentro do Chrome (spec 9.3). Aqui a varredura
+// só confirma que a regra está registrada e que o par bom/ruim existe.
+function existeFixtureDeComposicao(nome) {
+  return existsSync(new URL(`${nome}/bom.html`, FIXTURES)) && existsSync(new URL(`${nome}/ruim.html`, FIXTURES));
+}
+
 for (const nome of readdirSync(FIXTURES).sort()) {
   test(`fixture de ${nome}`, () => {
     if (DE_CARGA.has(nome)) {
@@ -333,6 +345,11 @@ for (const nome of readdirSync(FIXTURES).sort()) {
       const ruim = rodarComCarga(nome, 'ruim.html');
       assert.deepEqual(bom, [], `bom.html de ${nome} acusou com recursos de verdade: ${bom.map((a) => a.mensagem).join(' / ')}`);
       assert.ok(ruim.length > 0, `ruim.html de ${nome} não acusou nada da própria regra, mesmo com recursos de verdade`);
+      return;
+    }
+    if (DE_COMPOSICAO.has(nome)) {
+      assert.ok(contrato.regras[nome], `${nome} não está no contrato`);
+      assert.ok(existeFixtureDeComposicao(nome), `${nome} sem bom.html ou ruim.html`);
       return;
     }
     const regra = IMPLEMENTADAS.get(nome);
