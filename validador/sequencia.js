@@ -31,7 +31,7 @@ export function casaSeletor(item, seletor) {
 // Um grupo não engole o que outra entrada da mesma sequência nomeia: assim p.lide depois do corpo
 // não passa por bloco de corpo, e sim por elemento fora de ordem.
 function casa(item, entrada, contrato, nomeados = []) {
-  if (!item) return false;
+  if (!item || (!entrada.seletor && !entrada.grupo)) return false;
   if (!entrada.grupo) return casaSeletor(item, entrada.seletor);
   if (nomeados.some((seletor) => casaSeletor(item, seletor))) return false;
   return contrato[entrada.grupo].some((seletor) => casaSeletor(item, seletor));
@@ -49,39 +49,55 @@ export function nomeDaEntrada(entrada) {
   return entrada.grupo ? 'bloco de corpo' : entrada.seletor;
 }
 
-function consumir(itens, inicio, entradas, contrato, nomeados) {
-  let i = inicio;
-  const faltando = [];
-  for (const entrada of entradas) {
-    if (entrada.umDe) {
-      const escolhida = entrada.umDe.find((alternativa) => casa(itens[i], alternativa[0], contrato, nomeados));
-      if (!escolhida) {
-        // Nenhuma alternativa começou: a mensagem nomeia todas, em vez de escolher a primeira por acaso.
-        faltando.push({ nomes: entrada.umDe.map((alternativa) => nomeDaEntrada(alternativa[0])) });
-        continue;
-      }
-      const parcial = consumir(itens, i, escolhida, contrato, nomeados);
-      i = parcial.i;
-      faltando.push(...parcial.faltando);
-      continue;
+// Alternativa de umDe que mais casa itens; empate fica com a escrita primeiro no contrato.
+function melhorAlternativa(itens, umDe, contrato, nomeados) {
+  let escolhida = null;
+  let maior = 0;
+  for (const alternativa of umDe) {
+    const casados = itens.filter((item) => alternativa.some((entrada) => casa(item, entrada, contrato, nomeados))).length;
+    if (casados > maior) {
+      maior = casados;
+      escolhida = alternativa;
     }
-    let quantos = 0;
-    while (casa(itens[i], entrada, contrato, nomeados) && (entrada.max === null || quantos < entrada.max)) {
-      i += 1;
-      quantos += 1;
-    }
-    if (quantos < (entrada.min ?? 0)) faltando.push(entrada);
   }
-  return { i, faltando };
+  return escolhida;
 }
 
-// O que falta e o que sobra. Sobra é o item que não coube: ou não é permitido ali, ou está fora de ordem.
+// A sequência com os umDe já resolvidos. A alternativa que não casa nada vira uma entrada que nomeia todas,
+// para a mensagem dizer "sem div.colunas nem bloco de corpo" em vez de escolher uma por acaso.
+function entradasEfetivas(itens, sequencia, contrato, nomeados) {
+  return sequencia.flatMap((entrada) => {
+    if (!entrada.umDe) return [entrada];
+    return melhorAlternativa(itens, entrada.umDe, contrato, nomeados)
+      ?? [{ nomes: entrada.umDe.map((alternativa) => nomeDaEntrada(alternativa[0])), min: 1, max: null }];
+  });
+}
+
+// Duas passadas, porque são duas perguntas: quantos de cada elemento existem, e em que ordem aparecem.
+// Um casamento guloso de uma passada só confunde elemento deslocado com elemento ausente, e manda o autor
+// acrescentar o que já está no slide.
 export function casarSequencia(itens, sequencia, contrato) {
   const nomeados = seletoresNomeados(sequencia);
-  const { i, faltando } = consumir(itens, 0, sequencia, contrato, nomeados);
-  const sobrando = itens.slice(i).map((item) => ({
-    item,
-    foraDeOrdem: sequencia.some((entrada) => (entrada.umDe ?? [[entrada]]).flat().some((e) => casa(item, e, contrato, nomeados))),
-  }));
+  const entradas = entradasEfetivas(itens, sequencia, contrato, nomeados);
+  const de = itens.map((item) => entradas.findIndex((entrada) => casa(item, entrada, contrato, nomeados)));
+
+  // Passada 1: cardinalidade, por conjunto, sem olhar a ordem.
+  const faltando = [];
+  const excedentes = new Map();
+  entradas.forEach((entrada, indice) => {
+    const meus = de.flatMap((qual, k) => (qual === indice ? [k] : []));
+    if (meus.length < (entrada.min ?? 0)) faltando.push(entrada);
+    if (entrada.max != null) for (const k of meus.slice(entrada.max)) excedentes.set(k, entrada);
+  });
+
+  // Passada 2: os índices atribuídos, lidos na ordem do documento, não podem decrescer.
+  const sobrando = [];
+  let maior = -1;
+  itens.forEach((item, k) => {
+    if (de[k] < 0) sobrando.push({ item });
+    else if (excedentes.has(k)) sobrando.push({ item, excedente: [nomeDaEntrada(excedentes.get(k))] });
+    else if (de[k] < maior) sobrando.push({ item, foraDeOrdem: true });
+    else maior = de[k];
+  });
   return { faltando, sobrando };
 }

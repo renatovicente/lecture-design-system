@@ -190,6 +190,68 @@ test('as notas podem estar em qualquer posição do slide', () => {
   assert.deepEqual(achados.filter((a) => a.severidade === 'erro'), []);
 });
 
+// Deslocamento não é ausência: o casador de uma passada só mandava acrescentar o que já estava no slide.
+test('elemento deslocado acusa fora de ordem, e nunca ausência', () => {
+  const achados = rodar(slide('  <p class="lide">Lide.</p>\n  <h2>Título</h2>\n  <p>Corpo.</p>\n'), todas);
+  assert.deepEqual(achados.filter((a) => a.regra === 'estrutura.obrigatorio'), []);
+  assert.deepEqual(
+    achados.filter((a) => a.regra === 'estrutura.fora-do-layout').map((a) => a.mensagem),
+    ['<h2> fora de ordem no layout "conteudo".'],
+  );
+});
+
+test('pergunta antes do h2 na abertura também é só ordem', () => {
+  const invertida = BASE.replace(
+    '<section data-layout="abertura" id="bloco-um"><h2>Um</h2></section>',
+    '<section data-layout="abertura" id="bloco-um"><p class="pergunta">Pergunta?</p><h2>Um</h2></section>',
+  );
+  const achados = rodar(invertida, todas);
+  assert.deepEqual(achados.filter((a) => a.regra === 'estrutura.obrigatorio'), []);
+  assert.equal(achados.find((a) => a.regra === 'estrutura.fora-do-layout').mensagem, '<h2> fora de ordem no layout "abertura".');
+});
+
+test('bloco solto antes da demo não faz a demo sumir', () => {
+  const comDemo = BASE.replace(
+    '<section data-layout="encerramento">',
+    '<section data-layout="demo" id="demo"><h2>Demo</h2><p>Antes.</p>'
+    + '<div class="demo" data-demo="contador"></div><aside class="notas">N.</aside></section>\n<section data-layout="encerramento">',
+  );
+  const achados = rodar(comDemo, todas);
+  assert.deepEqual(achados.filter((a) => a.regra === 'estrutura.obrigatorio'), []);
+  assert.equal(achados.find((a) => a.regra === 'estrutura.fora-do-layout').mensagem, '<p> não é permitido no layout "demo".');
+});
+
+test('exercício com a resposta antes do enunciado é ordem, não falta', () => {
+  const invertido = slide('  <h2>Título</h2>\n  <div class="exercicio"><div class="resposta"><p>R.</p></div><div class="enunciado"><p>E.</p></div></div>\n');
+  const achados = rodar(invertido, todas);
+  assert.deepEqual(achados.filter((a) => a.regra === 'estrutura.obrigatorio'), []);
+  assert.equal(achados.find((a) => a.regra === 'estrutura.fora-do-layout').mensagem, '<div> fora de ordem dentro de <div>.');
+});
+
+test('a segunda legenda da figura é excesso', () => {
+  const duasLegendas = slide('  <h2>Título</h2>\n  <figure><img src="img/a.png" alt="a"><figcaption>Uma.</figcaption><figcaption>Duas.</figcaption></figure>\n');
+  assert.equal(
+    rodar(duasLegendas, todas).find((a) => a.regra === 'estrutura.fora-do-layout').mensagem,
+    '<figcaption> a mais dentro de <figure>: só um figcaption.',
+  );
+});
+
+test('exercício escrito como coluna vale: a chave mais específica do contrato é que manda', () => {
+  const comoColuna = slide('  <h2>Título</h2>\n  <div class="colunas" data-grade="6-6">'
+    + '<div class="exercicio"><div class="enunciado"><p>E.</p></div></div><div><p>B.</p></div></div>\n');
+  assert.deepEqual(rodar(comoColuna, todas).filter((a) => a.severidade === 'erro'), []);
+});
+
+// Pino: com colunas e blocos soltos no mesmo slide, vence a alternativa que casa mais itens.
+test('misturar colunas com blocos soltos acusa o que está em minoria', () => {
+  const misto = slide('  <h2>Título</h2>\n  <div class="colunas" data-grade="6-6"><div><p>A.</p></div><div><p>B.</p></div></div>\n'
+    + '  <p>Solto um.</p>\n  <p>Solto dois.</p>\n');
+  assert.deepEqual(
+    rodar(misto, todas).filter((a) => a.regra === 'estrutura.fora-do-layout').map((a) => a.mensagem),
+    ['<div> não é permitido no layout "conteudo".'],
+  );
+});
+
 const FIXTURES = new URL('tests/fixtures/validador/', RAIZ);
 const IMPLEMENTADAS = new Map(todas.map((regra) => [regra.nome, regra]));
 

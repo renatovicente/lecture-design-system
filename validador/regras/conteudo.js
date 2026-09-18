@@ -28,11 +28,19 @@ function conferirFilhos(elemento, seletor, regra, contrato) {
   const entradas = entradasDeFilhos(seletor, regra);
   const faltando = [];
   const sobrando = [];
+  const quantos = new Map();
   for (const item of itens) {
-    const permitido = entradas.some((entrada) => (entrada.grupo
-      ? contrato[entrada.grupo].some((nome) => casaSeletor(item, nome))
-      : casaSeletor(item, entrada.seletor)));
-    if (!permitido) sobrando.push({ item, foraDeOrdem: false });
+    const entrada = entradas.find((e) => (e.grupo
+      ? contrato[e.grupo].some((nome) => casaSeletor(item, nome))
+      : casaSeletor(item, e.seletor)));
+    if (!entrada) {
+      sobrando.push({ item, foraDeOrdem: false });
+      continue;
+    }
+    // O max dos opcionais vale: uma segunda figcaption na figura é excesso, não detalhe.
+    const chave = entrada.grupo ?? entrada.seletor;
+    quantos.set(chave, (quantos.get(chave) ?? 0) + 1);
+    if (entrada.max != null && quantos.get(chave) > entrada.max) sobrando.push({ item, excedente: [entrada.seletor] });
   }
   if (regra.exatamenteUmDe) {
     const escolhidos = itens.filter((item) => regra.exatamenteUmDe.some((nome) => casaSeletor(item, nome)));
@@ -43,15 +51,26 @@ function conferirFilhos(elemento, seletor, regra, contrato) {
   return { faltando, sobrando };
 }
 
+// Um elemento pode casar duas chaves de "filhos": uma div.exercicio escrita como coluna casa
+// "div.colunas > div" e "div.exercicio". Vale a mais específica — mais classes no último seletor
+// composto, empate pela ordem do contrato —, senão o mesmo elemento é conferido sob regras que se
+// contradizem e ganha um erro falso.
+function chavesPorEspecificidade(contrato) {
+  return Object.keys(contrato.filhos)
+    .map((chave, ordem) => ({ chave, ordem, classes: (chave.split('>').at(-1).match(/\./g) ?? []).length }))
+    .sort((a, b) => b.classes - a.classes || a.ordem - b.ordem)
+    .map(({ chave }) => chave);
+}
+
 // Um achado por alvo: a própria section, e cada elemento que o contrato descreve em "filhos".
 function* conferir(secao, contrato) {
   const layout = contrato.layouts[secao.getAttribute('data-layout')];
   if (!layout) return; // layout fora do contrato já é estrutura.layout
   yield { alvo: secao, ...casarSequencia(semOpcionais(secao, contrato), layout.sequencia, contrato) };
-  for (const [seletor, regra] of Object.entries(contrato.filhos)) {
-    for (const elemento of secao.querySelectorAll(seletor)) {
-      yield { alvo: elemento, ...conferirFilhos(elemento, seletor, regra, contrato) };
-    }
+  const chaves = chavesPorEspecificidade(contrato);
+  for (const elemento of secao.querySelectorAll('*')) {
+    const chave = chaves.find((candidata) => elemento.matches(candidata));
+    if (chave) yield { alvo: elemento, ...conferirFilhos(elemento, chave, contrato.filhos[chave], contrato) };
   }
 }
 
