@@ -15,6 +15,8 @@ const TECLAS = {
   P: 'apresentador',
   f: 'tela-cheia',
   F: 'tela-cheia',
+  v: 'validador',
+  V: 'validador',
   '?': 'ajuda',
 };
 

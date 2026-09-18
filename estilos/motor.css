@@ -75,7 +75,8 @@ body.modo-palco [data-passo]:not([data-revelado]) {
 }
 
 [data-painel="visao-geral"],
-[data-painel="ajuda"] {
+[data-painel="ajuda"],
+[data-painel="validador"] {
   inset: 0;
   padding: var(--espaco-5) var(--espaco-6);
 }
@@ -149,6 +150,54 @@ body.modo-palco [data-passo]:not([data-revelado]) {
   font-family: var(--tipo-codigo-familia);
   font-weight: var(--tipo-codigo-peso-enfase);
   white-space: nowrap;
+}
+
+/* Painel do validador (spec 3.2 e 9.1): a mensagem já vem pronta de linhaDe, só o estilo é daqui. */
+
+.achados {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-family: var(--tipo-codigo-familia);
+  font-size: 18px;
+  line-height: var(--tipo-codigo-entrelinha);
+}
+
+.achados li {
+  white-space: pre-wrap; /* linhaDe quebra o trecho numa segunda linha recuada; preserva a quebra */
+}
+
+.achados li + li {
+  margin-top: var(--espaco-2);
+}
+
+.achados li[data-severidade="erro"] {
+  font-weight: var(--tipo-codigo-peso-enfase);
+}
+
+.achados li[data-severidade="aviso"] {
+  color: var(--cor-cinza);
+}
+
+[data-painel="validador"] .copiar {
+  position: absolute;
+  top: var(--espaco-5);
+  right: var(--espaco-6);
+  padding: var(--espaco-1) var(--espaco-2);
+  border: var(--regua-normal) solid var(--cor-tinta);
+  background: var(--cor-papel);
+  color: var(--cor-tinta);
+  font: inherit;
+  font-size: var(--tipo-rotulo-tamanho);
+  text-transform: var(--tipo-rotulo-caixa);
+  letter-spacing: var(--tipo-rotulo-tracking);
+  cursor: pointer;
+}
+
+[data-painel="validador"] .copiar:disabled {
+  border-color: var(--cor-cinza);
+  color: var(--cor-cinza);
+  cursor: default;
 }
 
 /* Janela do apresentador (spec 6.6): miniaturas fiéis à esquerda, notas e controles à direita. */
