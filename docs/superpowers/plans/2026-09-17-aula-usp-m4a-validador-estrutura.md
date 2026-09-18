@@ -1014,7 +1014,7 @@ test('toda regra de estrutura do contrato está implementada', () => {
 - [ ] **Step 7: Rodar e ver passar**
 
 Rode: `node --test tests/unit/validador.test.mjs`
-Espere: 21 + 10 testes novos + 2 fixtures novas = 33 testes passando, 0 falhas.
+Espere: 23 + 10 testes novos + 2 fixtures novas = 35 testes passando, 0 falhas. (A rodada de correção da Task 1 acrescentou dois testes ao arquivo depois que este plano foi escrito: a base é 23, não 21.)
 
 - [ ] **Step 8: Commitar**
 
@@ -1339,7 +1339,7 @@ test('validar sem argumento explica o uso e sai com 2', () => {
 - [ ] **Step 9: Rodar os dois conjuntos**
 
 Rode: `node --test tests/unit/*.test.mjs`
-Espere: 156 + 33 + 8 = 197 testes passando.
+Espere: 156 + 35 + 8 = 199 testes passando.
 
 Rode: `node --test tests/integracao/validador.test.mjs`
 Espere: 2 testes passando.
