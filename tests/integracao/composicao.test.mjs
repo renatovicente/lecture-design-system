@@ -49,6 +49,39 @@ test('elemento que passa da zona de conteúdo acusa transbordo', async () => {
   assert.match(achados[0].mensagem, /^<p> passa \d+ px da zona de conteúdo\.$/);
 });
 
+test('elemento deslocado para fora da zona pela esquerda ou por cima também acusa', async () => {
+  const esquerda = await medir('index.html', () => {
+    document.querySelector('.slide .area p').style.marginLeft = '-300px';
+  });
+  assert.ok(esquerda.some((achado) => achado.regra === 'composicao.transbordo'), JSON.stringify(esquerda));
+
+  const cima = await medir('index.html', () => {
+    document.querySelector('.slide .area p').style.marginTop = '-300px';
+  });
+  assert.ok(cima.some((achado) => achado.regra === 'composicao.transbordo'), JSON.stringify(cima));
+});
+
+// Crítico da revisão: uma equação larga demais não podia ser vista, porque .katex/.katex-display
+// inteiros ficavam de fora da medição (o filtro que existe para tamanho-minimo, spec 4.3).
+test('equação em linha larga demais acusa transbordo', async () => {
+  const achados = await medir('matematica.html', () => {
+    const formula = document.querySelector('#no-texto p:nth-of-type(2) .katex');
+    formula.style.display = 'inline-block';
+    formula.style.width = '2000px';
+  });
+  assert.ok(achados.some((achado) => achado.regra === 'composicao.transbordo' && /passa \d+ px/.test(achado.mensagem)), JSON.stringify(achados));
+});
+
+// A mesma lição do marco 3c (linha de código larga não muda a caixa do <pre>) vale para uma
+// equação em destaque: o KaTeX deixa o conteúdo transbordar (overflow-x: visible), sem alargar a
+// própria caixa do .katex-display.
+test('equação em destaque larga demais acusa mesmo sem mudar a própria caixa', async () => {
+  const achados = await medir('matematica.html', () => {
+    document.querySelector('#em-destaque .katex-display .katex').style.minWidth = '2000px';
+  });
+  assert.ok(achados.some((achado) => achado.regra === 'composicao.transbordo' && /px de conteúdo além da largura/.test(achado.mensagem)), JSON.stringify(achados));
+});
+
 // A lição do marco 3c: a caixa do <pre> não muda quando uma linha é larga demais.
 test('código mais largo que o bloco acusa, mesmo sem mudar a caixa', async () => {
   const achados = await medir('codigo.html', () => {
@@ -64,6 +97,20 @@ test('título que passa de duas linhas acusa', async () => {
   });
   assert.equal(achados[0].regra, 'composicao.linhas-titulo');
   assert.match(achados[0].mensagem, /título renderizado em 3 linhas \(máx\. 2\)\./);
+});
+
+// Importante da revisão: altura ÷ entrelinha arredondado é frágil perto de matemática inline — um
+// elemento alto na mesma linha (uma fração, um expoente empilhado) engorda a altura sem quebrar a
+// linha. Medido num título real do espécime (\(\eta\)): razão 1,39, perto demais do arredondamento.
+test('título de uma linha só, mas mais alto por causa de um elemento inline, não conta linha a mais', async () => {
+  const achados = await medir('matematica.html', () => {
+    const titulo = document.querySelector('#o-papel-de-eta h2');
+    const alto = document.createElement('span');
+    alto.textContent = ' ';
+    Object.assign(alto.style, { display: 'inline-block', width: '1px', height: '300px', verticalAlign: 'middle' });
+    titulo.appendChild(alto);
+  });
+  assert.deepEqual(achados.filter((achado) => achado.regra === 'composicao.linhas-titulo'), []);
 });
 
 test('texto abaixo do mínimo do seu papel acusa, e o papel vem do seletor mais específico', async () => {
@@ -95,4 +142,15 @@ test('azul pequeno e texto sobre amarelo fora da tinta acusam', async () => {
     p.style.color = '#FFFFFF';
   });
   assert.ok(amarelo.some((achado) => achado.regra === 'composicao.texto-no-amarelo'), JSON.stringify(amarelo));
+});
+
+// Importante da revisão: aside.notas nunca aparece no slide (display:none) — não é composição.
+test('conteúdo dentro de aside.notas não é medido', async () => {
+  const achados = await medir('index.html', () => {
+    const notas = document.querySelector('.slide aside.notas');
+    notas.innerHTML = '<p style="font-size:10px">pequeno</p>'
+      + '<span style="color:rgb(16,148,171);font-size:10px">azul</span>'
+      + '<div style="background:rgb(252,180,33);color:red">amarelo</div>';
+  });
+  assert.deepEqual(achados, []);
 });
