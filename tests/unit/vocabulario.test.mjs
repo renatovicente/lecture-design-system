@@ -133,6 +133,13 @@ test('cor e tamanho de SVG sobem pelos ancestrais até achar quem define o atrib
   assert.deepEqual(mensagens(svg('<g fill="#1094AB"><text font-size="20">oi</text></g>')), ['azul em texto de 20 px (mín. 32).']);
 });
 
+// Achado da revisão final (item 7): o padrão de src no contrato é sensível a caixa, então HTTPS://
+// (maiúsculo) caía como erro confuso de vocabulario.atributo — o dono certo desse caso é o aviso de
+// recursos.imagem-externa (fixture ao lado, em recursos.test.mjs).
+test('src de imagem externa com esquema em maiúsculas não é erro de vocabulario.atributo', () => {
+  assert.deepEqual(mensagens(slide('<h2>T</h2>\n<figure><img src="HTTPS://exemplo.org/a.png" alt="a"></figure>')), []);
+});
+
 test('script dentro da section', () => {
   assert.deepEqual(
     mensagens(slide('<h2>T</h2>\n<p>C.</p>\n<script>var x = 1;</script>')),

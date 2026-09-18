@@ -205,3 +205,15 @@ test('valor de atributo com maiúscula, como data-rotulo="Definição", não é 
   assert.equal(div.hasAttribute('Class'), false);
   assert.equal(div.getAttribute('data-rotulo'), 'Definição');
 });
+
+// Achado da revisão final (item 7, "já conhecido"): o linkedom preserva Class e class como dois
+// atributos distintos (ao contrário de um navegador, que já descarta a duplicata no parser); o
+// comportamento de "vence o primeiro" é um efeito colateral de normalizarAtributos recolocar os
+// atributos de trás para a frente, e não tinha teste próprio.
+test('Class e class no mesmo elemento: vence o primeiro do fonte, como no navegador', () => {
+  const pasta = aulaTemporaria('<!DOCTYPE html><html><body><div Class="primeiro" class="segundo" data-rotulo="X">y</div></body></html>');
+  const documento = lerAula(join(pasta, 'index.html'), contrato);
+  const div = documento.querySelector('div');
+  assert.equal(div.getAttribute('class'), 'primeiro');
+  assert.deepEqual([...div.attributes].map((atributo) => atributo.name), ['class', 'data-rotulo']);
+});

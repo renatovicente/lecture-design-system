@@ -137,7 +137,7 @@
       "aside.quadro":   { "data-rotulo": {} },
       "aside.alerta":   { "data-rotulo": {} },
       "figure":  { "data-foto": { "valores": ["pb"] } },
-      "img":     { "src": { "padrao": "^(?:img/(?!(?:[^/]*/)*(?:\\.|%2[eE]){2}(?:/|$))[^\\\\]+$|data:image/[a-z0-9.+-]+[;,]|https://)" }, "alt": { "obrigatorio": true } },
+      "img":     { "src": { "padrao": "^(?:img/(?!(?:[^/]*/)*(?:\\.|%2[eE]){2}(?:/|$))[^\\\\]+$|data:image/[a-z0-9.+-]+[;,]|[hH][tT][tT][pP][sS]://)" }, "alt": { "obrigatorio": true } },
       "pre":     { "data-lang": { "valores": ["python", "r", "sql", "javascript", "bash", "json", "latex"] }, "data-linhas": { "padrao": "^[0-9]+(-[0-9]+)?(,[0-9]+(-[0-9]+)?)*$" }, "data-numeros": { "valores": [""] } },
       "th":      { "colspan": { "padrao": "^[1-9][0-9]?$" }, "rowspan": { "padrao": "^[1-9][0-9]?$" }, "scope": { "valores": ["row", "col"] } },
       "td":      { "colspan": { "padrao": "^[1-9][0-9]?$" }, "rowspan": { "padrao": "^[1-9][0-9]?$" } },

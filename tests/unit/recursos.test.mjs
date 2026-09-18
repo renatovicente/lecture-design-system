@@ -45,9 +45,32 @@ test('o passo continua valendo: \\passo não é comando proibido', () => {
   assert.deepEqual(mensagens(slide('<h2>T</h2>\n<p>Veja \\(\\passo{1}{x}\\).</p>')), []);
 });
 
+// Achado da revisão final (item 7): .exec() não global só reportava o primeiro comando de cor do
+// segmento; \redA e \blue no mesmo \( \) precisam dos dois achados, um por ocorrência.
+test('cada comando de cor por padrão é reportado, não só o primeiro do segmento', () => {
+  assert.deepEqual(
+    mensagens(slide('<h2>T</h2>\n<p>Veja \\(\\redA{x} + \\blue{y}\\).</p>')),
+    ['comando de cor no TeX: \\redA.', 'comando de cor no TeX: \\blue.'],
+  );
+});
+
 test('cifrão suspeito é aviso; dinheiro não é', () => {
   assert.deepEqual(mensagens(slide('<h2>T</h2>\n<p>Considere $x^2 + y^2$ no plano.</p>')), ['"$x^2 + y^2$" parece matemática entre cifrões.']);
   assert.deepEqual(mensagens(slide('<h2>T</h2>\n<p>O preço é $100 e o desconto é $20.</p>')), []);
+});
+
+// Achado da revisão final (item 7 e M1): mesmo .exec() não global do achado acima, e o texto fora do
+// TeX era juntado com espaço antes de casar o padrão — um $ antes de uma equação casava com o $ de
+// depois dela, um segmento nunca deveria ver o outro lado do TeX.
+test('cada cifrão suspeito é reportado, e um TeX no meio não deixa um $ casar do outro lado', () => {
+  assert.deepEqual(
+    mensagens(slide('<h2>T</h2>\n<p>Veja $a^2$ e depois $b_1$ também.</p>')),
+    ['"$a^2$" parece matemática entre cifrões.', '"$b_1$" parece matemática entre cifrões.'],
+  );
+  assert.deepEqual(
+    mensagens(slide('<h2>T</h2>\n<p>Custa R$ 5 e \\(x^2\\) o valor_base sobe a R$ 9.</p>')),
+    [],
+  );
 });
 
 // A lição do marco 4a: matemática dentro de pre nunca é renderizada, então nunca é acusada.
@@ -62,4 +85,13 @@ test('imagem sem alt, imagem de fora e linguagem fora da lista', () => {
     ['imagem de fora: "https://exemplo.org/a.png".']);
   assert.deepEqual(mensagens(slide('<h2>T</h2>\n<pre data-lang="cobol">MOVE X TO Y.</pre>')),
     ['linguagem fora da lista em data-lang: "cobol".']);
+});
+
+// Achado da revisão final (item 7): o seletor era sensível a caixa, então HTTPS:// escapava do aviso
+// — e não em silêncio: o padrão de src do contrato também é sensível a caixa, então sobrava um erro
+// confuso de vocabulario.atributo. Corrigir só o seletor faria os dois acusarem juntos; o padrão do
+// contrato precisa aceitar o esquema em qualquer caixa também, para restar só o aviso certo.
+test('imagem de fora com esquema em maiúsculas (HTTPS://) também é aviso, não erro confuso', () => {
+  assert.deepEqual(mensagens(slide('<h2>T</h2>\n<figure><img src="HTTPS://exemplo.org/a.png" alt="a"></figure>')),
+    ['imagem de fora: "HTTPS://exemplo.org/a.png".']);
 });
