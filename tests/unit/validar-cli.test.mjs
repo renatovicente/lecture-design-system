@@ -1,7 +1,7 @@
 // Cola de Node do validador (spec 8.1 e 9.3): lê a aula do disco e devolve os achados.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { execFileSync, spawn } from 'node:child_process';
+import { execFileSync, spawn, spawnSync } from 'node:child_process';
 import { mkdtempSync, writeFileSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -20,6 +20,12 @@ function aulaTemporaria(html) {
 
 // Repete uma abertura com título longo e sem data-curto (um erro de estrutura.nome-curto por
 // slide) até passar de sobra dos 64 KiB que expõem o truncamento de process.exit() num cano.
+//
+// <script src="dist/aula-usp.js"> no head, aqui e em BOA (marco 4c, Task 4): validarArquivo agora
+// também sobe o Chrome (build/composicao.mjs), e reescreverRuntime (build/servir.mjs) só troca essa
+// tag pelo importmap e o carregador de verdade quando ela existe — sem ela a página nunca escreve
+// document.body.dataset.montado, e page.waitForFunction espera os 30 s do Playwright à toa (medido
+// no rascunho desta task). O caminho não precisa resolver a nada: só o final "/aula-usp.js" importa.
 function aulaGrande(quantos) {
   let corpo = '<section data-layout="capa"><h1>Capa</h1></section>\n';
   for (let i = 0; i < quantos; i++) {
@@ -28,13 +34,13 @@ function aulaGrande(quantos) {
   corpo += '<section data-layout="encerramento"><h2>Fim</h2><ol class="sintese"><li>Um.</li></ol></section>\n';
   return `<!DOCTYPE html><html lang="pt-BR"><head>
 <meta name="unidade" content="ime"><meta name="disciplina" content="Teste"><meta name="aula" content="1">
-<meta name="data" content="2026-09-17"><meta name="professor" content="Prof."></head><body>
+<meta name="data" content="2026-09-17"><meta name="professor" content="Prof."><script src="dist/aula-usp.js"></script></head><body>
 ${corpo}</body></html>`;
 }
 
 const BOA = `<!DOCTYPE html><html lang="pt-BR"><head>
 <meta name="unidade" content="ime"><meta name="disciplina" content="Teste"><meta name="aula" content="1">
-<meta name="data" content="2026-09-17"><meta name="professor" content="Prof."></head><body>
+<meta name="data" content="2026-09-17"><meta name="professor" content="Prof."><script src="dist/aula-usp.js"></script></head><body>
 <section data-layout="capa"><h1>Capa</h1></section>
 <section data-layout="abertura" id="um"><h2>Um</h2></section>
 <section data-layout="abertura" id="dois"><h2>Dois</h2></section>
@@ -106,6 +112,38 @@ test('o grupo de carga roda no build: TeX inválido, imagem ausente e demo sem r
     assert.ok(regras.includes('matematica.tex-invalido'), regras.join(', '));
     assert.ok(regras.includes('recursos.imagem'), regras.join(', '));
   }
+});
+
+// Marco 4c, Task 4: com Chrome, validar mede composição também (spec 8.1: "havendo Chrome, as de
+// composição"). O mesmo título de tests/integracao/composicao.test.mjs e da fixture
+// composicao.linhas-titulo/ruim.html, já provado que estoura para 3 linhas (máx. 2) no Chrome — num
+// slide de conteúdo: a mesma repetição de texto numa abertura mede 8 linhas (coluna mais estreita)
+// e também transbordo, o que provaria a regra errada.
+test('a CLI mede composição no Chrome: título que estoura em 3 linhas sai com 1 e nomeia composicao.linhas-titulo', () => {
+  const tituloComprido = 'Um título muito comprido '.repeat(6);
+  const pasta = aulaTemporaria(BOA.replace('<section data-layout="encerramento">',
+    `<section data-layout="conteudo" id="longo"><h2>${tituloComprido}</h2><p>C.</p></section>\n<section data-layout="encerramento">`));
+  try {
+    execFileSync('node', [CLI, 'validar', pasta, '--json'], { encoding: 'utf8' });
+    assert.fail('deveria ter saído com 1');
+  } catch (erro) {
+    assert.equal(erro.status, 1);
+    const regras = JSON.parse(erro.stdout).map((achado) => achado.regra);
+    assert.ok(regras.includes('composicao.linhas-titulo'), regras.join(', '));
+  }
+});
+
+// Spec 8.1: "Falta de Chrome não é falha: vira aviso e pula composição". CHROME_PATH para um
+// caminho que não existe é a mesma falha que build/composicao.mjs mediu no rascunho do brief.
+test('CHROME_PATH inexistente: a CLI avisa no stderr e a saída continua a dos outros grupos', () => {
+  const pasta = aulaTemporaria(BOA);
+  const resultado = spawnSync('node', [CLI, 'validar', pasta], {
+    encoding: 'utf8',
+    env: { ...process.env, CHROME_PATH: '/caminho/que/nao/existe/de-verdade' },
+  });
+  assert.equal(resultado.status, 0, resultado.stderr);
+  assert.match(resultado.stderr, /aviso.*composição pulada/i);
+  assert.match(resultado.stdout, /^Validador Aula USP: 0 erros, 0 avisos$/m);
 });
 
 test('pasta sem index.html sai com 2', () => {

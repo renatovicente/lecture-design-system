@@ -8,7 +8,10 @@ import { join } from 'node:path';
 const RAIZ = fileURLToPath(new URL('../../', import.meta.url));
 const CLI = join(RAIZ, 'bin/aula-usp.mjs');
 
-test('validar especime/ não acha nada e sai com 0', () => {
+// Marco 4c, Task 4: esta chamada roda os três grupos — estático, carga e, havendo Chrome (há, neste
+// ambiente), composição (spec 8.1). "0 erros, 0 avisos" com os três ligados é a prova de que eles
+// convivem: se a composição achasse algo no espécime, apareceria aqui, sem precisar de outro teste.
+test('validar especime/ não acha nada e sai com 0, com estática, carga e composição rodando juntas', () => {
   const saida = execFileSync('node', [CLI, 'validar', join(RAIZ, 'especime')], { encoding: 'utf8' });
   assert.equal(saida.trim(), 'Validador Aula USP: 0 erros, 0 avisos');
 });

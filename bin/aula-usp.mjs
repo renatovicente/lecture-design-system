@@ -72,7 +72,10 @@ async function validarComando(argumentos) {
     if (ehCaminhoDaAula) sair(`não encontrei a aula em ${alvo}: ${erro.message}`);
     else sair(`falha de ambiente: ${erro.message}`);
   }
-  const { achados, erros } = resultado;
+  const { achados, erros, avisoDeComposicao } = resultado;
+  // Vai para stderr, não stdout: --json manda só o array de achados para o cano (spec 9.1), e um
+  // aviso solto ali quebraria o parse. Spec 8.1: falta de Chrome não é falha, é aviso para o autor.
+  if (avisoDeComposicao) console.error(`Aula USP: aviso: ${avisoDeComposicao}`);
   if (opcoes.json) console.log(JSON.stringify(achados, null, 2));
   else {
     for (const achado of achados) console.log(linhaDe(achado));
