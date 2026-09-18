@@ -62,7 +62,7 @@ tests/unit/vocabulario.test.mjs, limites.test.mjs, recursos.test.mjs            
 
 **Files:**
 - Create: `validador/regras/index.js`, `validador/regras/vocabulario.js`, `tests/unit/vocabulario.test.mjs`
-- Modify: `validador/validar.js`, `build/validar.mjs`, `tests/unit/validar-cli.test.mjs`
+- Modify: `validador/validar.js`, `build/validar.mjs`, `tests/unit/validador.test.mjs` (a varredura de fixtures mora lá)
 - Create: 8 pastas de fixture
 
 **Interfaces:**
@@ -1289,6 +1289,15 @@ MSG
 ```
 
 ---
+
+## Achado durante a execução
+
+O `linkedom` devolve `nodeName` em caixa alta **também dentro de SVG**, enquanto o contrato escreve
+`foreignObject`, `clipPath`, `linearGradient` e `radialGradient` na caixa do DOM. Comparar o nome em
+minúsculas contra essas listas com `includes()` nunca casa, e um `<foreignObject>` passava batido. A
+correção é um casamento insensível a caixa que devolve **a grafia do contrato**, para a mensagem sair
+com o nome que o autor escreveu. Vale para qualquer regra futura que compare nome de elemento com lista
+do contrato — o marco 4c herda o cuidado.
 
 ## Decisões tomadas neste plano
 
