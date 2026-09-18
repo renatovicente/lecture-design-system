@@ -109,8 +109,89 @@ test('data-passo só com espaço em branco continua sem número', () => {
   assert.equal(achados[0].mensagem, 'o slide mistura 1 passo sem número com 1 numerado.');
 });
 
+import { regras as conteudo } from '../../validador/regras/conteudo.js';
+import { itensDoConteudo } from '../../validador/sequencia.js';
+
+const todas = [...estrutura, ...conteudo];
+
+function slide(corpo) {
+  return BASE.replace('  <h2>Título</h2>\n  <p class="lide">Lide.</p>\n  <p>Corpo.</p>\n', corpo);
+}
+
+test('a equação em destaque é um item de conteúdo, o texto solto também', () => {
+  const { document } = parseHTML(aula('<section>\\[ x = 1 \\] solto <p>p</p></section>'));
+  document.body.normalize();
+  assert.deepEqual(
+    itensDoConteudo(document.querySelector('section')).map((item) => item.tipo),
+    ['tex-destaque', 'texto-solto', 'elemento'],
+  );
+});
+
+test('o layout sem elemento obrigatório acusa, nomeando as alternativas', () => {
+  const [achado] = rodar(slide('  <h2>Título</h2>\n'), todas).filter((a) => a.regra === 'estrutura.obrigatorio');
+  assert.equal(achado.mensagem, 'layout "conteudo" sem div.colunas nem bloco de corpo.');
+});
+
+test('a equação em destaque conta como bloco de corpo', () => {
+  const achados = rodar(slide('  <h2>Título</h2>\n  \\[ E = mc^2 \\]\n'), todas);
+  assert.deepEqual(achados.filter((a) => a.severidade === 'erro'), []);
+});
+
+test('o lide depois do corpo é elemento fora de ordem, não bloco de corpo', () => {
+  const [achado] = rodar(slide('  <h2>Título</h2>\n  <p>Corpo.</p>\n  <p class="lide">Lide.</p>\n'), todas)
+    .filter((a) => a.regra === 'estrutura.fora-do-layout');
+  assert.equal(achado.mensagem, '<p> fora de ordem no layout "conteudo".');
+});
+
+test('elemento fora do conteúdo do layout acusa com o trecho', () => {
+  const [achado] = rodar(slide('  <h2>Título</h2>\n  <p>Corpo.</p>\n  <blockquote>Citação.</blockquote>\n'), todas)
+    .filter((a) => a.regra === 'estrutura.fora-do-layout');
+  assert.equal(achado.mensagem, '<blockquote> não é permitido no layout "conteudo".');
+  assert.equal(achado.trecho, '<blockquote>Citação.</blockquote>');
+});
+
+test('texto solto no slide não é bloco de corpo', () => {
+  const achados = rodar(slide('  <h2>Título</h2>\n  <p>Corpo.</p>\n  Texto solto.\n'), todas)
+    .filter((a) => a.regra === 'estrutura.fora-do-layout');
+  assert.equal(achados[0].mensagem, 'texto solto não é permitido no layout "conteudo".');
+});
+
+test('figure pede exatamente uma imagem: zero falta, duas sobram', () => {
+  const semImagem = slide('  <h2>Título</h2>\n  <figure><figcaption>Só legenda.</figcaption></figure>\n');
+  const [falta] = rodar(semImagem, todas).filter((a) => a.regra === 'estrutura.obrigatorio');
+  assert.equal(falta.mensagem, '<figure> sem img nem svg.');
+  const duas = slide('  <h2>Título</h2>\n  <figure><img src="img/a.png" alt="a"><svg viewBox="0 0 1 1"></svg></figure>\n');
+  const [sobra] = rodar(duas, todas).filter((a) => a.regra === 'estrutura.fora-do-layout');
+  assert.equal(sobra.mensagem, '<svg> a mais dentro de <figure>: só um img ou svg.');
+});
+
+test('tbody escrito ou implícito dá a mesma resposta', () => {
+  for (const tabela of ['<table><tr><td>a</td></tr></table>', '<table><tbody><tr><td>a</td></tr></tbody></table>']) {
+    const achados = rodar(slide(`  <h2>Título</h2>\n  ${tabela}\n`), todas).filter((a) => a.severidade === 'erro');
+    assert.deepEqual(achados, [], `${tabela} acusou ${achados.map((a) => a.mensagem).join(' / ')}`);
+  }
+});
+
+test('a coluna só aceita bloco de corpo, e o exercício exige enunciado', () => {
+  const coluna = slide('  <h2>Título</h2>\n  <div class="colunas" data-grade="6-6"><div><h2>Não.</h2></div><div><p>B.</p></div></div>\n');
+  assert.equal(
+    rodar(coluna, todas).find((a) => a.regra === 'estrutura.fora-do-layout').mensagem,
+    '<h2> não é permitido dentro de <div>.',
+  );
+  const exercicio = slide('  <h2>Título</h2>\n  <div class="exercicio"><div class="resposta"><p>R.</p></div></div>\n');
+  assert.equal(
+    rodar(exercicio, todas).find((a) => a.regra === 'estrutura.obrigatorio').mensagem,
+    '<div> sem div.enunciado.',
+  );
+});
+
+test('as notas podem estar em qualquer posição do slide', () => {
+  const achados = rodar(slide('  <h2>Título</h2>\n  <aside class="notas">No meio.</aside>\n  <p>Corpo.</p>\n'), todas);
+  assert.deepEqual(achados.filter((a) => a.severidade === 'erro'), []);
+});
+
 const FIXTURES = new URL('tests/fixtures/validador/', RAIZ);
-const IMPLEMENTADAS = new Map(estrutura.map((regra) => [regra.nome, regra]));
+const IMPLEMENTADAS = new Map(todas.map((regra) => [regra.nome, regra]));
 
 // Uma pasta por regra (spec 11.1): bom.html não acusa nada, ruim.html acusa a regra da pasta.
 for (const nome of readdirSync(FIXTURES).sort()) {
@@ -136,7 +217,5 @@ test('toda regra de estrutura do contrato está implementada', () => {
   const doContrato = Object.entries(contrato.regras)
     .filter(([nome, regra]) => nome.startsWith('estrutura.') && regra.grupo === 'estatica' && regra.fase === 1)
     .map(([nome]) => nome);
-  const faltando = doContrato.filter((nome) => !IMPLEMENTADAS.has(nome));
-  // estrutura.obrigatorio e estrutura.fora-do-layout chegam na Task 2, com o casador de sequência.
-  assert.deepEqual(faltando, ['estrutura.obrigatorio', 'estrutura.fora-do-layout']);
+  assert.deepEqual(doContrato.filter((nome) => !IMPLEMENTADAS.has(nome)), []);
 });
