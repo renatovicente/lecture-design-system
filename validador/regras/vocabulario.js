@@ -131,6 +131,10 @@ export const regras = [
     *aplicar({ slides, contrato, fase }) {
       const doSistema = new Set(contrato.classesDoSistema);
       for (const { secao, elemento } of elementosDoCorpo(slides)) {
+        const nome = nomeDe(elemento);
+        // Elemento que nem está no vocabulário já foi acusado por vocabulario.elemento; enumerar as
+        // classes dele por cima é a mesma dupla contagem que vocabulario.atributo já evita.
+        if (elemento !== secao && !emSvg(elemento) && !contrato.html.elementos.includes(nome)) continue;
         for (const classe of classesDe(elemento)) {
           if (emSvg(elemento)) {
             if (!contrato.svg.classes.includes(classe)) {
@@ -147,7 +151,6 @@ export const regras = [
             yield { ...onde(slides, secao), mensagem: `classe "${classe}" não existe no contrato.`, trecho: trechoDe(elemento) };
             continue;
           }
-          const nome = nomeDe(elemento);
           if (regra.em && !regra.em.includes(nome)) {
             yield { ...onde(slides, secao), mensagem: `classe "${classe}" não vale em <${nome}>, só em ${regra.em.map((e) => `<${e}>`).join(' ou ')}.`, trecho: trechoDe(elemento) };
             continue;

@@ -45,6 +45,20 @@ test('classe inventada, classe do sistema, classe no elemento errado e fora do p
   assert.deepEqual(mensagens(slide('<h2>T</h2>\n<div class="enunciado"><p>E.</p></div>')), ['classe "enunciado" só vale dentro de div.exercicio.']);
 });
 
+// Achado da revisão final (Important 3): vocabulario.atributo já não enumera atributo de elemento
+// fora do vocabulário ("uma regra, um dono", testado acima); vocabulario.classe não tinha a mesma
+// guarda e emendava um segundo aviso — às vezes um conselho enganoso, como se trocar a tag resolvesse.
+test('classe de um elemento fora do vocabulário é problema do elemento, não da classe', () => {
+  assert.deepEqual(
+    mensagens(slide('<h2>T</h2>\n<iframe class="demo" src="https://x"></iframe>')),
+    ['<iframe> é proibido no corpo da aula.'],
+  );
+  assert.deepEqual(
+    mensagens(slide('<h2>T</h2>\n<marquee class="bonito">oi</marquee>')),
+    ['<marquee> não está no vocabulário no corpo.'],
+  );
+});
+
 test('atributo fora do contrato, com valor fora da lista, e com JSON inválido', () => {
   assert.deepEqual(mensagens(slide('<h2>T</h2>\n<p tabindex="0">C.</p>')), ['atributo "tabindex" não vale em <p>.']);
   assert.deepEqual(
