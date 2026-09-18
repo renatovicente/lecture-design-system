@@ -22,3 +22,13 @@ test('validar sem argumento explica o uso e sai com 2', () => {
     assert.match(erro.stderr, /uso: aula-usp servir/);
   }
 });
+
+test('cada deck do espécime valida com o que a spec espera', () => {
+  const limpos = ['componentes', 'matematica', 'codigo', 'ifusp'];
+  for (const nome of limpos) {
+    const saida = execFileSync('node', [CLI, 'validar', join(RAIZ, `especime/${nome}.html`)], { encoding: 'utf8' });
+    assert.match(saida, /^Validador Aula USP: 0 erros, 0 avisos$/m, `${nome}.html deveria estar limpo`);
+  }
+  const muitos = execFileSync('node', [CLI, 'validar', join(RAIZ, 'especime/muitos-blocos.html')], { encoding: 'utf8' });
+  assert.match(muitos, /^Validador Aula USP: 0 erros, 10 avisos$/m);
+});

@@ -6,10 +6,11 @@ import { mkdtempSync, writeFileSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { validarArquivo } from '../../build/validar.mjs';
+import { validarArquivo, lerAula } from '../../build/validar.mjs';
 
 const RAIZ = fileURLToPath(new URL('../../', import.meta.url));
 const CLI = join(RAIZ, 'bin/aula-usp.mjs');
+const contrato = JSON.parse(readFileSync(join(RAIZ, 'contrato/contrato.json'), 'utf8'));
 
 function aulaTemporaria(html) {
   const pasta = mkdtempSync(join(tmpdir(), 'aula-usp-'));
@@ -163,4 +164,44 @@ test('--json não trunca em 64 KiB quando a saída é lida por um cano', async (
   const achados = JSON.parse(saida.toString('utf8'));
   assert.deepEqual(achados, esperados);
   assert.equal(codigo, 1);
+});
+
+// lerAula normaliza a grafia de atributo na fronteira onde o fonte vira DOM (build/validar.mjs):
+// o linkedom preserva a grafia do autor, um navegador normaliza para minúsculas e, dentro de SVG,
+// restaura a grafia canônica do contrato. Sem isso, <div Class="colunas"> não bate com o seletor
+// "div.colunas" que estrutura.colunas e o casador de sequência usam (medido no marco 4b).
+test('atributo com grafia diferente do autor (Class) valida exatamente como a mesma aula em minúsculas', () => {
+  const original = readFileSync(join(RAIZ, 'especime/index.html'), 'utf8');
+  assert.match(original, /<div class="colunas" data-grade="8-4">/);
+  const comClasseMaiuscula = original.replace('<div class="colunas" data-grade="8-4">', '<div Class="colunas" data-grade="8-4">');
+  assert.notEqual(comClasseMaiuscula, original);
+  const { achados: esperados } = validarArquivo(join(RAIZ, 'especime/index.html'));
+  assert.deepEqual(esperados, []); // a base da comparação: o espécime original já é limpo
+  const { achados } = validarArquivo(aulaTemporaria(comClasseMaiuscula));
+  assert.deepEqual(achados, esperados);
+});
+
+test('<svg VIEWBOX> continua funcionando, e a grafia final é viewBox, a do contrato', () => {
+  const original = readFileSync(join(RAIZ, 'especime/index.html'), 'utf8');
+  assert.match(original, /viewBox="0 0 1152 360"/);
+  const comViewboxMaiusculo = original.replace('viewBox="0 0 1152 360"', 'VIEWBOX="0 0 1152 360"');
+  assert.notEqual(comViewboxMaiusculo, original);
+  const pasta = aulaTemporaria(comViewboxMaiusculo);
+  const { achados } = validarArquivo(pasta);
+  assert.deepEqual(achados, []);
+  const documento = lerAula(join(pasta, 'index.html'), contrato);
+  const svg = documento.querySelector('svg');
+  assert.equal(svg.getAttribute('viewBox'), '0 0 1152 360');
+  assert.equal(svg.hasAttribute('VIEWBOX'), false);
+});
+
+test('valor de atributo com maiúscula, como data-rotulo="Definição", não é tocado pela normalização', () => {
+  // O mesmo elemento também tem Class maiúsculo, para o valor passar pelo ciclo de
+  // removeAttribute + setAttribute do atributo vizinho, não só pelo caminho em que nada muda.
+  const pasta = aulaTemporaria('<!DOCTYPE html><html><body><div Class="x" data-rotulo="Definição">y</div></body></html>');
+  const documento = lerAula(join(pasta, 'index.html'), contrato);
+  const div = documento.querySelector('div');
+  assert.equal(div.getAttribute('class'), 'x');
+  assert.equal(div.hasAttribute('Class'), false);
+  assert.equal(div.getAttribute('data-rotulo'), 'Definição');
 });

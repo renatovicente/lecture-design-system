@@ -157,7 +157,8 @@
     "elementos": ["style", "iframe", "video", "audio", "font", "foreignObject", "image", "linearGradient", "radialGradient", "filter", "mask", "pattern"],
     "atributos": ["style", "opacity", "fill-opacity", "stroke-opacity"],
     "prefixosDeAtributo": ["on"],
-    "comandosTex": ["\\color", "\\textcolor", "\\colorbox", "\\fcolorbox", "\\htmlStyle", "\\htmlClass", "\\htmlId", "\\htmlData"]
+    "comandosTex": ["\\color", "\\textcolor", "\\colorbox", "\\fcolorbox", "\\htmlStyle", "\\htmlClass", "\\htmlId", "\\htmlData"],
+    "comandosTexPorPadrao": ["\\\\(red|orange|yellow|green|blue|purple|pink|gray|grey|teal|gold|maroon|mint)[A-H]?(?![a-zA-Z])"]
   },
   "tex": {
     "inline": ["\\(", "\\)"],

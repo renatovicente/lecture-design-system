@@ -133,12 +133,10 @@ test('estrutura.id-ausente escreve a mensagem por extenso, com e sem layout', ()
   assert.equal(semLayout.mensagem, 'section sem data-layout e sem id.');
 });
 
-import { regras as conteudo } from '../../validador/regras/conteudo.js';
-import { regras as vocabulario } from '../../validador/regras/vocabulario.js';
-import { regras as limites } from '../../validador/regras/limites.js';
 import { itensDoConteudo } from '../../validador/sequencia.js';
-
-const todas = [...estrutura, ...conteudo, ...vocabulario, ...limites];
+// O registro é a única lista de regras (spec 9.3); uma segunda lista aqui já divergiu dele uma vez
+// (as fixtures de limites do marco 4b-2 chegaram e o teste continuou sem elas até isto ser corrigido).
+import { REGRAS_ESTATICAS as todas } from '../../validador/regras/index.js';
 
 function slide(corpo) {
   return BASE.replace('  <h2>Título</h2>\n  <p class="lide">Lide.</p>\n  <p>Corpo.</p>\n', corpo);
