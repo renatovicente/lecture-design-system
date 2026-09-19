@@ -23,8 +23,12 @@ test('a tag do runtime some e o motor embutido entra no lugar dela', async () =>
   const { doc } = await construirHtml({ raiz: RAIZ, caminhoDaAula: new URL('especime/matematica.html', RAIZ), embutirFontes: FONTES });
   const comSrc = [...doc.querySelectorAll('script[src]')].map((s) => s.getAttribute('src'));
   assert.deepEqual(comSrc.filter((s) => s.endsWith('/aula-usp.js')), [], 'a tag do runtime continua lá');
+  // Igualdade com o arquivo, não substring: `AulaUSPMotor` também aparece no script de arranque,
+  // então um `includes` passa com o motor vazio — medido, era o caso antes desta correção.
+  const { readFile } = await import('node:fs/promises');
+  const bundle = await readFile(new URL('dist/aula-usp-motor.js', RAIZ), 'utf8');
   const embutidos = [...doc.querySelectorAll('script:not([src])')].map((s) => s.textContent);
-  assert.ok(embutidos.some((t) => t.includes('AulaUSPMotor')), 'o motor embutido não entrou');
+  assert.ok(embutidos.includes(bundle), 'o motor embutido não é o bundle de dist/aula-usp-motor.js');
 });
 
 // Fato 4: reconstruir o resumo do DOM seria uma segunda implementação do que montar() calculou.
@@ -60,4 +64,41 @@ test('a matemática é pré-renderizada: o HTML final tem KaTeX e não tem delim
   assert.ok(doc.querySelectorAll('.katex').length > 10);
   const corpo = doc.body.textContent;
   assert.equal(/\\\(|\\\[/.test(corpo), false, 'sobrou delimitador de TeX não renderizado');
+});
+
+// Rodada de correção 1, item 2: nenhum espécime usado acima tem bloco de código; prerenderizarCodigo
+// ficava sem cobertura nenhuma. especime/codigo.html tem as sete linguagens do contrato.
+test('o código é pré-renderizado: nós do Shiki no HTML final, nenhum pre[data-lang] por destacar', async () => {
+  const { doc, errosDeCodigo } = await construirHtml({ raiz: RAIZ, caminhoDaAula: new URL('especime/codigo.html', RAIZ), embutirFontes: FONTES });
+  assert.deepEqual(errosDeCodigo, [], 'prerenderizarCodigo relatou erro numa aula que só usa linguagens do contrato');
+  const blocos = [...doc.querySelectorAll('pre[data-lang]')];
+  assert.ok(blocos.length > 0, 'o espécime não tem bloco de código nenhum — teste não prova nada');
+  assert.ok(doc.querySelectorAll('.linha').length > 0, 'nenhuma linha do Shiki apareceu no HTML final');
+  assert.ok(blocos.every((pre) => pre.firstElementChild?.classList.contains('linha')),
+    'sobrou pre[data-lang] sem destacar (primeiro filho não é .linha)');
+});
+
+// Rodada de correção 1, item 2: idem para embutirImagensDoAutor — nenhum espécime usado tem <img> de
+// arquivo real (só data: já prontos). Fixture dedicada, com a imagem ao lado do arquivo da aula, para
+// que só passe se o caminho for resolvido contra a PASTA DA AULA — "figuras/quadrado.svg" não existe
+// na raiz do repositório, então resolver contra `raiz` por engano dispararia ENOENT.
+test('imagem do autor por caminho relativo vira data URI, resolvida contra a pasta da aula', async () => {
+  const { readFile } = await import('node:fs/promises');
+  const caminhoDaAula = new URL('../fixtures/construir/aula-com-imagem/aula.html', import.meta.url);
+  const { doc } = await construirHtml({ raiz: RAIZ, caminhoDaAula, embutirFontes: FONTES });
+  const img = doc.querySelector('img[alt="Quadrado de teste"]');
+  const src = img.getAttribute('src');
+  assert.ok(src.startsWith('data:image/svg+xml;base64,'), `esperava data URI de SVG, veio: ${src.slice(0, 40)}`);
+  const original = await readFile(new URL('../fixtures/construir/aula-com-imagem/figuras/quadrado.svg', import.meta.url));
+  assert.equal(src, `data:image/svg+xml;base64,${original.toString('base64')}`,
+    'os bytes não batem com figuras/quadrado.svg ao lado da aula — resolveu contra outra pasta');
+});
+
+// Rodada de correção 1, item 3: a guarda `if (!tag) throw` não tinha teste.
+test('sem a tag do runtime, construirHtml falha com mensagem clara', async () => {
+  const caminhoDaAula = new URL('../fixtures/construir/sem-runtime.html', import.meta.url);
+  await assert.rejects(
+    () => construirHtml({ raiz: RAIZ, caminhoDaAula, embutirFontes: FONTES }),
+    /a aula não tem a tag do runtime/,
+  );
 });

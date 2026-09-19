@@ -15,14 +15,13 @@ const TIPOS = { '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpe
 // de ":" — nesse caso não é um arquivo local, e embutirImagensDoAutor o deixa como está.
 const TEM_ESQUEMA = /^[a-z][a-z0-9+.-]*:/i;
 
+// `caminho` é sempre uma URL, nos dois pontos que chamam esta função (marcas e imagens do autor) —
+// por isso a extensão vem só de `pathname`. Achar o ponto e cortar do MESMO texto é o que importa:
+// a correção da rodada anterior foi justamente parar de cortar `String(caminho)` (o href inteiro,
+// com o esquema) usando um índice achado em `pathname` — os dois só coincidem por acaso.
 async function comoDataUri(caminho) {
   const bytes = await readFile(caminho);
-  // Um só nome serve para achar o ponto E para cortar a extensão: `caminho` pode ser uma URL (usa
-  // pathname) ou uma string comum (usa ela mesma). Cortar `String(caminho)` com um índice achado em
-  // `pathname` erraria por len('file://...') caracteres sempre que `caminho` for URL — a extensão
-  // saía deslocada, o TIPOS não achava a chave, e toda marca embutida virava application/octet-stream.
-  const nome = caminho.pathname ?? String(caminho);
-  const extensao = nome.slice(nome.lastIndexOf('.')).toLowerCase();
+  const extensao = caminho.pathname.slice(caminho.pathname.lastIndexOf('.')).toLowerCase();
   return `data:${TIPOS[extensao] ?? 'application/octet-stream'};base64,${bytes.toString('base64')}`;
 }
 
