@@ -36,7 +36,10 @@ const PASTA_FONTES_KATEX = 'node_modules/katex/dist/fonts/';
 // que aparece nele não é "size1"/"size2": é o PAR ".op-symbol.small-op" (Size1, forma em texto) ou
 // ".op-symbol.large-op" (Size2, forma em destaque) — um leitor de classe solta erraria os dois lados:
 // incluiria Size3 à toa e deixaria de incluir Size2, que É usado.
-const FAMILIA_POR_CLASSES = [
+// Exportada só para o teste (rodada de correção 1): compara esta tabela, linha a linha, contra o
+// que node_modules/katex/dist/katex.min.css de fato declara — a rede de proteção contra a tabela
+// envelhecer numa atualização futura do KaTeX, sem ninguém notar.
+export const FAMILIA_POR_CLASSES = [
   [['mathnormal'], 'KaTeX_Math'],
   [['boldsymbol'], 'KaTeX_Math'],
   [['mathit'], 'KaTeX_Main'],
