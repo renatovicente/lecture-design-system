@@ -181,6 +181,16 @@ test('um segundo posicional sai com 2', () => {
   }
 });
 
+test('dist não aceita alvo: um segundo argumento sai com 2 e imprime o uso', () => {
+  try {
+    execFileSync('node', [CLI, 'dist', 'alguma-pasta'], { encoding: 'utf8' });
+    assert.fail('deveria ter saído com 2');
+  } catch (erro) {
+    assert.equal(erro.status, 2);
+    assert.match(erro.stderr, /uso: aula-usp servir/);
+  }
+});
+
 test('caminho que não existe ainda sai com 2 e "não encontrei"', () => {
   try {
     execFileSync('node', [CLI, 'validar', join(RAIZ, 'especime/nao-existe.html')], { encoding: 'utf8' });

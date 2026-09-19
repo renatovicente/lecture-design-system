@@ -7,11 +7,16 @@ import { parseHTML } from 'linkedom';
 import katex from 'katex';
 import { validar, linhaDe, contar, cabecalhoDe, slidesDoFonte } from '../../validador/validar.js';
 import { regras as estrutura } from '../../validador/regras/estrutura.js';
+import { lerCobertura } from '../../validador/cobertura.js';
 import { carregarNoNode } from '../../build/carregar.mjs';
 
 const RAIZ = new URL('../../', import.meta.url);
 const contrato = JSON.parse(readFileSync(new URL('contrato/contrato.json', RAIZ), 'utf8'));
 const unidades = JSON.parse(readFileSync(new URL('assets/marcas/unidades.json', RAIZ), 'utf8'));
+// matematica.simbolo-fora-do-tex precisa disto no contexto para rodar; sem ela, fica calada (por
+// desenho) e a fixture de baixo (tests/fixtures/validador/matematica.simbolo-fora-do-tex) nunca
+// acusaria nada — a mesma cobertura de verdade que build/validar.mjs carrega para a CLI.
+const cobertura = lerCobertura(JSON.parse(readFileSync(new URL('validador/cobertura.json', RAIZ), 'utf8')));
 
 // O mesmo molde das fixtures: o linkedom só enche document.body num documento inteiro.
 const CABECA = `<!DOCTYPE html><html lang="pt-BR"><head>
@@ -34,7 +39,7 @@ const BASE = aula(`<section data-layout="capa"><h1>Capa</h1></section>
 
 function rodar(html, regras = estrutura) {
   const { document } = parseHTML(html);
-  return validar(document, { contrato, regras, grupo: 'estatica', unidades });
+  return validar(document, { contrato, regras, grupo: 'estatica', unidades, cobertura });
 }
 
 test('a aula de base não tem erro nenhum', () => {
@@ -370,20 +375,17 @@ test('toda regra implementada existe no contrato e tem fixture', () => {
   }
 });
 
-// Ruling 2: matematica.simbolo-fora-do-tex fica para o marco 5, junto com saida.glifo-ausente, os
-// dois lendo validador/cobertura.json. É a única exceção nomeada; o marco 5 apaga esta linha ao
-// implementar a regra, e o teste volta a cobrir as 47.
-const ADIADAS_DE_PROPOSITO = new Set(['matematica.simbolo-fora-do-tex']);
-
 test('toda regra estática de fase 1 do contrato está implementada', () => {
   // Cobria só "estrutura.": dava para apagar limites.tabela do registro (ou qualquer outra das 28
   // regras deste marco) e a suíte passava. Agora cobre o grupo e a fase inteiros, como o código→
   // contrato e o código→fixture já cobrem (acima).
+  // Ruling 2 adiava matematica.simbolo-fora-do-tex para o marco 5, com uma exceção nomeada aqui
+  // (ADIADAS_DE_PROPOSITO); implementada, a exceção some e o teste volta a cobrir as 47 sozinho.
   const doContrato = Object.entries(contrato.regras)
     .filter(([, regra]) => regra.grupo === 'estatica' && regra.fase === 1)
     .map(([nome]) => nome);
   assert.deepEqual(
-    doContrato.filter((nome) => !IMPLEMENTADAS.has(nome) && !ADIADAS_DE_PROPOSITO.has(nome)),
+    doContrato.filter((nome) => !IMPLEMENTADAS.has(nome)),
     [],
   );
 });

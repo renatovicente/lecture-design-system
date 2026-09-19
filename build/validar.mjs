@@ -3,12 +3,15 @@
 // havendo Chrome, o de composição (etapa 5, via build/composicao.mjs). Spec 8.1: falta de Chrome não
 // é falha — validarArquivo só relata o motivo; quem avisa o autor é a CLI (bin/aula-usp.mjs).
 // O validador em si não sabe de arquivos: aqui é o único lugar com node:fs e linkedom.
-import { readFileSync, statSync } from 'node:fs';
+import { readFileSync, statSync, existsSync } from 'node:fs';
 import { resolve, join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseHTML } from 'linkedom';
 import { validar, contar } from '../validador/validar.js';
 import { REGRAS_ESTATICAS, REGRAS_DE_CARGA } from '../validador/regras/index.js';
+// Puro, não build/cobertura.mjs: é o mesmo módulo que o navegador carrega (spec 3.5). Este arquivo
+// só faz a leitura de disco de validador/cobertura.json; expandi-la em Set é trabalho de lerCobertura.
+import { lerCobertura } from '../validador/cobertura.js';
 import { carregarNoNode } from './carregar.mjs';
 
 export const RAIZ_SISTEMA = fileURLToPath(new URL('..', import.meta.url));
@@ -59,6 +62,14 @@ export function lerAula(caminho, contrato) {
   return document;
 }
 
+// Sem validador/cobertura.json (ninguém rodou `aula-usp dist` neste checkout ainda), a validação
+// segue sem cobertura: matematica.simbolo-fora-do-tex se cala sozinha (ela mesma decide isso, não
+// quem chama), em vez de um artefato gerado e ausente derrubar a CLI inteira.
+function lerCoberturaDoSistema(raizDoSistema) {
+  const caminho = join(raizDoSistema, 'validador/cobertura.json');
+  return existsSync(caminho) ? lerCobertura(JSON.parse(readFileSync(caminho, 'utf8'))) : undefined;
+}
+
 // async porque o grupo de carga precisa do await import('katex') abaixo, e a composição do await
 // import('./composicao.mjs') mais adiante: os dois só carregam aqui dentro, e não no topo do módulo,
 // porque build/composicao.mjs importa playwright-core e build/servir.mjs (que lê contrato.json no
@@ -68,10 +79,11 @@ export async function validarArquivo(alvo, { regras = REGRAS_ESTATICAS, raizDoSi
   const caminho = caminhoDaAula(alvo);
   const contrato = JSON.parse(readFileSync(join(raizDoSistema, 'contrato/contrato.json'), 'utf8'));
   const unidades = JSON.parse(readFileSync(join(raizDoSistema, 'assets/marcas/unidades.json'), 'utf8'));
+  const cobertura = lerCoberturaDoSistema(raizDoSistema);
   const doc = lerAula(caminho, contrato);
   // Nesta ordem: validar() normaliza doc.body como efeito colateral (validador/validar.js:28), e
   // carregarNoNode (build/carregar.mjs:texInvalido) depende disso já ter acontecido.
-  const daEstatica = validar(doc, { contrato, regras, grupo: 'estatica', unidades });
+  const daEstatica = validar(doc, { contrato, regras, grupo: 'estatica', unidades, cobertura });
   const { default: katex } = await import('katex');
   const { medirComposicao } = await import('./composicao.mjs');
   // Dispara o Chrome antes de carregarNoNode e só espera a resposta depois de terminar o trabalho

@@ -2,15 +2,19 @@
 // CLI do Aula USP (spec 8.1). Neste marco, `servir` e `validar`.
 import { statSync } from 'node:fs';
 import { resolve, join } from 'node:path';
-// build/servir.mjs e build/validar.mjs só são importados dentro do comando que precisa de cada um
-// (import dinâmico): os dois leem disco no escopo do próprio módulo (contrato/contrato.json, e
-// build/validar.mjs ainda importa linkedom), e um import estático rodaria essa leitura antes de
-// qualquer try/catch — uma dependência ou um arquivo do sistema ausente viraria stack trace e saída 1
-// para o comando (a spec 8.1 pede saída 2). A regra vale para os dois módulos de build/: nada que leia
-// disco ou dependência externa no escopo do módulo entra na CLI por import estático.
+// build/servir.mjs, build/validar.mjs, build/bundle.mjs e build/cobertura.mjs só são importados
+// dentro do comando que precisa de cada um (import dinâmico): todos leem disco ou uma dependência
+// externa no escopo do próprio módulo (contrato/contrato.json; build/validar.mjs ainda importa
+// linkedom; build/bundle.mjs importa esbuild; build/cobertura.mjs importa fontkit), e um import
+// estático rodaria essa leitura antes de qualquer try/catch — uma dependência ou um arquivo do
+// sistema ausente viraria stack trace e saída 1 para o comando (a spec 8.1 pede saída 2). A regra
+// vale para todo módulo de build/: nada que leia disco ou dependência externa no escopo do módulo
+// entra na CLI por import estático.
 import { linhaDe, cabecalhoDe } from '../validador/validar.js';
 
-const USO = 'uso: aula-usp servir <pasta> [--porta 8765]\n       aula-usp validar <pasta> [--json]';
+const USO = 'uso: aula-usp servir <pasta> [--porta 8765]\n'
+  + '       aula-usp validar <pasta> [--json]\n'
+  + '       aula-usp dist';
 
 function sair(mensagem) {
   console.error(mensagem);
@@ -86,7 +90,25 @@ async function validarComando(argumentos) {
   process.exitCode = erros > 0 ? 1 : 0;
 }
 
+async function distComando(argumentos) {
+  if (argumentos.length > 0) sair(USO); // dist não recebe alvo: gera sempre o do próprio sistema
+  const raiz = new URL('../', import.meta.url);
+  try {
+    const [{ empacotar }, { escreverCobertura }] = await Promise.all([
+      import('../build/bundle.mjs'),
+      import('../build/cobertura.mjs'),
+    ]);
+    const arquivos = await empacotar({ raiz });
+    const cobertura = await escreverCobertura({ raiz });
+    for (const [nome, { bytes }] of arquivos) console.log(`dist/${nome} · ${(bytes / 1024).toFixed(1)} kB`);
+    console.log(`validador/cobertura.json · ${cobertura.fontes.length} fontes`);
+  } catch (erro) {
+    sair(`falha de ambiente: ${erro.message}\nrode npm install na pasta do sistema`);
+  }
+}
+
 const [comando, ...argumentos] = process.argv.slice(2);
 if (comando === 'servir') servir(argumentos);
 else if (comando === 'validar') validarComando(argumentos);
+else if (comando === 'dist') distComando(argumentos);
 else sair(USO);

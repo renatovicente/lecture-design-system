@@ -216,7 +216,7 @@
     "composicao.texto-no-amarelo": { "severidade": "erro", "grupo": "composicao", "fase": 1, "acao": "Use só tinta sobre amarelo." },
     "matematica.tex-invalido":   { "severidade": "erro",  "grupo": "carga",    "fase": 1, "acao": "Corrija o TeX no trecho indicado." },
     "matematica.comando-proibido": { "severidade": "erro", "grupo": "estatica", "fase": 1, "acao": "Remova do TeX os comandos de cor e de estilo." },
-    "matematica.simbolo-fora-do-tex": { "severidade": "erro", "grupo": "estatica", "fase": 1, "acao": "Escreva o símbolo em TeX, entre \\( e \\)." },
+    "matematica.simbolo-fora-do-tex": { "severidade": "erro", "grupo": "estatica", "fase": 1, "acao": "Escreva o símbolo em TeX: \\( \\to \\), \\( \\alpha \\), \\( \\leq \\)." },
     "matematica.cifrao-suspeito": { "severidade": "aviso", "grupo": "estatica", "fase": 1, "acao": "Escreva matemática entre \\( e \\); $ não é delimitador." },
     "recursos.imagem":           { "severidade": "erro",  "grupo": "carga",    "fase": 1, "acao": "Confira o caminho da imagem em img/." },
     "recursos.imagem-externa":   { "severidade": "aviso", "grupo": "estatica", "fase": 1, "acao": "Guarde a imagem em img/, com autorização do autor para baixá-la." },

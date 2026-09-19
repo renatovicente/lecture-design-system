@@ -61,3 +61,24 @@ test('o satélite de matemática não deixa nenhuma url(fonts/...) para buscar',
   assert.equal(/url\(fonts\//.test(texto), false, 'sobrou referência a arquivo de fonte: daria 404');
   assert.ok(texto.includes('data:font/woff2;base64,'), 'as fontes do KaTeX não foram embutidas');
 });
+
+// Guarda de reprodutibilidade, no mesmo molde da guarda de validador/cobertura.json em
+// tests/unit/cobertura.test.mjs: dist/manifesto.json é gerado e versionado, e só é confiável se
+// regerar não mudar nada. Sem "gerado" em build/bundle.mjs (tarefa 4 desta tarefa, item extra fora
+// do brief), isto é igualdade estrutural direta — pega o caso de alguém trocar uma dependência ou
+// um arquivo do sistema e esquecer de rodar `aula-usp dist` de novo.
+test('regenerar bate campo a campo com o dist/manifesto.json commitado', async () => {
+  const { readFile } = await import('node:fs/promises');
+  const { version } = JSON.parse(await readFile(new URL('package.json', RAIZ), 'utf8'));
+  const commitado = JSON.parse(await readFile(new URL('dist/manifesto.json', RAIZ), 'utf8'));
+  const saidas = await empacotar({ raiz: RAIZ, escrever: false });
+  const regenerado = {
+    versao: version,
+    arquivos: Object.fromEntries([...saidas].map(([nome, { bytes, integrity }]) => [nome, { bytes, integrity }])),
+  };
+  assert.deepStrictEqual(
+    regenerado,
+    commitado,
+    'empacotar mudou desde o último commit — rode `aula-usp dist` e commite dist/manifesto.json de novo',
+  );
+});

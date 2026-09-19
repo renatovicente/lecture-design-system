@@ -112,8 +112,11 @@ export default katex;
     await mkdir(new URL('dist/', raiz), { recursive: true });
     for (const [nome, { conteudo }] of saidas) await writeFile(new URL(`dist/${nome}`, raiz), conteudo);
     const arquivos = Object.fromEntries([...saidas].map(([nome, { bytes, integrity }]) => [nome, { bytes, integrity }]));
+    // Sem timestamp: um artefato gerado-e-versionado só é confiável se regerar não mudar nada
+    // (mesma razão de validador/cobertura.json, tarefa 3 rodada de correção 1, item 3) — compra a
+    // guarda de reprodutibilidade em tests/unit/bundle.test.mjs.
     await writeFile(new URL('dist/manifesto.json', raiz),
-      `${JSON.stringify({ versao: version, gerado: new Date().toISOString(), arquivos }, null, 2)}\n`);
+      `${JSON.stringify({ versao: version, arquivos }, null, 2)}\n`);
   }
   return saidas;
 }
