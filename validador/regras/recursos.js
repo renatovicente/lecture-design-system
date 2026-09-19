@@ -17,7 +17,9 @@ const semTex = (texto) => texto.replace(/\\\([\s\S]*?\\\)|\\\[[\s\S]*?\\\]/g, ' 
 // Unicode para o que sobra sem desenhar nada (largura zero U+200B, ZWJ/ZWNJ, seletores de variação).
 // Achado do revisor: só `> 0x20` deixava passar U+2003 e companhia, que colado de um editor vira
 // falso "sem glifo" — mesma classe do defeito de espaço comum que o passo 1 já tinha achado.
-const INVISIVEL = /[\x00-\x20\s\p{Default_Ignorable_Code_Point}]/u;
+// Exportada porque saida.glifo-ausente (marco 5b) reusa o mesmo recorte sobre o HTML final: o corte
+// de invisível não muda com o texto vindo do fonte ou do build, só a cobertura de glifo muda.
+export const INVISIVEL = /[\x00-\x20\s\p{Default_Ignorable_Code_Point}]/u;
 
 function* segmentosDaSecao(secao) {
   for (const no of textosComTex(secao)) {

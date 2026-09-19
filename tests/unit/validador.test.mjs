@@ -144,7 +144,9 @@ test('estrutura.id-ausente escreve a mensagem por extenso, com e sem layout', ()
 import { itensDoConteudo } from '../../validador/sequencia.js';
 // O registro é a única lista de regras (spec 9.3); uma segunda lista aqui já divergiu dele uma vez
 // (as fixtures de limites do marco 4b-2 chegaram e o teste continuou sem elas até isto ser corrigido).
-import { REGRAS_ESTATICAS as todas, REGRAS_DE_CARGA as carga, REGRAS_DE_COMPOSICAO as composicao } from '../../validador/regras/index.js';
+import {
+  REGRAS_ESTATICAS as todas, REGRAS_DE_CARGA as carga, REGRAS_DE_COMPOSICAO as composicao, REGRAS_DE_SAIDA as saida,
+} from '../../validador/regras/index.js';
 
 function slide(corpo) {
   return BASE.replace('  <h2>Título</h2>\n  <p class="lide">Lide.</p>\n  <p>Corpo.</p>\n', corpo);
@@ -309,6 +311,7 @@ const FIXTURES = new URL('tests/fixtures/validador/', RAIZ);
 const IMPLEMENTADAS = new Map(todas.map((regra) => [regra.nome, regra]));
 const DE_CARGA = new Map(carga.map((regra) => [regra.nome, regra]));
 const DE_COMPOSICAO = new Map(composicao.map((regra) => [regra.nome, regra]));
+const DE_SAIDA = new Map(saida.map((regra) => [regra.nome, regra]));
 
 // Uma pasta por regra (spec 11.1): roda TODAS as regras sobre a fixture e filtra pela regra da
 // pasta — bom.html não produz nenhum achado dela, ruim.html produz pelo menos um. Rodar só a
@@ -386,6 +389,23 @@ test('toda regra estática de fase 1 do contrato está implementada', () => {
     .map(([nome]) => nome);
   assert.deepEqual(
     doContrato.filter((nome) => !IMPLEMENTADAS.has(nome)),
+    [],
+  );
+});
+
+// A mesma guarda, para o grupo saida (marco 5b/5c). saida.pdf-paginas ainda não tem código — é do
+// marco 5c — e por isso fica numa lista de exceção nomeada, no mesmo molde do ADIADAS_DE_PROPOSITO
+// que valeu para matematica.simbolo-fora-do-tex enquanto essa regra esperou pelo marco 5: cada nome
+// sai da lista assim que ganha implementação. saida.referencia-externa, saida.tamanho e
+// saida.glifo-ausente saíram dela nesta tarefa; só falta pdf-paginas.
+const ADIADAS_DE_PROPOSITO = ['saida.pdf-paginas'];
+
+test('toda regra de saída de fase 1 do contrato está implementada ou nomeada como adiada', () => {
+  const doContrato = Object.entries(contrato.regras)
+    .filter(([, regra]) => regra.grupo === 'saida' && regra.fase === 1)
+    .map(([nome]) => nome);
+  assert.deepEqual(
+    doContrato.filter((nome) => !DE_SAIDA.has(nome) && !ADIADAS_DE_PROPOSITO.includes(nome)),
     [],
   );
 });
