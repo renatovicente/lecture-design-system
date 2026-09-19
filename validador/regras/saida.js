@@ -100,19 +100,25 @@ export const regras = [
   },
   {
     nome: 'saida.glifo-ausente',
-    // A cobertura do contexto é a do build (fato 8): sistema ∪ famílias do KaTeX que a aula de fato
-    // usa. NUNCA validador/cobertura.json (só sistema) — alimentada por ele, esta regra acusaria à
-    // toa qualquer aula com matemática fora do repertório do sistema. Sem cobertura no contexto
-    // (fora de um build), a regra se cala — mesmo desenho de matematica.simbolo-fora-do-tex: acusar
-    // tudo por um contexto incompleto é pior que não acusar nada.
-    *aplicar({ slides, cobertura }) {
-      if (!cobertura) return;
+    // A cobertura é dependente de contexto (revisão final do 5b, I1): dentro de `.katex` vale a
+    // união (fato 8 — usar só o sistema ali acusaria sete erros falsos, porque só katex.css nomeia
+    // KaTeX_Math, KaTeX_Size1 etc.), fora vale só `coberturaSistema` — a `.katex` de uma equação
+    // nunca aplica a texto de PROSA comum, então um caractere que só existe numa família do KaTeX
+    // (Σ, Γ, Ω…) tem de continuar acusando fora dali. NUNCA validador/cobertura.json (só sistema, sem
+    // interseção de unicode-range) — alimentada por ele, esta regra acusaria à toa qualquer aula com
+    // matemática fora do repertório do sistema. Sem coberturaSistema no contexto (fora de um build),
+    // a regra se cala — mesmo desenho de matematica.simbolo-fora-do-tex: acusar tudo por um contexto
+    // incompleto é pior que não acusar nada.
+    *aplicar({ slides, coberturaSistema, coberturaKatex }) {
+      if (!coberturaSistema) return;
       for (const secao of slides) {
         const vistos = new Set(); // uma vez por slide, não uma vez por ocorrência
         for (const no of textosDoHtml(secao)) {
+          const dentroDoKatex = no.parentElement?.closest('.katex') != null;
           for (const caractere of no.textContent) {
             const ponto = caractere.codePointAt(0);
-            if (INVISIVEL.test(caractere) || cobertura.has(ponto) || vistos.has(ponto)) continue;
+            const temGlifo = coberturaSistema.has(ponto) || (dentroDoKatex && coberturaKatex?.has(ponto));
+            if (INVISIVEL.test(caractere) || temGlifo || vistos.has(ponto)) continue;
             vistos.add(ponto);
             yield {
               ...onde(slides, secao),

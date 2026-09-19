@@ -9,9 +9,12 @@ import { REGRAS_DE_SAIDA } from '../../validador/regras/index.js';
 const contrato = JSON.parse(readFileSync(new URL('../../contrato/contrato.json', import.meta.url), 'utf8'));
 const COBERTURA = new Set([...'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 .,;:!?()-—çãõáéíóúâêô'].map((c) => c.codePointAt(0)));
 
-const saida = (corpo, { cobertura = COBERTURA, bytes = 1000 } = {}) => {
+// [Rodada de correção 2, I1] cobertura virou duas: coberturaSistema vale em qualquer lugar,
+// coberturaKatex só dentro de um elemento `.katex`. Os testes que não mencionam nenhuma das duas
+// continuam com o comportamento de sempre — só prosa comum, então só coberturaSistema importa.
+const saida = (corpo, { coberturaSistema = COBERTURA, coberturaKatex, bytes = 1000 } = {}) => {
   const doc = parseHTML(`<!DOCTYPE html><html lang="pt-BR"><head><title>t</title></head><body>${corpo}</body></html>`).document;
-  return validar(doc, { contrato, regras: REGRAS_DE_SAIDA, grupo: 'saida', cobertura, bytes });
+  return validar(doc, { contrato, regras: REGRAS_DE_SAIDA, grupo: 'saida', coberturaSistema, coberturaKatex, bytes });
 };
 const regras = (achados) => achados.map((a) => a.regra);
 
@@ -32,7 +35,7 @@ test('link para fora não é referência externa', () => {
 
 test('folha de estilo por href acusa', () => {
   const doc = parseHTML('<!DOCTYPE html><html lang="pt-BR"><head><title>t</title><link rel="stylesheet" href="https://exemplo/e.css"></head><body><section data-layout="conteudo"><p>oi</p></section></body></html>').document;
-  assert.deepEqual(regras(validar(doc, { contrato, regras: REGRAS_DE_SAIDA, grupo: 'saida', cobertura: COBERTURA, bytes: 10 })), ['saida.referencia-externa']);
+  assert.deepEqual(regras(validar(doc, { contrato, regras: REGRAS_DE_SAIDA, grupo: 'saida', coberturaSistema: COBERTURA, bytes: 10 })), ['saida.referencia-externa']);
 });
 
 test('url() de arquivo dentro de <style> acusa; data URI e url(#id) não', () => {
@@ -65,7 +68,7 @@ test('saida.tamanho lê o limiar do contrato, não um valor fixo no código', ()
   const comLimiteBaixo = { ...contrato, limites: { ...contrato.limites, 'saida.megabytes': 1 } };
   const doc = parseHTML('<!DOCTYPE html><html lang="pt-BR"><head><title>t</title></head><body><section data-layout="conteudo"><p>oi</p></section></body></html>').document;
   const achados = validar(doc, {
-    contrato: comLimiteBaixo, regras: REGRAS_DE_SAIDA, grupo: 'saida', cobertura: COBERTURA, bytes: 2 * 1024 * 1024,
+    contrato: comLimiteBaixo, regras: REGRAS_DE_SAIDA, grupo: 'saida', coberturaSistema: COBERTURA, bytes: 2 * 1024 * 1024,
   });
   assert.deepEqual(regras(achados), ['saida.tamanho']);
 });
@@ -76,13 +79,28 @@ test('caractere sem glifo na cobertura do HTML final acusa, uma vez por slide', 
   assert.match(achados[0].mensagem, /∑/);
 });
 
-// Fato 8: a cobertura do HTML final inclui o KaTeX embutido; com ela, o mesmo símbolo não acusa.
-test('o mesmo caractere não acusa quando a cobertura recebida o inclui', () => {
-  const comKatex = new Set([...COBERTURA, '∑'.codePointAt(0)]);
-  assert.deepEqual(saida('<section data-layout="conteudo"><p>Soma: ∑</p></section>', { cobertura: comKatex }), []);
+// Fato 8 + I1 (revisão final do 5b): a cobertura do KaTeX só é alcançável DENTRO de `.katex` — a CSS
+// nunca nomeia essas famílias fora dali. Um caractere que só está em coberturaKatex tem de continuar
+// acusando em prosa comum (é a divergência que a revisão final mediu: Σ → Γ Ω em prosa, achados: []),
+// mas para de acusar dentro de um `.katex` de verdade.
+test('caractere só em coberturaKatex: acusa em prosa, não acusa dentro de .katex', () => {
+  const soKatex = new Set(['∑'.codePointAt(0)]);
+  const emProsa = saida('<section data-layout="conteudo"><p>Soma: ∑</p></section>', { coberturaKatex: soKatex });
+  assert.deepEqual(regras(emProsa), ['saida.glifo-ausente'], 'coberturaKatex não pode valer fora de .katex');
+
+  const dentroDoKatex = saida('<section data-layout="conteudo"><p><span class="katex">∑</span></p></section>', { coberturaKatex: soKatex });
+  assert.deepEqual(dentroDoKatex, [], 'coberturaKatex deveria valer dentro de .katex (fato 8)');
 });
 
-test('sem cobertura no contexto a regra de glifo se cala, em vez de acusar tudo', () => {
+// coberturaSistema, ao contrário, vale em qualquer lugar — é a mesma fonte que pintaria o caractere
+// nos dois casos.
+test('caractere em coberturaSistema não acusa nem em prosa nem dentro de .katex', () => {
+  const comSistema = new Set([...COBERTURA, '∑'.codePointAt(0)]);
+  assert.deepEqual(saida('<section data-layout="conteudo"><p>Soma: ∑</p></section>', { coberturaSistema: comSistema }), []);
+  assert.deepEqual(saida('<section data-layout="conteudo"><p><span class="katex">∑</span></p></section>', { coberturaSistema: comSistema }), []);
+});
+
+test('sem coberturaSistema no contexto a regra de glifo se cala, em vez de acusar tudo', () => {
   const doc = parseHTML('<!DOCTYPE html><html lang="pt-BR"><head><title>t</title></head><body><section data-layout="conteudo"><p>∑</p></section></body></html>').document;
   const achados = validar(doc, { contrato, regras: REGRAS_DE_SAIDA, grupo: 'saida', bytes: 10 });
   assert.equal(regras(achados).includes('saida.glifo-ausente'), false);

@@ -32,6 +32,23 @@ export async function pontosDoArquivo(caminho) {
   return pontos;
 }
 
+// Converte "U+0000-00FF, U+0131, ..." (o unicode-range de um @font-face, assets/fontes/fontes.json)
+// no conjunto de pontos de código que a faixa cobre. O cmap de uma fonte sozinho superestima o que
+// ela pinta: tem pontos que o arquivo carrega mas o navegador nunca escolhe aquele @font-face para
+// desenhar, porque caem fora da faixa declarada (medido, tests/unit/cobertura.test.mjs, "por arquivo,
+// o cmap não cabe no unicodeRange"). fontes-embutidas.mjs (marco 5b, revisão final I1) intersecta os
+// dois para saber o que uma fonte do sistema pinta de verdade fora do `.katex`.
+export function pontosDaFaixa(unicodeRange) {
+  const pontos = new Set();
+  for (const trecho of unicodeRange.split(',')) {
+    const [a, b] = trecho.trim().replace(/^U\+/i, '').split('-');
+    const inicio = parseInt(a, 16);
+    const fim = parseInt(b ?? a, 16);
+    for (let p = inicio; p <= fim; p += 1) pontos.add(p);
+  }
+  return pontos;
+}
+
 export async function gerarCobertura({ raiz }) {
   const pasta = new URL('assets/fontes/', raiz);
   const arquivos = (await readdir(pasta)).filter((nome) => nome.endsWith('.woff2')).sort();

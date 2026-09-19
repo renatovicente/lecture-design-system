@@ -15,7 +15,7 @@
 import { readFile } from 'node:fs/promises';
 import katex from 'katex';
 import { renderizarTex } from '../componentes/tex.js';
-import { pontosDoArquivo } from './cobertura.mjs';
+import { pontosDoArquivo, pontosDaFaixa } from './cobertura.mjs';
 import { gerarFontesCss } from './fontes-css.mjs';
 
 const CAMINHO_CSS_KATEX = 'node_modules/katex/dist/katex.min.css';
@@ -122,11 +122,11 @@ async function cssEFontesDoSistema(raiz) {
   const manifesto = JSON.parse(await readFile(new URL('fontes.json', pasta), 'utf8'));
   const comDataUri = await Promise.all(manifesto.map(async (item) => {
     const caminho = new URL(item.arquivo, pasta);
-    return { arquivo: item.arquivo, caminho, uri: await comoDataUriDeFonte(caminho) };
+    return { arquivo: item.arquivo, caminho, unicodeRange: item.unicodeRange, uri: await comoDataUriDeFonte(caminho) };
   }));
   let css = gerarFontesCss(manifesto);
   for (const { arquivo, uri } of comDataUri) css = css.replaceAll(`url('../assets/fontes/${arquivo}')`, `url(${uri})`);
-  return { css, caminhos: comDataUri.map((item) => item.caminho) };
+  return { css, arquivos: comDataUri.map(({ caminho, unicodeRange }) => ({ caminho, unicodeRange })) };
 }
 
 // "KaTeX_Main-BoldItalic.woff2" -> "KaTeX_Main"; "KaTeX_Size1-Regular.woff2" -> "KaTeX_Size1". Nenhum
@@ -160,6 +160,29 @@ async function cssEFontesDoKatex(raiz, familias) {
   return { css, caminhos: arquivosParaEmbutir.map((arquivo) => new URL(arquivo, pastaFontes)) };
 }
 
+// Revisão final do 5b, I1: saida.glifo-ausente tratava a cobertura como uma coisa só (a união crua
+// dos cmap), mas ela é dependente de contexto — dentro de `.katex` vale a união (fato 8: usar só o
+// sistema acusaria sete erros falsos ali, porque só katex.css nomeia essas famílias), fora vale só o
+// sistema, e só o que cada face de fato pinta (cmap ∩ unicode-range — sem isso, um Σ em PROSA comum
+// passava batido, porque tinha glifo em algum arquivo do KaTeX que nunca é escolhido fora de
+// `.katex`). katex.min.css não declara unicode-range nenhum (medido: zero ocorrências) — toda família
+// embutida vale por inteiro dentro de `.katex`, sem precisar da mesma interseção.
+async function coberturaDoSistema(arquivos) {
+  const conjuntos = await Promise.all(arquivos.map(async ({ caminho, unicodeRange }) => {
+    const cmap = await pontosDoArquivo(caminho);
+    const faixa = pontosDaFaixa(unicodeRange);
+    return [...cmap].filter((ponto) => faixa.has(ponto));
+  }));
+  return new Set(conjuntos.flat());
+}
+
+async function coberturaDoKatex(caminhos) {
+  const conjuntos = await Promise.all(caminhos.map(pontosDoArquivo));
+  const cobertura = new Set();
+  for (const conjunto of conjuntos) for (const ponto of conjunto) cobertura.add(ponto);
+  return cobertura;
+}
+
 export async function embutirFontes({ raiz, doc }) {
   renderizarTex(doc.body, { katex });
   const familias = familiasDoKatexUsadas(doc);
@@ -167,9 +190,14 @@ export async function embutirFontes({ raiz, doc }) {
     cssEFontesDoSistema(raiz),
     cssEFontesDoKatex(raiz, familias),
   ]);
-  const conjuntos = await Promise.all([...sistema.caminhos, ...doKatex.caminhos].map(pontosDoArquivo));
-  const cobertura = new Set();
-  for (const conjunto of conjuntos) for (const ponto of conjunto) cobertura.add(ponto);
+  const [coberturaSistema, coberturaKatex] = await Promise.all([
+    coberturaDoSistema(sistema.arquivos),
+    coberturaDoKatex(doKatex.caminhos),
+  ]);
+  // `cobertura` (união crua, sistema ∪ katex) fica para compatibilidade — fato 8 continua verdadeiro
+  // como descrição do total embutido; quem decide onde cada parte vale é saida.glifo-ausente, com as
+  // duas de baixo.
+  const cobertura = new Set([...coberturaSistema, ...coberturaKatex]);
   const css = doKatex.css ? `${sistema.css}\n${doKatex.css}` : sistema.css;
-  return { css, cobertura, familias };
+  return { css, cobertura, coberturaSistema, coberturaKatex, familias };
 }
