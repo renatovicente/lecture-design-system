@@ -6,11 +6,6 @@
 import { onde, trechoDe, encurtar } from '../validar.js';
 import { INVISIVEL } from './recursos.js';
 
-// Fato 10 (marco 5b, tarefa 3): a aula mais pesada do espécime, com tudo embutido, mede 1,02 MB —
-// fator dez de folga até aqui. Só valor de código: diferente da severidade (que vem do contrato), o
-// contrato não guarda limite de bytes nenhum, e nada aqui pretende que devesse.
-const LIMITE_BYTES = 10 * 1024 * 1024;
-
 // "Externo" para as três fontes abaixo: não vazio, não já embutido (data:) e não uma referência
 // interna por id (#gradiente, #corte — como o url(#id) de SVG). Um url() sem argumento nenhum (o
 // build deixa exatamente "url()" numa família do KaTeX que a aula não usa, spec 3.3 etapa 4) também
@@ -93,9 +88,14 @@ export const regras = [
   },
   {
     nome: 'saida.tamanho',
-    *aplicar({ bytes }) {
-      if (!Number.isFinite(bytes) || bytes <= LIMITE_BYTES) return;
-      yield { mensagem: `HTML final com ${(bytes / (1024 * 1024)).toFixed(1)} MB (acima de 10 MB).` };
+    // O limiar mora em contrato.limites, como os outros 24 (limites.js abre com a mesma regra: "os
+    // números vêm todos de contrato.limites; o código só sabe contar") — nunca um valor fixo aqui,
+    // por mais que o fato 10 tenha medido o número. Em megabytes, não bytes crus: contrato.json é
+    // editado por gente, e 10 se lê melhor que 10485760.
+    *aplicar({ bytes, contrato }) {
+      const megabytes = contrato.limites['saida.megabytes'];
+      if (!Number.isFinite(bytes) || bytes <= megabytes * 1024 * 1024) return;
+      yield { mensagem: `HTML final com ${(bytes / (1024 * 1024)).toFixed(1)} MB (acima de ${megabytes} MB).` };
     },
   },
   {

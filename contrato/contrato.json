@@ -92,7 +92,8 @@
     "codigo.colunas": 64,
     "tabela.linhasDeDados": 8,
     "tabela.colunas": 6,
-    "diagrama.nos": 15
+    "diagrama.nos": 15,
+    "saida.megabytes": 10
   },
   "papeis": {
     "precedencia": "seletor-mais-especifico",

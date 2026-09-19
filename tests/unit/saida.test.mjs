@@ -57,6 +57,19 @@ test('acima de 10 MB avisa; abaixo, não', () => {
   assert.deepEqual(saida('<section data-layout="conteudo"><p>oi</p></section>', { bytes: 9 * 1024 * 1024 }), []);
 });
 
+// [Rodada de correção 1] O limiar vem de contrato.limites['saida.megabytes'], nunca de um valor
+// fixo no código (a mesma regra que limites.js já segue para os outros 24). Prova por injeção: um
+// contrato com o limiar baixado para 1 MB faz uma aula de 2 MB avisar — um valor fixo no código
+// nunca deixaria isto mudar.
+test('saida.tamanho lê o limiar do contrato, não um valor fixo no código', () => {
+  const comLimiteBaixo = { ...contrato, limites: { ...contrato.limites, 'saida.megabytes': 1 } };
+  const doc = parseHTML('<!DOCTYPE html><html lang="pt-BR"><head><title>t</title></head><body><section data-layout="conteudo"><p>oi</p></section></body></html>').document;
+  const achados = validar(doc, {
+    contrato: comLimiteBaixo, regras: REGRAS_DE_SAIDA, grupo: 'saida', cobertura: COBERTURA, bytes: 2 * 1024 * 1024,
+  });
+  assert.deepEqual(regras(achados), ['saida.tamanho']);
+});
+
 test('caractere sem glifo na cobertura do HTML final acusa, uma vez por slide', () => {
   const achados = saida('<section data-layout="conteudo" id="s"><p>Soma: ∑ e de novo ∑</p></section>');
   assert.deepEqual(regras(achados), ['saida.glifo-ausente']);
