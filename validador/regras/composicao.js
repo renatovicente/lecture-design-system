@@ -47,12 +47,16 @@ function papelDe(elemento, papeis) {
 // medidos peça por peça, não diriam nada —, mas a fórmula em si não: sua caixa inteira é a resposta
 // honesta sobre tamanho e transbordo (ver composicao.transbordo, que é quem realmente precisa dela;
 // tamanho-minimo já filtra o miolo de novo, pela sua própria leitura de contrato.papeis.excecoes).
+function medivel(elemento) {
+  if (elemento.nodeName === 'BR') return false;
+  if (elemento.closest('aside.notas')) return false;
+  if (elemento.parentElement?.closest('.katex, .katex-display')) return false;
+  return true;
+}
+
 function* elementosMedidos(slide) {
   for (const elemento of slide.querySelectorAll('*')) {
-    if (elemento.nodeName === 'BR') continue;
-    if (elemento.closest('aside.notas')) continue;
-    if (elemento.parentElement?.closest('.katex, .katex-display')) continue;
-    yield elemento;
+    if (medivel(elemento)) yield elemento;
   }
 }
 
@@ -209,8 +213,10 @@ export const regras = [
         for (const elemento of elementosMedidos(slide)) {
           const estilo = janela.getComputedStyle(elemento);
           if (estilo.backgroundColor !== AMARELO) continue;
-          // O campo amarelo pinta o fundo; quem escreve texto nele são os descendentes, o próprio incluído.
-          for (const dentro of [elemento, ...elemento.querySelectorAll('*')]) {
+          // O campo amarelo pinta o fundo; quem escreve texto nele são os descendentes, o próprio
+          // incluído — pelo mesmo filtro de elementosMedidos, senão o miolo do KaTeX e o conteúdo de
+          // aside.notas voltam a ser medidos aqui (Minor da revisão final do 4c).
+          for (const dentro of [elemento, ...elemento.querySelectorAll('*')].filter(medivel)) {
             if (!dentro.textContent.trim()) continue;
             const cor = janela.getComputedStyle(dentro).color;
             if (cor !== TINTA) {

@@ -1,6 +1,14 @@
 <!DOCTYPE html><html lang="pt-BR"><head>
 <meta name="unidade" content="ime"><meta name="disciplina" content="Teste"><meta name="aula" content="1">
 <meta name="data" content="2026-09-17"><meta name="professor" content="Prof.">
+<script src="../../../../dist/aula-usp.js"></script>
 </head><body>
-<section data-layout="conteudo" id="a"><h2>T</h2><p><sub>quase invisível</sub></p></section>
+<!-- Medido (revisão final do 4c, I4): a versão anterior usava <sub>, que está literalmente em
+     contrato.papeis.excecoes — a regra nunca chega a medi-lo, então não é o mecanismo certo para
+     ilustrar composicao.tamanho-minimo. Isto aqui mostra o mecanismo de verdade (um papel — leitura,
+     mínimo 24 px — forçado abaixo do próprio mínimo), mas continua fora do alcance de um autor real:
+     o vocabulário sancionado não tem como escolher font-size, e nenhuma classe do sistema produz um
+     papel abaixo do seu próprio mínimo. style="" só existe aqui para exercitar a regra; ele também
+     aciona vocabulario.style, de propósito — outra regra, outro achado. -->
+<section data-layout="conteudo" id="a"><h2>T</h2><p style="font-size: 10px">quase invisível</p></section>
 </body></html>

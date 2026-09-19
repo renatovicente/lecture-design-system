@@ -1,6 +1,14 @@
 <!DOCTYPE html><html lang="pt-BR"><head>
 <meta name="unidade" content="ime"><meta name="disciplina" content="Teste"><meta name="aula" content="1">
 <meta name="data" content="2026-09-17"><meta name="professor" content="Prof.">
+<script src="../../../../dist/aula-usp.js"></script>
 </head><body>
-<section data-layout="conteudo" id="a"><h2>T</h2><figure><svg viewBox="0 0 10 10"><text fill="#1094AB" font-size="20">oi</text></svg></figure></section>
+<!-- Medido (revisão final do 4c, I4): a versão anterior usava fill de SVG, e a regra só lê
+     getComputedStyle(elemento).color — fill nunca é lido, então aquele ruim.html não discriminava
+     nada desta regra (o achado, se algum, seria de vocabulario.azul-svg, no grupo estático). Isto
+     aqui mostra o mecanismo de verdade: texto em color: var(--cor-azul) abaixo de 32 px. Continua
+     fora do alcance de um autor real: .sinal é o único jeito sancionado de pintar texto de azul, e só
+     vive em h1/h2 (96/44 px, sempre acima do mínimo). style="" só existe aqui para exercitar a regra;
+     ele também aciona vocabulario.style, de propósito — outra regra, outro achado. -->
+<section data-layout="conteudo" id="a"><h2>T</h2><p style="color: var(--cor-azul); font-size: 24px">azul pequeno</p></section>
 </body></html>

@@ -16,10 +16,12 @@ const RODAR = async (contrato) => {
 
 const navegador = await iniciarChrome();
 const sitio = await servirPasta('especime');
+const fixturas = await servirPasta('tests/fixtures/validador');
 
 test.after(async () => {
   await navegador.close();
   await sitio.fechar();
+  await fixturas.fechar();
 });
 
 async function medir(arquivo, mutacao) {
@@ -142,6 +144,39 @@ test('azul pequeno e texto sobre amarelo fora da tinta acusam', async () => {
     p.style.color = '#FFFFFF';
   });
   assert.ok(amarelo.some((achado) => achado.regra === 'composicao.texto-no-amarelo'), JSON.stringify(amarelo));
+});
+
+async function medirFixture(pasta, arquivo) {
+  const pagina = await navegador.newPage({ viewport: { width: 1400, height: 900 } });
+  await pagina.goto(`${fixturas.endereco}/${pasta}/${arquivo}?folha`);
+  await pagina.waitForFunction(() => document.body?.dataset.montado === 'sim');
+  await pagina.evaluate(() => document.fonts.ready);
+  const achados = await pagina.evaluate(RODAR, contrato);
+  await pagina.close();
+  return achados;
+}
+
+// I3/I4 da revisão final do 4c: das cinco fixtures de composição (tests/fixtures/validador/), só
+// duas discriminavam de verdade quando medidas no Chrome. transbordo/ruim.html não acusava nada (a
+// tabela original era baixa demais); azul-pequeno/bom.html estava sujo (um <svg> sem tamanho estourava
+// a zona de conteúdo). As duas foram consertadas; azul-pequeno/ruim.html e tamanho-minimo/ruim.html
+// eram o mecanismo errado (fill de SVG e <sub>, que está em papeis.excecoes) e agora mostram o
+// mecanismo certo, mesmo continuando fora do alcance do vocabulário de um autor real (ver comentário
+// em cada fixture).
+test('as cinco fixtures de composição discriminam bom de ruim, medidas no Chrome', async () => {
+  const nomes = [
+    'composicao.transbordo',
+    'composicao.linhas-titulo',
+    'composicao.tamanho-minimo',
+    'composicao.azul-pequeno',
+    'composicao.texto-no-amarelo',
+  ];
+  for (const nome of nomes) {
+    const bom = await medirFixture(nome, 'bom.html');
+    const ruim = await medirFixture(nome, 'ruim.html');
+    assert.deepEqual(bom, [], `bom.html de ${nome} acusou: ${bom.map((a) => a.mensagem).join(' / ')}`);
+    assert.ok(ruim.some((achado) => achado.regra === nome), `ruim.html de ${nome} não acusou a própria regra: ${JSON.stringify(ruim)}`);
+  }
 });
 
 // Importante da revisão: aside.notas nunca aparece no slide (display:none) — não é composição.

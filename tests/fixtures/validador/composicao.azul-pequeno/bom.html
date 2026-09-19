@@ -1,6 +1,11 @@
 <!DOCTYPE html><html lang="pt-BR"><head>
 <meta name="unidade" content="ime"><meta name="disciplina" content="Teste"><meta name="aula" content="1">
 <meta name="data" content="2026-09-17"><meta name="professor" content="Prof.">
+<script src="../../../../dist/aula-usp.js"></script>
 </head><body>
-<section data-layout="conteudo" id="a"><h2>T</h2><figure><svg viewBox="0 0 10 10"><text fill="#1094AB" font-size="32">oi</text></svg></figure></section>
+<!-- Medido (revisão final do 4c, I3): o <svg> sem width/height próprios caía no tamanho padrão de
+     elemento substituído (300×150), estourava a zona de conteúdo e sujava esta fixture com três
+     achados de composicao.transbordo. viewBox e width/height iguais (sem magnificação) e um texto
+     bem dentro dos limites resolvem, sem mudar o que a figura ilustra. -->
+<section data-layout="conteudo" id="a"><h2>T</h2><figure><svg viewBox="0 0 40 40" width="40" height="40"><text x="4" y="24" fill="#1094AB" font-size="14">oi</text></svg></figure></section>
 </body></html>
