@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Fixture do painel: demo registrada antes do motor esvaziar a fila</title>
+<meta name="unidade" content="ime">
+<meta name="disciplina" content="Fixture do painel">
+<meta name="aula" content="1">
+<meta name="data" content="2026-09-18">
+<meta name="professor" content="Prof. Renato Vicente">
+<script src="../../../dist/aula-usp.js"></script>
+</head>
+<body>
+<script>
+  AulaUSP.demo('fixture-demo', { montar() {}, capturar() {} });
+</script>
+
+<section data-layout="capa">
+  <h1>Fixture do painel</h1>
+</section>
+
+<!-- Guarda a Ruling 11 (revisão final do 4c, I2): motor/demos.js esvazia filaDeDemos dentro de
+     instalarDemos, que só roda depois do passo 6 de montar/navegador.js. Se a fila fosse esvaziada
+     antes, recursos.demos chegaria vazio e esta div.demo acusaria recursos.demo-sem-registro (erro). -->
+<section data-layout="demo" id="com-demo">
+  <h2>Com demo</h2>
+  <div class="demo" data-demo="fixture-demo"></div>
+  <aside class="notas">Nota do slide, só para não acusar estrutura.notas-ausentes de brinde.</aside>
+</section>
+
+<section data-layout="abertura" id="bloco-1">
+  <h2>Bloco 1</h2>
+</section>
+
+<section data-layout="abertura" id="bloco-2">
+  <h2>Bloco 2</h2>
+</section>
+
+<section data-layout="encerramento">
+  <h2>Fim</h2>
+  <ol class="sintese">
+    <li>A fila de demos é lida antes de instalarDemos esvaziá-la.</li>
+  </ol>
+</section>
+
+</body>
+</html>
