@@ -7,7 +7,15 @@ import { montar } from '../montar/montar.js';
 import { renderizarTex } from '../componentes/tex.js';
 import { criarDestacador, renderizarCodigo } from '../componentes/codigo.js';
 
-const ESTILOS = ['tokens', 'fontes', 'base', 'layouts', 'componentes', 'motor', 'impressao'];
+// Sem 'fontes': estilos/fontes.css é o @font-face de DESENVOLVIMENTO (URL relativa a assets/fontes/,
+// servida por build/servir.mjs). embutirFontes (tarefa 2 do marco 5b) já devolve o @font-face de
+// PRODUÇÃO, em data URI, para as mesmas oito fontes — incluir os dois é o mesmo font-family duas
+// vezes com o mesmo unicode-range, e medido (Chrome real, HTML construído aberto por fora do
+// repositório) que o navegador tenta a ÚLTIMA declaração da folha, não a primeira: com as duas, a
+// relativa vem depois de fontes.css, falha (o pacote não tem mais a pasta assets/fontes/ ao lado, fato
+// 6), e Geist/Geist Mono caem para a fonte de reserva — dois net::ERR_FILE_NOT_FOUND, dois erros no
+// console, e o título deixa de sair em Geist, contra o fato 7.
+const ESTILOS = ['tokens', 'base', 'layouts', 'componentes', 'motor', 'impressao'];
 
 const TIPOS = { '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.webp': 'image/webp', '.gif': 'image/gif' };
 
