@@ -63,7 +63,9 @@ Cada um veio de uma sonda executada. Não os re-derive; se algum se mostrar fals
 
 **Interfaces entre as tarefas:**
 
-- Tarefa 1 **produz** `construirHtml({ raiz, caminhoDaAula, fontes }) → Promise<{ html, resumo, doc, errosDeTex, errosDeCodigo }>`. `raiz` é a URL da raiz do sistema; `caminhoDaAula` o arquivo da aula; `fontes` o resultado da tarefa 2.
+- Tarefa 1 **produz** `construirHtml({ raiz, caminhoDaAula, embutirFontes }) → Promise<{ html, resumo, doc, fontes, errosDeTex, errosDeCodigo }>`. `raiz` é a URL da raiz do sistema; `caminhoDaAula` o arquivo da aula; **`embutirFontes` é a FUNÇÃO da tarefa 2**, chamada no momento certo — depois de `renderizarTex`, antes de o CSS ser injetado. Devolve em `fontes` o que ela devolveu, para a tarefa 4 usar a cobertura.
+
+  Por que função e não objeto pronto: `embutirFontes` precisa do documento **depois** da renderização do TeX, para saber quais famílias do KaTeX a aula usa, e `renderizarTex` roda dentro de `construirHtml`. Chamar `construirHtml` duas vezes não serve — `montar()` recusa aula já montada. É o mesmo padrão de injeção que o marco 5a usou em `resolver`, `estilo` e `marca`.
 - Tarefa 2 **produz** `embutirFontes({ raiz, doc }) → Promise<{ css, cobertura, familias }>`. `css` é o texto das `@font-face` com as fontes em data URI; `cobertura` é um `Set<number>` dos pontos de código com glifo **no que foi embutido**; `familias` a lista de famílias do KaTeX incluídas.
 - Tarefa 3 **produz** `REGRAS_DE_SAIDA` e consome `cobertura` e `bytes` do contexto de `validar`.
 - Tarefa 4 **consome** as três anteriores.
@@ -77,8 +79,8 @@ Cada um veio de uma sonda executada. Não os re-derive; se algum se mostrar fals
 - Teste: `tests/unit/embutir.test.mjs` (novo)
 
 **Interfaces:**
-- Consome: `embutirFontes` da tarefa 2 — mas **não a implemente aqui**; receba o resultado como parâmetro `fontes` e deixe o teste passar um coto.
-- Produz: `construirHtml({ raiz, caminhoDaAula, fontes })`, descrita acima.
+- Consome: `embutirFontes` da tarefa 2 — mas **não a implemente aqui**; receba a FUNÇÃO como parâmetro e deixe o teste passar um coto.
+- Produz: `construirHtml({ raiz, caminhoDaAula, embutirFontes })`, descrita acima.
 
 - [ ] **Passo 1: escrever o teste que falha primeiro**
 
@@ -92,11 +94,12 @@ import assert from 'node:assert/strict';
 import { construirHtml } from '../../build/embutir.mjs';
 
 const RAIZ = new URL('../../', import.meta.url);
-// Coto das fontes: a tarefa 2 é quem as embute de verdade. Aqui só precisamos de CSS plausível.
-const FONTES = { css: '@font-face{font-family:Geist;src:url(data:font/woff2;base64,AA==)}', cobertura: new Set(), familias: [] };
+// Coto das fontes: a tarefa 2 é quem as embute de verdade. É FUNÇÃO, não objeto — construirHtml a
+// chama depois de renderizarTex, porque só aí dá para saber quais famílias do KaTeX a aula usa.
+const FONTES = async () => ({ css: '@font-face{font-family:Geist;src:url(data:font/woff2;base64,AA==)}', cobertura: new Set(), familias: [] });
 
 test('constrói um HTML sem nenhuma referência externa', async () => {
-  const { html, doc } = await construirHtml({ raiz: RAIZ, caminhoDaAula: new URL('especime/matematica.html', RAIZ), fontes: FONTES });
+  const { html, doc } = await construirHtml({ raiz: RAIZ, caminhoDaAula: new URL('especime/matematica.html', RAIZ), embutirFontes: FONTES });
   const externos = [...doc.querySelectorAll('[src]')]
     .map((elemento) => elemento.getAttribute('src'))
     .filter((valor) => valor && !valor.startsWith('data:'));
@@ -106,7 +109,7 @@ test('constrói um HTML sem nenhuma referência externa', async () => {
 });
 
 test('a tag do runtime some e o motor embutido entra no lugar dela', async () => {
-  const { doc } = await construirHtml({ raiz: RAIZ, caminhoDaAula: new URL('especime/matematica.html', RAIZ), fontes: FONTES });
+  const { doc } = await construirHtml({ raiz: RAIZ, caminhoDaAula: new URL('especime/matematica.html', RAIZ), embutirFontes: FONTES });
   const comSrc = [...doc.querySelectorAll('script[src]')].map((s) => s.getAttribute('src'));
   assert.deepEqual(comSrc.filter((s) => s.endsWith('/aula-usp.js')), [], 'a tag do runtime continua lá');
   const embutidos = [...doc.querySelectorAll('script:not([src])')].map((s) => s.textContent);
@@ -115,7 +118,7 @@ test('a tag do runtime some e o motor embutido entra no lugar dela', async () =>
 
 // Fato 4: reconstruir o resumo do DOM seria uma segunda implementação do que montar() calculou.
 test('o resumo que montar() devolveu vai serializado no HTML, com os mesmos blocos', async () => {
-  const { doc, resumo } = await construirHtml({ raiz: RAIZ, caminhoDaAula: new URL('especime/matematica.html', RAIZ), fontes: FONTES });
+  const { doc, resumo } = await construirHtml({ raiz: RAIZ, caminhoDaAula: new URL('especime/matematica.html', RAIZ), embutirFontes: FONTES });
   const arranque = [...doc.querySelectorAll('script:not([src])')].map((s) => s.textContent).join('\n');
   assert.ok(arranque.includes(JSON.stringify(resumo.blocos[0].id)), 'o id do primeiro bloco não está no arranque');
   // Sem "ou": JSON.stringify produz exatamente esta forma. Um ou aqui só faria o teste passar mais fácil.
@@ -124,7 +127,7 @@ test('o resumo que montar() devolveu vai serializado no HTML, com os mesmos bloc
 
 // Fato 5: a fila tem de existir antes do <script> do autor, que roda durante o parsing.
 test('a fila de demos é instalada antes de qualquer script do autor', async () => {
-  const { doc } = await construirHtml({ raiz: RAIZ, caminhoDaAula: new URL('especime/index.html', RAIZ), fontes: FONTES });
+  const { doc } = await construirHtml({ raiz: RAIZ, caminhoDaAula: new URL('especime/index.html', RAIZ), embutirFontes: FONTES });
   const scripts = [...doc.querySelectorAll('script')];
   const ondeAFila = scripts.findIndex((s) => s.textContent.includes('filaDeDemos'));
   const ondeOAutor = scripts.findIndex((s) => !s.src && s.textContent.includes('AulaUSP.demo('));
@@ -137,12 +140,12 @@ test('construir não toca no arquivo da aula', async () => {
   const { readFile } = await import('node:fs/promises');
   const caminho = new URL('especime/matematica.html', RAIZ);
   const antes = await readFile(caminho, 'utf8');
-  await construirHtml({ raiz: RAIZ, caminhoDaAula: caminho, fontes: FONTES });
+  await construirHtml({ raiz: RAIZ, caminhoDaAula: caminho, embutirFontes: FONTES });
   assert.equal(await readFile(caminho, 'utf8'), antes);
 });
 
 test('a matemática é pré-renderizada: o HTML final tem KaTeX e não tem delimitador cru', async () => {
-  const { doc } = await construirHtml({ raiz: RAIZ, caminhoDaAula: new URL('especime/matematica.html', RAIZ), fontes: FONTES });
+  const { doc } = await construirHtml({ raiz: RAIZ, caminhoDaAula: new URL('especime/matematica.html', RAIZ), embutirFontes: FONTES });
   assert.ok(doc.querySelectorAll('.katex').length > 10);
   const corpo = doc.body.textContent;
   assert.equal(/\\\(|\\\[/.test(corpo), false, 'sobrou delimitador de TeX não renderizado');
@@ -204,7 +207,7 @@ document.addEventListener('DOMContentLoaded', function () {
   document.body.dataset.montado = 'sim';
 });`;
 
-export async function construirHtml({ raiz, caminhoDaAula, fontes }) {
+export async function construirHtml({ raiz, caminhoDaAula, embutirFontes }) {
   const { document } = parseHTML(await readFile(caminhoDaAula, 'utf8'));
   const contrato = JSON.parse(await readFile(new URL('contrato/contrato.json', raiz), 'utf8'));
 
@@ -227,7 +230,9 @@ export async function construirHtml({ raiz, caminhoDaAula, fontes }) {
   const errosDeTex = renderizarTex(document.body, { katex });
   const errosDeCodigo = await prerenderizarCodigo(document, contrato);
 
-  // Etapa 4. CSS do sistema, com as fontes que a tarefa 2 embutiu.
+  // Etapa 4. As fontes só agora: embutirFontes precisa do documento COM o TeX já renderizado, para
+  // saber quais famílias do KaTeX a aula usa (spec 3.3: "só as que a aula usa").
+  const fontes = await embutirFontes({ raiz, doc: document });
   const css = (await Promise.all(ESTILOS.map((nome) => readFile(new URL(`estilos/${nome}.css`, raiz), 'utf8')))).join('\n');
   const folha = document.createElement('style');
   folha.textContent = `${fontes.css}\n${css}`;
@@ -245,7 +250,7 @@ export async function construirHtml({ raiz, caminhoDaAula, fontes }) {
   motor.after(arranque);
 
   const html = `<!DOCTYPE html>\n${document.documentElement.outerHTML}\n`;
-  return { html, resumo, doc: document, errosDeTex, errosDeCodigo };
+  return { html, resumo, doc: document, fontes, errosDeTex, errosDeCodigo };
 }
 ```
 
@@ -600,7 +605,7 @@ Esperado: FALHA, módulo inexistente.
 
 - [ ] **Passo 3: implementar `build/construir.mjs`**
 
-A ordem importa e vem dos fatos: `construirHtml` precisa do resultado de `embutirFontes`, e `embutirFontes` precisa do documento **depois** de `renderizarTex` para saber quais famílias do KaTeX a aula usa (tarefa 2, passo 3). Resolva isso do jeito que preferir — duas passagens, ou `construirHtml` chamando `embutirFontes` no meio — e **diga no relatório qual escolheu e por quê**.
+A ordem já está resolvida pela interface: `construirHtml` recebe `embutirFontes` como função e a chama no momento certo (tarefa 1). Aqui você só passa a função de verdade e usa o `fontes` que vem de volta.
 
 Depois de ter o HTML: rode as regras de saída sobre ele, com `cobertura` vindo de `embutirFontes` e `bytes` de `Buffer.byteLength(html)`. Grave `<slug>.html` e `validacao.json` em `destino`. `<slug>` é o nome da pasta da aula (spec 3.3).
 
@@ -641,6 +646,6 @@ git commit -m "feat(build): amarra a construção, grava o HTML e o validacao.js
 
 **Fora de escopo, de propósito, e o dono de cada um:** as etapas 5 e 6 (composição sobre o resultado, e o PDF), `saida.pdf-paginas`, o comando `aula-usp build`, o pipeline de sete etapas com os códigos de saída da spec 3.3, e a comparação visual entre os modos — **todos do marco 5c**. A captura de demos sem imagem própria é fase 2.
 
-**Dependências entre tarefas.** 1 consome 2 (recebe `fontes` como parâmetro; o teste passa um coto, para as duas poderem ser feitas em qualquer ordem). 4 consome 1, 2 e 3. 3 é independente das outras três.
+**Dependências entre tarefas.** 1 consome 2 (recebe `embutirFontes` como função; o teste passa um coto, para as duas poderem ser feitas em qualquer ordem). 4 consome 1, 2 e 3. 3 é independente das outras três.
 
 **O risco desta leva.** A tarefa 2 tem a única pergunta que não foi respondida por medição antes deste plano: **quais famílias do KaTeX a aula usa**, e em que momento dá para saber. O passo 3 dela aponta um caminho e manda justificar se você escolher outro. Se a resposta se mostrar cara, uma saída aceitável é embutir todas as 20 woff2 do KaTeX quando a aula tem matemática — custa ~400 kB num arquivo cujo aviso é 10 MB —, mas isso contraria o texto da spec 3.3, e por isso é ruling minha, não sua: **pare e relate** se chegar aí.
