@@ -26,5 +26,9 @@
     "katex": "0.18.7",
     "linkedom": "^0.18.13",
     "playwright-core": "^1.63.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2",
+    "fontkit": "^2.0.4"
   }
 }
