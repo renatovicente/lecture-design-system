@@ -164,7 +164,7 @@ test('um recurso do autor que nunca responde não deixa a aula em branco, nem vi
 });
 
 // Guarda do Critical em si (re-revisão, Item 2): o grupo de carga roda sobre `fonte`, e por isso os
-// erros de TeX precisam da tradução por índice de section em navegador.js — o alerta .tex-invalido só
+// erros de TeX precisam da tradução por índice de section em entrada.js — o alerta .tex-invalido só
 // existe no documento vivo. Trocar `fonte` de volta por `document`, ou quebrar a tradução, faz o slide
 // virar null ("aula") em silêncio, e até aqui nenhum teste via. Sem ?folha de propósito: com ?folha o
 // painel nunca é instalado, que é por onde esse caminho tinha escapado de toda a suíte.

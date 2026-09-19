@@ -6,7 +6,7 @@ export function criarDemos({ api, console: registro }) {
 
   const registrar = (nome, definicao) => definicoes.set(nome, definicao);
   for (const item of api.filaDeDemos ?? []) registrar(item.nome, item.definicao);
-  // Ruling 11: o passo 6 de montar/navegador.js lê api.filaDeDemos para montar recursos.demos ANTES
+  // Ruling 11: o passo 6 de montar/entrada.js lê api.filaDeDemos para montar recursos.demos ANTES
   // de instalarDemos (e portanto criarDemos) rodar — iniciarMotor só chama instalarDemos depois desse
   // passo. Esvaziar a fila aqui é seguro só por causa dessa ordem; invertida, recursos.demos chegaria
   // vazio ao passo 6 e toda div.demo[data-demo] da aula acusaria recursos.demo-sem-registro (erro).

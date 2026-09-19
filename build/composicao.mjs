@@ -6,7 +6,7 @@ import { chromium } from 'playwright-core';
 import { criarServidor } from './servir.mjs';
 
 // Roda dentro da página: importa o validador pelo caminho que o servidor de desenvolvimento publica,
-// e lê a fila de demos do mesmo jeito que montar/navegador.js faz no passo 6 — antes que
+// e lê a fila de demos do mesmo jeito que montar/entrada.js faz no passo 6 — antes que
 // instalarDemos a esvazie, o que aqui nunca acontece: ?folha nunca chama iniciarMotor. Aqui essa
 // fila é fato, não a inferência de texto de build/carregar.mjs; é o que a Task 4 promove a
 // recursos.demos quando há Chrome (instrução do controlador, não da spec 9.3 original).

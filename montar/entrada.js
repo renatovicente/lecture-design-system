@@ -11,11 +11,10 @@ import { criarDestacador, renderizarCodigo } from '../componentes/codigo.js';
 import { validar, linhaDe, slidesDoFonte } from '../validador/validar.js';
 import { REGRAS_ESTATICAS, REGRAS_DE_CARGA, REGRAS_DE_COMPOSICAO } from '../validador/regras/index.js';
 
-// A raiz do sistema, derivada da URL de QUEM chamou: a do módulo (import, seguido de `.meta.url`)
-// na entrada de desenvolvimento, document.currentScript.src no pacote do dist. Essa sintaxe não é
-// usada aqui: no formato iife o esbuild a deixa vazia, e `new URL('../', undefined)` lança na carga
-// — medido, não suposto. As duas entradas ficam um nível abaixo da raiz (montar/navegador.js e
-// dist/aula-usp.js), por isso o mesmo '../'.
+// A raiz do sistema, derivada da URL de QUEM chamou: import.meta.url na entrada de desenvolvimento,
+// document.currentScript.src no pacote do dist. Não use import.meta aqui: no formato iife o esbuild o
+// deixa vazio, e `new URL('../', undefined)` lança na carga — medido, não suposto. As duas entradas
+// ficam um nível abaixo da raiz (montar/navegador.js e dist/aula-usp.js), por isso o mesmo '../'.
 let BASE;
 const TEX = /\\\(|\\\[/;
 const ESTILOS = ['estilos/tokens.css', 'estilos/fontes.css', 'estilos/base.css', 'estilos/layouts.css', 'estilos/componentes.css', 'estilos/motor.css', 'estilos/impressao.css'];

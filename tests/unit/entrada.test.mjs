@@ -7,6 +7,12 @@ import { readFileSync } from 'node:fs';
 
 const FONTE = readFileSync(new URL('../../montar/entrada.js', import.meta.url), 'utf8');
 
+// O que estes testes querem afirmar é sobre o CÓDIGO, não sobre o texto do arquivo. Sem tirar os
+// comentários, um comentário que explica por que NÃO se usa `import.meta` derruba o teste que
+// proíbe `import.meta` — e a prosa acaba contorcida para driblar a medida, que é o instrumento
+// mandando na escrita em vez do contrário.
+const CODIGO = FONTE.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+
 test('todo import dinâmico de entrada.js passa pelo resolver', () => {
   const dinamicos = [...FONTE.matchAll(/import\(([^)]*)\)/g)].map((m) => m[1].trim());
   assert.ok(dinamicos.length >= 4, `esperava ao menos 4 import dinâmicos, achei ${dinamicos.length}`);
@@ -15,11 +21,13 @@ test('todo import dinâmico de entrada.js passa pelo resolver', () => {
 });
 
 test('entrada.js não usa import.meta: no formato iife ele vem vazio e new URL lança', () => {
-  assert.equal(FONTE.includes('import.meta'), false);
+  assert.equal(CODIGO.includes('import.meta'), false);
 });
 
-test('nenhuma folha de estilo é carregada fora do injetor, dentro de iniciar()', () => {
-  const corpo = FONTE.slice(FONTE.indexOf('export async function iniciar'));
-  assert.equal(corpo.includes('carregarEstilo('), false,
-    'dentro de iniciar() o carregamento de folha tem de passar por injetarEstilo');
+test('dentro de iniciar(), a única menção a carregarEstilo é o padrão de injetarEstilo', () => {
+  const corpo = CODIGO.slice(CODIGO.indexOf('export async function iniciar'));
+  const mencoes = [...corpo.matchAll(/carregarEstilo/g)].length;
+  // Conta, não casa `carregarEstilo(`: `ESTILOS.map(carregarEstilo)` é referência nua e escaparia.
+  assert.equal(mencoes, 1, `carregarEstilo mencionado ${mencoes}× dentro de iniciar()`);
+  assert.match(corpo, /const injetarEstilo = estilo \?\? carregarEstilo;/);
 });
