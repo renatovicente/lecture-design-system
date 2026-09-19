@@ -108,8 +108,18 @@ try {
   // carregou" para img.complete/naturalWidth — dois erros falsos, atribuídos a um slide do autor,
   // sobre um elemento que ele não escreveu. document.readyState já pode ser 'complete' aqui (o load
   // correu enquanto os passos 4-5 rodavam); só esperar o evento perderia esse caso.
+  // Com teto, e o teto não é detalhe (re-revisão da rodada de correção): o <body> está escondido até
+  // o finally lá embaixo, então esperar o load sem limite faz um recurso pendurado — e a spec 5.5
+  // permite imagem externa, só avisa — deixar a aula em branco para sempre, sem mensagem, na frente
+  // da turma. Medido: com um pedido que nunca responde, a montagem não terminava em 7 s. A aula
+  // aparecer importa mais que validar imagem lenta; quem chegar atrasado simplesmente não é julgado
+  // (ver o mapa de imagens abaixo). Dois segundos porque o caso real é arquivo local ou localhost,
+  // que chega em milissegundos — o teto só existe para o caso patológico.
   if (document.readyState !== 'complete') {
-    await new Promise((pronto) => window.addEventListener('load', pronto, { once: true }));
+    await new Promise((pronto) => {
+      const teto = setTimeout(pronto, 2000);
+      window.addEventListener('load', () => { clearTimeout(teto); pronto(); }, { once: true });
+    });
   }
   void document.body.offsetHeight; // força o layout, que pede as fontes usadas, antes de esperar por elas
   await document.fonts.ready;
@@ -119,7 +129,14 @@ try {
     // roda sobre `fonte` logo abaixo: quais imagens a regra percorre passa a ser só as que o autor
     // escreveu, nunca o cromo que montar() injetou (a outra metade do Critical — spec 9.3 diz que o
     // grupo de carga roda sobre o fonte, não sobre o documento montado).
-    imagens: new Map([...document.querySelectorAll('img')].map((img) => [img.getAttribute('src') ?? '', img.complete && img.naturalWidth > 0])),
+    // São TRÊS estados, não dois: carregou, falhou, e ainda em voo. `img.complete && naturalWidth`
+    // achatava os três em dois e lia "em voo" como "falhou" — era isso que a espera pelo load
+    // mascarava por tempo. Só entra no mapa quem já tem desfecho (complete), e a regra só acusa o
+    // que vale exatamente false: de quem não chegou a tempo o validador não diz nada, em vez de
+    // dizer errado. É o que torna o teto da espera seguro, e não só rápido.
+    imagens: new Map([...document.querySelectorAll('img')]
+      .filter((img) => img.complete)
+      .map((img) => [img.getAttribute('src') ?? '', img.naturalWidth > 0])),
     // window.AulaUSP.demos não existe: motor/demos.js só monta o registro de verdade dentro de
     // instalarDemos(), que roda depois de iniciarMotor — de propósito, ainda não rodou aqui. A fila
     // é a mesma informação, ainda intacta: o script clássico do autor (AulaUSP.demo(...)) já rodou
