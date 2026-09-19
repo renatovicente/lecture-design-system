@@ -6,6 +6,8 @@ import * as fontkit from 'fontkit';
 
 // O cmap traz entradas que não são caracteres que alguém escreve: o nulo, o carriage return e o
 // não-caractere U+FFFF aparecem no Open Sans. Deixá-los entrar faria a regra aprovar um NUL literal.
+// `> 0x20` também corta o espaço (U+20) de propósito: espaço e quebra de linha nunca precisam de
+// glifo, e tirá-los daqui evita que a regra da tarefa 4 precise abrir exceção para eles.
 const UTILIZAVEL = (ponto) => ponto > 0x20 && ponto !== 0xFFFF && ponto !== 0xFFFE;
 
 // Faixas inclusivas, para o arquivo caber num olhar e não crescer linearmente com a fase 2.
@@ -20,12 +22,6 @@ function emFaixas(pontos) {
   return faixas;
 }
 
-export function lerCobertura({ pontos }) {
-  const conjunto = new Set();
-  for (const [inicio, fim] of pontos) for (let p = inicio; p <= fim; p++) conjunto.add(p);
-  return conjunto;
-}
-
 export async function gerarCobertura({ raiz }) {
   const pasta = new URL('assets/fontes/', raiz);
   const arquivos = (await readdir(pasta)).filter((nome) => nome.endsWith('.woff2')).sort();
@@ -34,7 +30,9 @@ export async function gerarCobertura({ raiz }) {
     const fonte = fontkit.create(await readFile(new URL(arquivo, pasta)));
     for (const ponto of fonte.characterSet) if (UTILIZAVEL(ponto)) pontos.add(ponto);
   }
-  return { gerado: new Date().toISOString(), fontes: arquivos, pontos: emFaixas(pontos) };
+  // Sem timestamp nem qualquer outro campo não-determinístico: gerado-e-versionado só compra a
+  // guarda "regerar não muda nada" (rodada de correção 1, item 3) se dois runs derem o mesmo objeto.
+  return { fontes: arquivos, pontos: emFaixas(pontos) };
 }
 
 export async function escreverCobertura({ raiz }) {

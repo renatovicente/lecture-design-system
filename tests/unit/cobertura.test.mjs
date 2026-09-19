@@ -2,7 +2,11 @@
 // (spec 9.3). Os números aqui foram medidos nas fontes reais deste repositório.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { gerarCobertura, lerCobertura } from '../../build/cobertura.mjs';
+import { gerarCobertura } from '../../build/cobertura.mjs';
+// lerCobertura mora em validador/, não em build/: é o módulo puro que o navegador também carrega
+// (rodada de correção 1, item 1). Importar de build/ aqui arrastaria Node para dentro do que o
+// esbuild empacota para a tarefa 4.
+import { lerCobertura } from '../../validador/cobertura.js';
 
 const RAIZ = new URL('../../', import.meta.url);
 
@@ -32,19 +36,48 @@ test('pontos que o cmap traz mas não são caracteres utilizáveis ficam de fora
 // Esta é a guarda que justifica a existência do módulo: se um dia der para trocar o cmap pelo
 // unicodeRange declarado, este teste vai avisar. Hoje ele prova o contrário — e é por isso que a
 // spec 8.2 pede fontkit em vez de um `split` no manifesto.
-test('o cmap NÃO cabe no unicodeRange declarado: o manifesto não serve como fonte', async () => {
+// A comparação é POR ARQUIVO, contra o unicodeRange da PRÓPRIA entrada (é assim que o fato 9 mediu).
+// Comparar a união de todos os cmaps contra a união de todos os unicodeRange (rodada de correção 1,
+// item 2) esconderia a lacuna: a união de oito faixas cobre quase tudo, e um ajuste pontual no
+// manifesto zeraria o teste sem fechar a diferença real de nenhum arquivo individual.
+test('por arquivo, o cmap NÃO cabe no unicodeRange daquela entrada: o manifesto não serve como fonte', async () => {
   const { readFile } = await import('node:fs/promises');
-  const manifesto = JSON.parse(await readFile(new URL('assets/fontes/fontes.json', RAIZ), 'utf8'));
-  const pontos = lerCobertura(await gerarCobertura({ raiz: RAIZ }));
-  const declarados = new Set();
+  const fontkit = await import('fontkit');
+  const pasta = new URL('assets/fontes/', RAIZ);
+  const manifesto = JSON.parse(await readFile(new URL('fontes.json', pasta), 'utf8'));
   for (const entrada of manifesto) {
+    const fonte = fontkit.create(await readFile(new URL(entrada.arquivo, pasta)));
+    const cmap = fonte.characterSet;
+    const declarados = new Set();
     for (const trecho of entrada.unicodeRange.split(',')) {
       const [a, b] = trecho.trim().replace(/^U\+/i, '').split('-');
       const inicio = parseInt(a, 16);
       const fim = parseInt(b ?? a, 16);
       for (let p = inicio; p <= fim; p++) declarados.add(p);
     }
+    const fora = cmap.filter((p) => !declarados.has(p)).sort((a, b) => a - b);
+    console.log(
+      `  ${entrada.arquivo}: ${fora.length} fora da faixa declarada (${fora
+        .map((p) => `U+${p.toString(16).toUpperCase()}`)
+        .join(', ')})`,
+    );
+    assert.ok(
+      fora.length > 0,
+      `${entrada.arquivo}: cmap cabe inteiro no unicodeRange declarado — o manifesto virou fonte válida, reveja a spec 8.2`,
+    );
   }
-  const fora = [...pontos].filter((p) => !declarados.has(p));
-  assert.ok(fora.length > 0, 'se isto passar a ser zero, o manifesto virou fonte válida — reveja a spec 8.2');
+});
+
+// Guarda de reprodutibilidade (rodada de correção 1, item 3): um artefato gerado-e-versionado só é
+// confiável se regerar não muda nada. Sem timestamp em gerarCobertura, isto pode ser igualdade
+// estrutural direta — pega o caso de alguém trocar uma fonte e esquecer de regerar o arquivo.
+test('regenerar bate campo a campo com o validador/cobertura.json commitado', async () => {
+  const { readFile } = await import('node:fs/promises');
+  const commitado = JSON.parse(await readFile(new URL('validador/cobertura.json', RAIZ), 'utf8'));
+  const regenerado = await gerarCobertura({ raiz: RAIZ });
+  assert.deepStrictEqual(
+    regenerado,
+    commitado,
+    'gerarCobertura mudou desde o último commit — regenere validador/cobertura.json (passo 5 do brief) e commite de novo',
+  );
 });
