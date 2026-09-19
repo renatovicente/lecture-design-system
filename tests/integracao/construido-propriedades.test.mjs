@@ -66,6 +66,15 @@ test('a demo registrada pelo autor chega viva ao HTML construído aberto de file
   await pagina.locator('#demo .demo button').click();
   assert.equal(await pagina.evaluate(() => document.querySelector('#demo .demo output').textContent), '5',
     'data-opcoes (passo:5) não chegou à demo — a montagem usou outra definição, ou nenhuma');
+
+  // I3 (revisão final do 5b): a fotografia da fila (build/embutir.mjs) tem de sobreviver a
+  // instalarDemos esvaziar filaDeDemos — prova de execução real, no mesmo navegador já aberto acima
+  // (sem página nova: "uma abertura de navegador, várias páginas"). tests/unit/embutir.test.mjs já
+  // prova a ORDEM no texto do script, sem executar nada; esta prova o RESULTADO depois de rodar.
+  const demos = await pagina.evaluate(() => [window.AulaUSP.filaDeDemos.length, [...window.AulaUSP.demos ?? []]]);
+  assert.deepEqual(demos, [0, [['contador', { capturar: false }]]],
+    'a fila deveria estar vazia (instalarDemos já rodou) e AulaUSP.demos deveria guardar a fotografia de antes');
+
   assert.deepEqual(erros, [], erros.join('\n'));
 });
 
@@ -89,6 +98,22 @@ const PROBES = [
   { familia: 'KaTeX_Size2', seletor: '.katex .op-symbol.large-op' },
 ];
 
+// [Rodada de correção 2, item 4 da revisão final] waitForTimeout(150) era sono fixo, não espera por
+// condição: medido pelo re-revisor, sem esperar nada dá 4 leituras vazias do CDP em 9. Poll sobre
+// fontesDoNo até vir não-vazio, com teto e mensagem próprios — a mesma receita do try/catch com
+// waitForFunction em 'a demo registrada...' acima (item 4 da rodada de correção anterior).
+async function esperarFontesDoNo(pagina, seletor, { timeout = 2000, intervalo = 20 } = {}) {
+  const prazo = Date.now() + timeout;
+  for (;;) {
+    const fonts = await fontesDoNo(pagina, seletor);
+    if (fonts?.length > 0) return fonts;
+    if (Date.now() >= prazo) {
+      assert.fail(`CDP não relatou fonte para "${seletor}" em ${timeout} ms — corrida entre o paint e CSS.getPlatformFontsForNode`);
+    }
+    await new Promise((pronto) => setTimeout(pronto, intervalo));
+  }
+}
+
 // O que este teste garante, com precisão (correção sobre a alegação anterior, item 3 da rodada 1: uma
 // revisão mostrou que excluir KaTeX_Math por completo JÁ cai em saida.glifo-ausente — "η" não tem
 // cobertura alternativa —, e que \mathbb{R} — cobertura alternativa de propósito — já cai na guarda
@@ -107,13 +132,9 @@ test('cada família do KaTeX usada por especime/matematica.html pinta com a font
     assert.ok(idDoSlide, `nenhum elemento casa "${seletor}" — a aula mudou, ou o seletor não serve mais para ${familia}`);
     await pagina.evaluate((id) => { location.hash = '#' + id; }, idDoSlide);
     await pagina.waitForFunction((id) => document.querySelector('.slide.ativo')?.id === id, idDoSlide);
-    // Medido escrevendo este teste: logo que o slide vira ativo, CDP às vezes ainda relata fonts: []
-    // (o flip de display:none para block e o primeiro paint não têm a mesma marca de tempo) — 150 ms
-    // bastaram em toda repetição, para as quatro famílias.
-    await pagina.waitForTimeout(150);
-
-    const fonts = await fontesDoNo(pagina, seletor);
-    assert.ok(fonts?.length > 0, `CDP não relatou fonte para "${seletor}" no slide #${idDoSlide} (${familia})`);
+    // Logo que o slide vira ativo, CDP às vezes ainda relata fonts: [] (o flip de display:none para
+    // block e o primeiro paint não têm a mesma marca de tempo) — poll em vez de sono fixo.
+    const fonts = await esperarFontesDoNo(pagina, seletor);
     const nomes = fonts.map((f) => f.familyName);
     assert.ok(fonts.every((f) => f.familyName === familia && f.isCustomFont),
       `slide #${idDoSlide}, "${seletor}": esperava só ${familia}, veio ${nomes.join(', ')}`);
