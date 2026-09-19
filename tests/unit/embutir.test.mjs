@@ -41,13 +41,42 @@ test('o resumo que montar() devolveu vai serializado no HTML, com os mesmos bloc
 });
 
 // Fato 5: a fila tem de existir antes do <script> do autor, que roda durante o parsing.
+// [Rodada de correção 2, M1 da revisão final] dist/aula-usp-motor.js também contém a string
+// "filaDeDemos" (a própria implementação do motor a referencia) e vem ANTES do arranque no
+// documento — sem excluir o bundle, ondeAFila sempre achava o motor, nunca o arranque, e o teste
+// passava mesmo com as duas linhas de instalação apagadas do arranque (medido pelo revisor: 9/9
+// verdes com o código desligado). A guarda que cai de verdade, com a mensagem certa, é a de execução
+// real em tests/integracao/construido-propriedades.test.mjs; esta aqui volta a medir o que o nome
+// promete escopando a busca ao que NÃO é o bundle do motor, e exige que o espécime ainda registre a
+// demo (antes, a ausência dela fazia a segunda asserção não rodar, em silêncio).
 test('a fila de demos é instalada antes de qualquer script do autor', async () => {
   const { doc } = await construirHtml({ raiz: RAIZ, caminhoDaAula: new URL('especime/index.html', RAIZ), embutirFontes: FONTES });
-  const scripts = [...doc.querySelectorAll('script')];
-  const ondeAFila = scripts.findIndex((s) => s.textContent.includes('filaDeDemos'));
+  const { readFile } = await import('node:fs/promises');
+  const bundle = await readFile(new URL('dist/aula-usp-motor.js', RAIZ), 'utf8');
+  const scripts = [...doc.querySelectorAll('script')].filter((s) => s.textContent !== bundle);
+  const ondeAFila = scripts.findIndex((s) => s.textContent.includes('window.AulaUSP.filaDeDemos = []'));
   const ondeOAutor = scripts.findIndex((s) => !s.src && s.textContent.includes('AulaUSP.demo('));
   assert.ok(ondeAFila >= 0, 'ninguém instala a fila');
-  if (ondeOAutor >= 0) assert.ok(ondeAFila < ondeOAutor, 'a fila é instalada depois do script do autor');
+  assert.ok(ondeOAutor >= 0, 'o espécime não chama mais AulaUSP.demo(...) — este teste não prova nada');
+  assert.ok(ondeAFila < ondeOAutor, 'a fila é instalada depois do script do autor');
+});
+
+// I3 (revisão final do 5b): motor/demos.js esvazia filaDeDemos ao instalar (Ruling 11, marco 4c) — o
+// arranque tem de fotografá-la ANTES dessa instalação, mesmo padrão de montar/entrada.js. Prova
+// estática (ordem no texto do script, sem executar nada — quem prova a EXECUÇÃO real é
+// tests/integracao/construido-propriedades.test.mjs): a linha que fotografa filaDeDemos em
+// AulaUSP.demos vem antes da chamada a instalarDemos, que é quem esvazia a fila de verdade.
+test('o arranque fotografa a fila de demos antes de instalarDemos esvaziá-la', async () => {
+  const { doc } = await construirHtml({ raiz: RAIZ, caminhoDaAula: new URL('especime/index.html', RAIZ), embutirFontes: FONTES });
+  const { readFile } = await import('node:fs/promises');
+  const bundle = await readFile(new URL('dist/aula-usp-motor.js', RAIZ), 'utf8');
+  const arranque = [...doc.querySelectorAll('script')].find((s) => s.textContent !== bundle && s.textContent.includes('instalarDemos'));
+  assert.ok(arranque, 'não achei o script de arranque (com instalarDemos) no HTML construído');
+  const ondeAFoto = arranque.textContent.indexOf('AulaUSP.demos = new Map(');
+  const ondeInstala = arranque.textContent.indexOf('instalarDemos(');
+  assert.ok(ondeAFoto >= 0, 'o arranque não fotografa filaDeDemos em AulaUSP.demos');
+  assert.ok(ondeInstala >= 0, 'o arranque não chama instalarDemos');
+  assert.ok(ondeAFoto < ondeInstala, 'a fotografia da fila vem depois de instalarDemos — tarde demais, a fila já foi esvaziada');
 });
 
 // Spec 3.3: o fonte nunca é alterado.

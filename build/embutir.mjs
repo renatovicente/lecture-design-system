@@ -76,6 +76,14 @@ document.addEventListener('DOMContentLoaded', function () {
   var resumo = ${JSON.stringify(resumo)};
   var M = AulaUSPMotor;
   var motor = M.iniciarMotor({ doc: document, janela: window, resumo: resumo });
+  // Ruling 11 (marco 4c, motor/demos.js:9): criarDemos esvazia filaDeDemos ao instalar — sem
+  // fotografá-la ANTES, quem precisar do registro depois (a etapa 5 do marco 5c, ao abrir esta
+  // página no Chrome) acharia a fila vazia e toda div.demo viraria recursos.demo-sem-registro
+  // (revisão final do 5b, I3). Mesmo padrão de montar/entrada.js: fotografar antes de instalarDemos,
+  // incondicional, antes do próprio branch de apresentador — não só no ramo que instala de fato.
+  window.AulaUSP.demos = new Map(window.AulaUSP.filaDeDemos.map(function (item) {
+    return [item.nome, { capturar: typeof item.definicao.capturar === 'function' }];
+  }));
   if (M.modoApresentador(window)) {
     M.instalarApresentador(motor);
   } else {
