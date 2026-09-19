@@ -106,6 +106,29 @@ export async function esperarMontagem(pagina) {
   await pagina.evaluate(() => document.fonts.ready);
 }
 
+// getComputedStyle().fontFamily só devolve o nome declarado pela cascata — não se o arquivo por trás
+// dele de fato resolveu (medido por mutação, rodada de correção 1 da tarefa 4 do marco 5b: com os
+// bytes da fonte embutida corrompidos, esse valor continua "Geist" enquanto o Chrome pinta com a
+// fonte de reserva do sistema). CSS.getPlatformFontsForNode (CDP) é o único jeito de perguntar qual
+// arquivo pintou um nó de verdade. Ligar DOM/CSS do CDP sobre uma página file:// loga sozinho, sem
+// nenhuma navegação, "Unsafe attempt to load URL …#<id> from frame with URL …#<id>. 'file:' URLs are
+// treated as unique security origins." — instrumentação do próprio Chrome ao instrumentar file://, não
+// um erro da aula (medido isolando arquivo, método de navegação e ordem até sobrar só "CDP ligado
+// sobre file://" como causa comum). Quem usar fontesDoNo para conferir erros de console deve filtrar
+// essa mensagem exata — e só essa: filtrar qualquer outra esconderia defeito de verdade.
+export const AVISO_CDP_SOBRE_FILE = "'file:' URLs are treated as unique security origins.";
+
+export async function fontesDoNo(pagina, seletor) {
+  const cdp = await pagina.context().newCDPSession(pagina);
+  await cdp.send('DOM.enable');
+  await cdp.send('CSS.enable');
+  const { root } = await cdp.send('DOM.getDocument');
+  const { nodeId } = await cdp.send('DOM.querySelector', { nodeId: root.nodeId, selector: seletor });
+  if (!nodeId) return null;
+  const { fonts } = await cdp.send('CSS.getPlatformFontsForNode', { nodeId });
+  return fonts;
+}
+
 export async function abrirAula(navegador, url, { largura = 1400, altura = 900 } = {}) {
   const pagina = await navegador.newPage({ viewport: { width: largura, height: altura } });
   const erros = [];
