@@ -53,6 +53,15 @@ test('tipografia que TEM glifo não acusa — senão a regra vira ruído', () =>
   assert.deepEqual(glifos('<section data-layout="conteudo"><p>São 3 × 4 ± 1 — “aspas”, 25 °C.</p></section>'), []);
 });
 
+// Achado do revisor (rodada de correção 1): a guarda original só cortava <= 0x20 (controles C0 e o
+// espaço comum) — U+2003 (em space, que \s do JS já cobre) e U+200B (largura zero, que só
+// Default_Ignorable_Code_Point cobre) não são <= 0x20 e não estão em cobertura.json; sem a guarda
+// ampliada (INVISIVEL, em recursos.js), colar texto de um editor com esses espaços viraria falso
+// "sem glifo". Nenhum dos dois desenha nada — não há glifo para "faltar".
+test('espaço Unicode invisível, mesmo sem estar em cobertura.json, não acusa', () => {
+  assert.deepEqual(glifos('<section data-layout="conteudo"><p>São 3​coisas.</p></section>'), []);
+});
+
 test('o mesmo símbolo repetido no slide acusa uma vez só', () => {
   const achados = glifos('<section data-layout="conteudo"><p>α e depois α de novo</p></section>');
   assert.equal(achados.length, 1);

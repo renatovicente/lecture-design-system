@@ -39,7 +39,7 @@ function paineisAbertos(pagina) {
 }
 
 test('uma aula limpa não abre painel nenhum', async () => {
-  console.log('painel.test.mjs: 1/10 aula limpa');
+  console.log('painel.test.mjs: 1/11 aula limpa');
   const { pagina, erros } = await abrirEspecime('index.html');
   assert.deepEqual(await paineisAbertos(pagina), []);
   assert.equal((await painelValidador(pagina)).titulo, 'Validador Aula USP: 0 erros, 0 avisos');
@@ -48,7 +48,7 @@ test('uma aula limpa não abre painel nenhum', async () => {
 });
 
 test('uma aula com erro abre o painel do validador sozinho', async () => {
-  console.log('painel.test.mjs: 2/10 aula com erro');
+  console.log('painel.test.mjs: 2/11 aula com erro');
   const { pagina } = await abrirFixture('erro.html');
   const validador = await painelValidador(pagina);
   assert.deepEqual(await paineisAbertos(pagina), ['validador']);
@@ -59,7 +59,7 @@ test('uma aula com erro abre o painel do validador sozinho', async () => {
 });
 
 test('a tecla V alterna o painel do validador', async () => {
-  console.log('painel.test.mjs: 3/10 tecla V');
+  console.log('painel.test.mjs: 3/11 tecla V');
   const { pagina } = await abrirEspecime('index.html');
   assert.equal((await painelValidador(pagina)).visivel, false);
   await pagina.keyboard.press('v');
@@ -70,7 +70,7 @@ test('a tecla V alterna o painel do validador', async () => {
 });
 
 test('o texto copiado começa pelo cabeçalho do validador', async () => {
-  console.log('painel.test.mjs: 4/10 copiar para o chat');
+  console.log('painel.test.mjs: 4/11 copiar para o chat');
   const { pagina } = await abrirFixture('erro.html');
   // navigator.clipboard já existe (servido por http://127.0.0.1, contexto seguro); troca por um coto
   // que só guarda o texto, para o teste não depender do clipboard de verdade do sistema operacional.
@@ -96,7 +96,7 @@ function linhasDoValidador(pagina) {
 // causas se somam nesta fixture: atrasa toda imagem .svg (a marca do cromo é .svg, e a imagem do
 // autor também), e nada deve acusar.
 test('imagem do autor e marca do cromo atrasadas não acusam recursos.imagem', async () => {
-  console.log('painel.test.mjs: 5/10 imagens atrasadas');
+  console.log('painel.test.mjs: 5/11 imagens atrasadas');
   const pagina = await navegador.newPage({ viewport: { width: 1400, height: 900 } });
   await pagina.route('**/*.svg', async (rota) => {
     await new Promise((pronto) => setTimeout(pronto, 1200));
@@ -112,7 +112,7 @@ test('imagem do autor e marca do cromo atrasadas não acusam recursos.imagem', a
 // A outra metade do Critical: uma imagem do autor que de fato não existe continua acusando — uma vez
 // só, no slide certo. Sem isso, "rodar o grupo de carga sobre o fonte" poderia ter ficado cego demais.
 test('uma imagem do autor que não existe acusa uma vez, no slide certo', async () => {
-  console.log('painel.test.mjs: 6/10 imagem do autor quebrada');
+  console.log('painel.test.mjs: 6/11 imagem do autor quebrada');
   const { pagina } = await abrirFixture('imagem-quebrada.html');
   const validador = await painelValidador(pagina);
   const linhas = await linhasDoValidador(pagina);
@@ -127,7 +127,7 @@ test('uma imagem do autor que não existe acusa uma vez, no slide certo', async 
 // slide (o segundo, não o primeiro) mediria 0×0 — display:none nos slides que não são o .ativo — e o
 // transbordo sumiria. Ver a checagem de inversão no relatório desta rodada.
 test('transbordo num slide que não é o primeiro acusa mesmo com o motor rodando', async () => {
-  console.log('painel.test.mjs: 7/10 composição antes do motor');
+  console.log('painel.test.mjs: 7/11 composição antes do motor');
   const { pagina } = await abrirFixture('transbordo.html');
   const linhas = await linhasDoValidador(pagina);
   assert.deepEqual(await paineisAbertos(pagina), ['validador']);
@@ -139,7 +139,7 @@ test('transbordo num slide que não é o primeiro acusa mesmo com o motor rodand
 // instalarDemos, que só roda depois do passo 6. Se a fila fosse lida vazia, esta div.demo acusaria
 // recursos.demo-sem-registro (erro). Ver a checagem de inversão no relatório desta rodada.
 test('uma demo registrada não acusa recursos.demo-sem-registro', async () => {
-  console.log('painel.test.mjs: 8/10 fila de demos antes do motor');
+  console.log('painel.test.mjs: 8/11 fila de demos antes do motor');
   const { pagina } = await abrirFixture('demo.html');
   assert.deepEqual(await paineisAbertos(pagina), []);
   assert.equal((await painelValidador(pagina)).titulo, 'Validador Aula USP: 0 erros, 0 avisos');
@@ -152,7 +152,7 @@ test('uma demo registrada não acusa recursos.demo-sem-registro', async () => {
 // (teto na espera) e a imagem pendurada não é acusada (o mapa só guarda quem tem desfecho). Este
 // teste não pode usar abrirAula: o goto dela espera o load, que é justamente o que pendura aqui.
 test('um recurso do autor que nunca responde não deixa a aula em branco, nem vira acusação', async () => {
-  console.log('painel.test.mjs: 9/10 recurso pendurado');
+  console.log('painel.test.mjs: 9/11 recurso pendurado');
   const pagina = await navegador.newPage({ viewport: { width: 1400, height: 900 } });
   // Sem continue/abort/fulfill: o pedido fica pendurado, como um servidor que aceita a conexão e cala.
   await pagina.route('**/img/foto.svg', () => {});
@@ -169,7 +169,7 @@ test('um recurso do autor que nunca responde não deixa a aula em branco, nem vi
 // virar null ("aula") em silêncio, e até aqui nenhum teste via. Sem ?folha de propósito: com ?folha o
 // painel nunca é instalado, que é por onde esse caminho tinha escapado de toda a suíte.
 test('o slide de um TeX inválido é lido no fonte, não no documento montado', async (t) => {
-  console.log('painel.test.mjs: 10/10 slide do TeX inválido');
+  console.log('painel.test.mjs: 10/11 slide do TeX inválido');
   const fixturasDeTex = await servirPasta('tests/fixtures/tex/');
   t.after(() => fixturasDeTex.fechar());
   const pagina = await navegador.newPage({ viewport: { width: 1400, height: 900 } });
@@ -179,4 +179,24 @@ test('o slide de um TeX inválido é lido no fonte, não no documento montado', 
   const tex = (await linhasDoValidador(pagina)).filter((linha) => linha.includes('matematica.tex-invalido'));
   assert.equal(tex.length, 3, tex.join('\n'));
   assert.ok(tex.every((linha) => linha.includes('slide 3 #invalido')), tex.join('\n'));
+});
+
+// Rodada de correção 1 da tarefa 4: guarda que a ligação entre montar/entrada.js e
+// validador/cobertura.json continua de pé. Sem cobertura no contexto, matematica.simbolo-fora-do-tex
+// se cala por definição (é o comportamento certo quando o arquivo não existe) — o que faltava era um
+// teste que prove que, com o arquivo presente, a ligação de fato existe, para que "arquivo ausente" e
+// "ligação desfeita por engano" não fiquem indistinguíveis. Falha se alguém tirar `cobertura` do
+// Promise.all ou da chamada a validar() em entrada.js (verificado por inversão no relatório desta
+// rodada: removido, este teste falhou; restaurado, voltou a passar).
+test('matematica.simbolo-fora-do-tex dispara no navegador, não só na CLI', async () => {
+  console.log('painel.test.mjs: 11/11 símbolo sem glifo no navegador');
+  const { pagina } = await abrirFixture('simbolo-fora-do-tex.html');
+  const validador = await painelValidador(pagina);
+  const linhas = await linhasDoValidador(pagina);
+  assert.deepEqual(await paineisAbertos(pagina), ['validador']);
+  assert.equal(validador.titulo, 'Validador Aula USP: 1 erro, 0 avisos');
+  const daRegra = linhas.filter((linha) => linha.includes('matematica.simbolo-fora-do-tex'));
+  assert.equal(daRegra.length, 1, linhas.join('\n'));
+  assert.ok(daRegra[0].includes('slide 2 #simbolo-sem-glifo'), daRegra[0]);
+  await pagina.close();
 });

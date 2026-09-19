@@ -31,3 +31,17 @@ test('dentro de iniciar(), a única menção a carregarEstilo é o padrão de in
   assert.equal(mencoes, 1, `carregarEstilo mencionado ${mencoes}× dentro de iniciar()`);
   assert.match(corpo, /const injetarEstilo = estilo \?\? carregarEstilo;/);
 });
+
+// Rodada de correção 1 da tarefa 4: sem validador/cobertura.json, lerCoberturaOpcional degrada para
+// undefined (a regra se cala sozinha) — mas "arquivo ausente" e "alguém apagou o aviso sem querer"
+// não podem ficar indistinguíveis. Guarda de texto, no mesmo estilo dos dois testes acima: rápida, e
+// não precisa de navegador. tests/integracao/painel.test.mjs cobre a outra metade (que `cobertura`
+// de fato chega a validar()), com um DOM de verdade.
+test('lerCoberturaOpcional avisa no console quando a cobertura não carrega, em vez de ficar muda', () => {
+  const corpo = CODIGO.slice(
+    CODIGO.indexOf('async function lerCoberturaOpcional'),
+    CODIGO.indexOf('function documentoLido'),
+  );
+  assert.match(corpo, /console\.warn/);
+  assert.match(corpo, /return undefined;/);
+});

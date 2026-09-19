@@ -10,6 +10,9 @@ import { renderizarTex } from '../componentes/tex.js';
 import { criarDestacador, renderizarCodigo } from '../componentes/codigo.js';
 import { validar, linhaDe, slidesDoFonte } from '../validador/validar.js';
 import { REGRAS_ESTATICAS, REGRAS_DE_CARGA, REGRAS_DE_COMPOSICAO } from '../validador/regras/index.js';
+// Puro (spec 3.5): o mesmo módulo que build/validar.mjs carrega para a CLI. matematica.simbolo-fora-do-tex
+// precisa disto no contexto para não ficar muda — ver lerCoberturaOpcional, abaixo.
+import { lerCobertura } from '../validador/cobertura.js';
 
 // A raiz do sistema, derivada da URL de QUEM chamou: import.meta.url na entrada de desenvolvimento,
 // document.currentScript.src no pacote do dist. Não use import.meta aqui: no formato iife o esbuild o
@@ -36,6 +39,22 @@ async function lerJson(caminho) {
   return resposta.json();
 }
 
+// Igual à CLI (build/validar.mjs): sem validador/cobertura.json (ninguém rodou `aula-usp dist`
+// ainda), a validação segue sem cobertura — matematica.simbolo-fora-do-tex se cala sozinha (ela
+// mesma decide isso). Mas "o arquivo não existe" e "a ligação foi desfeita por engano" não podem
+// ficar indistinguíveis: por isso o catch aqui, sozinho — não dentro do Promise.all de lerJson lá
+// embaixo — nunca deixa a promessa rejeitar (um cobertura.json ausente não pode derrubar a aula
+// inteira, que é o que Promise.all faria) e sempre avisa no console quando degrada.
+async function lerCoberturaOpcional() {
+  try {
+    return lerCobertura(await lerJson('validador/cobertura.json'));
+  } catch (erro) {
+    console.warn(`Aula USP: cobertura de glifos não carregou (${erro.message}) — `
+      + 'matematica.simbolo-fora-do-tex fica muda nesta aula.');
+    return undefined;
+  }
+}
+
 function documentoLido() {
   if (document.readyState !== 'loading') return Promise.resolve();
   return new Promise((pronto) => document.addEventListener('DOMContentLoaded', pronto, { once: true }));
@@ -55,17 +74,18 @@ export async function iniciar({ base, resolver = (nome) => nome, estilo } = {}) 
   const injetarEstilo = estilo ?? carregarEstilo;
   try {
     await documentoLido();
-    const [unidades, usp, contrato] = await Promise.all([
+    const [unidades, usp, contrato, cobertura] = await Promise.all([
       lerJson('assets/marcas/unidades.json'),
       lerJson('assets/marcas/usp.json'),
       lerJson('contrato/contrato.json'),
+      lerCoberturaOpcional(),
     ]);
     // Passo 2 da spec 3.2: o fonte, antes de qualquer alteração — inclusive o CSS do passo 4, que antes
     // entrava aqui no mesmo Promise.all e chegava ao <head> antes desta cópia (revisão final do 4c,
     // Minor 1). O documento inteiro, porque o validador lê as metas do <head> — passar só o corpo dá
     // cinco erros falsos de metadados (revisão do marco 4b).
     const fonte = document.cloneNode(true);
-    const estaticos = validar(fonte, { contrato, regras: REGRAS_ESTATICAS, grupo: 'estatica', unidades });
+    const estaticos = validar(fonte, { contrato, regras: REGRAS_ESTATICAS, grupo: 'estatica', unidades, cobertura });
     await Promise.all(ESTILOS.map(injetarEstilo));
     const resumo = montar(document, {
       unidades,

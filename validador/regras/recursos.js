@@ -11,6 +11,14 @@ const CIFRAO_SUSPEITO = /\$[^$\n]*[\\^_][^$\n]*\$/g;
 // fontes dele. Mesmo recorte que limites.palavras-corpo usa para "sem contar TeX" (spec 5.3).
 const semTex = (texto) => texto.replace(/\\\([\s\S]*?\\\)|\\\[[\s\S]*?\\\]/g, ' ');
 
+// Nada aqui desenha glifo nenhum, então nada aqui pode "faltar" um: controles C0 e espaço comum
+// (\x00-\x20, como antes), \s (que já fecha as larguras de espaço Unicode — U+2002 em space, U+2009
+// thin space, U+2000-200A em geral — e o BOM, U+FEFF) e Default_Ignorable_Code_Point, a propriedade
+// Unicode para o que sobra sem desenhar nada (largura zero U+200B, ZWJ/ZWNJ, seletores de variação).
+// Achado do revisor: só `> 0x20` deixava passar U+2003 e companhia, que colado de um editor vira
+// falso "sem glifo" — mesma classe do defeito de espaço comum que o passo 1 já tinha achado.
+const INVISIVEL = /[\x00-\x20\s\p{Default_Ignorable_Code_Point}]/u;
+
 function* segmentosDaSecao(secao) {
   for (const no of textosComTex(secao)) {
     for (const segmento of segmentosDeTex(no.data)) {
@@ -82,11 +90,11 @@ export const regras = [
           // Fora de TeX: os segmentos entre \( \) e \[ \] saem do texto antes de medir.
           for (const caractere of semTex(no.textContent)) {
             const ponto = caractere.codePointAt(0);
-            // Espaço, tabulação e quebra de linha nunca têm glifo em cobertura.json (mesmo corte
-            // de build/cobertura.mjs:UTILIZAVEL, > 0x20) — sem esta guarda, todo espaço do texto
-            // corrido virava um falso "sem glifo" (medido: quebrava as duas fixtures de tipografia
-            // com glifo do passo 1 deste teste).
-            if (ponto <= 0x20 || cobertura.has(ponto) || vistos.has(ponto)) continue;
+            // Espaço e invisível nunca têm glifo em cobertura.json — sem esta guarda, um deles no
+            // texto corrido vira falso "sem glifo" (medido, duas vezes: primeiro só com espaço
+            // comum, quebrando as fixtures de tipografia do passo 1; depois com U+2003 e companhia,
+            // achado do revisor — ver INVISIVEL acima).
+            if (INVISIVEL.test(caractere) || cobertura.has(ponto) || vistos.has(ponto)) continue;
             vistos.add(ponto);
             yield {
               ...onde(slides, secao),
