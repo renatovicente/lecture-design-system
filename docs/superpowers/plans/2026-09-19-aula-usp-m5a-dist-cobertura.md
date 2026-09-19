@@ -47,7 +47,7 @@ Cada um destes veio de uma sonda executada, não de leitura de código. Não os 
 
 10. **O `cmap` traz pontos que não são caracteres utilizáveis** (`U+0`, `U+D`, `U+FFFF`): filtre.
 
-11. **Geist Mono ⊂ (Geist ∪ Open Sans)**: zero pontos exclusivos. Logo um conjunto só — a união, **433 pontos** — e não um por família.
+11. **Geist Mono ⊂ (Geist ∪ Open Sans)**: zero pontos exclusivos. Logo um conjunto só, e não um por família. Dois números, que medem coisas diferentes e não devem ser confundidos: a união crua do `cmap` tem **433** pontos; depois do filtro do fato 10 (`> U+20`, sem `U+FFFE`/`U+FFFF`) sobram **429**, e 429 é o que `cobertura.json` guarda.
 
 12. **Sem glifo, e um professor escreveria:** `→ ← ↔ ⇒ ⇔ ≤ ≥ ≠ ≈ ∞ ∑ ∏ ∫ √ ∂ ∇ α β γ δ θ λ μ π σ φ ω Ω ⟨ ⟩`. **Com** glifo: `× ÷ ± … — – " " ' ' • · ° ′ ″ § ¶ †`. A regra da tarefa 4 vai disparar muito; a mensagem dela tem de ensinar o comando TeX, não só acusar.
 
@@ -225,14 +225,14 @@ import layouts from '../estilos/layouts.css';
 import componentes from '../estilos/componentes.css';
 import motorCss from '../estilos/motor.css';
 import impressao from '../estilos/impressao.css';
-import katexCss from '../node_modules/katex/dist/katex.min.css';
 
 // As chaves são os mesmos caminhos que iniciar() pede; quem empacota resolveu o conteúdo.
 const EMBUTIDAS = new Map([
   ['estilos/tokens.css', tokens], ['estilos/fontes.css', fontes], ['estilos/base.css', estiloBase],
   ['estilos/layouts.css', layouts], ['estilos/componentes.css', componentes],
   ['estilos/motor.css', motorCss], ['estilos/impressao.css', impressao],
-  ['modulos/katex/dist/katex.min.css', katexCss],
+  // A CSS do KaTeX NÃO está aqui: aula-usp-tex.js injeta a sua, já com as 20 fontes como data URI
+  // (tarefa 2). Uma aula sem matemática não deve pagar 361 kB por ela.
 ]);
 
 const ocultar = document.createElement('style');
@@ -253,8 +253,12 @@ iniciar({
     : nome.startsWith('@shikijs/langs/') ? `aula-usp-lang-${nome.split('/').pop()}.js`
     : 'aula-usp-codigo.js', base).href,
   estilo: (caminho) => {
+    // Chave desconhecida (hoje só a do KaTeX): nada a fazer. Injetar <style> vazio funcionaria e
+    // esconderia o caso; retornar cedo deixa explícito que o satélite é quem cuida dela.
+    const texto = EMBUTIDAS.get(caminho);
+    if (texto === undefined) return;
     const folha = document.createElement('style');
-    folha.textContent = EMBUTIDAS.get(caminho) ?? '';
+    folha.textContent = texto;
     document.head.append(folha);
   },
 }).catch((erro) => {
@@ -316,7 +320,8 @@ test('empacotar produz os quatro scripts da spec 3.5 e uma gramática por lingua
 test('todo arquivo do manifesto tem integrity sha384 válido', async () => {
   const arquivos = await empacotar({ raiz: RAIZ, escrever: false });
   for (const [nome, { integrity }] of arquivos) {
-    assert.match(integrity, /^sha384-[A-Za-z0-9+/]{64}=$/, `${nome}: integrity fora do formato SRI`);
+    // sha384 são 48 bytes; em base64 dão exatamente 64 caracteres, SEM preenchimento `=`. Medido.
+    assert.match(integrity, /^sha384-[A-Za-z0-9+/]{64}$/, `${nome}: integrity fora do formato SRI`);
   }
 });
 
@@ -557,10 +562,11 @@ import { gerarCobertura, lerCobertura } from '../../build/cobertura.mjs';
 
 const RAIZ = new URL('../../', import.meta.url);
 
-test('a cobertura sai das oito fontes do sistema e cobre os 433 pontos medidos', async () => {
+test('a cobertura sai das oito fontes do sistema e guarda os 429 pontos medidos', async () => {
   const cobertura = await gerarCobertura({ raiz: RAIZ });
   assert.equal(cobertura.fontes.length, 8);
-  assert.equal(lerCobertura(cobertura).size, 433);
+  // 433 é a união crua do cmap; 429 é o que sobra depois do filtro de pontos inutilizáveis.
+  assert.equal(lerCobertura(cobertura).size, 429);
 });
 
 test('o que tem glifo e o que não tem, medido', async () => {
@@ -665,7 +671,7 @@ export async function escreverCobertura({ raiz }) {
 node --test tests/unit/cobertura.test.mjs
 ```
 
-Esperado: 4 passam. **Se a contagem não der 433**, não ajuste o número no teste: as fontes do repositório são as mesmas que foram medidas, então uma contagem diferente significa que `UTILIZAVEL` ou a leitura mudaram. Pare e relate.
+Esperado: 4 passam. **Se a contagem não der 429**, não ajuste o número no teste: as fontes do repositório são as mesmas que foram medidas, então uma contagem diferente significa que `UTILIZAVEL` ou a leitura mudaram. Pare e relate.
 
 - [ ] **Passo 5: gerar o arquivo e commitar**
 
