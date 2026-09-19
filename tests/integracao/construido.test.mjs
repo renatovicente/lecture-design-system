@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import { mkdtemp } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { iniciarChrome } from './utilitarios.mjs';
+import { iniciarChrome, fontesDoNo, AVISO_CDP_SOBRE_FILE } from './utilitarios.mjs';
 import { construir } from '../../build/construir.mjs';
 
 const RAIZ = new URL('../../', import.meta.url);
@@ -32,15 +32,24 @@ test('a aula construída vive de file://, sem rede e sem erro de console', async
     palco: !!document.querySelector('.palco'),
     imprimir: typeof window.AulaUSP?.prepararImpressao,
     katex: document.querySelectorAll('.katex').length,
-    fonte: getComputedStyle(document.querySelector('h1, h2')).fontFamily.split(',')[0].replace(/["']/g, ''),
   }));
   assert.equal(medida.slides, 8);
   assert.equal(medida.palco, true);
   assert.equal(medida.imprimir, 'function', 'prepararImpressao é o gancho que a spec 8.4 pede no 5c');
   assert.ok(medida.katex > 10);
-  assert.equal(medida.fonte, 'Geist', 'a fonte embutida não pegou — caiu no fallback');
+
+  // Rodada de correção 1: getComputedStyle().fontFamily devolve o nome declarado pela cascata, não a
+  // fonte que o Chrome de fato pintou — medido por mutação (corromper os bytes da fonte embutida
+  // mantém esse valor em "Geist" enquanto o navegador pinta com a fonte de reserva do sistema). Só
+  // CDP CSS.getPlatformFontsForNode (fontesDoNo, tests/integracao/utilitarios.mjs) vê a pintura real;
+  // "capa" já é o slide ativo no load, então o h1 já tem layout, sem precisar navegar antes.
+  const fontesDoTitulo = await fontesDoNo(pagina, 'h1');
+  assert.ok(fontesDoTitulo?.length > 0, 'CDP não relatou fonte nenhuma para o título');
+  assert.ok(fontesDoTitulo.every((f) => f.familyName === 'Geist' && f.isCustomFont),
+    `a fonte embutida não pegou — pintou com ${fontesDoTitulo.map((f) => f.familyName).join(', ')}`);
+
   assert.deepEqual(pedidos, [], `a aula pediu recursos: ${pedidos.join(', ')}`);
-  assert.deepEqual(erros, [], erros.join('\n'));
+  assert.deepEqual(erros.filter((erro) => !erro.includes(AVISO_CDP_SOBRE_FILE)), [], erros.join('\n'));
 
   await pagina.keyboard.press('ArrowRight');
   await pagina.waitForTimeout(250);
