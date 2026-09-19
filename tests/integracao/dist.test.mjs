@@ -18,12 +18,15 @@ after(async () => {
   await sitio?.fechar();
 });
 
-async function abrirPeloDist(deck) {
+// Recebe o caminho completo a partir da raiz servida por servirPastaCrua('.') — não só o nome do
+// deck — porque a rodada de correção 1 precisou abrir também uma fixture fora de especime/
+// (tests/fixtures/painel/demo.html) pelo mesmo pacote real. Os três decks passam `especime/${deck}`.
+async function abrirPeloDist(caminho) {
   const pagina = await navegador.newPage({ viewport: { width: 1400, height: 900 } });
   const erros = [];
   pagina.on('console', (m) => { if (m.type() === 'error' && !m.location().url.endsWith('/favicon.ico')) erros.push(m.text()); });
   pagina.on('pageerror', (e) => erros.push(e.message));
-  await pagina.goto(`${sitio.endereco}/especime/${deck}`);
+  await pagina.goto(`${sitio.endereco}/${caminho}`);
   await esperarMontagem(pagina);
   const titulo = await pagina.evaluate(() => document.querySelector('[data-painel="validador"] .painel-titulo')?.textContent);
   return { pagina, erros, titulo };
@@ -31,19 +34,27 @@ async function abrirPeloDist(deck) {
 
 for (const deck of ['index.html', 'matematica.html', 'codigo.html']) {
   test(`${deck} monta pelo pacote de dist/, sem erro de console`, async (t) => {
-    const { pagina, erros, titulo } = await abrirPeloDist(deck);
+    const { pagina, erros, titulo } = await abrirPeloDist(`especime/${deck}`);
     t.after(() => pagina.close());
     assert.equal(titulo, 'Validador Aula USP: 0 erros, 0 avisos');
     assert.deepEqual(erros, [], erros.join('\n'));
   });
 }
 
-// A fila de demos é a razão de o pacote ser script clássico (tarefa 1). Este teste mede o efeito,
-// não a forma: se o pacote virar módulo, ele roda depois do <script> do autor e a demo se perde.
-test('a demo registrada pelo script do autor chega ao runtime', async (t) => {
-  const { pagina } = await abrirPeloDist('index.html');
+// A fila de AulaUSP.demo existir antes do <script> do autor é a razão de o pacote ser script
+// clássico, e a razão de a tarefa 1 ter partido a entrada em três (rodada de correção 1, item 2).
+// Este teste mede a CONSEQUÊNCIA, não o mecanismo: window.AulaUSP.demos nunca existe nesta
+// arquitetura (motor/demos.js guarda o registro num Map fechado dentro de criarDemos, nunca
+// reexposto) e instalarDemos esvazia filaDeDemos incondicionalmente — então medir os dois direto,
+// como a versão anterior deste teste fazia, é tautológico (dá sempre `0 > 0 || 0 === 0`, sempre
+// verdadeiro, não importa se a fila sobreviveu ou não). tests/fixtures/painel/demo.html registra
+// 'fixture-demo' durante o parsing e tem um <div class="demo" data-demo="fixture-demo">: se a fila
+// se perder antes do passo 6 de montar/entrada.js ler filaDeDemos, recursos.demo-sem-registro
+// dispara como ERRO (contrato.json: severidade "erro") e o painel deixa de dizer "0 erros" — o
+// mesmo defeito que a Ruling 11 (motor/demos.js) documenta e guarda do lado do motor.
+test('a demo registrada durante o parsing sobrevive ao pacote do dist', async (t) => {
+  const { pagina, erros, titulo } = await abrirPeloDist('tests/fixtures/painel/demo.html');
   t.after(() => pagina.close());
-  const registradas = await pagina.evaluate(() => [...(window.AulaUSP?.demos?.keys?.() ?? [])].length);
-  const naFila = await pagina.evaluate(() => window.AulaUSP?.filaDeDemos?.length ?? -1);
-  assert.ok(registradas > 0 || naFila === 0, 'nem registro nem fila: a demo do autor se perdeu');
+  assert.equal(titulo, 'Validador Aula USP: 0 erros, 0 avisos');
+  assert.deepEqual(erros, [], erros.join('\n'));
 });

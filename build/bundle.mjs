@@ -36,6 +36,39 @@ async function cssDoTexComFontes(raiz) {
   });
 }
 
+// Achado na rodada de correção 1 (item 2) do relatório da tarefa 2, ao testar uma fixture fora de
+// especime/. estilos/fontes.css (gerado por build/fontes-css.mjs) referencia as fontes do sistema por
+// url('../assets/fontes/X.woff2') — caminho relativo ao PRÓPRIO arquivo CSS. O loader 'text' não olha
+// para dentro do CSS, então esse texto entra intacto em aula-usp.js; montar/dist.js injeta como
+// <style> inline, e é aí que a conta muda: o navegador resolve url() de <style> inline contra a
+// página HOSPEDEIRA, não contra o pacote. Para os três decks de especime/ (um nível abaixo da raiz,
+// como estilos/) o acidente acerta. Para tests/fixtures/painel/demo.html (três níveis abaixo) não:
+// medido, dois 404 de geist-*.woff2 ao abrir a fixture pelo dist/. Mesma classe do fato 8 do plano
+// (fonte de CSS injetada não pode depender de profundidade de quem hospeda), mesmo remédio: fonte
+// vira data URI. Plugin, não edição em montar/dist.js — a tarefa 1 já revisou aquele arquivo, e o
+// import ali (`import fontes from '../estilos/fontes.css'`) não precisa saber que isto acontece.
+function pluginFontesDoSistemaEmbutidas(raiz) {
+  return {
+    name: 'fontes-do-sistema-embutidas',
+    setup(build) {
+      build.onLoad({ filter: /estilos\/fontes\.css$/ }, async (args) => {
+        const css = await readFile(args.path, 'utf8');
+        const pastaFontes = new URL('assets/fontes/', raiz);
+        const arquivos = [...new Set([...css.matchAll(/url\('\.\.\/assets\/fontes\/([^']+)'\)/g)].map((m) => m[1]))];
+        const dados = new Map();
+        for (const arquivo of arquivos) {
+          dados.set(arquivo, (await readFile(new URL(arquivo, pastaFontes))).toString('base64'));
+        }
+        const contents = css.replace(/url\('\.\.\/assets\/fontes\/([^']+)'\)/g, (_, arquivo) => {
+          const base64 = dados.get(arquivo);
+          return base64 ? `url(data:font/woff2;base64,${base64})` : 'url()';
+        });
+        return { contents, loader: 'text' };
+      });
+    },
+  };
+}
+
 export async function empacotar({ raiz, escrever = true } = {}) {
   const dir = fileURLToPath(raiz);
   const { linguagens } = JSON.parse(await readFile(new URL('contrato/contrato.json', raiz), 'utf8'));
@@ -47,8 +80,9 @@ export async function empacotar({ raiz, escrever = true } = {}) {
     saidas.set(nome, { bytes: arquivo.contents.length, integrity: integridade(arquivo.contents), texto: arquivo.text, conteudo: arquivo.contents });
   };
 
-  // 1. o pacote do navegador: CLÁSSICO (iife), pelos motivos na tarefa 1.
-  guardar('aula-usp.js', await esbuild.build({ ...COMUM, absWorkingDir: dir, entryPoints: ['montar/dist.js'], format: 'iife' }));
+  // 1. o pacote do navegador: CLÁSSICO (iife), pelos motivos na tarefa 1. O plugin embute as fontes
+  //    do sistema (Geist/Open Sans) como data URI dentro de estilos/fontes.css — ver o comentário dele.
+  guardar('aula-usp.js', await esbuild.build({ ...COMUM, absWorkingDir: dir, entryPoints: ['montar/dist.js'], format: 'iife', plugins: [pluginFontesDoSistemaEmbutidas(raiz)] }));
 
   // 2. o motor sozinho, que o build do marco 5b põe no lugar da tag do runtime.
   guardar('aula-usp-motor.js', await esbuild.build({ ...COMUM, absWorkingDir: dir, entryPoints: ['motor/motor.js'], format: 'iife', globalName: 'AulaUSPMotor' }));

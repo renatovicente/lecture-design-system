@@ -27,10 +27,14 @@ test('todo arquivo do manifesto tem integrity sha384 válido', async () => {
   }
 });
 
-// A regra que a tarefa 1 estabeleceu, agora do lado do pacote: o bundle do navegador é CLÁSSICO.
-// Se alguém trocar o formato para esm, a fila de AulaUSP.demo deixa de existir antes do <script>
-// do autor e toda demo da aula vira erro de registro — em silêncio, porque o espécime não tem demo
-// em todos os decks. Barato de afirmar aqui, caro de descobrir depois.
+// Esta asserção mede uma coisa mais estreita do que o nome do teste sugere: só que não sobrou
+// import/export de topo no artefato. Isso sozinho já vale a pena guardar — se sobrasse, a tag
+// precisaria de type="module" (spec 3.3/8.1), e sem isso o navegador rejeita o <script> inteiro
+// como erro de sintaxe. Mas NÃO guarda o comportamento da fila de AulaUSP.demo: medido por mutação,
+// com Chrome, que trocar format: 'iife' por 'esm' aqui dá saída observável idêntica (a única
+// diferença são os 11 bytes do invólucro do iife) — não sobra import/export de topo de qualquer
+// jeito, e import() dinâmico é legal em script clássico. Quem guarda o comportamento da fila é
+// 'a demo registrada durante o parsing sobrevive ao pacote do dist', em tests/integracao/dist.test.mjs.
 test('aula-usp.js é script clássico: nada de import/export no topo', async () => {
   const arquivos = await empacotar({ raiz: RAIZ, escrever: false });
   const texto = arquivos.get('aula-usp.js').texto;

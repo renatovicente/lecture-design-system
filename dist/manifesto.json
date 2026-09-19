@@ -1,10 +1,10 @@
 {
   "versao": "0.1.0",
-  "gerado": "2026-09-19T04:23:56.736Z",
+  "gerado": "2026-09-19T05:09:06.925Z",
   "arquivos": {
     "aula-usp.js": {
-      "bytes": 96885,
-      "integrity": "sha384-UN782ANHmUbNSgDkAsRuROanV1qbm6TYZm/Q4kD2uE/t42qzABG1D+Ok78Vw5ZRg"
+      "bytes": 269437,
+      "integrity": "sha384-ahdVgCSVwJPaHc2g9VUuCS6o82WWPajP1ro8vw9Oi7Of6GJTLwiMl0oT77xwNN5F"
     },
     "aula-usp-motor.js": {
       "bytes": 7072,
