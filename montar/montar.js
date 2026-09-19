@@ -44,7 +44,7 @@ function envolverEmArea(doc, secao) {
   return area;
 }
 
-export function montar(doc, { unidades, usp, urlMarcas, limites }) {
+export function montar(doc, { unidades, usp, marca, limites }) {
   if (doc.documentElement.getAttribute('data-aula-usp') === 'montada') throw new Error('aula já montada');
   const meta = lerMetadados(doc);
   const unidade = Object.hasOwn(unidades, meta.unidade) ? unidades[meta.unidade] : undefined;
@@ -71,7 +71,7 @@ export function montar(doc, { unidades, usp, urlMarcas, limites }) {
     if (layout === 'capa') {
       area.append(criarMetadadosCapa(doc, [rodape, `${meta.professor} · ${formatarData(meta.data, meta.lang)}`]));
       if (modo !== 'nenhum') area.append(criarRoteiro(doc, blocos));
-      secao.append(criarFaixaDeMarca(doc, { unidade, usp, urlMarcas }));
+      secao.append(criarFaixaDeMarca(doc, { unidade, usp, marca }));
       return;
     }
     if (layout === 'abertura') {
@@ -93,7 +93,7 @@ export function montar(doc, { unidades, usp, urlMarcas, limites }) {
       blocoAtual: encerramento ? null : numero,
       contador: `${i + 1} / ${total}`,
     }));
-    secao.append(encerramento ? criarFaixaDeMarca(doc, { unidade, usp, urlMarcas }) : criarRodape(doc, rodape));
+    secao.append(encerramento ? criarFaixaDeMarca(doc, { unidade, usp, marca }) : criarRodape(doc, rodape));
   });
 
   doc.documentElement.setAttribute('data-aula-usp', 'montada');

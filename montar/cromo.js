@@ -61,10 +61,10 @@ export function criarFileira(doc, blocos, estados) {
   return fileira;
 }
 
-export function criarFaixaDeMarca(doc, { unidade, usp, urlMarcas }) {
+export function criarFaixaDeMarca(doc, { unidade, usp, marca }) {
   const faixa = elemento(doc, 'div', 'faixa-de-marca');
   const logo = elemento(doc, 'img', 'marca-unidade');
-  logo.setAttribute('src', `${urlMarcas}/${unidade.arquivo}`);
+  logo.setAttribute('src', marca(unidade.arquivo));
   logo.setAttribute('alt', unidade.integraUSP ? `${unidade.nome} · ${usp.texto}` : unidade.nome);
   logo.setAttribute('height', String(unidade.altura));
   faixa.append(logo);
@@ -74,7 +74,7 @@ export function criarFaixaDeMarca(doc, { unidade, usp, urlMarcas }) {
     const [primeira, ...resto] = usp.texto.split(' ');
     texto.append(doc.createTextNode(primeira), doc.createElement('br'), doc.createTextNode(resto.join(' ')));
     const logoUsp = doc.createElement('img');
-    logoUsp.setAttribute('src', `${urlMarcas}/${usp.arquivo}`);
+    logoUsp.setAttribute('src', marca(usp.arquivo));
     logoUsp.setAttribute('alt', usp.texto);
     logoUsp.setAttribute('height', String(usp.altura));
     assinatura.append(texto, logoUsp);

@@ -84,8 +84,10 @@ export async function empacotar({ raiz, escrever = true } = {}) {
   //    do sistema (Geist/Open Sans) como data URI dentro de estilos/fontes.css — ver o comentário dele.
   guardar('aula-usp.js', await esbuild.build({ ...COMUM, absWorkingDir: dir, entryPoints: ['montar/dist.js'], format: 'iife', plugins: [pluginFontesDoSistemaEmbutidas(raiz)] }));
 
-  // 2. o motor sozinho, que o build do marco 5b põe no lugar da tag do runtime.
-  guardar('aula-usp-motor.js', await esbuild.build({ ...COMUM, absWorkingDir: dir, entryPoints: ['motor/motor.js'], format: 'iife', globalName: 'AulaUSPMotor' }));
+  // 2. o motor de interação, que o build do marco 5b põe no lugar da tag do runtime (spec 3.3 etapa
+  //    4). motor/dist.js, não motor/motor.js sozinho: motor.js só cobre navegação e passos, e a spec
+  //    pede também notas, visão geral, apresentador e impressão (achado I1 da revisão final do 5a).
+  guardar('aula-usp-motor.js', await esbuild.build({ ...COMUM, absWorkingDir: dir, entryPoints: ['motor/dist.js'], format: 'iife', globalName: 'AulaUSPMotor' }));
 
   // 3. matemática: KaTeX + a CSS dele + as fontes dele. Injeta a própria folha ao ser importado,
   //    para que entrada.js não precise de um ramo só para este caso.

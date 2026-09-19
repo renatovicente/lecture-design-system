@@ -98,8 +98,12 @@ async function distComando(argumentos) {
       import('../build/bundle.mjs'),
       import('../build/cobertura.mjs'),
     ]);
-    const arquivos = await empacotar({ raiz });
+    // cobertura ANTES de empacotar: desde a rodada de correção 1 (item 1), montar/dist.js importa
+    // validador/cobertura.json estaticamente para embuti-lo em aula-usp.js — se empacotar rodasse
+    // primeiro, o esbuild leria o cobertura.json da execução ANTERIOR de `aula-usp dist`, sempre uma
+    // geração atrasado em relação às fontes que o mesmo artefato também embute.
     const cobertura = await escreverCobertura({ raiz });
+    const arquivos = await empacotar({ raiz });
     for (const [nome, { bytes }] of arquivos) console.log(`dist/${nome} · ${(bytes / 1024).toFixed(1)} kB`);
     console.log(`validador/cobertura.json · ${cobertura.fontes.length} fontes`);
   } catch (erro) {

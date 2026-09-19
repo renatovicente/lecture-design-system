@@ -2,12 +2,12 @@
   "versao": "0.1.0",
   "arquivos": {
     "aula-usp.js": {
-      "bytes": 270282,
-      "integrity": "sha384-uuuMWn90RjFPzCXJhH/uSgz86midBETHsw6iVFpPTYrebzTu8wiUvkdGcjAAqnbk"
+      "bytes": 558611,
+      "integrity": "sha384-zULboicXVUyWiK1+rgVwUsJCiYdDQCWMxudcCpojdG7lDGaW8Vu8HpIzf5uODSNm"
     },
     "aula-usp-motor.js": {
-      "bytes": 7072,
-      "integrity": "sha384-0e2aAP5TDTyOjAypdCXOfU2x+C3mFZMwjB/gf1Bv8P+15QuObOnAiZ31Mpm8CSBk"
+      "bytes": 20512,
+      "integrity": "sha384-ID5Om6IP8mZ30SF0BsOYmH9UNDnORuTVmgIqxl0BQBGm5m3weHS152+obMx0j0nf"
     },
     "aula-usp-tex.js": {
       "bytes": 637702,

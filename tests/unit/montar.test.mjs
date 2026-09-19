@@ -25,9 +25,10 @@ const AULA_IME = (lang) => `${cabeca('ime', lang)}<body>
   <section data-layout="encerramento"><h2>O que fica</h2><ol class="sintese"><li>Um.</li></ol></section>
 </body></html>`;
 
+const marca = (arquivo) => `M/${arquivo}`;
 const montado = (html) => {
   const { document } = parseHTML(html);
-  const resumo = montar(document, { unidades, usp, urlMarcas: 'M', limites });
+  const resumo = montar(document, { unidades, usp, marca, limites });
   return { document, resumo };
 };
 const classes = (lista) => [...lista].map((el) => el.className);
@@ -209,7 +210,7 @@ test('unidade desconhecida gera erro claro', () => {
 
 test('montar recusa uma aula já montada', () => {
   const { document } = montado(AULA_IME());
-  assert.throws(() => montar(document, { unidades, usp, urlMarcas: 'M', limites }), /aula já montada/);
+  assert.throws(() => montar(document, { unidades, usp, marca, limites }), /aula já montada/);
 });
 
 test('montar aceita uma aula em que o autor escreveu class="slide"', () => {

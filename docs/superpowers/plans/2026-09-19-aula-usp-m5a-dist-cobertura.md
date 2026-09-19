@@ -37,7 +37,16 @@ Cada um destes veio de uma sonda executada, não de leitura de código. Não os 
 
 5. **`splitting: true` colide** (`Two output files share the same path`) por causa do import glob de `@shikijs/langs/*`. Não use splitting: satélites explícitos, um arquivo por linguagem.
 
-6. **Tamanhos medidos** (minify, `target: chrome120`), já na forma final que a tarefa 2 produz: `aula-usp.js` **94,6 kB** com os 7 CSS do sistema embutidos · `aula-usp-motor.js` 6,9 kB · `aula-usp-tex.js` **622,8 kB** (KaTeX + a CSS dele + as 20 fontes dele em data URI) · `aula-usp-codigo.js` 112,4 kB · as 7 gramáticas somam 398,8 kB. O aviso de `saida.tamanho` é 10 MB: folga de duas ordens de grandeza.
+6. **Tamanhos medidos** (minify, `target: chrome120`) nesta sondagem, com só a CSS do sistema embutida:
+   `aula-usp.js` 94,6 kB · `aula-usp-motor.js` 6,9 kB · `aula-usp-tex.js` **622,8 kB** (KaTeX + a CSS
+   dele + as 20 fontes dele em data URI) · `aula-usp-codigo.js` 112,4 kB · as 7 gramáticas somam 398,8
+   kB. **Não é a forma final** — as fontes do sistema (plugin posterior) e, na rodada de correção 1 do
+   5a, o contrato, as duas JSON de marcas, a cobertura e as três marcas em si também entraram em
+   `aula-usp.js` (spec 3.2 exige: nenhum recurso fora de script), e `aula-usp-motor.js` passou a
+   empacotar `motor/dist.js` (notas, visão geral, apresentador e impressão — achado I1), não só
+   `motor/motor.js`. Hoje: `aula-usp.js` 545,5 kB · `aula-usp-motor.js` 20,0 kB — `dist/manifesto.json`
+   é a fonte da verdade, não este número. O aviso de `saida.tamanho` é 10 MB: ainda mais de uma ordem
+   de grandeza de folga.
 
 7. **Prova de ponta a ponta já obtida:** os três decks do espécime (`index`, `matematica`, `codigo`) montam pelo pacote IIFE, servidos por um servidor estático burro, em Chrome de verdade — `montado=sim` e **0 erros, 0 avisos** no painel nos três.
 
@@ -462,7 +471,13 @@ Esperado: 5 passam.
 node -e "import('./build/bundle.mjs').then(m => m.empacotar({ raiz: new URL('file://' + process.cwd() + '/') }))"
 ```
 
-Esperado, na ordem de grandeza medida: `aula-usp.js` ~95 kB · `aula-usp-motor.js` ~7 kB · `aula-usp-tex.js` ~620 kB · `aula-usp-codigo.js` ~112 kB · sete gramáticas somando ~400 kB. Se `aula-usp.js` passar de 200 kB, a CSS do KaTeX voltou para dentro dele — investigue antes de seguir.
+Esperado nesta sondagem (só CSS do sistema, sem fontes/marcas/contrato — ver a nota do fato 6, hoje
+`aula-usp.js` é 545,5 kB de verdade e crescer é esperado): `aula-usp.js` ~95 kB · `aula-usp-motor.js`
+~7 kB · `aula-usp-tex.js` ~620 kB · `aula-usp-codigo.js` ~112 kB · sete gramáticas somando ~400 kB. Um
+alarme de tamanho aqui erra assim que qualquer embutido legítimo crescer (fontes, marcas, contrato) —
+o alarme que vale é de CONTEÚDO, não de byte: `aula-usp.js` não deve conter a substring `KaTeX_Main`
+(só existe nos 20 `@font-face` da folha do KaTeX). Se aparecer, a CSS do KaTeX voltou para dentro dele
+— investigue antes de seguir. `tests/unit/bundle.test.mjs` já guarda isto automaticamente.
 
 - [ ] **Passo 6: o teste de integração que prova que uma aula monta pelo pacote**
 
@@ -904,7 +919,16 @@ git commit -m "feat(validador): fecha matematica.simbolo-fora-do-tex e acrescent
 
 ## Auto-revisão deste plano
 
-**Cobertura da spec.** 3.5 (os quatro scripts de `dist/`): tarefa 2. 8.1 (comando `dist`; `servir` sem `integrity`): tarefa 4. 8.2 (esbuild e fontkit como devDependencies): commit `a9bb1e9`, antes deste plano. 9.2 e 9.3 (`matematica.simbolo-fora-do-tex` e a origem de `cobertura.json`): tarefas 3 e 4. 3.2 (o pacote embute CSS, fontes e marcas): tarefa 2 — **com um desvio declarado**: a CSS e as fontes do KaTeX vão para `aula-usp-tex.js`, não para `aula-usp.js`, porque são 361 kB que uma aula sem matemática não usa. O resultado observável é o mesmo (nada é buscado de fora), e o desvio está medido no fato 8.
+**Cobertura da spec.** 3.5 (os quatro scripts de `dist/`): tarefa 2. 8.1 (comando `dist`; `servir` sem `integrity`): tarefa 4. 8.2 (esbuild e fontkit como devDependencies): commit `a9bb1e9`, antes deste plano. 9.2 e 9.3 (`matematica.simbolo-fora-do-tex` e a origem de `cobertura.json`): tarefas 3 e 4. 3.2 (o pacote embute CSS, fontes e marcas): tarefa 2 para CSS e fontes do sistema, **com um desvio
+declarado** — a CSS e as fontes do KaTeX vão para `aula-usp-tex.js`, não para `aula-usp.js`, porque são
+361 kB que uma aula sem matemática não usa (o desvio está medido no fato 8) —, mas **não** para as
+marcas: a tarefa 2, como implementada, deixou o contrato, as duas JSON de marcas, a cobertura e as três
+marcas em si de fora, todos buscados por fetch/`<img src>` a partir de `dist/aula-usp.js`. Três dessas
+buscas estavam num `Promise.all` sem guarda — bloqueadas, a aula não montava. A revisão final do 5a
+(C1) achou isto antes do merge; a rodada de correção 1 (item 1) embutiu os sete, pela mesma injeção que
+a tarefa 1 estabeleceu (`dados` e `marca` em `iniciar()`), e um teste de integração em Chrome de
+verdade (`tests/integracao/dist.test.mjs`) guarda que nenhum pedido de rede que não seja script sobra.
+Só agora o resultado observável é mesmo "nada é buscado de fora" — não desde a tarefa 2.
 
 **Fora de escopo, de propósito:** `saida.glifo-ausente` (marco 5b: roda sobre o HTML final, que ainda não existe), `aula-usp build`, o PDF, e a reescrita da tag do runtime com versão e `integrity` (marco 6, comando `pacotes`, que lê o `dist/manifesto.json` que a tarefa 2 grava).
 

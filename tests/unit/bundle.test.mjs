@@ -62,6 +62,51 @@ test('o satélite de matemática não deixa nenhuma url(fonts/...) para buscar',
   assert.ok(texto.includes('data:font/woff2;base64,'), 'as fontes do KaTeX não foram embutidas');
 });
 
+// M1 da revisão final do 5a (adiado da tarefa 2): o satélite de matemática tinha esta guarda (teste
+// acima) e o pacote principal não, apesar do mesmo plugin (pluginFontesDoSistemaEmbutidas) embutir as
+// 8 fontes do sistema nele. Espelha o teste acima.
+test('aula-usp.js não deixa nenhuma url(...) de fonte do sistema para buscar', async () => {
+  const arquivos = await empacotar({ raiz: RAIZ, escrever: false });
+  const texto = arquivos.get('aula-usp.js').texto;
+  assert.equal(/url\(['"]?\.\.\/assets\/fontes\//.test(texto), false, 'sobrou referência a arquivo de fonte: daria 404');
+  assert.equal([...texto.matchAll(/data:font\/woff2;base64,/g)].length, 8, 'esperava as 8 fontes do sistema como data URI');
+});
+
+// C1 da revisão final do 5a, Critical: a spec 3.2 proíbe qualquer recurso que não seja script, e
+// contrato.json, as duas JSON de marcas, a cobertura e as marcas em si buscavam por fetch/<img src>.
+// tests/integracao/dist.test.mjs prova a CONSEQUÊNCIA (nenhum pedido de rede sobra) num Chrome de
+// verdade; esta aqui é a guarda rápida de que o CONTEÚDO está mesmo dentro do artefato, sem precisar
+// de navegador.
+test('aula-usp.js embute o contrato, as marcas e as duas JSON de unidades/USP — spec 3.2', async () => {
+  const arquivos = await empacotar({ raiz: RAIZ, escrever: false });
+  const texto = arquivos.get('aula-usp.js').texto;
+  // Marcadores por VALOR, não por chave: uma chave de objeto (ex.: "classesDoSistema") sobrevive à
+  // minificação mesmo quando só é usada como acesso de propriedade em código, sem nenhum dado do JSON
+  // embutido — não prova nada. Prefixo ASCII de cada valor (o minificador escapa acento como \xE9 e
+  // faria estes marcadores falharem se tivessem á/ç/ã literais).
+  assert.ok(texto.includes('Contrato de HTML do Aula USP (spec 5.2 a 5.6 e 9.2).'), 'contrato.json não parece estar embutido');
+  assert.ok(texto.includes('alturaMinima'), 'unidades.json não parece estar embutido');
+  assert.ok(texto.includes('Universidade de S'), 'usp.json não parece estar embutido');
+  assert.ok(texto.includes('geist-mono-normal-latin.woff2'), 'validador/cobertura.json não parece estar embutido');
+  assert.ok(texto.includes('data:image/svg+xml,'), 'os SVG de marca não saíram como data URI');
+  assert.ok(texto.includes('data:image/png;base64,'), 'o PNG de marca (IFUSP) não saiu como data URI');
+  assert.equal(/['"]assets\/marcas\/[\w.-]+\.(?:svg|png)['"]/.test(texto), false,
+    'sobrou um caminho de arquivo de marca: alguma marca voltou a ser buscada por URL');
+});
+
+// I1 da revisão final do 5a, Important: o que estava empacotado era motor/motor.js sozinho — só
+// navegação e passos. A spec 3.3 etapa 4 pede também notas, visão geral, apresentador e impressão; a
+// 8.4 chama AulaUSP.prepararImpressao() na página. Mede por nome, como o revisor mediu o defeito
+// ("prepararImpressao aparece 0 vez no artefato") — se alguém voltar a apontar o entryPoint para
+// motor/motor.js sozinho, os quatro últimos nomes somem e o teste falha.
+test('aula-usp-motor.js expõe as capacidades de interação que a spec 3.3 nomeia', async () => {
+  const arquivos = await empacotar({ raiz: RAIZ, escrever: false });
+  const texto = arquivos.get('aula-usp-motor.js').texto;
+  for (const nome of ['iniciarMotor', 'instalarPaineis', 'instalarApresentador', 'instalarDemos', 'instalarImpressao', 'prepararImpressao']) {
+    assert.ok(texto.includes(nome), `faltou "${nome}" no artefato — aula-usp-motor.js voltou a empacotar só motor/motor.js?`);
+  }
+});
+
 // Guarda de reprodutibilidade, no mesmo molde da guarda de validador/cobertura.json em
 // tests/unit/cobertura.test.mjs: dist/manifesto.json é gerado e versionado, e só é confiável se
 // regerar não mudar nada. Sem "gerado" em build/bundle.mjs (tarefa 4 desta tarefa, item extra fora
@@ -81,4 +126,18 @@ test('regenerar bate campo a campo com o dist/manifesto.json commitado', async (
     commitado,
     'empacotar mudou desde o último commit — rode `aula-usp dist` e commite dist/manifesto.json de novo',
   );
+});
+
+// M2 da revisão final do 5a: o teste acima só lê dist/manifesto.json — nenhum teste lia os ARQUIVOS de
+// dist/. Um aula-usp.js editado à mão ou corrompido no git passava em tudo, e deixava de bater com o
+// próprio integrity, que é exatamente o que o SRI existe para detectar. Compara os bytes em disco com
+// os que empacotar() acabou de gerar.
+test('os arquivos em dist/ batem byte a byte com o que empacotar regera', async () => {
+  const { readFile } = await import('node:fs/promises');
+  const saidas = await empacotar({ raiz: RAIZ, escrever: false });
+  for (const [nome, { conteudo }] of saidas) {
+    const emDisco = await readFile(new URL(`dist/${nome}`, RAIZ));
+    assert.ok(Buffer.compare(emDisco, conteudo) === 0,
+      `dist/${nome} em disco não bate byte a byte com o regenerado — rode \`aula-usp dist\` de novo`);
+  }
 });

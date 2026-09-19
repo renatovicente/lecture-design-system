@@ -4,7 +4,7 @@
 // o comentário dela em utilitarios.mjs.
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { iniciarChrome, servirPastaCrua, esperarMontagem } from './utilitarios.mjs';
+import { iniciarChrome, servirPastaCrua, esperarMontagem, abrirAula } from './utilitarios.mjs';
 
 let navegador;
 let sitio;
@@ -40,6 +40,24 @@ for (const deck of ['index.html', 'matematica.html', 'codigo.html']) {
     assert.deepEqual(erros, [], erros.join('\n'));
   });
 }
+
+// Critical da revisão final do 5a (C1): três das quatro buscas de rede que entrada.js faz (contrato,
+// unidades, usp) estavam num Promise.all sem guarda — bloqueadas (como aqui: servirPastaCrua não tem
+// CDN nenhuma fora do ar, mas o efeito de "não embutiu" é o mesmo pedido de rede), a aula não montava,
+// tela em branco, sem mensagem. Foi assim que o revisor achou o problema: abrindo um deck e olhando os
+// pedidos de rede. Mede a CONSEQUÊNCIA (nenhum pedido que não seja script sobra), não o mecanismo (que
+// módulos dist.js importa) — se alguém voltar a buscar qualquer um dos quatro JSON ou das três marcas
+// por fetch/<img src>, o pedido aparece na lista e o teste falha.
+test('o pacote de dist/ não busca nenhum recurso que não seja script (spec 3.2)', async (t) => {
+  const url = `${sitio.endereco}/especime/index.html`;
+  const { pagina, erros, pedidos } = await abrirAula(navegador, url);
+  t.after(() => pagina.close());
+  const titulo = await pagina.evaluate(() => document.querySelector('[data-painel="validador"] .painel-titulo')?.textContent);
+  assert.equal(titulo, 'Validador Aula USP: 0 erros, 0 avisos');
+  assert.deepEqual(erros, [], erros.join('\n'));
+  const outros = pedidos.filter((pedido) => pedido !== url && !pedido.endsWith('.js') && !pedido.endsWith('/favicon.ico'));
+  assert.deepEqual(outros, [], `pedido de rede que não é script: ${outros.join(', ')}`);
+});
 
 // A fila de AulaUSP.demo existir antes do <script> do autor é a razão de o pacote ser script
 // clássico, e a razão de a tarefa 1 ter partido a entrada em três (rodada de correção 1, item 2).

@@ -45,9 +45,9 @@ async function lerJson(caminho) {
 // ficar indistinguíveis: por isso o catch aqui, sozinho — não dentro do Promise.all de lerJson lá
 // embaixo — nunca deixa a promessa rejeitar (um cobertura.json ausente não pode derrubar a aula
 // inteira, que é o que Promise.all faria) e sempre avisa no console quando degrada.
-async function lerCoberturaOpcional() {
+async function lerCoberturaOpcional(dados) {
   try {
-    return lerCobertura(await lerJson('validador/cobertura.json'));
+    return lerCobertura(await dados('validador/cobertura.json'));
   } catch (erro) {
     console.warn(`Aula USP: cobertura de glifos não carregou (${erro.message}) — `
       + 'matematica.simbolo-fora-do-tex fica muda nesta aula.');
@@ -65,20 +65,24 @@ function documentoLido() {
 // pacote do dist precisa ser script CLÁSSICO (a fila de AulaUSP.demo tem de existir antes do
 // <script> do autor, que roda durante o parsing), e o formato iife do esbuild não aceita
 // top-level await — que é como este arquivo inteiro era escrito.
-// `resolver` traduz o nome de um módulo carregado sob demanda; `estilo` injeta uma folha. São os dois
-// pontos onde desenvolvimento e dist diferem de verdade — no dev o importmap resolve o especificador
-// nu e o <link> busca o arquivo; no dist tudo já está dentro do pacote. Injetados, não ramificados:
-// o corpo de iniciar() é um só, como o contexto extensível das regras do marco 4b.
-export async function iniciar({ base, resolver = (nome) => nome, estilo } = {}) {
+// `resolver` traduz o nome de um módulo carregado sob demanda; `estilo` injeta uma folha; `dados`
+// devolve o JSON de um caminho; `marca` resolve o arquivo de uma logomarca. São os pontos onde
+// desenvolvimento e dist diferem de verdade — no dev cada um busca por URL (importmap, <link>, fetch,
+// join de URL); no dist tudo já está dentro do pacote (marco 5, rodada de correção 1, item 1).
+// Injetados, não ramificados: o corpo de iniciar() é um só, como o contexto extensível das regras do
+// marco 4b.
+export async function iniciar({ base, resolver = (nome) => nome, estilo, dados = lerJson, marca } = {}) {
   BASE = new URL('../', base);
   const injetarEstilo = estilo ?? carregarEstilo;
+  const urlMarcas = new URL('assets/marcas', BASE).href;
+  const resolverMarca = marca ?? ((arquivo) => `${urlMarcas}/${arquivo}`);
   try {
     await documentoLido();
     const [unidades, usp, contrato, cobertura] = await Promise.all([
-      lerJson('assets/marcas/unidades.json'),
-      lerJson('assets/marcas/usp.json'),
-      lerJson('contrato/contrato.json'),
-      lerCoberturaOpcional(),
+      dados('assets/marcas/unidades.json'),
+      dados('assets/marcas/usp.json'),
+      dados('contrato/contrato.json'),
+      lerCoberturaOpcional(dados),
     ]);
     // Passo 2 da spec 3.2: o fonte, antes de qualquer alteração — inclusive o CSS do passo 4, que antes
     // entrava aqui no mesmo Promise.all e chegava ao <head> antes desta cópia (revisão final do 4c,
@@ -90,7 +94,7 @@ export async function iniciar({ base, resolver = (nome) => nome, estilo } = {}) 
     const resumo = montar(document, {
       unidades,
       usp,
-      urlMarcas: new URL('assets/marcas', BASE).href,
+      marca: resolverMarca,
       limites: { minBlocos: contrato.limites['blocos.min'], maxFileira: contrato.limites['blocos.maxFileira'] },
     });
     // A matemática entra antes do motor: cada \passo vira data-passo, que o motor conta ao iniciar (spec 6.4).
