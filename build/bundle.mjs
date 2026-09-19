@@ -1,0 +1,85 @@
+// Empacotador de dist/ (spec 3.3 etapa 4, 3.5 e 8.1). Node, não navegador.
+// Os quatro scripts da spec, mais uma gramática do Shiki por linguagem do contrato.
+import { createHash } from 'node:crypto';
+import { readFile, writeFile, mkdir } from 'node:fs/promises';
+import { fileURLToPath } from 'node:url';
+import * as esbuild from 'esbuild';
+
+// sha384 em base64, o formato que o atributo integrity espera (spec 8.1; o `pacotes` do marco 6 escreve).
+const integridade = (bytes) => `sha384-${createHash('sha384').update(bytes).digest('base64')}`;
+
+const COMUM = {
+  bundle: true,
+  minify: true,
+  target: ['chrome120'],
+  logLevel: 'silent',
+  write: false,
+  // O CSS entra como TEXTO (montar/dist.js o importa e injeta), e binário como data URI.
+  loader: { '.css': 'text', '.woff2': 'dataurl', '.svg': 'text', '.png': 'dataurl' },
+};
+
+// A CSS do KaTeX com as 20 woff2 dentro. Só woff2: woff e ttf são o fallback para navegadores que
+// este sistema não atende (spec 8.2 pede Chrome), e embutir os três triplicaria 296 kB à toa.
+async function cssDoTexComFontes(raiz) {
+  const pastaKatex = new URL('node_modules/katex/dist/', raiz);
+  const css = await readFile(new URL('katex.min.css', pastaKatex), 'utf8');
+  const arquivos = [...new Set([...css.matchAll(/url\(fonts\/([^)]+)\)/g)].map((m) => m[1]))];
+  const dados = new Map();
+  for (const arquivo of arquivos.filter((a) => a.endsWith('.woff2'))) {
+    dados.set(arquivo, (await readFile(new URL(`fonts/${arquivo}`, pastaKatex))).toString('base64'));
+  }
+  return css.replace(/url\(fonts\/([^)]+)\)/g, (_, arquivo) => {
+    const base64 = dados.get(arquivo);
+    // Sem data: a regra @font-face que sobrar aponta para lugar nenhum. url() vazio é a forma de
+    // dizer "não tenho", e o Chrome simplesmente pula essa fonte da lista de src.
+    return base64 ? `url(data:font/woff2;base64,${base64})` : 'url()';
+  });
+}
+
+export async function empacotar({ raiz, escrever = true } = {}) {
+  const dir = fileURLToPath(raiz);
+  const { linguagens } = JSON.parse(await readFile(new URL('contrato/contrato.json', raiz), 'utf8'));
+  const { version } = JSON.parse(await readFile(new URL('package.json', raiz), 'utf8'));
+  const saidas = new Map();
+
+  const guardar = (nome, resultado) => {
+    const arquivo = resultado.outputFiles[0];
+    saidas.set(nome, { bytes: arquivo.contents.length, integrity: integridade(arquivo.contents), texto: arquivo.text, conteudo: arquivo.contents });
+  };
+
+  // 1. o pacote do navegador: CLÁSSICO (iife), pelos motivos na tarefa 1.
+  guardar('aula-usp.js', await esbuild.build({ ...COMUM, absWorkingDir: dir, entryPoints: ['montar/dist.js'], format: 'iife' }));
+
+  // 2. o motor sozinho, que o build do marco 5b põe no lugar da tag do runtime.
+  guardar('aula-usp-motor.js', await esbuild.build({ ...COMUM, absWorkingDir: dir, entryPoints: ['motor/motor.js'], format: 'iife', globalName: 'AulaUSPMotor' }));
+
+  // 3. matemática: KaTeX + a CSS dele + as fontes dele. Injeta a própria folha ao ser importado,
+  //    para que entrada.js não precise de um ramo só para este caso.
+  const entradaTex = `
+import katex from 'katex';
+const folha = document.createElement('style');
+folha.textContent = ${JSON.stringify(await cssDoTexComFontes(raiz))};
+document.head.append(folha);
+export default katex;
+`;
+  guardar('aula-usp-tex.js', await esbuild.build({ ...COMUM, absWorkingDir: dir, stdin: { contents: entradaTex, resolveDir: dir, loader: 'js' }, format: 'esm' }));
+
+  // 4. código: o núcleo do Shiki. As gramáticas vão à parte, uma por linguagem — uma aula de
+  //    Python não deve baixar a de LaTeX. (E `splitting: true` não serve: colide nos nomes.)
+  guardar('aula-usp-codigo.js', await esbuild.build({ ...COMUM, absWorkingDir: dir,
+    stdin: { contents: "export * from '@shikijs/primitive'; export * from '@shikijs/engine-javascript';", resolveDir: dir, loader: 'js' }, format: 'esm' }));
+
+  for (const linguagem of linguagens) {
+    guardar(`aula-usp-lang-${linguagem}.js`, await esbuild.build({ ...COMUM, absWorkingDir: dir,
+      stdin: { contents: `export { default } from '@shikijs/langs/${linguagem}';`, resolveDir: dir, loader: 'js' }, format: 'esm' }));
+  }
+
+  if (escrever) {
+    await mkdir(new URL('dist/', raiz), { recursive: true });
+    for (const [nome, { conteudo }] of saidas) await writeFile(new URL(`dist/${nome}`, raiz), conteudo);
+    const arquivos = Object.fromEntries([...saidas].map(([nome, { bytes, integrity }]) => [nome, { bytes, integrity }]));
+    await writeFile(new URL('dist/manifesto.json', raiz),
+      `${JSON.stringify({ versao: version, gerado: new Date().toISOString(), arquivos }, null, 2)}\n`);
+  }
+  return saidas;
+}

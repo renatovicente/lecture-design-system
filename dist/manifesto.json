@@ -1,0 +1,50 @@
+{
+  "versao": "0.1.0",
+  "gerado": "2026-09-19T04:23:56.736Z",
+  "arquivos": {
+    "aula-usp.js": {
+      "bytes": 96885,
+      "integrity": "sha384-UN782ANHmUbNSgDkAsRuROanV1qbm6TYZm/Q4kD2uE/t42qzABG1D+Ok78Vw5ZRg"
+    },
+    "aula-usp-motor.js": {
+      "bytes": 7072,
+      "integrity": "sha384-0e2aAP5TDTyOjAypdCXOfU2x+C3mFZMwjB/gf1Bv8P+15QuObOnAiZ31Mpm8CSBk"
+    },
+    "aula-usp-tex.js": {
+      "bytes": 637702,
+      "integrity": "sha384-N9VaDSwKqdGv0LechWjzdwpVV6OZUbSHewkOJ11h8gpCRbqccJ4Gu7XTGVT6wGRJ"
+    },
+    "aula-usp-codigo.js": {
+      "bytes": 115093,
+      "integrity": "sha384-8gNfnG/TXjKufj8MqfhkW9nVDjb6iSDhVM8kPzqyt6Y4sNqXbImVppat60XVOV9g"
+    },
+    "aula-usp-lang-python.js": {
+      "bytes": 69950,
+      "integrity": "sha384-ddRnmDXuDyeBM0uJJwIiqnyOcaCKwiWHhJk/AsAvSC/XncM/MI6jvJIdF/AvN6HL"
+    },
+    "aula-usp-lang-r.js": {
+      "bytes": 6733,
+      "integrity": "sha384-6GKQEGZCekUPRp+PKQl+Q3tQDSzylkzLWO69f5AhNOHROZ9955iL2AcOE+TF3BsQ"
+    },
+    "aula-usp-lang-sql.js": {
+      "bytes": 23426,
+      "integrity": "sha384-o/c6UjgWnVelcQBpuOG0o5C92JTEA++beYXZ4sNTQ1n/D0MFlK98IOE1MBtCatZb"
+    },
+    "aula-usp-lang-javascript.js": {
+      "bytes": 174825,
+      "integrity": "sha384-luRtpnkjhe68s2qlJagSWy9E7IIGlASzq9XZTDbR9XiKFjbIb4EQfkYZPPkL7QXY"
+    },
+    "aula-usp-lang-bash.js": {
+      "bytes": 41477,
+      "integrity": "sha384-97MhuVr4PN/s/YLehy4dPtLvdcaGxNEAbZqt59G6ovPW7HpKm/6lfN8Q2D1frjzC"
+    },
+    "aula-usp-lang-json.js": {
+      "bytes": 2822,
+      "integrity": "sha384-nbr6ATqNTy4sNdHMQlhB8YpKz2Rlp+keqrEeJnEId7S3Er2p0KAeVefRs0Vftn7P"
+    },
+    "aula-usp-lang-latex.js": {
+      "bytes": 89168,
+      "integrity": "sha384-l99Gz6Ef86zZR7flIi0rAu6lUEkirdmWzvD97Wxgfvyi+gADRO99T3v0Gf88VlFH"
+    }
+  }
+}

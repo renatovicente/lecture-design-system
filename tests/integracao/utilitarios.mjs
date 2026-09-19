@@ -1,9 +1,11 @@
 // Utilitários dos testes de integração: Chrome instalado, servidor de uma pasta e aula montada.
 import assert from 'node:assert/strict';
+import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
+import { extname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright-core';
-import { criarServidor } from '../../build/servir.mjs';
+import { criarServidor, resolverSeguro } from '../../build/servir.mjs';
 
 export const RAIZ = new URL('../../', import.meta.url);
 
@@ -37,6 +39,56 @@ export function iniciarChrome() {
 
 export async function servirPasta(pastaRelativaARaiz) {
   const servidor = criarServidor({ pastaAula: fileURLToPath(new URL(pastaRelativaARaiz, RAIZ)) });
+  await new Promise((pronto) => servidor.listen(0, '127.0.0.1', pronto));
+  return {
+    endereco: `http://127.0.0.1:${servidor.address().port}`,
+    fechar: () => new Promise((fim) => {
+      servidor.closeAllConnections();
+      servidor.close(fim);
+    }),
+  };
+}
+
+const TIPOS_CRUS = {
+  '.html': 'text/html; charset=utf-8',
+  '.js': 'text/javascript; charset=utf-8',
+  '.mjs': 'text/javascript; charset=utf-8',
+  '.css': 'text/css; charset=utf-8',
+  '.json': 'application/json; charset=utf-8',
+  '.svg': 'image/svg+xml',
+  '.png': 'image/png',
+  '.woff2': 'font/woff2',
+};
+
+// Servidor estático burro: ao contrário de servirPasta, não passa por criarServidor e não reescreve
+// nada. tests/integracao/dist.test.mjs precisa dele, não de servirPasta — é o teste que prova o
+// caminho de produção, em que o <script src=".../dist/aula-usp.js"> do espécime chega ao navegador
+// do jeito que o autor escreveu. criarServidor (build/servir.mjs) reescreve QUALQUER
+// <script src=".../aula-usp.js"> para o modo de desenvolvimento, sempre, sem opção de desligar —
+// é o próprio comportamento sob teste em todos os outros arquivos desta pasta, que continuam usando
+// servirPasta sem mudança nenhuma.
+export async function servirPastaCrua(pastaRelativaARaiz) {
+  const raiz = resolve(fileURLToPath(new URL(pastaRelativaARaiz, RAIZ)));
+  const servidor = createServer(async (pedido, resposta) => {
+    let pathname;
+    try {
+      ({ pathname } = new URL(pedido.url, 'http://localhost'));
+    } catch {
+      resposta.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' }).end('pedido inválido');
+      return;
+    }
+    const caminho = resolverSeguro(raiz, pathname.endsWith('/') ? `${pathname}index.html` : pathname);
+    if (!caminho) {
+      resposta.writeHead(403, { 'Content-Type': 'text/plain; charset=utf-8' }).end('proibido');
+      return;
+    }
+    try {
+      const corpo = await readFile(caminho);
+      resposta.writeHead(200, { 'Content-Type': TIPOS_CRUS[extname(caminho).toLowerCase()] ?? 'application/octet-stream' }).end(corpo);
+    } catch {
+      resposta.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' }).end('não encontrado');
+    }
+  });
   await new Promise((pronto) => servidor.listen(0, '127.0.0.1', pronto));
   return {
     endereco: `http://127.0.0.1:${servidor.address().port}`,
