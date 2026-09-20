@@ -56,6 +56,12 @@ export function exemplosPorLayout(raiz) {
   const achados = {};
   for (const nome of readdirSync(new URL('especime/', raiz)).filter((n) => n.endsWith('.html')).sort()) {
     const html = readFileSync(new URL(`especime/${nome}`, raiz), 'utf8');
+    // Só decks em português. especime/ifusp.html é `lang="en"` de propósito — é ele que exercita os
+    // rótulos em inglês da spec 6.8 —, e sem este filtro ele vence o critério "o menor" em dois
+    // layouts, pondo "The cloud spreads" e "Takeaways" como exemplos canônicos de um guia escrito
+    // para professores brasileiros. Medido: os sete layouts têm instância pt-BR, então filtrar não
+    // custa cobertura nenhuma.
+    if (!/<html lang="pt/.test(html)) continue;
     for (const trecho of html.match(/<section data-layout="[a-z-]+"[\s\S]*?<\/section>/g) ?? []) {
       const layout = trecho.match(/data-layout="([a-z-]+)"/)[1];
       if (!achados[layout] || trecho.length < achados[layout].trecho.length) {

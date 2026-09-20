@@ -44,14 +44,14 @@ Extraído de `especime/muitos-blocos.html`.
 #### `conteudo`
 
 ```html
-<section data-layout="conteudo" id="spreading">
-  <h2>The cloud spreads</h2>
-  <p>The spread grows with the square root of time.</p>
-  <aside class="notas">The cloud widens as the square root of time: that is the whole point of the slide.</aside>
+<section data-layout="conteudo" id="dentro-do-terceiro">
+  <h2>Dentro do terceiro bloco</h2>
+  <p>O cabeçalho mostra o bloco em texto.</p>
+  <aside class="notas">Este deck existe para mostrar o contador: acima de oito blocos, o mapa de quadrados vira "Bloco N de M".</aside>
 </section>
 ```
 
-Extraído de `especime/ifusp.html`.
+Extraído de `especime/muitos-blocos.html`.
 
 #### `afirmacao`
 
@@ -98,12 +98,12 @@ Extraído de `especime/index.html`.
 
 ```html
 <section data-layout="encerramento">
-  <h2>Takeaways</h2>
+  <h2>O que fica</h2>
   <ol class="sintese">
-    <li>Steps add up to a spread.</li>
+    <li>Com nove blocos, o mapa vira texto.</li>
   </ol>
 </section>
 ```
 
-Extraído de `especime/ifusp.html`.
+Extraído de `especime/muitos-blocos.html`.
 <!-- /gerado -->
