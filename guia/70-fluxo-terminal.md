@@ -152,6 +152,8 @@ Para um agente, `--json` dá a mesma lista em objetos, um por achado, com os cam
 aula-usp validar minha-aula --json
 ```
 
+A saída é um array; abaixo, um elemento dele — o achado de `vocabulario.style` da lista de cima:
+
 ```json
 {
   "severidade": "erro",
