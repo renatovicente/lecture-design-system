@@ -134,10 +134,10 @@ Do espécime: `especime/matematica.html#o-papel-de-eta`. Sem `data-curto`, o nom
 **As notas do apresentador**, em `<aside class="notas">`, como último filho da seção:
 
 ```html
-<aside class="notas">Revelar um passo por vez. A troca de sinal do terceiro item é onde a turma tropeça.</aside>
+<aside class="notas">Dar um minuto de silêncio antes de revelar a resposta. Errar o sinal é o engano mais comum, e é melhor que ele apareça aqui do que na lista.</aside>
 ```
 
-Elas não aparecem no slide — só na janela do apresentador — e não contam no orçamento de palavras do slide. Escreva nelas o que você vai dizer e não está escrito na tela; `estrutura.notas-ausentes` avisa quando um slide de conteúdo, afirmação, figura ou demo não tem nenhuma.
+Da aula-exemplo: `exemplos/descida-do-gradiente/index.html#exercicio`. As notas não aparecem no slide — só na janela do apresentador — e não contam no orçamento de palavras do slide. Escreva nelas o que você vai dizer e não está escrito na tela; `estrutura.notas-ausentes` avisa quando um slide de conteúdo, afirmação, figura ou demo não tem nenhuma.
 
 ## Revelar por passos
 
