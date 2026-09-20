@@ -53,11 +53,11 @@ test('final 2 — erro de composição na etapa 5: grava HTML e validacao.json, 
   const r = await build({ raiz: RAIZ, caminhoDaAula: fixture('erro-composicao'), destino, navegador });
   assert.equal(r.codigo, 1);
   assert.deepEqual((await readdir(destino)).sort(), ['erro-composicao.html', 'validacao.json']);
-  assert.ok(r.achados.some((a) => a.regra === 'composicao.transbordo'), JSON.stringify(r.achados));
-  // Mesma regressão do final 4/caminho feliz (comentário lá): os avisos de estática desta fixture
-  // (as mesmas duas condições de aula-limpa) têm de sobreviver ao lado do erro de composição.
-  assert.ok(r.achados.some((a) => a.regra === 'estrutura.blocos'), JSON.stringify(r.achados));
-  assert.ok(r.achados.some((a) => a.regra === 'estrutura.notas-ausentes'), JSON.stringify(r.achados));
+  // Lista exata (item 2 da rodada de correção 1: array ordenado, não .some()/Set — comentário no
+  // teste "final 3"): os avisos de estática desta fixture (as mesmas duas condições de aula-limpa)
+  // sobrevivem ao lado do erro de composição, e é só ESTE erro — não duplica nada.
+  assert.deepEqual(r.achados.map((a) => a.regra).sort(),
+    ['estrutura.blocos', 'estrutura.notas-ausentes', 'composicao.transbordo'].sort());
   // Distingue este final do final 4 (mesma lista de arquivos, código igual a 1 aqui e 0 lá): aqui
   // NÃO há aviso de Chrome ausente — o Chrome rodou, e foi ELE quem achou o erro.
   assert.equal(r.avisoSemChrome, undefined);
@@ -75,13 +75,46 @@ test('final 3 — erro de saída na etapa 7: mantém HTML e PDF gravados, e sai 
   // build precisa terminar as etapas 5 e 6 (composição limpa, PDF gerado) antes de decidir o código
   // final: as quatro regras de saída são concatenadas num só veredito, na etapa 7 (comentário de
   // SO_PDF_PAGINAS em build/build.mjs).
-  assert.ok(r.achados.some((a) => a.regra === 'saida.referencia-externa'), JSON.stringify(r.achados));
-  // E o número de páginas do PDF bate com o esperado: o único defeito desta fixture é a referência
-  // externa, não a contagem de páginas — saida.pdf-paginas roda (não se cala) e não acusa nada,
-  // prova de que a etapa 7 recebeu números de verdade, não só de que ela existe.
-  assert.ok(!r.achados.some((a) => a.regra === 'saida.pdf-paginas'), JSON.stringify(r.achados));
+  //
+  // Rodada de correção 1: a lista EXATA, em vez de .some()/Set (que absorvem duplicata) — o revisor
+  // trocou SO_PDF_PAGINAS por REGRAS_DE_SAIDA em build.mjs e o teste anterior (só .some()) continuou
+  // verde, porque rodar o grupo inteiro na etapa 7 duplica saida.referencia-externa (já achada por
+  // construir()) em vez de mudar o código de saída. Um array ordenado, comparado por igualdade
+  // estrita, pega a duplicata que um Set ou um .some() deixariam passar; verificado por inversão
+  // (relatório da tarefa, rodada 1): com REGRAS_DE_SAIDA, esta asserção falha listando o nome duas
+  // vezes; com SO_PDF_PAGINAS, de volta à lista de baixo.
+  const regras = r.achados.map((a) => a.regra).sort();
+  assert.deepEqual(regras, ['estrutura.blocos', 'estrutura.notas-ausentes', 'recursos.imagem-externa', 'saida.referencia-externa'].sort());
+  // saida.pdf-paginas RODOU (não se calou por falta de contexto) e não acusou nada: o único defeito
+  // desta fixture é a referência externa, não a contagem de páginas — prova de que a etapa 7 recebeu
+  // números de verdade. (A prova de que ela SABE acusar um número errado é o teste seguinte.)
   assert.equal(typeof r.paginas, 'number');
   assert.ok(r.paginas > 0);
+});
+
+test('a etapa 7 liga saida.pdf-paginas de verdade: um gerarPdf com contagem errada faz build() sair 1', async () => {
+  // Rodada de correção 1, item 1 (Important): a tarefa tinha só prova unitária (tarefa 2, números
+  // sintéticos direto na regra) e prova negativa (o teste "final 3" e o "caminho feliz", onde os
+  // números batem) de que saida.pdf-paginas está LIGADA dentro de build(). Nenhuma prova positiva de
+  // que um número ERRADO de verdade, saindo de gerarPdf, de fato derruba o build — a mesma classe de
+  // defeito do marco 5a: uma regra pode ficar muda por nunca ter sido ligada, e sem este teste
+  // "ligada e concordando" fica indistinguível de "nunca ligada". gerarPdf injetável (mesma costura
+  // de navegador, comentário em build/build.mjs) resolve isso sem gastar Chrome a mais: o falso nem
+  // precisa do navegador que recebe.
+  const destino = await pastaTemporaria();
+  const gerarPdfComContagemErrada = async () => ({ bytes: Buffer.from('não é um pdf de verdade'), paginas: 999 });
+  const r = await build({
+    raiz: RAIZ, caminhoDaAula: fixture('aula-limpa'), destino, navegador, gerarPdf: gerarPdfComContagemErrada,
+  });
+  assert.equal(r.codigo, 1);
+  assert.equal(r.paginas, 999);
+  const daRegra = r.achados.filter((a) => a.regra === 'saida.pdf-paginas');
+  assert.equal(daRegra.length, 1, JSON.stringify(r.achados));
+  assert.match(daRegra[0].mensagem, /999/);
+  // O arquivo é o mesmo que a função devolveu — mantido, como o final "erro de saída" pede.
+  assert.deepEqual((await readdir(destino)).sort(), ['aula-limpa.html', 'aula-limpa.pdf', 'validacao.json'].sort());
+  const validacao = JSON.parse(await readFile(join(destino, 'validacao.json'), 'utf8'));
+  assert.deepEqual(validacao, r.achados);
 });
 
 test('final 4 — sem Chrome: grava HTML (não o PDF), avisa, e sai 0 se não houver erro', async () => {
@@ -109,7 +142,11 @@ test('final 4 — sem Chrome: grava HTML (não o PDF), avisa, e sai 0 se não ho
   // sem a correção, esta asserção falha com [] em vez dos dois. Achado rodando os seis decks do
   // espécime pela CLI de verdade (não previsto no brief): nenhum teste dos quatro finais, sozinho,
   // pegava isto, porque nenhum deles afirmava a lista COMPLETA de achados no caso de sucesso.
-  assert.deepEqual(new Set(r.achados.map((a) => a.regra)), new Set(['estrutura.blocos', 'estrutura.notas-ausentes']));
+  //
+  // Array ordenado, não Set: rodada de correção 1 do item 2 trocou toda comparação de lista de
+  // achados por igualdade estrita de array (Set absorve duplicata, e é exatamente o que o revisor
+  // achou escondido no teste "final 3" — comentário lá).
+  assert.deepEqual(r.achados.map((a) => a.regra).sort(), ['estrutura.blocos', 'estrutura.notas-ausentes'].sort());
 });
 
 test('caminho feliz: grava HTML, PDF e validacao.json, e sai 0', async () => {
@@ -117,7 +154,6 @@ test('caminho feliz: grava HTML, PDF e validacao.json, e sai 0', async () => {
   const r = await build({ raiz: RAIZ, caminhoDaAula: fixture('aula-limpa'), destino, navegador });
   assert.equal(r.codigo, 0);
   assert.deepEqual((await readdir(destino)).sort(), ['aula-limpa.html', 'aula-limpa.pdf', 'validacao.json'].sort());
-  assert.equal(r.achados.filter((a) => a.severidade === 'erro').length, 0);
   assert.equal(r.avisoSemChrome, undefined);
   // O PDF de verdade tem o número de páginas que paginasEsperadas prevê a partir do MESMO HTML que
   // foi gravado — a mesma prova de wiring que o final 3 faz, desta vez no caso em que os dois
@@ -125,10 +161,11 @@ test('caminho feliz: grava HTML, PDF e validacao.json, e sai 0', async () => {
   const html = await readFile(join(destino, 'aula-limpa.html'), 'utf8');
   const esperadas = paginasEsperadas(parseHTML(html).document);
   assert.equal(r.paginas, esperadas);
-  assert.ok(!r.achados.some((a) => a.regra === 'saida.pdf-paginas'), JSON.stringify(r.achados));
-  // Mesma regressão do final 4 (comentário lá): os dois avisos de estática de aula-limpa têm de
-  // sobreviver até o fim do pipeline inteiro, não só até a etapa 1.
-  assert.deepEqual(new Set(r.achados.map((a) => a.regra)), new Set(['estrutura.blocos', 'estrutura.notas-ausentes']));
+  // Mesma regressão do final 4 (comentário lá) e mesmo aperto do item 2 (lista exata, não Set): os
+  // dois avisos de estática de aula-limpa sobrevivem até o fim, sem erro nenhum e sem
+  // saida.pdf-paginas (os números batem) — a lista exata já garante os dois, sem precisar de
+  // asserções soltas por cima.
+  assert.deepEqual(r.achados.map((a) => a.regra).sort(), ['estrutura.blocos', 'estrutura.notas-ausentes'].sort());
 });
 
 test('--sem-pdf: pula as etapas 6 e 7, grava HTML e validacao.json, e sai 0', async () => {

@@ -171,6 +171,40 @@ test('uma flag desconhecida sai com 2 e imprime o uso', () => {
   }
 });
 
+// Rodada de correção 1 da tarefa 3: cada comando só reconhece a flag dele (spec 8.1: servir
+// --porta; validar --json; build --sem-pdf) — uma flag de OUTRO comando era aceita e ignorada em
+// silêncio, o oposto de "flag desconhecida sai com 2", que já vale para uma flag que não existe
+// nenhuma. Três casos, um por comando com uma flag de vizinho.
+test('validar recusa --sem-pdf (é de build, não dele)', () => {
+  try {
+    execFileSync('node', [CLI, 'validar', aulaTemporaria(BOA), '--sem-pdf'], { encoding: 'utf8' });
+    assert.fail('deveria ter saído com 2');
+  } catch (erro) {
+    assert.equal(erro.status, 2);
+    assert.match(erro.stderr, /uso: aula-usp servir/);
+  }
+});
+
+test('build recusa --porta (é de servir, não dele)', () => {
+  try {
+    execFileSync('node', [CLI, 'build', aulaTemporaria(BOA), '--porta', '9999'], { encoding: 'utf8' });
+    assert.fail('deveria ter saído com 2');
+  } catch (erro) {
+    assert.equal(erro.status, 2);
+    assert.match(erro.stderr, /uso: aula-usp servir/);
+  }
+});
+
+test('servir recusa --json (é de validar, não dele)', () => {
+  try {
+    execFileSync('node', [CLI, 'servir', aulaTemporaria(BOA), '--json'], { encoding: 'utf8' });
+    assert.fail('deveria ter saído com 2');
+  } catch (erro) {
+    assert.equal(erro.status, 2);
+    assert.match(erro.stderr, /uso: aula-usp servir/);
+  }
+});
+
 test('um segundo posicional sai com 2', () => {
   try {
     execFileSync('node', [CLI, 'validar', aulaTemporaria(BOA), aulaTemporaria(BOA)], { encoding: 'utf8' });

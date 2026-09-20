@@ -23,22 +23,31 @@ function sair(mensagem) {
   process.exit(2);
 }
 
-function lerArgumentos(argumentos) {
+// flagsPermitidas é específico de quem chama (servir: --porta; validar: --json; build: --sem-pdf,
+// spec 8.1): sem isso, uma flag de OUTRO comando (--sem-pdf em validar, --porta em build) era aceita
+// e ignorada em silêncio — o oposto da regra que este arquivo já segue para flag desconhecida
+// ("melhor recusar que ignorar em silêncio"), e que vale tanto para uma flag que não existe quanto
+// para uma que existe, mas não é deste comando (achado numa rodada de revisão da tarefa 3).
+function lerArgumentos(argumentos, flagsPermitidas) {
   const opcoes = { porta: 8765 };
   const posicionais = [];
   for (let i = 0; i < argumentos.length; i++) {
-    if (argumentos[i] === '--porta') opcoes.porta = Number(argumentos[++i]);
-    else if (argumentos[i] === '--json') opcoes.json = true;
-    else if (argumentos[i] === '--sem-pdf') opcoes.semPdf = true;
-    else if (argumentos[i].startsWith('--')) sair(USO); // flag desconhecida: melhor recusar que ignorar em silêncio
+    if (argumentos[i] === '--porta' && flagsPermitidas.has('--porta')) opcoes.porta = Number(argumentos[++i]);
+    else if (argumentos[i] === '--json' && flagsPermitidas.has('--json')) opcoes.json = true;
+    else if (argumentos[i] === '--sem-pdf' && flagsPermitidas.has('--sem-pdf')) opcoes.semPdf = true;
+    else if (argumentos[i].startsWith('--')) sair(USO); // desconhecida OU de outro comando: mesmo tratamento
     else posicionais.push(argumentos[i]);
   }
   if (posicionais.length > 1) sair(USO); // um alvo só; mais de um é engano do autor, não uma lista
   return { opcoes, posicionais };
 }
 
+const FLAGS_SERVIR = new Set(['--porta']);
+const FLAGS_VALIDAR = new Set(['--json']);
+const FLAGS_BUILD = new Set(['--sem-pdf']);
+
 async function servir(argumentos) {
-  const { opcoes, posicionais } = lerArgumentos(argumentos);
+  const { opcoes, posicionais } = lerArgumentos(argumentos, FLAGS_SERVIR);
   const [pasta] = posicionais;
   if (!pasta || !Number.isInteger(opcoes.porta) || opcoes.porta < 0 || opcoes.porta > 65535) sair(USO);
   let ehPasta = false;
@@ -62,7 +71,7 @@ async function servir(argumentos) {
 }
 
 async function validarComando(argumentos) {
-  const { opcoes, posicionais } = lerArgumentos(argumentos);
+  const { opcoes, posicionais } = lerArgumentos(argumentos, FLAGS_VALIDAR);
   const [alvo] = posicionais;
   if (!alvo) sair(USO);
   let resultado;
@@ -94,7 +103,7 @@ async function validarComando(argumentos) {
 }
 
 async function buildComando(argumentos) {
-  const { opcoes, posicionais } = lerArgumentos(argumentos);
+  const { opcoes, posicionais } = lerArgumentos(argumentos, FLAGS_BUILD);
   const [pasta] = posicionais;
   if (!pasta) sair(USO);
   let resultado;

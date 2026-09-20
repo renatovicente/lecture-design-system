@@ -13,7 +13,7 @@ import { paginasEsperadas } from '../motor/impressao.js';
 import { lerERodarEstatica, validarCarga } from './validar.mjs';
 import { construir } from './construir.mjs';
 import { medirComposicao, abrirChrome } from './composicao.mjs';
-import { gerarPdf } from './pdf.mjs';
+import { gerarPdf as gerarPdfPadrao } from './pdf.mjs';
 
 // Quem roda quais das quatro regras de saída (spec 9.2), e por quê — decisão do controlador do
 // plano (ledger da tarefa 3, "ruling 1"), registrada aqui porque sem a razão a divisão parece
@@ -47,12 +47,21 @@ function metadadosDaAula(doc) {
   };
 }
 
-// navegador: só para os testes (tests/unit/build.test.mjs) reaproveitarem UM Chrome entre várias
-// chamadas de build() no mesmo arquivo — o ritmo que build/pdf.mjs pede ("uma abertura por build,
-// não uma por deck"). Não documentado como parte da interface pública de build(): omitido, o
-// comportamento é exatamente o da spec (abre e fecha um Chrome próprio, dentro da etapa 6). Passado,
-// build() usa o que recebeu e não fecha — de quem abriu é a responsabilidade de fechar.
-export async function build({ raiz, caminhoDaAula, destino, semPdf = false, navegador: navegadorExterno } = {}) {
+// navegador e gerarPdf: a mesma costura que o marco 5b já usa três vezes (construirHtml recebe
+// embutirFontes; montar/entrada.js recebe resolver e estilo) — o que varia entre produção e teste
+// vira valor passado pelo chamador, com um padrão que é a peça de verdade. Nenhum dos dois é parte
+// documentada da interface pública de build() (a spec 8.1 só conhece raiz/caminhoDaAula/destino/
+// semPdf); omitidos, o comportamento é exatamente o da spec:
+// - navegador: só para tests/unit/build.test.mjs reaproveitar UM Chrome entre várias chamadas de
+//   build() no mesmo arquivo (o ritmo que build/pdf.mjs pede, "uma abertura por build, não uma por
+//   deck"). Passado, build() usa o que recebeu e não fecha — de quem abriu é a responsabilidade.
+// - gerarPdf: sem ele, a ligação de saida.pdf-paginas dentro de build() só tinha prova unitária
+//   (tarefa 2, números sintéticos) e prova negativa (números reais que batem, nesta função) — nunca
+//   uma prova de que um NÚMERO ERRADO de verdade, saindo de gerarPdf, de fato acusa. Rodada de
+//   correção 1: um gerarPdf de mentira, devolvendo paginas errado, prova a ligação sem gerar PDF de
+//   verdade nem gastar Chrome a mais — a mesma classe de defeito do marco 5a (regra muda por nunca
+//   ter sido ligada, indistinguível de "ligada e concordando" sem este teste).
+export async function build({ raiz, caminhoDaAula, destino, semPdf = false, navegador: navegadorExterno, gerarPdf = gerarPdfPadrao } = {}) {
   const progresso = (mensagem) => console.error(`aula-usp build: ${mensagem}`);
   await mkdir(destino, { recursive: true });
   const raizDoSistema = fileURLToPath(raiz);
