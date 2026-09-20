@@ -129,3 +129,11 @@ test('sem paginasDoPdf no contexto a regra se cala', () => {
   assert.deepEqual(saida('<section data-layout="conteudo"><p>oi</p></section>',
     { paginasEsperadas: 11 }), []);
 });
+
+// M9 da revisão final: o outro lado da mesma guarda. Antes, com paginasDoPdf finito e
+// paginasEsperadas ausente, a regra acusava "PDF com 11 páginas (esperadas undefined)." — medido.
+// Dentro de build() as duas chegam sempre juntas, mas a regra é um módulo público do validador.
+test('sem paginasEsperadas no contexto a regra também se cala', () => {
+  assert.deepEqual(saida('<section data-layout="conteudo"><p>oi</p></section>',
+    { paginasDoPdf: 11 }), []);
+});

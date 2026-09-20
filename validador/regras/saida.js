@@ -139,8 +139,14 @@ export const regras = [
     // contexto (build com --sem-pdf, ou sem Chrome) a regra se cala, em vez de acusar: mesma
     // disciplina de degradação de matematica.simbolo-fora-do-tex e saida.glifo-ausente. Um achado sem
     // slide sai como "aula" (spec 9.1) — o PDF é sempre da aula inteira, nunca de um slide só.
+    // M9 da revisão final: a guarda era assimétrica — faltar paginasDoPdf calava a regra, faltar
+    // paginasEsperadas não, e saía "PDF com 11 páginas (esperadas undefined)". Dentro de build() as
+    // duas sempre existem juntas (a etapa 7 calcula as duas), mas esta regra é módulo público do
+    // validador, e uma mensagem com "undefined" é pior que o silêncio que o resto da família já
+    // pratica. As duas guardadas, pela mesma razão: contexto incompleto não acusa.
     *aplicar({ paginasDoPdf, paginasEsperadas }) {
-      if (!Number.isFinite(paginasDoPdf) || paginasDoPdf === paginasEsperadas) return;
+      if (!Number.isFinite(paginasDoPdf) || !Number.isFinite(paginasEsperadas)) return;
+      if (paginasDoPdf === paginasEsperadas) return;
       yield { mensagem: `PDF com ${plural(paginasDoPdf, 'página', 'páginas')} (esperadas ${paginasEsperadas}).` };
     },
   },
