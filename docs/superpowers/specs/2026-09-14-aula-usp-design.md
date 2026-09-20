@@ -272,11 +272,13 @@ Uma unidade nova entra com uma entrada em `unidades.json` e o arquivo do logo, s
       \[ w \leftarrow w - \eta \, \nabla E(w) \]
       <aside class="destaque" data-rotulo="Definição">Taxa de aprendizado \(\eta\): o tamanho de cada passo.</aside>
     </div>
-    <ol class="passos">
-      <li>Calcule o erro.</li>
-      <li data-passo>Calcule o gradiente.</li>
-      <li data-passo>Ande contra ele.</li>
-    </ol>
+    <div>
+      <ol class="passos">
+        <li>Calcule o erro.</li>
+        <li data-passo>Calcule o gradiente.</li>
+        <li data-passo>Ande contra ele.</li>
+      </ol>
+    </div>
   </div>
   <aside class="notas">Dizer a regra em palavras antes de mostrar a equação.</aside>
 </section>
