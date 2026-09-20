@@ -65,7 +65,7 @@ A `div.colunas` tem um `data-grade` e **um `div` filho para cada parte da grade*
 </div>
 ```
 
-Do espécime: `especime/index.html#grade-8-4`. Os valores de `data-grade` estão em `contrato/contrato.json`, e são as divisões do grid em números de colunas que somam a largura útil: uma coluna só, duas iguais, duas desiguais — numa ordem ou na outra — ou três iguais. Um valor que não exista no contrato é `vocabulario.atributo`.
+Do espécime: `especime/index.html#grade-8-4`. Os valores de `data-grade` são as divisões do grid em números de colunas que somam a largura útil, e estão todos na tabela de vocabulário de `10-estrutura.md`, cada um com o número de `div` filhos que pede. Um valor que não exista no contrato é `vocabulario.atributo`.
 
 A escolha da grade é de significado, não de estética: colunas iguais quando as duas partes têm o mesmo peso — antes e depois, texto e figura —, e desiguais quando uma argumenta e a outra comenta.
 

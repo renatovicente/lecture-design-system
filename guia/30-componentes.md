@@ -192,3 +192,26 @@ Por isso o trecho abaixo vem com a seção inteira em volta — para não restar
 ```
 
 Do espécime: `especime/matematica.html#em-destaque`. A matemática no meio de uma frase é a mesma coisa com os outros delimitadores, `\( … \)`, e não é bloco de corpo: é parte do texto onde está. Delimitadores, `\passo` e derivações reveladas linha a linha estão em `40-matematica-e-codigo.md`.
+
+## O tamanho mínimo de cada papel
+
+O contrato agrupa o texto do slide em quatro **papéis tipográficos** — leitura, código, legenda e rótulo —, e cada um tem um tamanho mínimo. Não é o mesmo "papel" da abertura deste arquivo: ali é para que serve o componente, aqui é que tipo de texto ele carrega.
+
+O autor não tem como mexer nesse tamanho: não há `style`, e nada no sistema encolhe texto para caber. É por isso que a resposta a um slide cheio é cortar ou dividir, e nunca reduzir a letra — reduzir a letra não é uma opção que exista.
+
+`composicao.tamanho-minimo` mede o tamanho que chegou à tela, não o que está no fonte, e acusa quem ficar abaixo do mínimo do seu papel. Quando dois seletores casam o mesmo elemento, vence o mais específico: o `li` do roteiro da capa é rótulo, não leitura.
+
+<!-- gerado:tabela-de-papeis -->
+| papel | tamanho mínimo | onde vale |
+|---|---|---|
+| `leitura` | 24 px | `p:not(.fonte)`, `li`, `th`, `td`, `aside.destaque`, `aside.quadro`, `aside.alerta`, `div.enunciado`, `div.resposta`, `.metadados-capa` |
+| `codigo` | 20 px | `pre`, `code` |
+| `legenda` | 18 px | `figcaption`, `p.fonte` |
+| `rotulo` | 14 px | `.rotulo`, `.rodape`, `.contador`, `.nome-curto`, `.bloco-n-de-m`, `.roteiro li` |
+
+Fora da medição: `.katex *`, `sub`, `sup`, `svg *`, `.demo *`, `.painel *`, `.faixa-de-marca *`, `figcaption code`, `p.fonte code`.
+<!-- /gerado -->
+
+Nem todo seletor da tabela é coisa que você escreve: a linha `rotulo` é inteira de cromo, e `.metadados-capa`, na linha `leitura`, também — é o sistema que desenha aquele texto, e ele está aqui porque a regra o mede junto com o seu.
+
+E nem todo elemento tem papel: `h1` e `h2` não casam seletor nenhum da tabela, e a regra não os mede — o tamanho do título vem do layout. A lista de "fora da medição" é o resto do que ela não mede: o miolo de uma fórmula e o interior de um SVG têm escala própria; o índice e o expoente são menores por definição; o interior de uma demo, dos painéis e da faixa de marca é desenhado pelo sistema; e o `code` dentro de uma legenda ou de uma linha de fonte acompanha o tamanho dela, abaixo do mínimo do papel `codigo`.

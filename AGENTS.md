@@ -65,7 +65,7 @@ Consequência prática: **mexeu no empacotador (`build/bundle.mjs`), nos pontos 
 | `estilos/fontes.css` | `npm run fontes:css` | `tests/unit/fontes-css.test.mjs:24` |
 | `validador/cobertura.json` | `aula-usp dist` | `tests/unit/cobertura.test.mjs:74` |
 | `dist/` (11 scripts + manifesto) | `aula-usp dist` | `tests/unit/bundle.test.mjs:115` e `:135` |
-| `guia/20-layouts.md` e `guia/60-validador.md`, só entre `<!-- gerado:… -->` e `<!-- /gerado -->` | `npm run guia` | `tests/unit/guia.test.mjs:18` |
+| `guia/10-estrutura.md`, `20-layouts.md`, `30-componentes.md` e `60-validador.md`, só entre `<!-- gerado:… -->` e `<!-- /gerado -->` | `npm run guia` | `tests/unit/guia.test.mjs:21` |
 
 Todos são rastreados no git e trazem, quando o formato permite, o cabeçalho "Gerado por … Não editar à mão". Editar um à mão quebra a guarda, e a correção é sempre a mesma: edite a **fonte** e regere.
 

@@ -8,11 +8,20 @@ import { fileURLToPath } from 'node:url';
 const RAIZ = new URL('../', import.meta.url);
 
 // Que bloco gerado entra em que arquivo. A prosa em volta é escrita à mão (Tarefas 3 e 5); só o
-// que está entre os marcadores é sobrescrito.
+// que está entre os marcadores é sobrescrito. As quatro tabelas são as que a spec 5.6 nomeia —
+// "as tabelas de layouts, vocabulário, papéis e regras do guia são geradas dele" —, mais o
+// esqueleto, que é o próprio modelo copiado.
 export const BLOCOS_POR_ARQUIVO = {
+  'guia/10-estrutura.md': ['modelo', 'tabela-de-vocabulario'],
   'guia/20-layouts.md': ['tabela-de-layouts', 'exemplos-por-layout'],
+  'guia/30-componentes.md': ['tabela-de-papeis'],
   'guia/60-validador.md': ['tabela-de-regras'],
 };
+
+// O esqueleto que o guia mostra é este arquivo, não uma cópia dele: enquanto era cópia, nada
+// impedia que os dois divergissem — e um esqueleto de uma geração atrás é a forma mais cara de
+// documentação que mente, porque é dele que toda aula começa.
+const MODELO = 'modelos/aula/index.html';
 
 // A sequência de um layout tem TRÊS formas de item — {seletor}, {grupo} e {umDe:[[…],[…]]} —, mais
 // min/max. Ler só `seletor` imprime "undefined" no layout `conteudo`, cujo terceiro item é um umDe
@@ -46,6 +55,114 @@ export function tabelaDeRegras(contrato, { fase = 1 } = {}) {
     .sort(([a], [b]) => a.localeCompare(b, 'pt-BR'))
     .map(([nome, regra]) => `| \`${nome}\` | ${regra.severidade} | ${regra.acao} |`);
   return ['| regra | severidade | como corrigir |', '|---|---|---|', ...linhas].join('\n');
+}
+
+// Uma célula de tabela markdown não pode ter "|" cru. O padrão de `img src` tem (é uma alternância),
+// e o dia em que outro valor do contrato tiver, a tabela sairia torta sem ninguém ver.
+function celula(texto) {
+  return texto.replaceAll('|', '\\|');
+}
+
+function emCodigo(valores) {
+  return valores.map((valor) => `\`${valor}\``).join(', ');
+}
+
+// O contrato usa "*" como seletor de atributo para dizer "vale em qualquer elemento"; os demais são
+// seletores CSS de verdade, que o validador passa a elemento.matches() (vocabulario.js).
+function ondeVale(seletor) {
+  return seletor === '*' ? 'qualquer elemento' : `\`${seletor}\``;
+}
+
+// Um item do contrato com `fase: 2` não vale na fase 1 — é o mesmo teste que vocabulario.classe e
+// vocabulario.atributo fazem (`regra.fase > fase`). Sem ele o guia da fase 1 documentaria classe e
+// atributo que o validador recusa hoje.
+function daFase(entrada, fase) {
+  return !(entrada.fase > fase);
+}
+
+// `class` está no contrato como atributo de qualquer elemento, com o valor em aberto, porque quem
+// confere o que vai dentro dele é vocabulario.classe, pela tabela de classes — e não
+// vocabulario.atributo, que pula a chave. Deixar a regra genérica dizer "texto livre" seria falso.
+const VALOR_POR_ATRIBUTO = { class: 'as classes da tabela acima' };
+
+// O que o validador confere no valor de um atributo, na ordem em que valorInvalido() confere
+// (validador/regras/vocabulario.js): lista fechada, padrão, JSON. Nada declarado é texto livre.
+function valoresDe(regra) {
+  const partes = [];
+  if (regra.valores) partes.push(regra.valores.map((valor) => (valor === '' ? 'sem valor' : `\`${valor}\``)).join(', '));
+  if (regra.padrao) partes.push(`na forma \`${regra.padrao}\``);
+  if (regra.json) partes.push('um objeto JSON');
+  if (partes.length === 0) partes.push('texto livre');
+  if (regra.layouts) partes.push(`só no layout ${regra.layouts.map((layout) => `\`${layout}\``).join(' ou ')}`);
+  if (regra.obrigatorio) partes.push('obrigatório');
+  return partes.join('; ');
+}
+
+function tabela(cabecalho, linhas) {
+  return [`| ${cabecalho.join(' | ')} |`, `|${cabecalho.map(() => '---').join('|')}|`, ...linhas].join('\n');
+}
+
+// A segunda das quatro tabelas da spec 5.6. Ela é o que deixa o guia enumerar valor de atributo sem
+// depender de alguém ter usado o valor num deck: `data-grade="12"` não aparece em especime/,
+// modelos/ nem exemplos/ (medido), então o extrator de exemplos nunca o mostraria.
+export function tabelaDeVocabulario(contrato, { fase = 1 } = {}) {
+  const partes = [];
+
+  partes.push(`### Elementos\n\n${emCodigo(contrato.html.elementos)}.`);
+
+  const classes = Object.entries(contrato.html.classes)
+    .filter(([, regra]) => daFase(regra, fase))
+    .map(([nome, regra]) => `| \`.${nome}\` | ${regra.em ? emCodigo(regra.em) : 'qualquer elemento'} `
+      + `| ${regra.dentro ? emCodigo(regra.dentro) : '—'} |`);
+  partes.push(`### Classes\n\n${tabela(['classe', 'em', 'só dentro de'], classes)}`);
+
+  const atributos = [];
+  for (const [seletor, doSeletor] of Object.entries(contrato.html.atributos)) {
+    for (const [nome, regra] of Object.entries(doSeletor)) {
+      if (!daFase(regra, fase)) continue;
+      const valores = VALOR_POR_ATRIBUTO[nome] ?? valoresDe(regra);
+      atributos.push(`| \`${nome}\` | ${ondeVale(seletor)} | ${celula(valores)} |`);
+    }
+  }
+  partes.push(`### Atributos\n\n${tabela(['atributo', 'em', 'valores'], atributos)}`);
+
+  const grades = Object.entries(contrato.grades).map(([nome, divs]) => `| \`${nome}\` | ${divs} |`);
+  partes.push(`### Grades\n\n${tabela(['`data-grade`', '`div` filhos'], grades)}`);
+
+  const porElemento = Object.entries(contrato.svg.atributosPorElemento)
+    .map(([elemento, lista]) => `${emCodigo(lista)} em \`${elemento}\``)
+    .join('; ');
+  partes.push(`### Dentro de um \`<svg>\`\n\n`
+    + `Elementos: ${emCodigo(contrato.svg.elementos)}.\n\n`
+    + `Atributos: ${emCodigo(contrato.svg.atributos)}${porElemento ? `; e ${porElemento}` : ''}.\n\n`
+    + `Classes: ${emCodigo(contrato.svg.classes)}. Cores: ${emCodigo(contrato.svg.cores)}. `
+    + `O \`href\` aponta só para um id da própria figura (\`${contrato.svg.hrefPadrao}\`).`);
+
+  partes.push('### Proibidos e reservados\n\n'
+    + `Elementos proibidos: ${emCodigo(contrato.proibidos.elementos)}.\n\n`
+    + `Atributos proibidos: ${emCodigo(contrato.proibidos.atributos)}, e qualquer um que comece com `
+    + `${emCodigo(contrato.proibidos.prefixosDeAtributo)}.\n\n`
+    + `Comandos de TeX proibidos: ${emCodigo(contrato.proibidos.comandosTex)}, e o que casar `
+    + `${emCodigo(contrato.proibidos.comandosTexPorPadrao)}.\n\n`
+    + `Classes do sistema, que o sistema escreve e o autor não: ${emCodigo(contrato.classesDoSistema)}.`);
+
+  return partes.join('\n\n');
+}
+
+// A terceira das quatro tabelas da spec 5.6. O mínimo é em px, como a mensagem de
+// composicao.tamanho-minimo o diz; as chaves `precedencia` e `excecoes` não são papéis.
+export function tabelaDePapeis(contrato) {
+  const linhas = Object.entries(contrato.papeis)
+    .filter(([nome]) => nome !== 'precedencia' && nome !== 'excecoes')
+    .map(([nome, papel]) => `| \`${nome}\` | ${papel.minimo} px | ${celula(emCodigo(papel.seletores))} |`);
+  return `${tabela(['papel', 'tamanho mínimo', 'onde vale'], linhas)}\n\n`
+    + `Fora da medição: ${emCodigo(contrato.papeis.excecoes)}.`;
+}
+
+// O esqueleto, lido do próprio modelo. É a guarda que faltava ao trecho que o guia mostrava: antes,
+// a cópia era conferida à mão uma vez e nunca mais.
+export function blocoDoModelo(raiz) {
+  return `\`\`\`html\n${readFileSync(new URL(MODELO, raiz), 'utf8').trimEnd()}\n\`\`\``;
 }
 
 // Um exemplo por layout, EXTRAÍDO do espécime e não escrito: o espécime é validado a cada rodada,
@@ -98,16 +215,25 @@ export function aplicarMarcadores(texto, blocos) {
   return saida;
 }
 
+// Todo bloco gerado, por nome de marcador. Separado de gerarGuia() para que a guarda possa conferir
+// os blocos um a um sem ter de reencontrá-los dentro dos arquivos — e para que um bloco novo entre
+// nessa conferência só por existir aqui.
+export function blocosGerados({ raiz = RAIZ } = {}) {
+  const contrato = JSON.parse(readFileSync(new URL('contrato/contrato.json', raiz), 'utf8'));
+  return {
+    modelo: blocoDoModelo(raiz),
+    'tabela-de-vocabulario': tabelaDeVocabulario(contrato),
+    'tabela-de-layouts': tabelaDeLayouts(contrato),
+    'exemplos-por-layout': blocoDeExemplos(contrato, exemplosPorLayout(raiz)),
+    'tabela-de-papeis': tabelaDePapeis(contrato),
+    'tabela-de-regras': tabelaDeRegras(contrato),
+  };
+}
+
 // Devolve o texto novo de cada arquivo de guia com marcador, sempre; grava só quando pedido. É essa
 // separação que deixa a guarda de tests/unit/guia.test.mjs regerar em memória sem sujar o disco.
 export function gerarGuia({ raiz = RAIZ, escrever = false } = {}) {
-  const contrato = JSON.parse(readFileSync(new URL('contrato/contrato.json', raiz), 'utf8'));
-  const exemplos = exemplosPorLayout(raiz);
-  const conteudo = {
-    'tabela-de-layouts': tabelaDeLayouts(contrato),
-    'exemplos-por-layout': blocoDeExemplos(contrato, exemplos),
-    'tabela-de-regras': tabelaDeRegras(contrato),
-  };
+  const conteudo = blocosGerados({ raiz });
   const saida = {};
   for (const [caminho, nomes] of Object.entries(BLOCOS_POR_ARQUIVO)) {
     const alvo = new URL(caminho, raiz);

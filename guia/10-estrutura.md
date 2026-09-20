@@ -4,8 +4,9 @@ Uma aula é um arquivo HTML: um `<head>` com os metadados e a tag do runtime, e 
 
 ## O esqueleto
 
-É este o arquivo de onde toda aula começa. Ele está em `modelos/aula/index.html`, e nos pacotes para agentes vem como `assets/modelo.html`.
+É este o arquivo de onde toda aula começa. Ele está em `modelos/aula/index.html`, e nos pacotes para agentes vem como `assets/modelo.html`. O bloco abaixo **é** esse arquivo: `npm run guia` o copia para cá, então o que você lê aqui é o esqueleto que o repositório tem hoje, e não uma cópia que envelheceu.
 
+<!-- gerado:modelo -->
 ```html
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -72,6 +73,7 @@ Uma aula é um arquivo HTML: um `<head>` com os metadados e a tag do runtime, e 
 </body>
 </html>
 ```
+<!-- /gerado -->
 
 O que há para reparar nele:
 
@@ -181,3 +183,101 @@ Do espécime: `especime/matematica.html#passo-a-passo`.
 - **Conteúdo que não cabe.** Os limites do contrato estão medidos para a projeção: quando um deles acusa, a resposta é cortar ou dividir o slide, nunca reduzir o texto.
 
 O que pode entrar em cada layout, na ordem, está em `20-layouts.md`; o trecho pronto de cada componente, em `30-componentes.md`.
+
+## O vocabulário inteiro
+
+A seção acima diz o que não entra. Esta é a lista do que entra — todo elemento, toda classe e todo atributo que o corpo de uma aula aceita, com os valores de cada atributo. Ela sai de `contrato/contrato.json` por `npm run guia`, e é do mesmo contrato que o validador lê: o que não estiver aqui, as regras `vocabulario.*` acusam.
+
+Quatro avisos de leitura:
+
+- **as tabelas são da fase 1.** Classe e atributo marcados como fase 2 no contrato ficam de fora, porque o validador de hoje os recusa.
+- **`section` não está na lista de elementos**, porque ela não é conteúdo: ela é o slide. O que cada `data-layout` aceita dentro dela está em `20-layouts.md`.
+- **na tabela de classes, `em` é o elemento que recebe a classe e `só dentro de` é o ancestral obrigatório.** `enunciado` é classe de `div`, e um `div.enunciado` fora de um `div.exercicio` é erro.
+- **na tabela de atributos, "na forma" traz a expressão exata que o validador aplica ao valor.** Ela é para quem precisa da forma literal; o que ela quer dizer em português está no arquivo do componente. O `src` de uma imagem, por exemplo, é um caminho em `img/`, um URI `data:` ou um endereço `https://`, e é isso que `30-componentes.md` diz.
+
+<!-- gerado:tabela-de-vocabulario -->
+### Elementos
+
+`h1`, `h2`, `p`, `br`, `strong`, `em`, `sub`, `sup`, `a`, `ul`, `ol`, `li`, `table`, `thead`, `tbody`, `tr`, `th`, `td`, `figure`, `figcaption`, `img`, `svg`, `pre`, `code`, `aside`, `div`, `span`.
+
+### Classes
+
+| classe | em | só dentro de |
+|---|---|---|
+| `.sinal` | `span` | `h1`, `h2` |
+| `.lide` | `p` | — |
+| `.pergunta` | `p` | — |
+| `.afirmacao` | `p` | — |
+| `.fonte` | `p` | — |
+| `.proxima` | `p` | — |
+| `.colunas` | `div` | — |
+| `.destaque` | `aside`, `tr`, `td` | — |
+| `.quadro` | `aside` | — |
+| `.alerta` | `aside` | — |
+| `.exercicio` | `div` | — |
+| `.enunciado` | `div` | `div.exercicio` |
+| `.resposta` | `div` | `div.exercicio` |
+| `.passos` | `ol` | — |
+| `.sintese` | `ol` | — |
+| `.demo` | `div` | — |
+| `.estatico` | `img` | `div.demo` |
+| `.notas` | `aside` | — |
+
+### Atributos
+
+| atributo | em | valores |
+|---|---|---|
+| `class` | qualquer elemento | as classes da tabela acima |
+| `data-passo` | qualquer elemento | na forma `^([1-9][0-9]*)?$` |
+| `lang` | qualquer elemento | na forma `^[a-zA-Z]{2,3}(-[a-zA-Z0-9]{2,8})*$` |
+| `data-layout` | `section` | `capa`, `abertura`, `conteudo`, `afirmacao`, `figura`, `demo`, `encerramento` |
+| `id` | `section` | na forma `^[a-z0-9][a-z0-9-]*$` |
+| `data-curto` | `section` | texto livre; só no layout `abertura` |
+| `data-pdf` | `section` | `passos` |
+| `data-grade` | `div.colunas` | `12`, `6-6`, `8-4`, `4-8`, `4-4-4` |
+| `data-demo` | `div.demo` | na forma `^[a-z][a-z0-9-]*$` |
+| `data-opcoes` | `div.demo` | um objeto JSON |
+| `data-rotulo` | `aside.destaque` | texto livre |
+| `data-rotulo` | `aside.quadro` | texto livre |
+| `data-rotulo` | `aside.alerta` | texto livre |
+| `data-foto` | `figure` | `pb` |
+| `src` | `img` | na forma `^(?:img/(?!(?:[^/]*/)*(?:\.\|%2[eE]){2}(?:/\|$))[^\\]+$\|data:image/[a-z0-9.+-]+[;,]\|[hH][tT][tT][pP][sS]://)` |
+| `alt` | `img` | texto livre; obrigatório |
+| `data-lang` | `pre` | `python`, `r`, `sql`, `javascript`, `bash`, `json`, `latex` |
+| `data-linhas` | `pre` | na forma `^[0-9]+(-[0-9]+)?(,[0-9]+(-[0-9]+)?)*$` |
+| `data-numeros` | `pre` | sem valor |
+| `colspan` | `th` | na forma `^[1-9][0-9]?$` |
+| `rowspan` | `th` | na forma `^[1-9][0-9]?$` |
+| `scope` | `th` | `row`, `col` |
+| `colspan` | `td` | na forma `^[1-9][0-9]?$` |
+| `rowspan` | `td` | na forma `^[1-9][0-9]?$` |
+| `href` | `a` | na forma `^(#\|https://)` |
+
+### Grades
+
+| `data-grade` | `div` filhos |
+|---|---|
+| `12` | 1 |
+| `6-6` | 2 |
+| `8-4` | 2 |
+| `4-8` | 2 |
+| `4-4-4` | 3 |
+
+### Dentro de um `<svg>`
+
+Elementos: `svg`, `g`, `path`, `line`, `polyline`, `polygon`, `rect`, `circle`, `ellipse`, `text`, `tspan`, `title`, `desc`, `defs`, `marker`, `use`, `clipPath`.
+
+Atributos: `xmlns`, `viewBox`, `width`, `height`, `d`, `x`, `y`, `x1`, `y1`, `x2`, `y2`, `cx`, `cy`, `r`, `points`, `transform`, `fill`, `stroke`, `stroke-width`, `stroke-dasharray`, `stroke-linecap`, `stroke-linejoin`, `marker-start`, `marker-end`, `markerWidth`, `markerHeight`, `refX`, `refY`, `orient`, `text-anchor`, `dominant-baseline`, `font-size`, `font-weight`, `clip-path`, `id`, `href`, `role`, `aria-label`, `class`; e `rx`, `ry` em `ellipse`.
+
+Classes: `mono`. Cores: `#0A0A0A`, `#666666`, `#D9D9D9`, `#1094AB`, `#FCB421`, `#FFFFFF`, `none`. O `href` aponta só para um id da própria figura (`^#`).
+
+### Proibidos e reservados
+
+Elementos proibidos: `style`, `iframe`, `video`, `audio`, `font`, `foreignObject`, `image`, `linearGradient`, `radialGradient`, `filter`, `mask`, `pattern`.
+
+Atributos proibidos: `style`, `opacity`, `fill-opacity`, `stroke-opacity`, e qualquer um que comece com `on`.
+
+Comandos de TeX proibidos: `\color`, `\textcolor`, `\colorbox`, `\fcolorbox`, `\htmlStyle`, `\htmlClass`, `\htmlId`, `\htmlData`, e o que casar `\\(red|orange|yellow|green|blue|purple|pink|gray|grey|teal|gold|maroon|mint)[A-H]?(?![a-zA-Z])`.
+
+Classes do sistema, que o sistema escreve e o autor não: `palco`, `slide`, `area`, `cabecalho`, `rotulo`, `mapa`, `quadrado`, `visto`, `atual`, `futuro`, `contador`, `rodape`, `metadados-capa`, `roteiro`, `faixa-de-marca`, `marca-unidade`, `marca-usp`, `numero-bloco`, `fileira`, `nome-curto`, `bloco-n-de-m`, `painel`, `ativo`, `folha`, `modo-palco`, `painel-titulo`, `painel-corpo`, `grupo`, `grupo-titulo`, `cartoes`, `cartao`, `cartao-numero`, `cartao-titulo`, `teclas`, `aviso`, `modo-apresentador`, `apresentador`, `miniatura`, `quadro-miniatura`, `fim-da-aula`, `painel-apresentador`, `posicao`, `cronometro`, `tempo`, `relogio`, `notas-apresentador`, `captura-demo`, `demo-substituta`, `imprimindo`, `numerica`, `equacao`, `tex-invalido`, `linha`, `marcada`, `palavra-chave`, `comentario`, `achados`, `copiar`.
+<!-- /gerado -->
