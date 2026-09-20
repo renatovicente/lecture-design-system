@@ -221,16 +221,35 @@ Metadados: `unidade="ime"`, `disciplina="Aprendizado de Máquina"`, `aula="4"`, 
 
 A matemática é determinada; escreva-a assim, dentro de um `<div>` de coluna:
 
+**A derivação é em lote, e a primeira versão deste passo escrevia a de um exemplo.** Quarto defeito
+meu neste plano, achado pela revisão da tarefa 2. Eu tinha fixado `E(w) = \tfrac{1}{2}(y - \hat{y}(w))^2`,
+que é o erro de **um** exemplo, enquanto o Passo 3 fixa `grad = -X.T @ erro / len(y)`, que é o
+gradiente da **média** sobre os `N`. Cada passo estava certo sozinho, e o `1/N` que faltava entre eles
+nunca aparecia — mas o Passo 1 manda o slide 8 perguntar como "essas quatro linhas de conta viram um
+laço que roda", o que afirma uma correspondência que não existia. Quem acompanhasse a conta ia
+procurar o `len(y)` nos quatro passos e não ia achar.
+
+**Corrigi a derivação, não o código.** É o código que o aluno roda, a forma em lote é a que
+`especime/matematica.html:35` já escreve, e somar sobre os exemplos é a aula mais honesta. Com o
+`1/N`, o item 2 passa a ser literalmente a linha do `grad`.
+
+`N` maiúsculo, não `n`: o Passo 1 põe no slide 4 o gradiente como `(\partial E/\partial w_1, \ldots,
+\partial E/\partial w_n)`, onde `n` conta **pesos**. A mesma letra para duas grandezas a dois slides
+de distância seria um defeito novo, e `N` para exemplos é a letra do espécime.
+
 ```html
 <ol class="passos">
-  <li>O erro mede a distância ao alvo: \( E(w) = \tfrac{1}{2}\,(y - \hat{y}(w))^2 \).</li>
-  <li data-passo>Derive em relação ao peso: \( \nabla E(w) = -(y - \hat{y})\,\nabla \hat{y}(w) \).</li>
+  <li>O erro mede a distância ao alvo, na média sobre os \(N\) exemplos: \( E(w) = \tfrac{1}{2N} \sum_{i=1}^{N} (y_i - \hat{y}_i(w))^2 \).</li>
+  <li data-passo>Derive em relação ao peso: \( \nabla E(w) = -\tfrac{1}{N} \sum_{i=1}^{N} (y_i - \hat{y}_i)\,\nabla \hat{y}_i(w) \).</li>
   <li data-passo>O gradiente aponta a subida, então ande no sentido oposto.</li>
   <li data-passo>A regra: \( w \leftarrow w - \eta\,\nabla E(w) \).</li>
 </ol>
 ```
 
-Quatro itens cabem no limite de 5 (`lista.itens`, Fato 5).
+Quatro itens cabem no limite de 5 (`lista.itens`, Fato 5), e a coluna fica em 32 palavras das 60 de
+`coluna.palavras`. Medido com `numpy` depois da correção, sobre o código extraído do arquivo
+entregue: o gradiente do item 2 bate com uma diferença central de `E` (máx. 4,0e-10) e com o que o
+Passo 3 calcula (máx. 4,4e-16).
 
 - [ ] **Passo 3: o trecho de Python do slide `codigo`**
 
@@ -262,16 +281,31 @@ print(f"pesos: {w}")
 
 `div.exercicio` tem sequência fixa no contrato: `div.enunciado` (1) e `div.resposta` (0 ou 1).
 
+**O `div.resposta` leva `data-passo`, e a primeira versão deste passo o deixou de fora.** Quinto
+defeito meu, da mesma revisão. Sem ele não há nada a revelar: `montar/corpo.js:67-70` só põe
+`data-rotulo`, e enunciado e resposta aparecem juntos desde o primeiro instante, na tela e no PDF —
+o que deixava falsa a nota que o Passo 5 manda escrever ("dar um minuto de silêncio antes de revelar
+a resposta"). `especime/componentes.html:39-46` já tem o padrão certo, com a mesma frase na nota; foi
+de lá que a frase veio, sem o `data-passo` junto.
+
+`data-passo` vazio vale em qualquer elemento (`contrato/contrato.json:133`), e o motor conta um passo
+por elemento quando o valor não é número (`motor/passos.js:6-9`). Medido no Chrome, sobre o HTML
+construído: a resposta fica `visibility: hidden` no passo 0 e `visible` no passo 1. O PDF não muda —
+`data-passo` sem `data-pdf="passos"` não separa páginas, e a resposta continua impressa na apostila.
+
 ```html
 <div class="exercicio">
   <div class="enunciado">
     <p>Com \( \eta = 0{,}1 \) e gradiente \( 4 \), quanto o peso anda em um passo?</p>
   </div>
-  <div class="resposta">
+  <div class="resposta" data-passo>
     <p>Anda \( 0{,}4 \) no sentido oposto ao gradiente.</p>
   </div>
 </div>
 ```
+
+O guia do 6b documenta o exercício a partir daqui e de `especime/componentes.html:39-46`, com o
+`data-passo`.
 
 - [ ] **Passo 5: escrever a prosa**
 
