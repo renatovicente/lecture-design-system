@@ -65,9 +65,11 @@ Consequência prática: **mexeu no empacotador (`build/bundle.mjs`), nos pontos 
 | `estilos/fontes.css` | `npm run fontes:css` | `tests/unit/fontes-css.test.mjs:24` |
 | `validador/cobertura.json` | `aula-usp dist` | `tests/unit/cobertura.test.mjs:74` |
 | `dist/` (11 scripts + manifesto) | `aula-usp dist` | `tests/unit/bundle.test.mjs:115` e `:135` |
-| `guia/10-estrutura.md`, `20-layouts.md`, `30-componentes.md` e `60-validador.md`, só entre `<!-- gerado:… -->` e `<!-- /gerado -->` | `npm run guia` | `tests/unit/guia.test.mjs:21` |
+| `guia/10-estrutura.md`, `20-layouts.md`, `30-componentes.md` e `60-validador.md`, só entre `<!-- gerado:… -->` e `<!-- /gerado -->` | `npm run guia` | `tests/unit/guia.test.mjs:27` |
 
 Todos são rastreados no git e trazem, quando o formato permite, o cabeçalho "Gerado por … Não editar à mão". Editar um à mão quebra a guarda, e a correção é sempre a mesma: edite a **fonte** e regere.
+
+**O que uma guarda dessas NÃO prova.** Todas as cinco são da forma "regerar e comparar", e uma guarda dessa forma prova que o **arquivo** está em dia com o **gerador** — e nada sobre o gerador. Quebre o gerador, regere, e as duas voltam a bater: a guarda fica verde, e a mensagem que ela imprime ("rode … e commite o resultado") manda commitar a regressão. Medido no 6b: tirando do extrator de exemplos o filtro que só aceita deck em português, `npm run guia` publicou "The cloud spreads" e "Takeaways" como exemplos canônicos do guia, e esta guarda seguiu verde. O que fecha essa janela é asseverar **propriedades do resultado** ao lado da igualdade — no guia, que todo exemplo publicado é trecho literal de um deck pt-BR que valida limpo (`tests/unit/guia.test.mjs`). Ao acrescentar um gerado a esta tabela, pergunte também que propriedade o artefato promete, e não só se ele foi regerado.
 
 `aula-usp dist` gera a cobertura **antes** de empacotar, de propósito: `montar/dist.js` importa `validador/cobertura.json` para embuti-lo em `aula-usp.js`, e na ordem inversa o artefato sairia sempre uma geração atrasado.
 
