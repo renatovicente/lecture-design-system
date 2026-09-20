@@ -10,6 +10,8 @@ import {
   FONTES_DE_PACOTE,
   aplicarMarcadores,
   blocosGerados,
+  decksDoEspecime,
+  decksLimpos,
   exemplosPorLayout,
   gerarGuia,
   montarPacote,
@@ -22,8 +24,8 @@ import {
 const RAIZ = new URL('../../', import.meta.url);
 const contrato = JSON.parse(readFileSync(new URL('contrato/contrato.json', RAIZ), 'utf8'));
 
-test('os blocos gerados de guia/ batem com o que está em disco', () => {
-  const regerado = gerarGuia({ raiz: RAIZ });
+test('os blocos gerados de guia/ batem com o que está em disco', async () => {
+  const regerado = await gerarGuia({ raiz: RAIZ });
   for (const caminho of Object.keys(BLOCOS_POR_ARQUIVO)) {
     assert.equal(
       readFileSync(new URL(caminho, RAIZ), 'utf8'),
@@ -40,15 +42,55 @@ test('a tabela de layouts não contém `undefined`', () => {
 });
 
 // Deriva do contrato, não de uma lista escrita aqui: um layout novo entra nesta guarda sozinho.
-test('todo layout do contrato aparece na tabela e tem exemplo extraído do espécime', () => {
+test('todo layout do contrato aparece na tabela e tem exemplo extraído do espécime', async () => {
   const tabela = tabelaDeLayouts(contrato);
-  const exemplos = exemplosPorLayout(RAIZ);
+  const exemplos = await exemplosPorLayout(RAIZ);
   const layouts = Object.keys(contrato.layouts);
   assert.ok(layouts.length > 0, 'o contrato não declarou nenhum layout');
   for (const nome of layouts) {
     assert.ok(tabela.includes(`\`${nome}\``), `o layout ${nome} não aparece na tabela gerada`);
     assert.ok(exemplos[nome], `o layout ${nome} não tem exemplo em especime/`);
     assert.match(exemplos[nome].trecho, new RegExp(`data-layout="${nome}"`));
+  }
+});
+
+// O extrator de exemplos escolhe por DOIS filtros — só deck em português, só deck que valida limpo —
+// e a guarda de "regerar e comparar" não vê nenhum dos dois: ela compara saída com saída, e por isso
+// ABENÇOA a regressão do gerador. Tire um filtro, rode `npm run guia`, e as duas voltam a bater — com
+// a mensagem "commite o resultado", isto é, mandando commitar a regressão. Uma guarda de
+// gerado-e-versionado prova que o ARQUIVO está em dia com o GERADOR, e nada sobre o gerador.
+//
+// O que fecha a janela é asseverar PROPRIEDADES do resultado, medidas aqui e sem perguntar ao
+// gerador como ele escolheu:
+//
+//   1. a atribuição é verdadeira — o trecho publicado está literalmente no deck que o guia cita;
+//   2. esse deck é pt-BR — sem isso especime/ifusp.html, que é `lang="en"` de propósito, vence o
+//      critério "a menor" em dois layouts e o guia publica "The cloud spreads" e "Takeaways" como
+//      exemplos canônicos para professores brasileiros (medido);
+//   3. esse deck valida sem nenhum achado — sem isso o critério "a menor" escolhe sistematicamente a
+//      instância mais pobre do layout, porque é não ter os opcionais que a faz ser a menor: em
+//      `abertura` ele escolhia uma seção sem `id`, que o validador acusa com estrutura.id-ausente,
+//      num guia que manda "copie a forma".
+//
+// As três juntas são o que guia/00-principios.md promete ao leitor: "a marcação deste guia é tirada
+// de arquivos que o validador aprova, e vem com o endereço de onde saiu".
+test('todo exemplo publicado é trecho literal de um deck pt-BR que valida limpo', async () => {
+  const exemplos = await exemplosPorLayout(RAIZ);
+  const limpos = await decksLimpos(RAIZ);
+  assert.ok(Object.keys(exemplos).length > 0, 'o extrator não devolveu exemplo nenhum');
+  // Sem esta linha o filtro seria decoração: se decksLimpos devolvesse todo mundo, a asserção (3)
+  // passaria sempre. Ela cobra que o espécime ainda tenha o deck que existe para provocar aviso
+  // (muitos-blocos.html) e que a medição ainda saiba dizer não.
+  assert.ok(
+    limpos.size < decksDoEspecime(RAIZ).length,
+    'decksLimpos devolveu todos os decks do espécime: ou o deck que existe para provocar aviso saiu '
+      + 'de especime/, ou a medição parou de discriminar — nos dois casos o filtro virou decoração',
+  );
+  for (const [layout, { trecho, deck }] of Object.entries(exemplos)) {
+    const html = readFileSync(new URL(`especime/${deck}`, RAIZ), 'utf8');
+    assert.ok(html.includes(trecho), `${layout}: o trecho publicado não está em especime/${deck}`);
+    assert.match(html, /<html lang="pt/, `${layout}: especime/${deck} não é um deck em português`);
+    assert.ok(limpos.has(deck), `${layout}: especime/${deck} não valida limpo`);
   }
 });
 
@@ -102,9 +144,9 @@ test('a tabela de papéis traz os quatro papéis com o mínimo do contrato, e as
 
 // celula() escapa o "|" porque o padrão de `img src` tem um, e uma célula com "|" cru parte a linha
 // em duas: a tabela sai torta e ninguém vê. Conta as barras de cada linha de cada tabela gerada.
-test('nenhuma tabela gerada tem linha com número de células diferente do cabeçalho', () => {
+test('nenhuma tabela gerada tem linha com número de células diferente do cabeçalho', async () => {
   const barras = (linha) => (linha.match(/(?<!\\)\|/g) ?? []).length;
-  for (const [nome, bloco] of Object.entries(blocosGerados({ raiz: RAIZ }))) {
+  for (const [nome, bloco] of Object.entries(await blocosGerados({ raiz: RAIZ }))) {
     let esperado = null;
     for (const linha of bloco.split('\n')) {
       if (!linha.startsWith('|')) {

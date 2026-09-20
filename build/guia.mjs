@@ -165,19 +165,57 @@ export function blocoDoModelo(raiz) {
   return `\`\`\`html\n${readFileSync(new URL(MODELO, raiz), 'utf8').trimEnd()}\n\`\`\``;
 }
 
-// Um exemplo por layout, EXTRAÍDO do espécime e não escrito: o espécime é validado a cada rodada,
-// então todo trecho daqui é, por construção, um trecho que passa. Escolhe o menor entre os decks.
 // O `.sort()` é o que já se faz em build/cobertura.mjs: um gerado-e-versionado só compra a guarda
 // "regerar não muda nada" se a ordem de leitura do diretório não entrar no resultado.
-export function exemplosPorLayout(raiz) {
+export function decksDoEspecime(raiz) {
+  return readdirSync(new URL('especime/', raiz)).filter((nome) => nome.endsWith('.html')).sort();
+}
+
+// Um deck é "limpo" quando as regras estática e de carga não acham nada nele. São os dois grupos que
+// rodam SEM navegador, e por isso os únicos cujo resultado é o mesmo em qualquer máquina: incluir a
+// composição faria o guia sair diferente em dois checkouts pelo só fato de um deles ter Chrome, que
+// é a coisa que um gerado-e-versionado não pode fazer. Medido: 79 ms para os seis decks do espécime.
+export async function decksLimpos(raiz) {
+  const { lerERodarEstatica, validarCarga } = await import('./validar.mjs');
+  const raizDoSistema = fileURLToPath(raiz);
+  const limpos = new Set();
+  for (const nome of decksDoEspecime(raiz)) {
+    const alvo = fileURLToPath(new URL(`especime/${nome}`, raiz));
+    const { doc, contrato, recursos, achadosEstatica } = await lerERodarEstatica(alvo, { raizDoSistema });
+    const achados = [...achadosEstatica, ...validarCarga(doc, { contrato, recursos })];
+    if (achados.length === 0) limpos.add(nome);
+  }
+  return limpos;
+}
+
+// Um exemplo por layout, EXTRAÍDO do espécime e não escrito. O critério é **a menor seção entre os
+// decks que validam limpo**, e cada uma das duas metades foi paga com um defeito:
+//
+// "o menor" sozinho escolhe sistematicamente a instância mais pobre de cada layout — é justamente
+// não ter os opcionais que a faz ser a menor. Em `abertura` ele escolhia uma seção de
+// muitos-blocos.html sem `id` e sem `p.pergunta`, num guia que manda "copie a forma" e diz que o
+// bloco de código é a autoridade: o autor copiava e ganhava um aviso por bloco.
+//
+// Filtrar por deck limpo conserta isso pela raiz, e de um jeito que não exige rodar o validador
+// seção a seção: muitos-blocos.html existe para provocar aviso, por desenho, e é o único deck com
+// achado (medido: 10 avisos nele, 0 nos outros cinco). Sem ele, `abertura` passa a vir de
+// componentes.html, com `id` e com `p.pergunta`, e os sete layouts continuam com instância — o
+// filtro não custa cobertura nenhuma.
+//
+// O filtro de idioma é a outra metade. especime/ifusp.html é `lang="en"` de propósito — é ele que
+// exercita os rótulos em inglês da spec 6.8 —, e sem o filtro ele vence "o menor" em dois layouts,
+// pondo "The cloud spreads" e "Takeaways" como exemplos canônicos de um guia escrito para
+// professores brasileiros.
+//
+// Nenhum dos dois filtros é conferido por "regerar e comparar", que compara saída com saída e por
+// isso abençoa qualquer regressão daqui: quem os prende são as asserções de propriedade em
+// tests/unit/guia.test.mjs.
+export async function exemplosPorLayout(raiz) {
+  const limpos = await decksLimpos(raiz);
   const achados = {};
-  for (const nome of readdirSync(new URL('especime/', raiz)).filter((n) => n.endsWith('.html')).sort()) {
+  for (const nome of decksDoEspecime(raiz)) {
+    if (!limpos.has(nome)) continue;
     const html = readFileSync(new URL(`especime/${nome}`, raiz), 'utf8');
-    // Só decks em português. especime/ifusp.html é `lang="en"` de propósito — é ele que exercita os
-    // rótulos em inglês da spec 6.8 —, e sem este filtro ele vence o critério "o menor" em dois
-    // layouts, pondo "The cloud spreads" e "Takeaways" como exemplos canônicos de um guia escrito
-    // para professores brasileiros. Medido: os sete layouts têm instância pt-BR, então filtrar não
-    // custa cobertura nenhuma.
     if (!/<html lang="pt/.test(html)) continue;
     for (const trecho of html.match(/<section data-layout="[a-z-]+"[\s\S]*?<\/section>/g) ?? []) {
       const layout = trecho.match(/data-layout="([a-z-]+)"/)[1];
@@ -256,13 +294,14 @@ export function montarPacote(fonte, bloco) {
 // Todo bloco gerado, por nome de marcador. Separado de gerarGuia() para que a guarda possa conferir
 // os blocos um a um sem ter de reencontrá-los dentro dos arquivos — e para que um bloco novo entre
 // nessa conferência só por existir aqui.
-export function blocosGerados({ raiz = RAIZ } = {}) {
+// async desde que o extrator de exemplos passou a perguntar ao validador que decks estão limpos.
+export async function blocosGerados({ raiz = RAIZ } = {}) {
   const contrato = JSON.parse(readFileSync(new URL('contrato/contrato.json', raiz), 'utf8'));
   return {
     modelo: blocoDoModelo(raiz),
     'tabela-de-vocabulario': tabelaDeVocabulario(contrato),
     'tabela-de-layouts': tabelaDeLayouts(contrato),
-    'exemplos-por-layout': blocoDeExemplos(contrato, exemplosPorLayout(raiz)),
+    'exemplos-por-layout': blocoDeExemplos(contrato, await exemplosPorLayout(raiz)),
     'tabela-de-papeis': tabelaDePapeis(contrato),
     'tabela-de-regras': tabelaDeRegras(contrato),
   };
@@ -270,8 +309,8 @@ export function blocosGerados({ raiz = RAIZ } = {}) {
 
 // Devolve o texto novo de cada arquivo de guia com marcador, sempre; grava só quando pedido. É essa
 // separação que deixa a guarda de tests/unit/guia.test.mjs regerar em memória sem sujar o disco.
-export function gerarGuia({ raiz = RAIZ, escrever = false } = {}) {
-  const conteudo = blocosGerados({ raiz });
+export async function gerarGuia({ raiz = RAIZ, escrever = false } = {}) {
+  const conteudo = await blocosGerados({ raiz });
   const saida = {};
   for (const [caminho, nomes] of Object.entries(BLOCOS_POR_ARQUIVO)) {
     const alvo = new URL(caminho, raiz);
@@ -282,9 +321,9 @@ export function gerarGuia({ raiz = RAIZ, escrever = false } = {}) {
   return saida;
 }
 
-function principal() {
-  const saida = gerarGuia({ raiz: RAIZ, escrever: true });
+async function principal() {
+  const saida = await gerarGuia({ raiz: RAIZ, escrever: true });
   console.log(`guia gerado em ${Object.keys(saida).join(', ')}`);
 }
 
-if (process.argv[1] === fileURLToPath(import.meta.url)) principal();
+if (process.argv[1] === fileURLToPath(import.meta.url)) await principal();

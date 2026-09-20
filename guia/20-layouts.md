@@ -73,40 +73,44 @@ Duas contas correm no corpo, e as duas acusam por cortar, nunca por encolher a l
 
 ## Um exemplo de cada layout
 
-Um por layout, extraído de `especime/`. Os decks do espécime são validados a cada rodada do sistema, então todo trecho abaixo é, por construção, um trecho que passa. Copie a forma; o texto é de demonstração e existe para exercitar o layout.
+Um por layout, extraído dos decks de `especime/` que validam **sem nenhum achado** — nem erro, nem aviso. É o que torna seguro o que vem a seguir: copie a forma, porque a forma abaixo é a que o validador aprova em silêncio. O texto é de demonstração e existe para exercitar o layout.
 
 <!-- gerado:exemplos-por-layout -->
 #### `capa`
 
 ```html
 <section data-layout="capa">
-  <h1>Nove blocos<br><span class="sinal">modo contador</span></h1>
+  <h1>Espécime Aula USP<br><span class="sinal">layouts e cromo</span></h1>
 </section>
 ```
 
-Extraído de `especime/muitos-blocos.html`.
+Extraído de `especime/index.html`.
 
 #### `abertura`
 
 ```html
-<section data-layout="abertura">
-  <h2>Séries</h2>
+<section data-layout="abertura" id="tabelas">
+  <h2>Tabelas</h2>
+  <p class="pergunta">Como comparar números lado a lado?</p>
 </section>
 ```
 
-Extraído de `especime/muitos-blocos.html`.
+Extraído de `especime/componentes.html`.
 
 #### `conteudo`
 
 ```html
-<section data-layout="conteudo" id="dentro-do-terceiro">
-  <h2>Dentro do terceiro bloco</h2>
-  <p>O cabeçalho mostra o bloco em texto.</p>
-  <aside class="notas">Este deck existe para mostrar o contador: acima de oito blocos, o mapa de quadrados vira "Bloco N de M".</aside>
+<section data-layout="conteudo" id="grade-4-8">
+  <h2>Grade 4-8</h2>
+  <div class="colunas" data-grade="4-8">
+    <div><p>Estreita à esquerda.</p></div>
+    <div><p>Larga à direita, com 760 px.</p></div>
+  </div>
+  <aside class="notas">A mesma grade de antes, espelhada: a coluna estreita vem primeiro quando ela é a pergunta.</aside>
 </section>
 ```
 
-Extraído de `especime/muitos-blocos.html`.
+Extraído de `especime/index.html`.
 
 #### `afirmacao`
 
@@ -155,12 +159,14 @@ Extraído de `especime/index.html`.
 <section data-layout="encerramento">
   <h2>O que fica</h2>
   <ol class="sintese">
-    <li>Com nove blocos, o mapa vira texto.</li>
+    <li>As seções viram slides.</li>
+    <li>O mapa de blocos vem das aberturas.</li>
   </ol>
+  <p class="proxima">Próximo marco: demos, apresentador e impressão.</p>
 </section>
 ```
 
-Extraído de `especime/muitos-blocos.html`.
+Extraído de `especime/index.html`.
 <!-- /gerado -->
 
 Repare no que **não** está em nenhum deles: cabeçalho, rodapé, número do slide, mapa de blocos, logo. O fonte de um slide só tem o conteúdo do slide.
