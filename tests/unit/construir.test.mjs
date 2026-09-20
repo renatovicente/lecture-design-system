@@ -1,9 +1,10 @@
 // Amarra as três tarefas e grava. O pipeline completo, com os códigos de saída da spec 3.3, é do 5c.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, readFile } from 'node:fs/promises';
+import { mkdtemp, readFile, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { basename, join } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { construir } from '../../build/construir.mjs';
 
 const RAIZ = new URL('../../', import.meta.url);
@@ -65,4 +66,23 @@ test('uma aula com data-lang fora do contrato constrói com erros > 0 e o valida
   const daRegra = achados.filter((achado) => achado.regra === 'recursos.linguagem');
   assert.equal(daRegra.length, 1, `esperava 1 achado de recursos.linguagem, veio ${daRegra.length}`);
   assert.match(daRegra[0].mensagem, /cobol/);
+});
+
+// I7 da revisão final do 5c: `slugDaAula` era `basename(dirname(caminhoDaAula))` — o nome da PASTA —
+// para QUALQUER alvo, e `caminhoDaAula` (build/validar.mjs) aceita pasta ou arquivo de propósito.
+// Com alvo-arquivo, dois decks na mesma pasta produziam o mesmo `<slug>.html` e um apagava o outro
+// em silêncio (medido, antes desta correção: os dois construíram em `<nome da pasta>.html`). Regra
+// decidida pelo controlador: pasta quando o alvo resolveu para `index.html` — a forma que a spec 3.3
+// descreve —, basename do arquivo sem `.html` nas outras. O par completo `.html`/`.pdf`, que precisa
+// das etapas 5 e 6, está em tests/integracao/slug.test.mjs; aqui fica a metade sem navegador.
+test('<slug>: index.html dá o nome da pasta; outro arquivo dá o nome do arquivo', async () => {
+  const pasta = await pastaTemporaria();
+  const original = await readFile(new URL('../fixtures/build/aula-limpa/aula.html', import.meta.url), 'utf8');
+  await writeFile(join(pasta, 'index.html'), original, 'utf8');
+  await writeFile(join(pasta, 'primeira.html'), original, 'utf8');
+  const destino = join(pasta, 'dist');
+  const daPasta = await construir({ raiz: RAIZ, caminhoDaAula: pathToFileURL(join(pasta, 'index.html')), destino });
+  const doArquivo = await construir({ raiz: RAIZ, caminhoDaAula: pathToFileURL(join(pasta, 'primeira.html')), destino });
+  assert.equal(basename(daPasta.caminhoDoHtml), `${basename(pasta)}.html`);
+  assert.equal(basename(doArquivo.caminhoDoHtml), 'primeira.html');
 });

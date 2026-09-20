@@ -10,11 +10,21 @@ import { embutirFontes } from './fontes-embutidas.mjs';
 import { validar, contar } from '../validador/validar.js';
 import { REGRAS_DE_CARGA, REGRAS_DE_SAIDA } from '../validador/regras/index.js';
 
-// `<slug>` é o nome da pasta da aula (spec 3.3, "aula-usp build <pasta>"): o pai de caminhoDaAula,
-// nunca a raiz do sistema — cada aula real mora na própria pasta (index.html ao lado de figuras/,
-// por exemplo), e é essa pasta que dá nome ao HTML final.
+// `<slug>`, nas duas formas de alvo que caminhoDaAula (build/validar.mjs) aceita — e ele aceita as
+// duas de propósito, porque `aula-usp validar` documenta o alvo-arquivo:
+// - alvo que resolveu para `index.html`: o nome da PASTA. É literalmente o que a spec 3.3 diz da
+//   forma que ela descreve ("`<slug>` é o nome da pasta da aula", em `aula-usp build <pasta>`) —
+//   cada aula real mora na própria pasta (index.html ao lado de figuras/), e é a pasta que a nomeia;
+// - qualquer outro arquivo: o basename sem `.html`. A spec não descreve esta forma, e até a revisão
+//   final do 5c (I7) ela caía na regra de cima: seis decks lado a lado (é o caso de `especime/`)
+//   produziam todos `<nome da pasta>.html` no mesmo dist/ e se sobrescreviam em silêncio — medido,
+//   duas construções em sequência deixavam UM par .html/.pdf, não dois (tests/integracao/slug.test.mjs).
+// Cálculo em cópia única: build/build.mjs nomeia o PDF por `basename(caminhoDoHtml, '.html')`,
+// derivando do arquivo que esta função já nomeou em vez de repetir a conta (M4 — duas verdades sobre
+// o mesmo nome é a classe de defeito que este projeto mais pagou caro).
 function slugDaAula(caminhoDaAula) {
-  return basename(dirname(fileURLToPath(caminhoDaAula)));
+  const caminho = fileURLToPath(caminhoDaAula);
+  return basename(caminho) === 'index.html' ? basename(dirname(caminho)) : basename(caminho, '.html');
 }
 
 // Revisão final do 5b, I2: construirHtml já resolve TeX e código (etapa 3) e já sabe quando um dos

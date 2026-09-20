@@ -32,6 +32,12 @@ import { paginasEsperadas } from '../../motor/impressao.js';
 
 const RAIZ = new URL('../../', import.meta.url);
 const pastaTemporaria = () => mkdtemp(join(tmpdir(), 'build-'));
+// A fixture é um ARQUIVO (`<nome>/aula.html`), não uma pasta — e desde a correção do I7 (revisão
+// final do 5c) é o nome do ARQUIVO que dá o `<slug>` nessa forma de alvo, não o da pasta. Por isso
+// os artefatos abaixo se chamam `aula.html`/`aula.pdf` em todos os casos, e não `<nome da pasta>.*`
+// como antes: o alvo-arquivo deixou de herdar o nome da pasta, que era o que fazia dois decks lado a
+// lado se sobrescreverem (tests/integracao/slug.test.mjs). A forma da spec (`aula-usp build <pasta>`,
+// com index.html dentro) continua nomeando pela pasta, e quem a exercita é tests/unit/validar-cli.test.mjs.
 const fixture = (nome) => new URL(`../fixtures/build/${nome}/aula.html`, import.meta.url);
 
 let navegador;
@@ -63,7 +69,7 @@ test('final 2 — erro de composição na etapa 5: grava HTML e validacao.json, 
   const destino = await pastaTemporaria();
   const r = await build({ raiz: RAIZ, caminhoDaAula: fixture('erro-composicao'), destino, navegador });
   assert.equal(r.codigo, 1);
-  assert.deepEqual((await readdir(destino)).sort(), ['erro-composicao.html', 'validacao.json']);
+  assert.deepEqual((await readdir(destino)).sort(), ['aula.html', 'validacao.json']);
   // Lista exata (item 2 da rodada de correção 1: array ordenado, não .some()/Set — comentário no
   // teste "final 3"): os avisos de estática desta fixture (as mesmas duas condições de aula-limpa)
   // sobrevivem ao lado do erro de composição, e é só ESTE erro — não duplica nada.
@@ -81,7 +87,7 @@ test('final 3 — erro de saída na etapa 7: mantém HTML e PDF gravados, e sai 
   const destino = await pastaTemporaria();
   const r = await build({ raiz: RAIZ, caminhoDaAula: fixture('erro-saida'), destino, navegador });
   assert.equal(r.codigo, 1);
-  assert.deepEqual((await readdir(destino)).sort(), ['erro-saida.html', 'erro-saida.pdf', 'validacao.json'].sort());
+  assert.deepEqual((await readdir(destino)).sort(), ['aula.html', 'aula.pdf', 'validacao.json'].sort());
   // A referência externa é achada por construir() (etapas 2-4), não pela etapa 7 — e mesmo assim o
   // build precisa terminar as etapas 5 e 6 (composição limpa, PDF gerado) antes de decidir o código
   // final: as quatro regras de saída são concatenadas num só veredito, na etapa 7 (comentário de
@@ -123,7 +129,7 @@ test('a etapa 7 liga saida.pdf-paginas de verdade: um gerarPdf com contagem erra
   assert.equal(daRegra.length, 1, JSON.stringify(r.achados));
   assert.match(daRegra[0].mensagem, /999/);
   // O arquivo é o mesmo que a função devolveu — mantido, como o final "erro de saída" pede.
-  assert.deepEqual((await readdir(destino)).sort(), ['aula-limpa.html', 'aula-limpa.pdf', 'validacao.json'].sort());
+  assert.deepEqual((await readdir(destino)).sort(), ['aula.html', 'aula.pdf', 'validacao.json'].sort());
   const validacao = JSON.parse(await readFile(join(destino, 'validacao.json'), 'utf8'));
   assert.deepEqual(validacao, r.achados);
 });
@@ -142,7 +148,7 @@ test('final 4 — sem Chrome: grava HTML (não o PDF), avisa, e sai 0 se não ho
   assert.equal(r.codigo, 0);
   // Mesma lista de arquivos do final 2 (acima) — só o código e o aviso diferem, e os dois são
   // afirmados aqui: é exatamente o par que um teste frouxo, que só olhasse a lista, não distinguiria.
-  assert.deepEqual((await readdir(destino)).sort(), ['aula-limpa.html', 'validacao.json']);
+  assert.deepEqual((await readdir(destino)).sort(), ['aula.html', 'validacao.json']);
   assert.match(r.avisoSemChrome, /composição pulada, sem Chrome/);
   assert.equal(r.paginas, undefined);
   assert.equal(r.achados.filter((a) => a.severidade === 'erro').length, 0);
@@ -164,12 +170,12 @@ test('caminho feliz: grava HTML, PDF e validacao.json, e sai 0', async () => {
   const destino = await pastaTemporaria();
   const r = await build({ raiz: RAIZ, caminhoDaAula: fixture('aula-limpa'), destino, navegador });
   assert.equal(r.codigo, 0);
-  assert.deepEqual((await readdir(destino)).sort(), ['aula-limpa.html', 'aula-limpa.pdf', 'validacao.json'].sort());
+  assert.deepEqual((await readdir(destino)).sort(), ['aula.html', 'aula.pdf', 'validacao.json'].sort());
   assert.equal(r.avisoSemChrome, undefined);
   // O PDF de verdade tem o número de páginas que paginasEsperadas prevê a partir do MESMO HTML que
   // foi gravado — a mesma prova de wiring que o final 3 faz, desta vez no caso em que os dois
   // números batem (fato 4 do plano: "a regra é uma comparação, não uma heurística").
-  const html = await readFile(join(destino, 'aula-limpa.html'), 'utf8');
+  const html = await readFile(join(destino, 'aula.html'), 'utf8');
   const esperadas = paginasEsperadas(parseHTML(html).document);
   assert.equal(r.paginas, esperadas);
   // Mesma regressão do final 4 (comentário lá) e mesmo aperto do item 2 (lista exata, não Set): os
@@ -183,6 +189,6 @@ test('--sem-pdf: pula as etapas 6 e 7, grava HTML e validacao.json, e sai 0', as
   const destino = await pastaTemporaria();
   const r = await build({ raiz: RAIZ, caminhoDaAula: fixture('aula-limpa'), destino, navegador, semPdf: true });
   assert.equal(r.codigo, 0);
-  assert.deepEqual((await readdir(destino)).sort(), ['aula-limpa.html', 'validacao.json']);
+  assert.deepEqual((await readdir(destino)).sort(), ['aula.html', 'validacao.json']);
   assert.equal(r.paginas, undefined);
 });

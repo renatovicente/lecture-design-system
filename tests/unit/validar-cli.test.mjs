@@ -318,9 +318,11 @@ test('build: CHROME_PATH inexistente avisa no stderr, grava o HTML (sem PDF) e s
   });
   assert.equal(resultado.status, 0, resultado.stderr);
   assert.match(resultado.stderr, /aviso.*composição pulada, sem Chrome/i);
-  // <slug> vem do nome da PASTA da aula (build/build.mjs: slugDaAula), não do nome do arquivo —
-  // aulaTemporaria grava index.html dentro de uma pasta com nome aleatório (mkdtempSync), então o
-  // HTML final se chama "<nome da pasta>.html", nunca "index.html".
+  // <slug> vem do nome da PASTA quando o alvo resolve para index.html (build/construir.mjs:
+  // slugDaAula, cópia única desde M4) — aulaTemporaria grava index.html dentro de uma pasta com nome
+  // aleatório (mkdtempSync), então o HTML final se chama "<nome da pasta>.html", nunca "index.html".
+  // Esta é a forma que a spec 3.3 descreve; a forma com alvo-arquivo passou, na correção do I7, a
+  // nomear pelo arquivo (tests/integracao/slug.test.mjs).
   assert.deepEqual(readdirSync(join(pasta, 'dist')).sort(), [`${basename(pasta)}.html`, 'validacao.json'].sort());
 });
 

@@ -4,7 +4,7 @@
 // O que esta função decide são as TRANSIÇÕES entre elas — os quatro finais diferentes que a spec 3.3
 // define — não os cálculos: nenhum achado nasce aqui, todos vêm de validar() ou das próprias etapas.
 import { mkdir, writeFile } from 'node:fs/promises';
-import { basename, dirname, join } from 'node:path';
+import { basename, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseHTML } from 'linkedom';
 import { validar, contar } from '../validador/validar.js';
@@ -26,10 +26,6 @@ import { gerarPdf as gerarPdfPadrao } from './pdf.mjs';
 // contexto, ela não acusa nada — validador/regras/saida.js). Separar por artefato dá um dono por
 // pergunta: a etapa 7 fica só com a única pergunta que ela tem condição de responder.
 const SO_PDF_PAGINAS = REGRAS_DE_SAIDA.filter((regra) => regra.nome === 'saida.pdf-paginas');
-
-function slugDaAula(caminhoDaAula) {
-  return basename(dirname(fileURLToPath(caminhoDaAula)));
-}
 
 function gravarValidacao(destino, achados) {
   return writeFile(join(destino, 'validacao.json'), `${JSON.stringify(achados, null, 2)}\n`, 'utf8');
@@ -101,7 +97,6 @@ export async function build({ raiz, caminhoDaAula, destino, semPdf = false, nave
   progresso('etapa 2-4/7 — montando, pré-renderizando e embutindo');
   const { html, achados: achadosDoConstruir, caminhoDoHtml } = await construir({ raiz, caminhoDaAula, destino });
   let achados = [...achadosIniciais, ...achadosDoConstruir];
-  const slug = slugDaAula(caminhoDaAula);
 
   // Etapa 5 (spec 3.3): "abre o resultado no Chrome headless e roda as regras de composição" — sobre
   // o FONTE, não o <slug>.html que a etapa 4 gravou. Medido ao implementar (não estava no brief, e a
@@ -158,7 +153,10 @@ export async function build({ raiz, caminhoDaAula, destino, semPdf = false, nave
   try {
     const gerado = await gerarPdf({ caminhoDoHtml, navegador, metadados: metadadosDaAula(docDaFonte) });
     paginas = gerado.paginas;
-    await writeFile(join(destino, `${slug}.pdf`), gerado.bytes);
+    // M4 da revisão final: o nome do PDF vem do HTML que construir() acabou de gravar, não de uma
+    // segunda cópia do cálculo de `<slug>` (que era o que havia aqui, idêntica à de construir.mjs —
+    // e as duas tinham de mudar juntas na correção do I7 para não divergirem).
+    await writeFile(join(destino, `${basename(caminhoDoHtml, '.html')}.pdf`), gerado.bytes);
   } finally {
     if (!navegadorExterno) await navegador.close();
   }
