@@ -215,6 +215,44 @@ export function aplicarMarcadores(texto, blocos) {
   return saida;
 }
 
+// Os cinco arquivos-fonte de guia/pacotes/ (spec 10.1) não são lidos por humanos: são o texto que o
+// `aula-usp pacotes` do marco 6c monta nos quatro pacotes da spec 10.2, e os destinos abaixo são os
+// dessa tabela. `npm run guia` NÃO os escreve — eles são prosa à mão, como o resto do guia; o que
+// mora aqui é o que a montagem do 6c precisa saber, para não ser redescoberto lá.
+export const FONTES_DE_PACOTE = {
+  'guia/pacotes/skill.md': { destino: 'pacotes/skill/aula-usp/SKILL.md', essenciais: true },
+  'guia/pacotes/projeto-claude.md': { destino: 'pacotes/claude/projeto/instrucoes.md', essenciais: true },
+  // teto: spec 10.2 ("instrucoes.txt com até 8.000 caracteres") e 11.1. Número da spec, não do
+  // contrato, por isso constante nomeada com a citação ao lado (AGENTS.md).
+  'guia/pacotes/gpt-instrucoes.md': { destino: 'pacotes/gpt/gpt-personalizado/instrucoes.txt', essenciais: true, teto: 8000 },
+  // Sem regras essenciais: iniciadores de conversa não são instrução, são quatro frases de botão.
+  'guia/pacotes/gpt-iniciadores.md': { destino: 'pacotes/gpt/gpt-personalizado/iniciadores.txt', essenciais: false },
+  'guia/pacotes/agents-disciplina.md': { destino: 'pacotes/repositorio-de-disciplina/AGENTS.md', essenciais: true },
+};
+
+// O bloco que a spec 10.1 manda entrar "literalmente, em todos os pacotes". Ele é LIDO de
+// 00-principios.md, nunca copiado: é essa leitura que faz uma regra mudada num lugar mudar nos
+// quatro pacotes de uma vez. normalize('NFC') porque o marcador tem acento (`início`), e um editor
+// que grave em NFD faria a busca falhar por um motivo que não é o que ninguém quis medir.
+export function regrasEssenciais({ raiz = RAIZ } = {}) {
+  const texto = readFileSync(new URL('guia/00-principios.md', raiz), 'utf8').normalize('NFC');
+  const entre = texto.match(/<!-- regras-essenciais:início -->\n([\s\S]*?)<!-- regras-essenciais:fim -->/);
+  if (!entre) throw new Error('guia/00-principios.md não tem os marcadores de regras-essenciais');
+  return entre[1].trim();
+}
+
+// As duas regras de montagem de um arquivo-fonte de pacote, declaradas no cabeçalho de cada um. A
+// ORDEM entre elas importa: o marcador é trocado PRIMEIRO, e só então os comentários que sobraram
+// somem — na ordem inversa, o próprio marcador (que é um comentário) sumiria junto e o bloco nunca
+// entraria. E a troca é por FUNÇÃO, nunca por string: o bloco contém "`$` não é delimitador", e numa
+// string de substituição `$` seguido de crase é o padrão especial que insere tudo que vem ANTES do
+// casamento. Medido: com a string, instrucoes.txt saía 2.872 caracteres maior do que é.
+export function montarPacote(fonte, bloco) {
+  return fonte
+    .replace(/^<!-- inserir:regras-essenciais -->$/m, () => bloco)
+    .replace(/<!--[\s\S]*?-->\n?/g, '');
+}
+
 // Todo bloco gerado, por nome de marcador. Separado de gerarGuia() para que a guarda possa conferir
 // os blocos um a um sem ter de reencontrá-los dentro dos arquivos — e para que um bloco novo entre
 // nessa conferência só por existir aqui.

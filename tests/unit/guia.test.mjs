@@ -4,12 +4,16 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
+import { readdirSync } from 'node:fs';
 import {
   BLOCOS_POR_ARQUIVO,
+  FONTES_DE_PACOTE,
   aplicarMarcadores,
   blocosGerados,
   exemplosPorLayout,
   gerarGuia,
+  montarPacote,
+  regrasEssenciais,
   tabelaDeLayouts,
   tabelaDePapeis,
   tabelaDeVocabulario,
@@ -213,4 +217,56 @@ test('o bloco de regras essenciais de guia/00-principios.md existe e não está 
       + 'e é dele que o `aula-usp pacotes` do 6c extrai o texto dos quatro pacotes',
   );
   assert.notEqual(entre[1].trim(), '', 'o bloco de regras essenciais está vazio');
+});
+
+// As quatro guardas de guia/pacotes/ (Tarefa 7). Os cinco arquivos de lá não são lidos por humanos:
+// são o texto que o `aula-usp pacotes` do 6c monta nos quatro pacotes, e nada no 6b os executa —
+// sem guarda, um erro neles só apareceria um marco depois, dentro de um pacote entregue.
+
+// A lista vem de FONTES_DE_PACOTE, que é a tabela da spec 10.1 escrita uma vez. Um arquivo a mais
+// ou a menos na pasta é uma divergência entre o que o guia tem e o que o 6c vai procurar.
+test('guia/pacotes/ tem exatamente os cinco arquivos-fonte da spec 10.1', () => {
+  const esperados = Object.keys(FONTES_DE_PACOTE).map((caminho) => caminho.split('/').pop());
+  assert.deepEqual(readdirSync(new URL('guia/pacotes/', RAIZ)).sort(), esperados.sort());
+});
+
+// Spec 10.1: o bloco "entra, literalmente, em todos os pacotes". Quem diz ONDE é a linha do
+// marcador; sem ela, o 6c montaria um pacote sem as regras e ninguém veria.
+test('todo arquivo-fonte que leva as regras essenciais traz a linha do marcador', () => {
+  for (const [caminho, { essenciais }] of Object.entries(FONTES_DE_PACOTE)) {
+    const fonte = readFileSync(new URL(caminho, RAIZ), 'utf8').normalize('NFC');
+    const temMarcador = /^<!-- inserir:regras-essenciais -->$/m.test(fonte);
+    assert.equal(temMarcador, essenciais, `${caminho}: presença errada da linha do marcador`);
+  }
+});
+
+// A outra metade da mesma regra: o bloco é INJETADO, nunca copiado. Um parágrafo dele colado num
+// arquivo-fonte faria uma regra mudar em 00-principios.md e não mudar no pacote — exatamente o
+// defeito que o mecanismo de marcadores existe para impedir.
+test('nenhum arquivo-fonte de pacote copia o texto das regras essenciais', () => {
+  const paragrafos = regrasEssenciais({ raiz: RAIZ }).split('\n').filter((linha) => linha.trim() !== '');
+  assert.ok(paragrafos.length > 0, 'o bloco de regras essenciais está vazio');
+  for (const caminho of Object.keys(FONTES_DE_PACOTE)) {
+    const fonte = readFileSync(new URL(caminho, RAIZ), 'utf8').normalize('NFC');
+    for (const paragrafo of paragrafos) {
+      assert.equal(fonte.includes(paragrafo), false, `${caminho} copiou uma linha do bloco: "${paragrafo.slice(0, 40)}…"`);
+    }
+  }
+});
+
+// Spec 10.2 e 11.1: "instrucoes.txt com até 8.000 caracteres". O teto é do arquivo MONTADO, não do
+// fonte — o bloco essencial entra nele —, e é por isso que a conta passa por montarPacote().
+test('cada arquivo-fonte com teto cabe nele depois de montado', () => {
+  const bloco = regrasEssenciais({ raiz: RAIZ });
+  const comTeto = Object.entries(FONTES_DE_PACOTE).filter(([, { teto }]) => teto !== undefined);
+  assert.ok(comTeto.length > 0, 'nenhum arquivo-fonte declara teto');
+  for (const [caminho, { teto }] of comTeto) {
+    const montado = montarPacote(readFileSync(new URL(caminho, RAIZ), 'utf8').normalize('NFC'), bloco);
+    assert.ok(
+      montado.length <= teto,
+      `${caminho} montado tem ${montado.length} caracteres, e o teto é ${teto}`,
+    );
+    assert.ok(montado.includes(bloco), `${caminho} montado não contém o bloco de regras essenciais`);
+    assert.equal(montado.includes('<!--'), false, `${caminho} montado ainda tem comentário HTML`);
+  }
 });
