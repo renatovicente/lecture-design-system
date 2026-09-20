@@ -38,6 +38,7 @@ Itens sem ordem entre si. Se a ordem importa, a lista é de passos.
   <li>O gradiente aponta a subida.</li>
   <li>A taxa controla o passo.</li>
   <li>Os pesos começam ao acaso.</li>
+  <li>Um item longo quebra a linha, e a segunda linha segue o texto.</li>
 </ul>
 ```
 
@@ -53,6 +54,7 @@ Uma sequência: o numeral grande é parte da composição, e a régua entre os i
   <li data-passo>Calcule o gradiente com <code>grad(E)</code>.</li>
   <li data-passo>Ande <strong>contra</strong> o gradiente.</li>
   <li data-passo>Repita até o erro parar de cair.</li>
+  <li data-passo>Um passo longo também quebra a linha e segue o texto.</li>
 </ol>
 ```
 

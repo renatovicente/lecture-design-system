@@ -174,6 +174,62 @@ test('o esqueleto de guia/10-estrutura.md é modelos/aula/index.html, byte a byt
   );
 });
 
+// Cada bloco ```html de guia/ e as âncoras `arquivo#id` da atribuição logo abaixo dele. Uma
+// atribuição pode trazer mais de uma âncora ("Do espécime: `a#x` e `b#y`"), porque uma frase só
+// costuma atender aos dois blocos acima dela.
+function blocosComAncora(texto) {
+  const sem = texto.replace(/<!-- gerado:[\s\S]*?<!-- \/gerado -->/g, '');
+  const saida = [];
+  const blocos = /```html\n([\s\S]*?)```/g;
+  let achado;
+  while ((achado = blocos.exec(sem)) !== null) {
+    const proximo = sem.indexOf('```html', blocos.lastIndex);
+    const atribuicao = sem.slice(blocos.lastIndex, proximo === -1 ? undefined : proximo);
+    const ancoras = [...atribuicao.matchAll(/`([A-Za-z0-9/_.-]+\.html)#([A-Za-z0-9_-]+)`/g)]
+      .map(([, arquivo, id]) => ({ arquivo, id }));
+    if (ancoras.length > 0) {
+      saida.push({ trecho: achado[1], ancoras, linha: sem.slice(0, achado.index).split('\n').length });
+    }
+  }
+  return saida;
+}
+
+// O guia desindenta o trecho ao tirá-lo de dentro da `section`, então a comparação é por linha
+// aparada. O trecho continua tendo de ser um pedaço CONTÍGUO da seção — é isso que pega a cópia que
+// omite um item do meio sem dizer.
+const aparado = (texto) => texto.split('\n').map((linha) => linha.trim()).filter((linha) => linha !== '').join('\n');
+
+// Os trechos com âncora são cópia manual, e eram conferidos à mão uma vez. Este marco EDITOU o
+// espécime (7e4b45a, as duas definições de taxa de aprendizado): se algum trecho copiado citasse
+// aquelas linhas, o guia seguiria mostrando a frase velha com o endereço certo, e nada falharia.
+//
+// A guarda fecha a promessa que guia/30-componentes.md faz na sua terceira linha — "o seu trecho
+// pronto, tirado de um arquivo que valida … com o endereço da seção de onde veio" — e que
+// 00-principios.md repete para o guia inteiro.
+//
+// Medido: 28 blocos ```html de guia/ trazem âncora, e os 28 são literais. Outros três não trazem
+// âncora nenhuma, e é correto que não tragam: não são trechos tirados de arquivo — são um `ol` de
+// ilustração, o `<script>` de registro de uma demo, e a tag de CDN que ainda não existe.
+test('todo trecho de guia/ com âncora é literal na seção que ele cita', () => {
+  let conferidos = 0;
+  for (const nome of readdirSync(new URL('guia/', RAIZ)).filter((arquivo) => arquivo.endsWith('.md')).sort()) {
+    const texto = readFileSync(new URL(`guia/${nome}`, RAIZ), 'utf8');
+    for (const { trecho, ancoras, linha } of blocosComAncora(texto)) {
+      conferidos += 1;
+      const tentadas = [];
+      const casou = ancoras.some(({ arquivo, id }) => {
+        tentadas.push(`${arquivo}#${id}`);
+        const fonte = new URL(arquivo, RAIZ);
+        if (!existsSync(fonte)) return false;
+        const secao = readFileSync(fonte, 'utf8').match(new RegExp(`<section[^>]*\\sid="${id}"[\\s\\S]*?</section>`));
+        return secao !== null && aparado(secao[0]).includes(aparado(trecho));
+      });
+      assert.ok(casou, `guia/${nome}:${linha}: o trecho não é literal em ${tentadas.join(' nem em ')}`);
+    }
+  }
+  assert.ok(conferidos > 0, 'nenhum trecho com âncora foi conferido — a guarda virou decoração');
+});
+
 // A lista dos onze blocos de corpo é do contrato. O que guia/30-componentes.md promete sobre eles
 // está na sua terceira linha: "Cada um tem aqui o seu trecho pronto … com o endereço da seção de
 // onde veio". É isso que esta guarda cobra, e NÃO a simples menção ao nome — porque a menção passa
