@@ -77,6 +77,14 @@ O primeiro é **escrita**: `npm run guia` substitui o que está entre os marcado
 - Criar: `guia/20-layouts.md`, `guia/30-componentes.md` (Tarefa 3)
 - Criar: `guia/40-matematica-e-codigo.md`, `guia/50-graficos-diagramas-demos.md` (Tarefa 4)
 - Criar: `guia/60-validador.md` (Tarefa 5)
+
+**Correção, escrita depois que a execução derrubou esta lista.** Os quatro arquivos que recebem
+marcador — `10-estrutura.md`, `20-layouts.md`, `30-componentes.md` e `60-validador.md` — **nascem na
+Tarefa 1**, como esqueletos mínimos: título, uma linha de contexto, e os marcadores vazios. Só então
+a Tarefa 1 fecha o ciclo sozinha (gera, escreve, regera, compara), que é o que a torna rejeitável por
+um revisor sem depender de ninguém. O `gerarGuia()` **erra alto** se um arquivo não existir, de
+propósito: um bloco que silenciosamente não é escrito é documentação que mente. As Tarefas 2, 3 e 5
+escrevem a prosa **em volta** dos marcadores que já estarão lá.
 - Criar: `guia/70-fluxo-terminal.md`, `71-fluxo-chat.md`, `72-artifact-claude.md`, `73-chatgpt.md` (Tarefa 6)
 - Criar: `guia/pacotes/skill.md`, `projeto-claude.md`, `gpt-instrucoes.md`, `gpt-iniciadores.md`, `agents-disciplina.md` (Tarefa 7)
 - Modificar: `AGENTS.md` — a linha do guia na tabela de gerados (Tarefa 1)
