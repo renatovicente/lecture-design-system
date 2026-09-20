@@ -97,6 +97,14 @@ export async function build({ raiz, caminhoDaAula, destino, semPdf = false, nave
   progresso('etapa 2-4/7 — montando, pré-renderizando e embutindo');
   const { html, achados: achadosDoConstruir, caminhoDoHtml } = await construir({ raiz, caminhoDaAula, destino });
   let achados = [...achadosIniciais, ...achadosDoConstruir];
+  // I3 da revisão final: construir() acabou de gravar um validacao.json com só OS achados dele, e a
+  // lista completa só era gravada nos finais, três etapas adiante — entre um e outro havia uma
+  // janela em que qualquer estouro das etapas 5, 6 ou 7 deixava o PARCIAL no disco. Para uma aula
+  // cujos achados vêm todos da etapa 1, parcial quer dizer `[]`: o arquivo que o autor abre depois
+  // de um build que falhou dizia "0 erros, 0 avisos" (medido, sobre a fixture aula-limpa, que tem
+  // dois avisos). Uma escrita a mais aqui fecha a janela; as dos finais continuam, porque a lista
+  // ainda cresce nas etapas 5 e 7.
+  await gravarValidacao(destino, achados);
 
   // Etapa 5 (spec 3.3): "abre o resultado no Chrome headless e roda as regras de composição" — sobre
   // o FONTE, não o <slug>.html que a etapa 4 gravou. Medido ao implementar (não estava no brief, e a
