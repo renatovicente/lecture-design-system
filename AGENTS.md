@@ -1,0 +1,118 @@
+# AGENTS.md
+
+Instruções para quem **desenvolve o Aula USP** — o sistema, não as aulas. Quem escreve uma aula usa o guia do autor e os pacotes para agentes (`guia/`, marco 6b); nada aqui ensina a escrever um slide.
+
+A spec é a autoridade: `docs/superpowers/specs/2026-09-14-aula-usp-design.md`. Discordância entre ela e este arquivo é defeito num dos dois — resolva, não escolha em silêncio.
+
+## O sistema em um parágrafo
+
+Uma aula é um arquivo HTML. `montar/` transforma o fonte do autor no slide montado, `motor/` navega, `componentes/` renderiza matemática (KaTeX) e código (Shiki), `validador/` acusa o que fugiu do contrato — no terminal e num painel dentro da própria aula. `bin/` e `build/` são a camada de Node: CLI, servidor local, pipeline de build, PDF e empacotamento. `contrato/contrato.json` diz o que é permitido; `tokens/aula-usp.tokens.json` diz com que cores e medidas.
+
+## Comandos
+
+A CLI vive em `bin/aula-usp.mjs`. Sem `npm link`, chame por `node bin/aula-usp.mjs <comando>`.
+
+| comando | faz |
+|---|---|
+| `aula-usp servir <pasta> [--porta 8765]` | serve a aula com o runtime local de `dist/`; troca o endereço da tag e remove o `integrity` |
+| `aula-usp validar <pasta> [--json]` | regras estáticas e de carga e, havendo Chrome, as de composição |
+| `aula-usp build <pasta> [--sem-pdf]` | as sete etapas da spec 3.3; escreve só em `<pasta>/dist/` |
+| `aula-usp dist` | gera `validador/cobertura.json` e os 11 scripts de `dist/` (manutenção do sistema) |
+
+Códigos de saída (spec 8.1): 0 sem erros, avisos permitidos; 1 com erros de validação; 2 com falha de ambiente. Cada comando aceita **só as suas** flags: `--json` em `build` ou `--porta` em `validar` saem com o uso e código 2, como uma flag inexistente — melhor recusar que ignorar em silêncio.
+
+Dois comandos que a spec 8.1 lista ainda não existem: `aula-usp pacotes`, que chega no marco 6c, e `aula-usp novo <pasta> --unidade ime`, que não está atribuído a nenhum marco.
+
+Scripts de `package.json`: `npm test`, `npm run test:integracao`, `npm run servir`, `npm run tokens`, `npm run fontes:css`, `npm run fontes`, `npm run marcas`. `aula-usp dist` não tem script npm. **`npm run fontes` e `npm run marcas` baixam da rede** e só rodam com autorização do autor (spec 8.3) — os dois já rodaram na fase 1 e seus resultados estão no repositório.
+
+Node ≥ 20.6, ES modules. `playwright-core` usa o Google Chrome instalado (canal `chrome`, ou o executável em `CHROME_PATH`); não baixa navegador.
+
+## Testes
+
+```bash
+npm test                 # 34 arquivos em tests/unit/, sem navegador (linkedom)
+npm run test:integracao  # 22 arquivos em tests/integracao/, Chrome de verdade
+```
+
+Não há CI. Quem roda os testes antes de commitar é você.
+
+Os de integração são pesados — abrem Chrome, constroem decks, comparam pixels. Na prática rode um arquivo por vez:
+
+```bash
+node --test tests/integracao/composicao.test.mjs
+```
+
+Uma distinção que confunde: **"falta de Chrome não é falha" é regra da CLI**, não dos testes. `validar` e `build` degradam sozinhos — pulam composição e PDF, emitem aviso no stderr e terminam com 0 se não houver erros (spec 8.1). Os testes de integração não têm essa tolerância: chamam `chromium.launch()` direto (`tests/integracao/utilitarios.mjs:34`) e falham sem Chrome.
+
+## `dist/` é rastreado, e os testes comparam byte a byte
+
+`dist/` tem **12 arquivos versionados no git**: os quatro scripts da spec 3.5, as sete gramáticas de linguagem e `manifesto.json`. É a exceção do `.gitignore`, que ignora o `dist/` de cada aula construída (`aula-usp build` escreve em `<pasta>/dist/`) e preserva o da raiz — `dist/` seguido de `!/dist/`, nesta ordem.
+
+Quem gera é `aula-usp dist`. Dois testes unitários impedem que um `dist/` velho engane qualquer teste que o leia:
+
+- `tests/unit/bundle.test.mjs:115` — `dist/manifesto.json` commitado contra o regenerado, campo a campo;
+- `tests/unit/bundle.test.mjs:135` — os **bytes** de cada arquivo em disco contra os que `empacotar()` acabou de gerar, com a mensagem "rode `aula-usp dist` de novo".
+
+Isso não é zelo: onze arquivos de teste leem `dist/`, entre eles `tests/integracao/dist.test.mjs`, que monta o espécime pelo pacote num Chrome de verdade. Sem a guarda de bytes, um `dist/` de uma geração atrás validaria código-fonte que ninguém mais tem.
+
+Consequência prática: **mexeu no empacotador (`build/bundle.mjs`), nos pontos de entrada (`montar/dist.js`, `motor/dist.js`), em qualquer fonte que entre no pacote, ou numa dependência que ele embute — rode `aula-usp dist` e commite `dist/` junto com a mudança.** O `dist/` regenerado faz parte do diff, não é um passo posterior.
+
+## Todo arquivo gerado tem uma guarda dessas
+
+| gerado | por | guarda |
+|---|---|---|
+| `estilos/tokens.css`, `tokens/tokens.js` | `npm run tokens` | `tests/unit/tokens.test.mjs:93` |
+| `estilos/fontes.css` | `npm run fontes:css` | `tests/unit/fontes-css.test.mjs:24` |
+| `validador/cobertura.json` | `aula-usp dist` | `tests/unit/cobertura.test.mjs:74` |
+| `dist/` (11 scripts + manifesto) | `aula-usp dist` | `tests/unit/bundle.test.mjs:115` e `:135` |
+
+Todos são rastreados no git e trazem, quando o formato permite, o cabeçalho "Gerado por … Não editar à mão". Editar um à mão quebra a guarda, e a correção é sempre a mesma: edite a **fonte** e regere.
+
+`aula-usp dist` gera a cobertura **antes** de empacotar, de propósito: `montar/dist.js` importa `validador/cobertura.json` para embuti-lo em `aula-usp.js`, e na ordem inversa o artefato sairia sempre uma geração atrasado.
+
+## A fronteira: quem pode importar Node
+
+`montar/`, `motor/`, `componentes/` e `validador/` **não importam nada do Node** — rodam no navegador. Medido: zero ocorrências de `node:` nos quatro diretórios. Só `bin/` (1 arquivo) e `build/` (15 arquivos) são Node.
+
+É o que permite a mesma regra rodar no painel dentro da aula e na linha de comando, e o que torna `dist/` possível: esbuild empacota esses diretórios para o navegador, e um `import … from 'node:fs'` ali não tem como resolver. `tests/` fica fora da fronteira e importa Node à vontade.
+
+Não há teste que varra imports: a fronteira se mantém à mão. Se você se vir precisando de `node:` em um dos quatro, o que você quer provavelmente é receber o dado já lido por parâmetro — é assim que o validador recebe o contrato, as unidades e a cobertura.
+
+Em `bin/` vale uma regra própria, escrita no topo do arquivo: nada que leia disco ou dependência externa no escopo do módulo entra na CLI por `import` estático. Todos os módulos de `build/` entram por `import()` dentro do comando que precisa deles, para que uma dependência ausente vire "falha de ambiente" com saída 2, e não uma stack trace.
+
+## O contrato é dado, não código
+
+`contrato/contrato.json` (versão 1) carrega os 7 layouts, os blocos de corpo, as grades, os papéis tipográficos, o vocabulário de HTML e SVG, o TeX permitido, as 7 linguagens de código, 33 chaves de limite e 64 regras — **60 da fase 1, todas implementadas hoje**, e 4 da fase 2.
+
+O código **executa** o contrato; não o repete. Isso vale **inclusive para limiares**: `saida.megabytes: 10` mora no contrato, não em `validador/regras/saida.js`; as regras de limite leem `contrato.limites[chave]` e só sabem contar. Um número mágico no código que já existe no contrato é defeito — mudar um limite tem que ser editar um número em JSON.
+
+Duas guardas seguram isso, e vale conhecê-las antes de mexer nas regras:
+
+- `tests/unit/contrato.test.mjs` confere o contrato contra a spec — cores, tipografia, grid, limites, severidade, grupo e fase de cada regra;
+- `tests/unit/validador.test.mjs` confere o contrato contra o código, um registro por grupo, **sem escrever nenhum nome de grupo nem número de regras no teste**: os grupos vêm do próprio contrato. É o que faz "apareceu um grupo novo no contrato e ninguém escreveu o código dele" cair como falha.
+
+Número que **não** vem do contrato — porque é da spec — entra como constante nomeada com a citação da seção ao lado. Dois exemplos no repositório: o teto de diferença visual em `tests/integracao/visual.test.mjs` e as metas de tamanho de `dist/` em `tests/integracao/tamanhos.test.mjs`.
+
+## Acrescentar ou mudar uma regra
+
+1. A entrada em `contrato.regras` — `severidade`, `grupo`, `fase`, `acao` — e o número em `contrato.limites`, se houver.
+2. A implementação em `validador/regras/<grupo>.js`, registrada em `validador/regras/index.js`.
+3. Para regra **estática**, um par `bom.html` / `ruim.html` em `tests/fixtures/validador/<nome-da-regra>/`. `tests/unit/validador.test.mjs` gera um teste por pasta de fixture e exige que toda estática implementada tenha a sua: hoje são 56 pastas, uma para cada regra de estrutura, vocabulário, limites, recursos, matemática, carga e composição.
+4. Carga, composição e saída não se provam por fixture de linkedom: as de carga precisam de recursos de verdade, as de composição só existem dentro do Chrome (`tests/integracao/composicao.test.mjs`), e as quatro `saida.*` medem o artefato construído — por isso são as únicas quatro regras de fase 1 sem pasta de fixture.
+
+A ordem dos grupos não é detalhe: composição mede o documento montado **antes** de o motor iniciar, porque depois disso todo slide que não é o atual mede 0×0 e o transbordo deixa de existir para o validador.
+
+## Português
+
+Textos visíveis ao usuário e nomes de símbolo em português: mensagens do validador e da CLI, nomes de função, variável e arquivo, títulos de teste, comentários e mensagens de commit.
+
+## Processo
+
+Cada marco tem spec, plano em `docs/superpowers/plans/`, execução tarefa a tarefa com revisão, e revisão final em `docs/superpowers/revisoes/`. O plano mede os fatos no repositório antes de propor código.
+
+Duas regras de commit, que este projeto aprendeu caro:
+
+- **nenhuma mensagem afirma mais do que a evidência sustenta.** Se você não rodou, não escreva que passou; se mediu, escreva o número que mediu;
+- cada commit termina com exatamente `Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>`.
+
+Quando o plano e o repositório discordarem, **a medição vale** — e a divergência vai para o relatório, não para o silêncio.
