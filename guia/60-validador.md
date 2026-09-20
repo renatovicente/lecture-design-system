@@ -1,10 +1,63 @@
 # O validador
 
-O que o validador cobra, regra por regra, e o que fazer quando cada uma acusa.
+O validador é o contrato lido como regras. Ele abre a sua aula, confere item por item o que `contrato/contrato.json` descreve, e devolve uma lista de achados — cada um com o lugar, o nome da regra, o que ele encontrou e o que fazer. É o mesmo módulo nos dois lugares em que você o encontra: no painel dentro da aula, que abre com a tecla **V** no navegador, e na linha de comando, em `aula-usp validar` e em `aula-usp build`. Mesmas regras, mesmas mensagens.
 
-> Esqueleto: a prosa deste arquivo ainda será escrita. O que está entre `<!-- gerado:… -->` e `<!-- /gerado -->` é escrito por `npm run guia` a partir de `contrato/contrato.json` — não edite à mão; edite a fonte e regere.
+É por causa dele que se pode pedir uma aula a um modelo de linguagem e saber, sem abrir o arquivo, se ela está dentro do sistema. E é por isso que a última regra essencial é a mais curta: **entregue em zero erros**.
+
+## Erro e aviso
+
+**Erro bloqueia.** O `aula-usp build` para e não gera o HTML nem o PDF; a linha de comando termina com código 1. Um erro é sempre uma de duas coisas: você escreveu algo que o sistema não sabe montar, ou escreveu mais do que cabe no slide.
+
+**Aviso não bloqueia** — a aula monta e o PDF sai. Um aviso é uma coisa que costuma ser engano e às vezes é escolha: um slide sem notas, uma imagem que mora em outro servidor, uma aula com um bloco só. Leia cada um e decida; o que não se faz é acumulá-los sem olhar, porque no meio deles um dia estará o que ia dar errado na sala.
+
+O painel dentro da aula abre sozinho quando há erro, e traz um botão **Copiar para o chat**, que copia a lista inteira no mesmo formato da linha de comando. É esse botão que fecha o ciclo de quem escreve a aula num chat, sem terminal (`71-fluxo-chat.md`).
+
+## Quando cada grupo roda
+
+As regras são de quatro grupos, e o grupo diz **quando** a regra tem como saber a resposta. O grupo de cada regra está no contrato, ao lado da severidade e da ação.
+
+| grupo | sobre o quê | no navegador | no build |
+|---|---|---|---|
+| estáticas | o fonte da aula, sem cromo e sem nada renderizado | sim | sim |
+| de carga | o fonte, depois de carregar as bibliotecas, as imagens e os scripts | sim | sim |
+| composição | o slide montado e renderizado, no estado final | sim | só com Chrome |
+| saída | o HTML e o PDF finais | não roda | sim |
+
+**As estáticas** são a maioria, e são as que se respondem lendo o arquivo: estrutura, vocabulário, limites de tamanho, cor em SVG, comandos proibidos no TeX.
+
+**As de carga** são as que só se sabem depois de tentar: se o TeX compila, se a imagem existe no disco, se a demo tem registro. Hoje são quatro — `matematica.tex-invalido`, `recursos.imagem`, `recursos.demo-sem-registro` e `recursos.demo-sem-estatico`.
+
+**As de composição** são as que exigem medir a página desenhada: o que transbordou da zona de conteúdo, o título que tomou uma linha a mais, o texto que chegou à tela abaixo do mínimo do seu papel. No navegador elas rodam sempre; na linha de comando, só quando há um Chrome para abrir, e a CLI avisa quando não há. Um "zero erros" sem Chrome não é o mesmo "zero erros" de quem tem.
+
+**As de saída** olham o produto: o HTML final não pode depender de nenhum arquivo externo, e o PDF tem de ter o número de páginas previsto. Elas não existem no navegador porque lá não há HTML final nem PDF.
+
+## Como ler uma mensagem
+
+Toda mensagem tem a mesma forma, e cada campo responde uma pergunta:
+
+```
+ERRO · slide 3 #texto-solto · estrutura.fora-do-layout · texto solto não é permitido no layout "conteudo". Remova o elemento ou mova-o para um layout que o aceite, na ordem prevista.
+    Uma frase escrita sem parágrafo.
+```
+
+- **`ERRO` ou `AVISO`** — se bloqueia ou não.
+- **`slide 3 #texto-solto`** — onde. O número é a posição da seção no arquivo, contada a partir da capa, e o `#id` é o seu. Achados sobre a aula inteira, como um metadado que falta, trazem `aula` no lugar do slide.
+- **`estrutura.fora-do-layout`** — qual regra. O prefixo já diz de que tipo é o problema: `estrutura` é a forma do slide, `vocabulario` é o que não existe no contrato, `limites` é o que não cabe, `composicao` é o que a página desenhada revelou, `matematica`, `recursos` e `saida` dizem-se sozinhos.
+- **o que ele encontrou** — a frase até o ponto. Em `limites.*` ela traz sempre a medida encontrada e, entre parênteses, o máximo do contrato: você sabe de quanto está passando.
+- **o que fazer** — a última frase. É literalmente a coluna "como corrigir" da tabela abaixo, a mesma para todas as ocorrências daquela regra.
+- **a linha indentada**, quando existe, é o trecho do seu arquivo a que o achado se refere.
+
+Um aviso tem a mesma forma:
+
+```
+AVISO · slide 4 #lista-grande · estrutura.notas-ausentes · slide de layout "conteudo" sem notas do apresentador. Acrescente <aside class="notas"> com o que dizer neste slide.
+```
+
+A lista sai ordenada pela aula: primeiro o que é da aula inteira, depois slide a slide, e dentro de cada slide na ordem das regras. Ler de cima para baixo é percorrer a aula na ordem em que ela acontece.
 
 ## As regras da fase 1
+
+A tabela sai de `contrato/contrato.json` por `npm run guia` — do mesmo arquivo que o validador lê, de modo que ela não tem como discordar do que roda. Três colunas: o nome da regra, a severidade, e a ação, que é a frase com que toda mensagem daquela regra termina.
 
 <!-- gerado:tabela-de-regras -->
 | regra | severidade | como corrigir |
@@ -70,3 +123,36 @@ O que o validador cobra, regra por regra, e o que fazer quando cada uma acusa.
 | `vocabulario.script` | erro | Tire o script da section; registros de demo ficam fora dos slides. |
 | `vocabulario.style` | erro | Remova o estilo inline; use os layouts e componentes do sistema. |
 <!-- /gerado -->
+
+## Quando uma regra acusa
+
+A coluna "como corrigir" diz o que fazer; ela não tem espaço para dizer o que a experiência ensina sobre cada família. Isto aqui tem.
+
+**`estrutura.*` — o slide não tem a forma que o layout promete.** Abra `20-layouts.md`, ache a linha do layout e compare com o seu slide: os elementos são esses, nessa ordem? Duas mensagens costumam vir juntas, uma de falta e uma de sobra, e as duas são a mesma causa — um elemento que não devia estar ali ocupou o lugar do que devia.
+
+**`vocabulario.*` — você escreveu algo que não existe no sistema.** Quase sempre é marcação de outra ferramenta que entrou por hábito: uma classe de um framework, um `style` para ajeitar um espaço, um elemento que o contrato não tem. O conserto nunca é insistir: é achar em `30-componentes.md` o componente que faz aquilo. Se não houver nenhum, o slide está pedindo algo que o sistema decidiu não ter.
+
+**`limites.*` — não cabe.** A resposta é sempre uma das duas: **corte o conteúdo ou divida o slide em dois.** Reduzir a letra não é uma opção que exista — não há `style`, e nada no sistema encolhe texto para caber. Quando um limite acusa repetidamente no mesmo slide, o problema raramente é o limite: é um slide com duas ideias dentro.
+
+**`composicao.*` — o fonte parecia bem, a página desenhada não.** É o grupo que mede o que só o navegador sabe: quanto de fato ocupou, em quantas linhas o título quebrou, com que tamanho o texto chegou à tela. O conserto é o mesmo dos limites, e a diferença é que aqui você já viu a página e sabe o que sobra.
+
+**`matematica.*` — delimitador, comando ou símbolo.** Os três casos e os consertos estão em `40-matematica-e-codigo.md`.
+
+**`recursos.*` — a imagem, a linguagem ou a demo.** `recursos.imagem` é caminho errado ou arquivo que não veio junto; `recursos.linguagem` traz na própria mensagem a lista das aceitas; as duas de demo estão em `50-graficos-diagramas-demos.md`.
+
+**`saida.*` — o produto final.** São raras, e uma delas não é culpa sua: `saida.pdf-paginas` pede que você **relate o defeito**, porque o número de páginas é conta do sistema, não escolha do autor.
+
+Dois hábitos que economizam tempo em qualquer família:
+
+- **conserte a causa, não a mensagem.** Uma causa só costuma render várias mensagens — um recurso de fase 2 escrito hoje rende quatro de uma vez (`50-graficos-diagramas-demos.md`). Corrija o que está errado e rode de novo; a lista encolhe sozinha.
+- **rode depois de cada slide novo**, e não no fim da aula. As mensagens são baratas quando são duas e caras quando são quarenta.
+
+## Quando ela não acusa
+
+Silêncio não é aprovação em todos os casos, e vale conhecer os três em que não é:
+
+- **sem Chrome, o grupo de composição não roda.** A CLI avisa por fora da lista, e o que ela lhe entregou foi uma validação parcial.
+- **sem `validador/cobertura.json`**, o inventário de glifos das fontes embutidas, `matematica.simbolo-fora-do-tex` se cala — acusar tudo seria pior do que não acusar nada.
+- **as regras de saída só existem no build.** Uma aula impecável no painel do navegador ainda pode ter uma referência externa que só o HTML final revela.
+
+A validação completa, com os quatro grupos, é a do `aula-usp build` com Chrome disponível. É ela que vale como "entregue em zero erros".
