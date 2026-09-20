@@ -1,9 +1,10 @@
-// As três regras de saída (spec 9.2): só fazem sentido sobre o HTML final, já construído — nunca
+// As quatro regras de saída (spec 9.2): só fazem sentido sobre o HTML final, já construído — nunca
 // sobre o fonte que o autor escreve. Grupo "saida": build/validar.mjs chama depois de montar() e de
-// embutir tudo (marco 5b); o marco 4c não roda este grupo no navegador, porque cobertura e bytes só
-// existem depois do build. Mesmo assim o arquivo continua sem importar nada do Node (spec 3.5):
-// quem lê disco e calcula cobertura/bytes é build/, e entrega os dois prontos pelo contexto de validar().
-import { onde, trechoDe, encurtar } from '../validar.js';
+// embutir tudo (marco 5b); o marco 4c não roda este grupo no navegador, porque cobertura, bytes e as
+// páginas do PDF só existem depois do build (marco 5c). Mesmo assim o arquivo continua sem importar
+// nada do Node (spec 3.5): quem lê disco, gera o PDF e calcula cobertura/bytes/páginas é build/, e
+// entrega tudo pronto pelo contexto de validar().
+import { onde, trechoDe, encurtar, plural } from '../validar.js';
 import { INVISIVEL } from './recursos.js';
 
 // "Externo" para as três fontes abaixo: não vazio, não já embutido (data:) e não uma referência
@@ -128,6 +129,19 @@ export const regras = [
           }
         }
       }
+    },
+  },
+  {
+    nome: 'saida.pdf-paginas',
+    // Comparação, não heurística (fato 4 da sondagem): paginasEsperadas (motor/impressao.js, desde o
+    // marco 2) já é o oráculo, e quem a chama é o build — nunca recalcule aqui. Duas verdades sobre o
+    // mesmo número é a classe de defeito que este projeto mais pagou caro. Sem paginasDoPdf no
+    // contexto (build com --sem-pdf, ou sem Chrome) a regra se cala, em vez de acusar: mesma
+    // disciplina de degradação de matematica.simbolo-fora-do-tex e saida.glifo-ausente. Um achado sem
+    // slide sai como "aula" (spec 9.1) — o PDF é sempre da aula inteira, nunca de um slide só.
+    *aplicar({ paginasDoPdf, paginasEsperadas }) {
+      if (!Number.isFinite(paginasDoPdf) || paginasDoPdf === paginasEsperadas) return;
+      yield { mensagem: `PDF com ${plural(paginasDoPdf, 'página', 'páginas')} (esperadas ${paginasEsperadas}).` };
     },
   },
 ];

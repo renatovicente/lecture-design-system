@@ -393,12 +393,12 @@ test('toda regra estática de fase 1 do contrato está implementada', () => {
   );
 });
 
-// A mesma guarda, para o grupo saida (marco 5b/5c). saida.pdf-paginas ainda não tem código — é do
-// marco 5c — e por isso fica numa lista de exceção nomeada, no mesmo molde do ADIADAS_DE_PROPOSITO
-// que valeu para matematica.simbolo-fora-do-tex enquanto essa regra esperou pelo marco 5: cada nome
-// sai da lista assim que ganha implementação. saida.referencia-externa, saida.tamanho e
-// saida.glifo-ausente saíram dela nesta tarefa; só falta pdf-paginas.
-const ADIADAS_DE_PROPOSITO = ['saida.pdf-paginas'];
+// A mesma guarda, para o grupo saida (marco 5b/5c). saida.referencia-externa, saida.tamanho e
+// saida.glifo-ausente já tinham código; saida.pdf-paginas — a última das quatro — ganhou o dela
+// nesta tarefa. A lista de exceção nomeada, no mesmo molde do ADIADAS_DE_PROPOSITO que valeu para
+// matematica.simbolo-fora-do-tex enquanto essa regra esperou pelo marco 5, fica vazia: não sobra
+// nada de fase 1 adiado neste grupo — nem, com isso, na fase 1 do validador inteiro.
+const ADIADAS_DE_PROPOSITO = [];
 
 test('toda regra de saída de fase 1 do contrato está implementada ou nomeada como adiada', () => {
   const doContrato = Object.entries(contrato.regras)

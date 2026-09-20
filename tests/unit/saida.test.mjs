@@ -1,4 +1,4 @@
-// As três regras da spec 9.2 que rodam sobre o HTML final. Grupo "saida": não roda no navegador.
+// As quatro regras da spec 9.2 que rodam sobre o HTML final. Grupo "saida": não roda no navegador.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { parseHTML } from 'linkedom';
@@ -12,9 +12,11 @@ const COBERTURA = new Set([...'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVW
 // [Rodada de correção 2, I1] cobertura virou duas: coberturaSistema vale em qualquer lugar,
 // coberturaKatex só dentro de um elemento `.katex`. Os testes que não mencionam nenhuma das duas
 // continuam com o comportamento de sempre — só prosa comum, então só coberturaSistema importa.
-const saida = (corpo, { coberturaSistema = COBERTURA, coberturaKatex, bytes = 1000 } = {}) => {
+// `...resto` repassa qualquer outra chave do contexto (paginasDoPdf e paginasEsperadas, para
+// saida.pdf-paginas) sem que este auxiliar precise conhecer cada regra nova.
+const saida = (corpo, { coberturaSistema = COBERTURA, coberturaKatex, bytes = 1000, ...resto } = {}) => {
   const doc = parseHTML(`<!DOCTYPE html><html lang="pt-BR"><head><title>t</title></head><body>${corpo}</body></html>`).document;
-  return validar(doc, { contrato, regras: REGRAS_DE_SAIDA, grupo: 'saida', coberturaSistema, coberturaKatex, bytes });
+  return validar(doc, { contrato, regras: REGRAS_DE_SAIDA, grupo: 'saida', coberturaSistema, coberturaKatex, bytes, ...resto });
 };
 const regras = (achados) => achados.map((a) => a.regra);
 
@@ -104,4 +106,26 @@ test('sem coberturaSistema no contexto a regra de glifo se cala, em vez de acusa
   const doc = parseHTML('<!DOCTYPE html><html lang="pt-BR"><head><title>t</title></head><body><section data-layout="conteudo"><p>∑</p></section></body></html>').document;
   const achados = validar(doc, { contrato, regras: REGRAS_DE_SAIDA, grupo: 'saida', bytes: 10 });
   assert.equal(regras(achados).includes('saida.glifo-ausente'), false);
+});
+
+// spec 9.2: erro quando o número de páginas do PDF difere do esperado (seção 6.9). É comparação, não
+// heurística: quem calcula o esperado é paginasEsperadas, em motor/impressao.js, desde o marco 2.
+test('número de páginas diferente do esperado acusa, com os dois números na mensagem', () => {
+  const achados = saida('<section data-layout="conteudo"><p>oi</p></section>',
+    { paginasDoPdf: 9, paginasEsperadas: 11 });
+  assert.deepEqual(regras(achados), ['saida.pdf-paginas']);
+  assert.match(achados[0].mensagem, /9/);
+  assert.match(achados[0].mensagem, /11/);
+});
+
+test('número igual não acusa', () => {
+  assert.deepEqual(saida('<section data-layout="conteudo"><p>oi</p></section>',
+    { paginasDoPdf: 11, paginasEsperadas: 11 }), []);
+});
+
+// Sem PDF (build com --sem-pdf, ou sem Chrome) a regra se cala, em vez de acusar. Mesma disciplina de
+// degradação que matematica.simbolo-fora-do-tex e saida.glifo-ausente já seguem.
+test('sem paginasDoPdf no contexto a regra se cala', () => {
+  assert.deepEqual(saida('<section data-layout="conteudo"><p>oi</p></section>',
+    { paginasEsperadas: 11 }), []);
 });
