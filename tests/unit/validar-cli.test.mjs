@@ -2,7 +2,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync, spawn, spawnSync } from 'node:child_process';
-import { mkdtempSync, writeFileSync, readFileSync, readdirSync } from 'node:fs';
+import { mkdtempSync, writeFileSync, readFileSync, readdirSync, chmodSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -324,6 +324,28 @@ test('build: CHROME_PATH inexistente avisa no stderr, grava o HTML (sem PDF) e s
   // Esta é a forma que a spec 3.3 descreve; a forma com alvo-arquivo passou, na correção do I7, a
   // nomear pelo arquivo (tests/integracao/slug.test.mjs).
   assert.deepEqual(readdirSync(join(pasta, 'dist')).sort(), [`${basename(pasta)}.html`, 'validacao.json'].sort());
+});
+
+// I4 da revisão final, segunda metade: o catch de buildComando traduzia QUALQUER exceção do
+// pipeline em "falha de ambiente: … rode npm install na pasta do sistema" — inclusive as que nenhum
+// npm install conserta. O critério agora é a origem: só o bloco dos imports dinâmicos (o único lugar
+// onde falta de dependência aparece) fala em npm install; o que estoura depois é falha do pipeline.
+// Uma pasta sem permissão de escrita é o caso mais barato de produzir E o mais fácil de reconhecer:
+// build() morre no primeiro mkdir, antes de ler a aula e antes de abrir Chrome nenhum — o teste é
+// rápido e não depende de navegador, como os outros dois testes de `build` deste arquivo.
+test('build: falha do pipeline não sai como falta de dependência', { skip: process.getuid?.() === 0 && 'root ignora a permissão da pasta' }, () => {
+  const pasta = aulaTemporariaDoArquivo(FIXTURE_BUILD('aula-limpa'));
+  chmodSync(pasta, 0o555);
+  try {
+    const resultado = spawnSync('node', [CLI, 'build', pasta], { encoding: 'utf8' });
+    assert.equal(resultado.status, 2, resultado.stderr); // spec 8.1: "não deu para rodar"
+    assert.doesNotMatch(resultado.stderr, /npm install/,
+      `o conselho de instalação saiu para uma falha que não é de dependência: ${resultado.stderr}`);
+    assert.match(resultado.stderr, /o build falhou/);
+    assert.match(resultado.stderr, /EACCES|EPERM/); // a mensagem de verdade, que o autor pode agir
+  } finally {
+    chmodSync(pasta, 0o755); // devolve a permissão para o mkdtemp poder ser limpo por quem limpar
+  }
 });
 
 test('build: --sem-pdf é reconhecida, não "flag desconhecida"', () => {

@@ -1,13 +1,15 @@
-// O caminho de exceção do build (I3 da revisão final do 5c): o que fica no disco, e o que o autor
-// lê, quando o pipeline morre DEPOIS da etapa 2-4. Integração, não unitário: só se chega à etapa 6
-// passando pela 5, que abre Chrome de verdade.
+// O caminho de exceção do build (I3 e I4 da revisão final do 5c): o que fica no disco, e o que o
+// autor lê, quando o pipeline morre DEPOIS da etapa 2-4. Integração, não unitário: os dois casos
+// precisam de Chrome de verdade — o primeiro porque só se chega à etapa 6 passando pela 5, o segundo
+// porque é dentro de uma página que a montagem termina mal.
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, readFile } from 'node:fs/promises';
+import { mkdtemp, readFile, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { iniciarChrome } from './utilitarios.mjs';
 import { build } from '../../build/build.mjs';
+import { gerarPdf } from '../../build/pdf.mjs';
 
 const RAIZ = new URL('../../', import.meta.url);
 const fixture = (nome) => new URL(`../fixtures/build/${nome}/aula.html`, import.meta.url);
@@ -39,4 +41,21 @@ test('etapa 6 estourando: o validacao.json no disco é a lista acumulada, não o
   // não conhece, e que `aula-usp validar` acha nesta mesma aula.
   assert.deepEqual(validacao.map((achado) => achado.regra).sort(),
     ['estrutura.blocos', 'estrutura.notas-ausentes'].sort());
+});
+
+// I4, segunda metade, dentro da etapa 6: gerarPdf esperava `montado === 'sim'` e nada mais — quando
+// a montagem terminava em OUTRO estado, a espera ia até os 30 s do Playwright e saía como
+// TimeoutError, que a CLI ainda embrulhava em "rode npm install". O padrão certo já existia em
+// medirComposicao (build/composicao.mjs): esperar `montado !== undefined` e então LER o estado.
+// Medido antes da correção, com este mesmo HTML: 30 s de espera e
+// "page.waitForFunction: Timeout 30000ms exceeded".
+test('etapa 6: montagem que termina em outro estado falha na hora, dizendo qual estado', async () => {
+  const pasta = await mkdtemp(join(tmpdir(), 'excecao-'));
+  const caminhoDoHtml = join(pasta, 'nao-monta.html');
+  // Não é uma aula: gerarPdf só abre um arquivo e olha o dataset. O que este HTML reproduz é o
+  // estado final "nao" — o que um runtime embutido escreve quando a montagem falha.
+  await writeFile(caminhoDoHtml, '<!DOCTYPE html><html lang="pt-BR"><body data-montado="nao"></body></html>', 'utf8');
+  const comeco = Date.now();
+  await assert.rejects(gerarPdf({ caminhoDoHtml, navegador, metadados: {} }), /a montagem terminou em "nao"/);
+  assert.ok(Date.now() - comeco < 10_000, 'a falha demorou o bastante para ser a espera de 30 s, não a leitura do estado');
 });

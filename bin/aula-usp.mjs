@@ -106,13 +106,23 @@ async function buildComando(argumentos) {
   const { opcoes, posicionais } = lerArgumentos(argumentos, FLAGS_BUILD);
   const [pasta] = posicionais;
   if (!pasta) sair(USO);
+  // Dois try, não um (I4 da revisão final). O de cima é o ÚNICO lugar onde falta de dependência pode
+  // aparecer — build/validar.mjs e build/build.mjs só entram por import dinâmico (mesma regra do
+  // topo do arquivo), e build/build.mjs arrasta playwright-core e pdf-lib —, e é só nele que "rode
+  // npm install" é o conselho certo. Com um try só, QUALQUER estouro das sete etapas saía como
+  // "falha de ambiente: … rode npm install na pasta do sistema": uma montagem que falha na etapa 6,
+  // uma pasta sem permissão de escrita, um disco cheio. Nenhum npm install conserta nada disso, e o
+  // autor perdia a mensagem que dizia o que de fato quebrou.
+  let caminhoDaAula;
+  let build;
+  try {
+    ({ caminhoDaAula } = await import('../build/validar.mjs'));
+    ({ build } = await import('../build/build.mjs'));
+  } catch (erro) {
+    sair(`falha de ambiente: ${erro.message}\nrode npm install na pasta do sistema`);
+  }
   let resultado;
   try {
-    // build/validar.mjs e build/build.mjs só entram por import dinâmico, e os dois aqui dentro do
-    // try (mesma regra do topo do arquivo): build/build.mjs arrasta playwright-core e pdf-lib, e uma
-    // dependência ausente tem de virar saída 2 (spec 8.1), não stack trace.
-    const { caminhoDaAula } = await import('../build/validar.mjs');
-    const { build } = await import('../build/build.mjs');
     const alvo = caminhoDaAula(pasta); // ENOENT sobe: mesma origem de erro que validarComando trata abaixo
     resultado = await build({
       raiz: new URL('../', import.meta.url),
@@ -121,13 +131,16 @@ async function buildComando(argumentos) {
       semPdf: opcoes.semPdf ?? false,
     });
   } catch (erro) {
-    // Mesmo critério de validarComando: "não encontrei" só quando o caminho ausente é o da própria
-    // aula; qualquer outro ENOENT (contrato, unidades, dependência do import acima) é o ambiente.
+    // Mesmo critério de validarComando para o caminho da aula: "não encontrei" só quando o ausente é
+    // o alvo (ou o index.html dentro dele). Tudo o mais que chega aqui já rodou — os imports
+    // passaram —, então é falha do pipeline, e a mensagem de verdade (inclusive o caminho de um
+    // ENOENT de arquivo do sistema) aponta melhor que um conselho de instalação. A saída continua 2
+    // (spec 8.1: "não deu para rodar"), como antes.
     const alvoAbsoluto = resolve(pasta);
     const ehCaminhoDaAula = erro.code === 'ENOENT'
       && (erro.path === alvoAbsoluto || erro.path === join(alvoAbsoluto, 'index.html'));
     if (ehCaminhoDaAula) sair(`não encontrei a aula em ${pasta}: ${erro.message}`);
-    else sair(`falha de ambiente: ${erro.message}\nrode npm install na pasta do sistema`);
+    else sair(`o build falhou: ${erro.message}`);
   }
   const { achados, codigo, avisoSemChrome, paginas } = resultado;
   // Vai para stderr, como o aviso equivalente de validarComando: spec 8.1, falta de Chrome não é

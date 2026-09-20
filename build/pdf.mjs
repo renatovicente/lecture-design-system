@@ -1,13 +1,23 @@
 // Etapa 6 da spec 3.3 e seção 8.4: abre o HTML construído no Chrome, prepara a impressão e gera o PDF.
 // Node, não navegador. Não abre navegador próprio — recebe um, para o chamador controlar o ritmo de
 // Chrome (uma abertura por build, não uma por deck).
+import { pathToFileURL } from 'node:url';
 import { PDFDocument } from 'pdf-lib';
 
 export async function gerarPdf({ caminhoDoHtml, navegador, metadados = {} }) {
   const pagina = await navegador.newPage();
   try {
-    await pagina.goto(`file://${caminhoDoHtml}`);
-    await pagina.waitForFunction(() => document.body?.dataset.montado === 'sim');
+    // I4 da revisão final: pathToFileURL, não `file://${...}` — o Chrome corta a URL no `#` (e no
+    // `?`), então uma aula numa pasta chamada "Aula #3" fazia esta etapa abrir outra coisa e falhar.
+    // Espaço no nome já passava; `#` não (medido: `file:///tmp/aula#3/dist/aula#3.html`).
+    await pagina.goto(pathToFileURL(caminhoDoHtml).href);
+    // Espera o FIM da montagem, qualquer que seja o estado, e então LÊ qual foi — o padrão que
+    // medirComposicao (build/composicao.mjs:45-47) já usava. Esperar direto por 'sim' transformava
+    // toda montagem malsucedida nos 30 s do Playwright e num TimeoutError que não diz nada ao autor
+    // (medido, antes desta mudança: 30,2 s e "page.waitForFunction: Timeout 30000ms exceeded").
+    await pagina.waitForFunction(() => document.body?.dataset.montado !== undefined);
+    const estado = await pagina.evaluate(() => document.body.dataset.montado);
+    if (estado !== 'sim') throw new Error(`a montagem terminou em "${estado}"`);
     await pagina.evaluate(() => document.fonts.ready);
     // Spec 6.9: explicitamente, e não SÓ pelo beforeprint — o page.pdf() do Chrome também dispara
     // beforeprint/afterprint, e o motor embutido registra os dois (motor/impressao.js:82-83). As duas
