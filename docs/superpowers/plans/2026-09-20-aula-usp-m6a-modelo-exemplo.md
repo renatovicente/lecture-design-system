@@ -219,7 +219,7 @@ Metadados: `unidade="ime"`, `disciplina="Aprendizado de Máquina"`, `aula="4"`, 
 
 - [ ] **Passo 2: a derivação do slide `derivacao`**
 
-A matemática é determinada; escreva-a assim, dentro de um `<div>` de coluna:
+A matemática é determinada; escreva-a assim, **direto na `<section>`**, sem embrulhar em `div.colunas`:
 
 **A derivação é em lote, e a primeira versão deste passo escrevia a de um exemplo.** Quarto defeito
 meu neste plano, achado pela revisão da tarefa 2. Eu tinha fixado `E(w) = \tfrac{1}{2}(y - \hat{y}(w))^2`,
@@ -237,19 +237,36 @@ procurar o `len(y)` nos quatro passos e não ia achar.
 \partial E/\partial w_n)`, onde `n` conta **pesos**. A mesma letra para duas grandezas a dois slides
 de distância seria um defeito novo, e `N` para exemplos é a letra do espécime.
 
+**O `ol.passos` não vai dentro de uma coluna, e esta linha foi corrigida depois da revisão final.**
+Sexto defeito meu neste plano, e de um tipo novo: não é fato errado, é instrução que contradiz outra
+instrução do mesmo plano. A frase original — "dentro de um `<div>` de coluna" — veio do Fato 1, que é
+sobre filhos de `div.colunas`; mas o Fato 1 só vale **se** houver `div.colunas`, e a tabela do Passo 1
+dá duas colunas ao slide `taxa`, não ao `derivacao`. Para obedecer à letra num slide de uma coluna só,
+a execução inventou um `div.colunas data-grade="12"` — largura útil inteira, um filho só — que o
+contrato não pede. Medido na correção final: sem o embrulho, `validar` sai com 0 erros e 0 avisos e
+`build` com código 0 e 11 páginas.
+
+**O item 4 nomeia \( \eta \), e isto também é correção posterior.** A revisão final mediu que a aula
+usava o símbolo em três slides sem nunca dizer o que ele é. A forma da spec 5.1 para definir é um
+`aside.destaque`, e ele **não cabe neste slide**: `validar` acusa `composicao.transbordo` de 5 px — o
+mesmo número com e sem `data-passo` e com dois textos de comprimentos diferentes, isto é, é o bloco
+que não cabe, não o texto. O nome entra então no próprio item, antes da fórmula, que é onde o símbolo
+estreia; o lide do slide `taxa` passa a trazê-lo também.
+
 ```html
 <ol class="passos">
   <li>O erro mede a distância ao alvo, na média sobre os \(N\) exemplos: \( E(w) = \tfrac{1}{2N} \sum_{i=1}^{N} (y_i - \hat{y}_i(w))^2 \).</li>
   <li data-passo>Derive em relação ao peso: \( \nabla E(w) = -\tfrac{1}{N} \sum_{i=1}^{N} (y_i - \hat{y}_i)\,\nabla \hat{y}_i(w) \).</li>
   <li data-passo>O gradiente aponta a subida, então ande no sentido oposto.</li>
-  <li data-passo>A regra: \( w \leftarrow w - \eta\,\nabla E(w) \).</li>
+  <li data-passo>A regra, com a taxa de aprendizado \( \eta \): \( w \leftarrow w - \eta\,\nabla E(w) \).</li>
 </ol>
 ```
 
-Quatro itens cabem no limite de 5 (`lista.itens`, Fato 5), e a coluna fica em 32 palavras das 60 de
-`coluna.palavras`. Medido com `numpy` depois da correção, sobre o código extraído do arquivo
-entregue: o gradiente do item 2 bate com uma diferença central de `E` (máx. 4,0e-10) e com o que o
-Passo 3 calcula (máx. 4,4e-16).
+Quatro itens cabem no limite de 5 (`lista.itens`, Fato 5), e o corpo fica em 38 palavras das 90 de
+`corpo.palavras` — medido com `palavrasDe`, a função que a regra `limites.palavras-corpo` usa.
+Medido com `numpy` depois da correção, sobre o código extraído do arquivo entregue: o gradiente do
+item 2 bate com uma diferença central de `E` (máx. 4,0e-10) e com o que o Passo 3 calcula
+(máx. 4,4e-16).
 
 - [ ] **Passo 3: o trecho de Python do slide `codigo`**
 
@@ -340,7 +357,7 @@ A spec 10.2 diz: *"Na raiz do sistema ficam `AGENTS.md` (comandos, testes e regr
 
 Cubra, medindo cada número no repositório em vez de copiar deste plano:
 
-- os cinco comandos da CLI (`servir`, `validar`, `build`, `dist` hoje; `pacotes` chega em 6c);
+- os seis comandos que a spec 8.1 lista (`servir`, `validar`, `build`, `dist` hoje; `pacotes` e `novo` chegam em 6c);
 - `npm test` (unitários, sem navegador) e `npm run test:integracao` (Chrome), e a regra da spec 8.1: **falta de Chrome não é falha**;
 - **a fronteira**: `montar/`, `motor/`, `componentes/` e `validador/` não importam nada do Node; `bin/` e `build/` são Node;
 - **o contrato como dado**: o código executa `contrato/contrato.json`, nunca o repete — inclusive limiares;
