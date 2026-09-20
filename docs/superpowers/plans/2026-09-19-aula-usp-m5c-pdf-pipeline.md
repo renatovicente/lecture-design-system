@@ -307,7 +307,9 @@ Esta é a tarefa de **orquestração**, e o que ela precisa acertar são as tran
 | 4 | troca a tag do runtime, embute tudo, grava `<slug>.html` | `construir` (5b) |
 | 5 | abre no Chrome e roda composição | `build/composicao.mjs` |
 | 6 | chama `prepararImpressao()` e gera o PDF | `gerarPdf` (tarefa 1) |
-| 7 | roda as regras de saída, grava `<slug>.pdf` e `validacao.json` | tarefa 2 + esta |
+| 7 | roda **só** `saida.pdf-paginas`, grava `<slug>.pdf` e `validacao.json` | tarefa 2 + esta |
+
+> **Quem roda quais regras de saída, e por quê.** `construir()` (marco 5b) já roda as três regras que falam do **HTML final** — `referencia-externa`, `tamanho`, `glifo-ausente` — e continua rodando. A etapa 7 roda **apenas** `saida.pdf-paginas`, que é a única que fala do **PDF**, e concatena os achados. As quatro regras do grupo não têm um sujeito só: três são sobre um artefato, uma é sobre outro, e separá-las por artefato dá um dono por pergunta. Rodar o grupo inteiro na etapa 7 duplicaria os três primeiros achados; e na hora do `construir()` não existe PDF, então `saida.pdf-paginas` se cala ali de qualquer forma. **Ponha essa razão num comentário no código** — sem ela, a divisão parece descuido e alguém reunifica.
 
 **Os quatro finais, verbatim da spec 3.3** — cada um é um teste:
 
