@@ -2,10 +2,11 @@
 // de páginas, tamanho da página e metadados. Chrome de verdade, porque é ele quem gera.
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp } from 'node:fs/promises';
+import { mkdtemp, mkdir } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { PDFDocument, PDFName } from 'pdf-lib';
+import { inflateSync } from 'node:zlib';
+import { PDFDocument, PDFName, PDFArray, PDFRawStream } from 'pdf-lib';
 import { parseHTML } from 'linkedom';
 import { iniciarChrome } from './utilitarios.mjs';
 import { construir } from '../../build/construir.mjs';
@@ -145,4 +146,66 @@ test('num deck sem passos, o PDF tem exatamente uma página por slide', async ()
   assert.equal(doc.querySelectorAll('[data-pdf="passos"]').length, 0, 'este deck ganhou passos; escolha outro');
   const { paginas } = await gerarPdf({ caminhoDoHtml, navegador, metadados: {} });
   assert.equal(paginas, slides);
+});
+
+
+// Minor 6 da re-revisão: a correção do I4(a) em build/pdf.mjs (pathToFileURL em vez de
+// `file://${...}`) era a única correção de produção da rodada que nenhum teste afirmava — revertê-la
+// deixava a suíte de integração inteira em 195/195, porque todo caminho de teste vem de mkdtemp e
+// nenhum tem `#` nem `?`. Este é o caso exato: o Chrome corta a URL no `#`, então com a interpolação
+// crua ele pede `file:///…/aula` e o `#3/codigo.html` vira fragmento.
+test('o PDF sai de um HTML construído numa pasta com "#" no nome', async () => {
+  const base = await mkdtemp(join(tmpdir(), 'pdf-'));
+  const destino = join(base, 'aula#3');
+  await mkdir(destino);
+  const { caminhoDoHtml, html } = await construir({ raiz: RAIZ, caminhoDaAula: new URL('especime/codigo.html', RAIZ), destino });
+  assert.ok(caminhoDoHtml.includes('#'), `o caminho construído perdeu o "#" e este teste deixou de medir o que diz: ${caminhoDoHtml}`);
+  const slides = parseHTML(html).document.querySelectorAll('section.slide:not([data-copia])').length;
+  const { paginas } = await gerarPdf({ caminhoDoHtml, navegador, metadados: {} });
+  assert.equal(paginas, slides);
+});
+
+// Descomprime o content stream de uma página e devolve os retângulos que ela PREENCHE ("x y w h re f"),
+// como strings, na ordem em que aparecem. node:zlib e pdf-lib de baixo nível ficam aqui, no teste: a
+// fronteira do projeto é sobre montar/, motor/, componentes/ e validador/, não sobre tests/.
+function retangulosPreenchidos(pdf, indice) {
+  const pedacos = [];
+  const juntar = (objeto) => {
+    const alvo = pdf.context.lookup(objeto) ?? objeto;
+    if (alvo instanceof PDFArray) { for (const item of alvo.asArray()) juntar(item); return; }
+    if (alvo instanceof PDFRawStream) {
+      const filtro = String(alvo.dict.get(PDFName.of('Filter')) ?? '');
+      pedacos.push(filtro.includes('FlateDecode') ? inflateSync(Buffer.from(alvo.contents)) : Buffer.from(alvo.contents));
+    }
+  };
+  juntar(pdf.getPage(indice).node.get(PDFName.of('Contents')));
+  const fluxo = Buffer.concat(pedacos).toString('latin1');
+  return [...fluxo.matchAll(/(-?[\d.]+) (-?[\d.]+) (-?[\d.]+) (-?[\d.]+) re\s+f\b/g)]
+    .map(([, x, y, largura, altura]) => `${x} ${y} ${largura} ${altura}`);
+}
+
+// Minor 5 da re-revisão, e a decisão que ela derrubou: a rodada anterior deixou printBackground SEM
+// teste sobre a premissa de que "uma verificação honesta exigiria rasterizar a página". A premissa é
+// falsa, medida nos dois PDFs do mesmo HTML construído: com printBackground, toda página a partir da
+// 1 ganha exatamente um preenchimento de página inteira NA ORIGEM; sem ele, esse operador não existe
+// em nenhuma delas. É estrutural — um operador que só a pintura de fundo emite —, e é whitebox no
+// mesmo grau que as asserções de StructTreeRoot, Outlines e /Lang acima.
+//
+// A página 0 fica FORA de propósito: nela o retângulo do próprio slide também cai na origem, e a
+// contagem foi 3 (com) contra 2 (sem) — incluí-la seria uma asserção verdadeira nos dois casos, que
+// é o defeito de teste vazio que este marco já cobrou cinco vezes.
+//
+// O retângulo é o palco em PIXELS (o content stream do Chrome traz a caixa em px, com a escala na
+// CTM), não em pontos: por isso LARGURA_DO_PALCO/ALTURA_DO_PALCO crus, sem PT_POR_PX.
+test('printBackground pinta o fundo de cada página (spec 8.4)', async () => {
+  const { caminhoDoHtml } = await construirDeck('index.html');
+  const { bytes } = await gerarPdf({ caminhoDoHtml, navegador, metadados: {} });
+  const pdf = await PDFDocument.load(bytes);
+  const fundoDaPagina = `0 0 ${LARGURA_DO_PALCO} ${ALTURA_DO_PALCO}`;
+  assert.ok(pdf.getPageCount() > 1, 'este deck ficou com uma página só; a página 0 está fora da asserção e não sobraria nada para medir');
+  for (let indice = 1; indice < pdf.getPageCount(); indice += 1) {
+    const preenchidos = retangulosPreenchidos(pdf, indice);
+    assert.ok(preenchidos.includes(fundoDaPagina),
+      `página ${indice} sem o preenchimento de fundo "${fundoDaPagina} re f" — printBackground não chegou ao pagina.pdf(). Retângulos preenchidos nesta página: ${JSON.stringify(preenchidos)}`);
+  }
 });

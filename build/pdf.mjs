@@ -44,12 +44,19 @@ export async function gerarPdf({ caminhoDoHtml, navegador, metadados = {} }) {
     // de diferença no PDF bruto do Chrome, que a compressão do save() consome quase inteira. Medição
     // completa no relatório da tarefa 1 (.superpowers/sdd/2026-09-19-aula-usp-m5c-pdf-pipeline/).
     const bytes = await pagina.pdf({
-      // M3 da revisão final: esta linha NÃO tem teste, e a lacuna é deliberada. Apagá-la deixa os
-      // testes de pdf.test.mjs verdes, e a verificação óbvia — procurar a cor do campo no content
-      // stream da página — é ela própria vazia: medido, `.9882,.7059,.1294 rg` aparece com e sem
-      // printBackground, porque o mesmo operador também pinta traço e texto. Uma verificação honesta
-      // exigiria rasterizar a página (poppler ou equivalente) e olhar o pixel do fundo. Não escreva
-      // o teste fácil: ele passaria dos dois jeitos e só daria a impressão de cobertura.
+      // Esta linha TEM teste, e ele é estrutural: "printBackground pinta o fundo de cada página" em
+      // tests/integracao/pdf.test.mjs. O teste fácil — procurar a COR do campo no content stream — é
+      // de fato vazio: medido, `.9882,.7059,.1294 rg` aparece com e sem printBackground, porque o
+      // mesmo operador pinta traço e texto. Mas a conclusão que a primeira versão deste comentário
+      // tirou disso, "uma verificação honesta exigiria rasterizar a página", é FALSA, e ficou escrita
+      // aqui uma rodada inteira. Medido nos dois PDFs do mesmo HTML construído (index.html, 15
+      // páginas), descomprimindo o content stream de cada página: com printBackground, toda página a
+      // partir da 1 ganha exatamente um preenchimento de página inteira na origem
+      // (`0 0 1280 720 re f`); sem ele, esse operador não existe em nenhuma delas. A página 0 é a
+      // exceção e fica fora da asserção — nela o retângulo do próprio slide também cai na origem
+      // (3 ocorrências com a linha, 2 sem), então ali a contagem não separa as duas situações.
+      // Ressalva honesta, registrada junto: a forma do content stream é do Chrome e pode mudar de
+      // versão — é uma fragilidade real, mas não é "impossível sem rasterizar".
       printBackground: true,      // spec 8.4: o campo amarelo e o azul de sinal precisam sair
       preferCSSPageSize: true,    // honra o @page de estilos/impressao.css; sem isto o Chrome usa Letter
       tagged: true,               // spec 8.4: estrutura marcada — sobrevive ao save (ver comentário acima)
