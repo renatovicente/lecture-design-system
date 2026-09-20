@@ -29,7 +29,7 @@ As regras são de quatro grupos, e o grupo diz **quando** a regra tem como saber
 
 **As de composição** são as que exigem medir a página desenhada: o que transbordou da zona de conteúdo, o título que tomou uma linha a mais, o texto que chegou à tela abaixo do mínimo do seu papel. No navegador elas rodam sempre; na linha de comando, só quando há um Chrome para abrir, e a CLI avisa quando não há. Um "zero erros" sem Chrome não é o mesmo "zero erros" de quem tem.
 
-**As de saída** olham o produto: o HTML final não pode depender de nenhum arquivo externo, e o PDF tem de ter o número de páginas previsto. Elas não existem no navegador porque lá não há HTML final nem PDF.
+**As de saída** olham o produto: o HTML final não pode depender de nenhum arquivo externo (`saida.referencia-externa`) nem pedir um glifo que a fonte embutida não tem (`saida.glifo-ausente`); o PDF tem de ter o número de páginas previsto (`saida.pdf-paginas`); e o HTML final avisa quando passa do tamanho em megabytes do contrato (`saida.tamanho`). Elas não existem no navegador porque lá não há HTML final nem PDF.
 
 ## Como ler uma mensagem
 
