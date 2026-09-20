@@ -8,6 +8,7 @@ import assert from 'node:assert/strict';
 import { mkdtemp } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { pathToFileURL } from 'node:url'; // um '#' no caminho do temporário viraria fragmento, não pasta (I4 da revisão final)
 import { iniciarChrome, fontesDoNo, AVISO_CDP_SOBRE_FILE } from './utilitarios.mjs';
 import { construir } from '../../build/construir.mjs';
 import { FAMILIA_POR_CLASSES } from '../../build/fontes-embutidas.mjs';
@@ -24,7 +25,7 @@ async function construirEAbrir(caminhoRelativo) {
   const erros = [];
   pagina.on('console', (m) => { if (m.type() === 'error' && !m.location().url.endsWith('/favicon.ico')) erros.push(m.text()); });
   pagina.on('pageerror', (e) => erros.push(e.message));
-  await pagina.goto(`file://${caminhoDoHtml}`);
+  await pagina.goto(pathToFileURL(caminhoDoHtml).href);
   await pagina.waitForFunction(() => document.body?.dataset.montado === 'sim');
   return { pagina, erros };
 }

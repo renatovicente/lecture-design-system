@@ -5,6 +5,7 @@ import assert from 'node:assert/strict';
 import { mkdtemp } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { pathToFileURL } from 'node:url'; // um '#' no caminho do temporário viraria fragmento, não pasta (I4 da revisão final)
 import { iniciarChrome, fontesDoNo, AVISO_CDP_SOBRE_FILE } from './utilitarios.mjs';
 import { construir } from '../../build/construir.mjs';
 
@@ -20,7 +21,7 @@ test('a aula construída vive de file://, sem rede e sem erro de console', async
   t.after(() => pagina.close());
   const erros = [];
   const pedidos = [];
-  const alvo = `file://${caminhoDoHtml}`;
+  const alvo = pathToFileURL(caminhoDoHtml).href;
   pagina.on('console', (m) => { if (m.type() === 'error' && !m.location().url.endsWith('/favicon.ico')) erros.push(m.text()); });
   pagina.on('pageerror', (e) => erros.push(e.message));
   pagina.on('request', (p) => { if (!p.url().startsWith('data:') && p.url() !== alvo) pedidos.push(p.url()); });
