@@ -47,19 +47,19 @@
   <div class="colunas" data-grade="12">
     <div>
       <ol class="passos">
-        <li>O erro mede a distância ao alvo: \( E(w) = \tfrac{1}{2}\,(y - \hat{y}(w))^2 \).</li>
-        <li data-passo>Derive em relação ao peso: \( \nabla E(w) = -(y - \hat{y})\,\nabla \hat{y}(w) \).</li>
+        <li>O erro mede a distância ao alvo, na média sobre os \(N\) exemplos: \( E(w) = \tfrac{1}{2N} \sum_{i=1}^{N} (y_i - \hat{y}_i(w))^2 \).</li>
+        <li data-passo>Derive em relação ao peso: \( \nabla E(w) = -\tfrac{1}{N} \sum_{i=1}^{N} (y_i - \hat{y}_i)\,\nabla \hat{y}_i(w) \).</li>
         <li data-passo>O gradiente aponta a subida, então ande no sentido oposto.</li>
         <li data-passo>A regra: \( w \leftarrow w - \eta\,\nabla E(w) \).</li>
       </ol>
     </div>
   </div>
-  <aside class="notas">Revelar um passo por vez. O sinal de menos do terceiro item é onde a turma tropeça: vale parar e perguntar para que lado anda o peso antes de mostrar a regra.</aside>
+  <aside class="notas">Revelar um passo por vez. A troca de sinal do terceiro item é onde a turma tropeça: vale parar e perguntar para que lado anda o peso antes de mostrar a regra.</aside>
 </section>
 
 <section data-layout="conteudo" id="taxa">
   <h2>O tamanho do passo<br><span class="sinal">decide o resultado.</span></h2>
-  <p class="lide">A taxa de aprendizado decide quanto da inclinação medida vira movimento.</p>
+  <p class="lide">A taxa de aprendizado controla quanto da inclinação medida vira movimento.</p>
   <div class="colunas" data-grade="6-6">
     <div>
       <p>Com passo curto, a queda tende a ser lenta e regular, e o modelo gasta muitas épocas para chegar perto do fundo.</p>
@@ -93,7 +93,7 @@ def descida(w, X, y, eta=0.1, passos=100):
 w = descida(np.zeros(X.shape[1]), X, y)
 print(f"pesos: {w}")
 </pre>
-  <aside class="notas">A taxa e o número de passos são escolhas de quem chama a função; o miolo é a conta da derivação. Rodar ao vivo e mexer em eta rende mais do que explicar.</aside>
+  <aside class="notas">A taxa e o número de passos são escolhas de quem chama a função; o miolo é a conta da derivação. A divisão por len(y) é a média sobre todos os exemplos: a descida em lote. Rodar ao vivo e mexer em eta rende mais do que explicar.</aside>
 </section>
 
 <section data-layout="conteudo" id="exercicio">
@@ -102,7 +102,7 @@ print(f"pesos: {w}")
     <div class="enunciado">
       <p>Com \( \eta = 0{,}1 \) e gradiente \( 4 \), quanto o peso anda em um passo?</p>
     </div>
-    <div class="resposta">
+    <div class="resposta" data-passo>
       <p>Anda \( 0{,}4 \) no sentido oposto ao gradiente.</p>
     </div>
   </div>
@@ -114,7 +114,7 @@ print(f"pesos: {w}")
   <ol class="sintese">
     <li>O erro é uma superfície, e treinar é descer por ela.</li>
     <li>O gradiente aponta a subida; o passo anda no sentido oposto.</li>
-    <li>A taxa decide o tamanho do passo, e o passo decide se o erro cai.</li>
+    <li>A taxa regula o tamanho do passo, e o passo decide se o erro cai.</li>
   </ol>
   <p class="proxima">Próxima aula: por que um punhado de exemplos já estima bem o gradiente.</p>
 </section>
