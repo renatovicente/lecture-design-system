@@ -63,7 +63,7 @@ Cada um veio de uma sonda executada. Não os re-derive; se algum se mostrar fals
 
 - Tarefa 1 **produz** `gerarPdf({ caminhoDoHtml, navegador, metadados }) → Promise<{ bytes, paginas }>`. `metadados` é `{ titulo, autor, assunto, idioma }`. Não abre navegador próprio: recebe um, para o chamador controlar o ritmo de Chrome.
 - Tarefa 2 **produz** `saida.pdf-paginas` em `REGRAS_DE_SAIDA`, consumindo `paginasDoPdf` e `paginasEsperadas` do contexto de `validar`.
-- Tarefa 3 **consome** as duas anteriores e `construir` do marco 5b; **produz** `build({ raiz, caminhoDaAula, destino, semPdf }) → Promise<{ achados, erros, codigo, arquivos }>`.
+- Tarefa 3 **consome** as duas anteriores e `construir` do marco 5b; **produz** `build({ raiz, caminhoDaAula, destino, semPdf }) → Promise<{ codigo, achados, avisoSemChrome?, paginas? }>`. *(M7 da revisão final: este parágrafo prometia `{ achados, erros, codigo, arquivos }`, que nunca foi a forma real. `erros` e `arquivos` não existem — a CLI conta os erros por `cabecalhoDe` e os testes leem o disco com `readdir`; `avisoSemChrome` só vem no final "sem Chrome" e `paginas` só quando o PDF foi gerado. A função aceita ainda dois parâmetros opcionais que **não** são interface pública, `navegador` e `gerarPdf`, costuras de teste documentadas em `build/build.mjs`.)*
 - Tarefa 4 é independente das outras três.
 
 ---
@@ -289,11 +289,11 @@ git commit -m "feat(validador): fecha saida.pdf-paginas e completa as regras da 
 **Arquivos:**
 - Criar: `build/build.mjs`
 - Modificar: `bin/aula-usp.mjs`
-- Teste: `tests/unit/build.test.mjs` (novo), `tests/unit/validar-cli.test.mjs` (acrescentar)
+- Teste: `tests/integracao/build.test.mjs` (novo — nasceu em `tests/unit/` e foi movido na rodada de correção da revisão final, I6: abre Chrome de verdade e derrubava o `npm test` numa máquina sem Chrome), `tests/unit/validar-cli.test.mjs` (acrescentar)
 
 **Interfaces:**
 - Consome: `construir` (marco 5b), `gerarPdf` (tarefa 1), `REGRAS_DE_SAIDA` (tarefa 2), `medirComposicao` de `build/composicao.mjs`.
-- Produz: `build({ raiz, caminhoDaAula, destino, semPdf })`.
+- Produz: `build({ raiz, caminhoDaAula, destino, semPdf }) → Promise<{ codigo, achados, avisoSemChrome?, paginas? }>` — a forma real, corrigida na rodada de correção (ver a nota em "Interfaces entre as tarefas").
 
 Esta é a tarefa de **orquestração**, e o que ela precisa acertar são as transições — não as etapas, que já existem. A spec 3.3 define quatro finais diferentes, e o valor da tarefa está em cada um deles ser exercitado por um teste.
 
