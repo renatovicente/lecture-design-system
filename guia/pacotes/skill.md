@@ -59,4 +59,6 @@ Quando uma regra acusar e você não souber o conserto, abra `references/60-vali
 | `assets/modelo.html` | o esqueleto de onde toda aula começa |
 | `assets/exemplo.html` | uma aula inteira escrita dentro do sistema |
 
+A tabela lista o que você vai abrir; `references/` traz o guia inteiro, e nele também estão os dois fluxos que são do autor e não seus — a aula como artifact do Claude e a entrega pelo ChatGPT.
+
 Dois erros que este sistema vê o tempo todo, e que não custam nada evitar: **escrever o cromo à mão** — cabeçalho, rodapé, número de slide, logo — quando o sistema já o desenha, e **reduzir o texto para caber**, o que não existe aqui. Quando não couber, corte o conteúdo ou divida o slide em dois.
