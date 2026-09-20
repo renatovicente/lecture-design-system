@@ -65,6 +65,7 @@ Consequência prática: **mexeu no empacotador (`build/bundle.mjs`), nos pontos 
 | `estilos/fontes.css` | `npm run fontes:css` | `tests/unit/fontes-css.test.mjs:24` |
 | `validador/cobertura.json` | `aula-usp dist` | `tests/unit/cobertura.test.mjs:74` |
 | `dist/` (11 scripts + manifesto) | `aula-usp dist` | `tests/unit/bundle.test.mjs:115` e `:135` |
+| `guia/20-layouts.md` e `guia/60-validador.md`, só entre `<!-- gerado:… -->` e `<!-- /gerado -->` | `npm run guia` | `tests/unit/guia.test.mjs:18` |
 
 Todos são rastreados no git e trazem, quando o formato permite, o cabeçalho "Gerado por … Não editar à mão". Editar um à mão quebra a guarda, e a correção é sempre a mesma: edite a **fonte** e regere.
 
@@ -72,7 +73,7 @@ Todos são rastreados no git e trazem, quando o formato permite, o cabeçalho "G
 
 ## A fronteira: quem pode importar Node
 
-`montar/`, `motor/`, `componentes/` e `validador/` **não importam nada do Node** — rodam no navegador. Medido: zero ocorrências de `node:` nos quatro diretórios. Só `bin/` (1 arquivo) e `build/` (15 arquivos) são Node.
+`montar/`, `motor/`, `componentes/` e `validador/` **não importam nada do Node** — rodam no navegador. Medido: zero ocorrências de `node:` nos quatro diretórios. Só `bin/` (1 arquivo) e `build/` (16 arquivos) são Node.
 
 É o que permite a mesma regra rodar no painel dentro da aula e na linha de comando, e o que torna `dist/` possível: esbuild empacota esses diretórios para o navegador, e um `import … from 'node:fs'` ali não tem como resolver. `tests/` fica fora da fronteira e importa Node à vontade.
 

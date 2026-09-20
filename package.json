@@ -13,6 +13,7 @@
     "fontes": "node build/fontes.mjs",
     "marcas": "node build/marcas.mjs",
     "fontes:css": "node build/fontes-css.mjs",
+    "guia": "node build/guia.mjs",
     "servir": "node bin/aula-usp.mjs servir",
     "test:integracao": "node --test tests/integracao/*.test.mjs"
   },
