@@ -44,22 +44,18 @@
 
 <section data-layout="conteudo" id="derivacao">
   <h2>Da distância ao alvo<br><span class="sinal">até a regra de ajuste.</span></h2>
-  <div class="colunas" data-grade="12">
-    <div>
-      <ol class="passos">
-        <li>O erro mede a distância ao alvo, na média sobre os \(N\) exemplos: \( E(w) = \tfrac{1}{2N} \sum_{i=1}^{N} (y_i - \hat{y}_i(w))^2 \).</li>
-        <li data-passo>Derive em relação ao peso: \( \nabla E(w) = -\tfrac{1}{N} \sum_{i=1}^{N} (y_i - \hat{y}_i)\,\nabla \hat{y}_i(w) \).</li>
-        <li data-passo>O gradiente aponta a subida, então ande no sentido oposto.</li>
-        <li data-passo>A regra: \( w \leftarrow w - \eta\,\nabla E(w) \).</li>
-      </ol>
-    </div>
-  </div>
+  <ol class="passos">
+    <li>O erro mede a distância ao alvo, na média sobre os \(N\) exemplos: \( E(w) = \tfrac{1}{2N} \sum_{i=1}^{N} (y_i - \hat{y}_i(w))^2 \).</li>
+    <li data-passo>Derive em relação ao peso: \( \nabla E(w) = -\tfrac{1}{N} \sum_{i=1}^{N} (y_i - \hat{y}_i)\,\nabla \hat{y}_i(w) \).</li>
+    <li data-passo>O gradiente aponta a subida, então ande no sentido oposto.</li>
+    <li data-passo>A regra, com a taxa de aprendizado \( \eta \): \( w \leftarrow w - \eta\,\nabla E(w) \).</li>
+  </ol>
   <aside class="notas">Revelar um passo por vez. A troca de sinal do terceiro item é onde a turma tropeça: vale parar e perguntar para que lado anda o peso antes de mostrar a regra.</aside>
 </section>
 
 <section data-layout="conteudo" id="taxa">
   <h2>O tamanho do passo<br><span class="sinal">decide o resultado.</span></h2>
-  <p class="lide">A taxa de aprendizado controla quanto da inclinação medida vira movimento.</p>
+  <p class="lide">A taxa de aprendizado \( \eta \) controla quanto da inclinação medida vira movimento.</p>
   <div class="colunas" data-grade="6-6">
     <div>
       <p>Com passo curto, a queda tende a ser lenta e regular, e o modelo gasta muitas épocas para chegar perto do fundo.</p>
