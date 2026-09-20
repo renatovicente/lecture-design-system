@@ -172,7 +172,7 @@ O build usa o Google Chrome de verdade para medir a composição e gerar o PDF �
 
 Sem Chrome, **nada falha**: as etapas 5 e 6 são puladas, o HTML sai, e o aviso aparece no stderr, na forma `Aula USP: aviso: composição pulada, sem Chrome: …`, com o motivo no fim. O comando termina com 0 se não houver outro erro.
 
-Isso é uma degradação, não uma aprovação. Sem Chrome ficam de fora as cinco regras de composição e a conferência do número de páginas do PDF, e **"zero erros" ali não é o mesmo "zero erros" de quem tem Chrome** (`60-validador.md`). Se você trabalha num ambiente sem navegador, aponte `CHROME_PATH` para um, ou trate o resultado como parcial e confira num Chrome antes da aula.
+Isso é uma degradação, não uma aprovação. Sem Chrome ficam de fora o grupo inteiro de composição e a conferência do número de páginas do PDF, e **"zero erros" ali não é o mesmo "zero erros" de quem tem Chrome** (`60-validador.md`). Se você trabalha num ambiente sem navegador, aponte `CHROME_PATH` para um, ou trate o resultado como parcial e confira num Chrome antes da aula.
 
 ## O que entregar
 

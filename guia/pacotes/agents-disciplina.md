@@ -29,7 +29,7 @@ Códigos de saída: 0 sem erros, e avisos são permitidos; 1 com erros de valida
 
 **Antes de escrever qualquer coisa, confira que `aula-usp` responde no terminal.** Se não responder, trabalhe no modo navegador — escreva o HTML, entregue ao professor e peça a ele a lista do painel do validador (tecla **V**) — e diga a ele como instalar a CLI: `npm install` e `npm link` no repositório do Aula USP. `npm install -g aula-usp` ainda não funciona, porque o pacote não está publicado no npm.
 
-Sem Chrome instalado, `validar` e `build` não falham: pulam as regras de composição e o PDF, avisam no stderr e terminam com 0 se não houver outro erro. Isso é uma degradação, não uma aprovação — "zero erros" sem Chrome não cobre o que só a página desenhada revela.
+Sem Chrome instalado, `validar` e `build` não falham: pulam as regras de composição — e, no `build`, também o PDF —, avisam no stderr e terminam com 0 se não houver outro erro. Isso é uma degradação, não uma aprovação: "zero erros" sem Chrome não cobre o que só a página desenhada revela.
 
 ## O que é gerado e o que é fonte
 
