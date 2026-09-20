@@ -371,41 +371,62 @@ for (const nome of readdirSync(FIXTURES).sort()) {
   });
 }
 
-test('toda regra implementada existe no contrato e tem fixture', () => {
+// A exigência de FIXTURE é só das estáticas, e continua separada da guarda contrato↔código abaixo:
+// carga, composição e saída não se provam por fixture de linkedom. As de carga têm par bom/ruim
+// mas precisam de recursos de verdade (rodarComCarga, acima); as de composição só existem dentro do
+// Chrome (tests/integracao/composicao.test.mjs); as de saída medem o artefato construído.
+test('toda regra estática implementada tem fixture', () => {
   for (const regra of IMPLEMENTADAS.values()) {
-    assert.ok(contrato.regras[regra.nome], `${regra.nome} não está no contrato`);
     assert.ok(existsSync(new URL(`${regra.nome}/ruim.html`, FIXTURES)), `${regra.nome} sem fixture`);
   }
 });
 
-test('toda regra estática de fase 1 do contrato está implementada', () => {
-  // Cobria só "estrutura.": dava para apagar limites.tabela do registro (ou qualquer outra das 28
-  // regras deste marco) e a suíte passava. Agora cobre o grupo e a fase inteiros, como o código→
-  // contrato e o código→fixture já cobrem (acima).
-  // Ruling 2 adiava matematica.simbolo-fora-do-tex para o marco 5, com uma exceção nomeada aqui
-  // (ADIADAS_DE_PROPOSITO); implementada, a exceção some e o teste volta a cobrir as 47 sozinho.
-  const doContrato = Object.entries(contrato.regras)
-    .filter(([, regra]) => regra.grupo === 'estatica' && regra.fase === 1)
-    .map(([nome]) => nome);
-  assert.deepEqual(
-    doContrato.filter((nome) => !IMPLEMENTADAS.has(nome)),
-    [],
-  );
-});
+// I5 da revisão final: existiam duas guardas contrato→código, `estatica` e `saida`, e NENHUMA para
+// `carga` nem `composicao` — 9 das 60 regras de fase 1 sem guarda. Medido pelo revisor:
+// acrescentando carga.regra-fantasma e composicao.regra-fantasma ao contrato, sem nenhuma
+// implementação, este arquivo passava inteiro.
+//
+// Um registro por grupo. Os nomes dos grupos NÃO estão escritos neste teste: vêm do próprio
+// contrato (todo `grupo` distinto entre as regras de fase 1), e a primeira asserção é que cada um
+// deles tem registro nesta tabela. É isso que faz "apareceu um quinto grupo no contrato e ninguém
+// escreveu o código dele" cair aqui — sem que o teste precise apostar num número de grupos ou de
+// regras, que seria o contrato repetido em código.
+const REGISTROS_POR_GRUPO = new Map([
+  ['estatica', IMPLEMENTADAS],
+  ['carga', DE_CARGA],
+  ['composicao', DE_COMPOSICAO],
+  ['saida', DE_SAIDA],
+]);
 
-// A mesma guarda, para o grupo saida (marco 5b/5c). saida.referencia-externa, saida.tamanho e
-// saida.glifo-ausente já tinham código; saida.pdf-paginas — a última das quatro — ganhou o dela
-// nesta tarefa. A lista de exceção nomeada, no mesmo molde do ADIADAS_DE_PROPOSITO que valeu para
-// matematica.simbolo-fora-do-tex enquanto essa regra esperou pelo marco 5, fica vazia: não sobra
-// nada de fase 1 adiado neste grupo — nem, com isso, na fase 1 do validador inteiro.
+// Exceção nomeada, no molde do que valeu para matematica.simbolo-fora-do-tex enquanto essa regra
+// esperou pelo marco 5: uma regra de fase 1 que está no contrato e ainda não tem código só passa
+// por aqui se alguém a escrever nesta lista. Vazia hoje — não sobra nada adiado na fase 1.
 const ADIADAS_DE_PROPOSITO = [];
 
-test('toda regra de saída de fase 1 do contrato está implementada ou nomeada como adiada', () => {
-  const doContrato = Object.entries(contrato.regras)
-    .filter(([, regra]) => regra.grupo === 'saida' && regra.fase === 1)
-    .map(([nome]) => nome);
-  assert.deepEqual(
-    doContrato.filter((nome) => !DE_SAIDA.has(nome) && !ADIADAS_DE_PROPOSITO.includes(nome)),
-    [],
-  );
+const gruposDeFase1 = [...new Set(Object.values(contrato.regras)
+  .filter((regra) => regra.fase === 1)
+  .map((regra) => regra.grupo))].sort();
+
+test('todo grupo de regras de fase 1 do contrato tem registro em validador/regras/index.js', () => {
+  assert.deepEqual(gruposDeFase1.filter((grupo) => !REGISTROS_POR_GRUPO.has(grupo)), []);
+});
+
+test('contrato e código concordam nos dois sentidos, em todos os grupos de fase 1', () => {
+  for (const grupo of gruposDeFase1) {
+    const registro = REGISTROS_POR_GRUPO.get(grupo);
+    assert.ok(registro, `o grupo ${grupo} não tem registro — veja o teste acima`);
+    const doContrato = Object.entries(contrato.regras)
+      .filter(([, regra]) => regra.grupo === grupo && regra.fase === 1)
+      .map(([nome]) => nome);
+    assert.deepEqual(
+      doContrato.filter((nome) => !registro.has(nome) && !ADIADAS_DE_PROPOSITO.includes(nome)),
+      [],
+      `regras de ${grupo} no contrato sem implementação no registro`,
+    );
+    assert.deepEqual(
+      [...registro.keys()].filter((nome) => !contrato.regras[nome]),
+      [],
+      `regras de ${grupo} implementadas que não existem no contrato`,
+    );
+  }
 });
