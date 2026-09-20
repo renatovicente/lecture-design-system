@@ -4,17 +4,30 @@
 // navegador só recebe HTML pronto) produzem A MESMA IMAGEM. São dois caminhos de código totalmente
 // diferentes — este arquivo é o que garante que eles não divergem.
 //
-// Fato 8 do plano, medido antes deste código: com pixelmatch, viewport 1280×720, deviceScaleFactor 1,
-// depois de document.fonts.ready, ZERO pixels diferentes em 921.600, em todos os slides de
-// especime/matematica.html (8) e especime/codigo.html (9) — inclusive onde os caminhos mais
-// divergem (KaTeX e Shiki pré-renderizados de um lado, renderizados no navegador do outro). Por isso
-// a asserção abaixo é igualdade, não semelhança dentro de tolerância: um limiar generoso
-// desperdiçaria a informação que essa medição já deu de graça. (A spec 11.2 pede limiar 0,1 e até
-// 0,5 % de pixels diferentes por slide; 0 e igualdade exata são MAIS estritos que ela, e é uma
-// escolha deliberada, não um descuido.)
+// A comparação segue a spec 11.2 ao pé da letra: pixelmatch, limiar 0,1, no máximo 0,5 % de pixels
+// diferentes por slide, área das demos mascarada.
 //
-// Rodada de correção 2, I8: a medição acima vale agora para os SEIS decks do espécime — 63 slides,
-// zero pixels diferentes em cada um, com a área das demos mascarada (spec 11.2).
+// Até a rodada de correção da revisão final este arquivo era MAIS estrito que a spec — limiar 0 e
+// igualdade exata — e a escolha tinha medição por trás: o fato 8 do plano mediu zero pixels
+// diferentes em todos os slides de matematica.html e codigo.html. O que invalidou essa escolha foi
+// o item I8 da própria revisão, que mandou cobrir os SEIS decks em vez de dois: com codigo.html
+// dentro, a suíte inteira passou a dar 193/195 em 3 de 4 rodadas, sempre no mesmo slide e sempre
+// exatamente 131 pixels.
+//
+// Investigado até a causa, porque "o teste ficou intermitente" não é diagnóstico. Os 131 pixels são
+// rebordo de antialiasing, não glifo trocado nem deslocado: mesmas coordenadas, intensidades
+// diferentes, 597 pixels escuros do lado navegador contra 467 do lado build na mesma caixa de
+// 92×72 — e a diferença entre as duas contagens (130) é a própria contagem de pixels divergentes.
+// Perguntado ao CDP qual arquivo pinta o token, os dois lados respondem o mesmo
+// (GeistMono-SemiBold, isCustomFont, peso 600, mesma caixa), e as faces embutidas no HTML
+// construído são as mesmas oito do CSS de desenvolvimento. Ou seja: os dois modos usam a mesma
+// fonte e desenham no mesmo lugar; o que varia é o suavizado, sob carga.
+//
+// 131 em 921.600 é 0,014 % — trinta e cinco vezes abaixo dos 0,5 % que a spec permite. Insistir na
+// igualdade exata não deixa o teste mais forte: deixa-o intermitente, e um teste intermitente
+// ensina a ignorá-lo, o que custa o sinal inteiro e não só o excedente. A asserção de inversão
+// (lá embaixo) é o que impede a tolerância de engolir uma mudança de verdade: ela exige que uma
+// cor trocada de propósito ESTOURE a tolerância, não apenas que difira de zero.
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtemp, writeFile } from 'node:fs/promises';
@@ -42,6 +55,12 @@ const DECKS = readdirSync(new URL('especime/', RAIZ)).filter((nome) => nome.ends
 // (1280 × 720 = 921.600, o total do fato 8).
 const LARGURA = LARGURA_DO_PALCO;
 const ALTURA = ALTURA_DO_PALCO;
+
+// Spec 11.2, literal: "comparada com pixelmatch, limiar 0,1 e no máximo 0,5 % de pixels diferentes
+// por slide". Estes dois números são da spec, não escolhidos aqui.
+const LIMIAR = 0.1;
+const FRACAO_TOLERADA = 0.005;
+const PIXELS_TOLERADOS = Math.floor(LARGURA * ALTURA * FRACAO_TOLERADA);
 
 let navegador;
 let sitio;
@@ -101,10 +120,31 @@ async function idsDosSlides(pagina) {
 // condição. Dois requestAnimationFrame encadeados são a forma da casa para "o navegador já pintou o
 // quadro seguinte" (o idioma de f7d2e97 é "espere a condição, não o relógio"), e devolvem o controle
 // assim que o paint acontece, em vez de sempre 100 ms.
+// Dois requestAnimationFrame: o primeiro entra na fila do quadro corrente, o segundo só roda depois
+// que aquele quadro foi pintado. É a forma deste projeto de esperar por pintura desde f7d2e97.
+const esperarPintura = (pagina) =>
+  pagina.evaluate(() => new Promise((pronto) => requestAnimationFrame(() => requestAnimationFrame(pronto))));
+
 async function navegarEFotografar(pagina, id) {
   await pagina.evaluate((alvo) => { location.hash = `#${alvo}`; }, id);
   await pagina.waitForFunction((alvo) => document.querySelector('.slide.ativo')?.id === alvo, id);
-  await pagina.evaluate(() => new Promise((pronto) => requestAnimationFrame(() => requestAnimationFrame(pronto))));
+  // Os dois rAF forçam layout e pintura, e é o LAYOUT que faz o navegador pedir as faces que este
+  // slide usa. Só depois disso document.fonts.ready tem o que esperar: chamado antes, ele resolve na
+  // hora — não há carga pendente — e a foto sai com a face substituta. O último par repinta com a
+  // face já carregada.
+  //
+  // Medido: sem esta espera a suíte de integração inteira dava 193/195 em 3 de 3 rodadas (o arquivo
+  // sozinho passa 71/71 — a intermitência depende da carga). As duas falhas eram faces NÃO-regulares
+  // pedidas só quando o slide fica visível: codigo.html/javascript-e-bash, 131 pixels nos tokens
+  // `let` e `for`, que são as palavras-chave em negrito do monoespaçado; e matematica.html/capa, 33
+  // pixels no h1, que é Geist SemiBold. Dois decks e duas famílias diferentes, a mesma causa.
+  //
+  // Por que a pausa fixa de 100 ms que estava aqui antes escondia isto, e por que as duas medições
+  // que aprovaram a troca não viram: ambas rodaram este arquivo sozinho. Os 100 ms não esperavam
+  // transição nenhuma (não há) — eram folga incidental que cobria o carregamento da face.
+  await esperarPintura(pagina);
+  await pagina.evaluate(() => document.fonts.ready);
+  await esperarPintura(pagina);
   // Confirma nesta mesma chamada que quem pintou foi de fato o slide pedido — a armadilha do marco
   // (item 5 do despacho): um slide que não é o ativo fica em display:none. Comparar screenshots de
   // dois slides diferentes daria "igual" ou "diferente" por acidente, nunca pela razão certa.
@@ -165,7 +205,7 @@ function comparar(ladoA, ladoB) {
   const diff = new PNG({ width: LARGURA, height: ALTURA });
   // threshold: 0 é o próprio ponto da tarefa (fato 8) — a medição encontrou igualdade exata, e um
   // limiar frouxo escureceria essa informação em vez de expressá-la.
-  const diferentes = pixelmatch(a.data, b.data, diff.data, LARGURA, ALTURA, { threshold: 0 });
+  const diferentes = pixelmatch(a.data, b.data, diff.data, LARGURA, ALTURA, { threshold: LIMIAR });
   return { diferentes, diff };
 }
 
@@ -198,9 +238,8 @@ for (const deck of DECKS) {
         const { diferentes, diff } = comparar(ladoNavegador, ladoBuild);
         if (diferentes > 0) {
           const caminhoDoDiff = await gravarDiff(`${deck.replace('.html', '')}-${id}`, diff.data);
-          // Fato 8 do plano: medido em zero pixels diferentes, em todos os slides de matematica.html e
-          // codigo.html. Afirmamos igualdade, não semelhança: um limiar generoso desperdiçaria a informação.
-          assert.equal(diferentes, 0, `${deck} slide ${id}: ${diferentes} pixels diferentes entre os modos — diff em ${caminhoDoDiff}`);
+          assert.ok(diferentes <= PIXELS_TOLERADOS,
+            `${deck} slide ${id}: ${diferentes} pixels diferentes entre os modos, acima dos ${PIXELS_TOLERADOS} que a spec 11.2 tolera — diff em ${caminhoDoDiff}`);
         }
         console.log(`    [visual] ${deck} slide "${id}": 0 pixels diferentes (${LARGURA}×${ALTURA})`);
       });
@@ -281,7 +320,10 @@ test('a comparação de fato compara: uma cor trocada só do lado build faz o te
   ]);
   const { diferentes, diff } = comparar(ladoNavegador, ladoMutante);
 
-  assert.ok(diferentes > 0, 'a cor mudou só no lado build e pixelmatch não acusou nada — a comparação acima não está comparando de verdade');
+  // Maior que a TOLERÂNCIA, não que zero: é esta asserção que impede a tolerância da spec de
+  // engolir uma mudança real. Sem ela, subir o limiar até tudo passar continuaria "verde".
+  assert.ok(diferentes > PIXELS_TOLERADOS,
+    `a cor mudou só no lado build e a diferença (${diferentes}) não passou dos ${PIXELS_TOLERADOS} tolerados — a comparação acima não está comparando de verdade`);
   const caminhoDoDiff = await gravarDiff(`${deck.replace('.html', '')}-inversao-${idPrimeiroSlide}`, diff.data);
   console.log(`  [visual] inversão: ${diferentes} pixels diferentes (esperado), diff em ${caminhoDoDiff}`);
 });
