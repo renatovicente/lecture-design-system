@@ -382,17 +382,13 @@ test('aplicarMarcadores ergue erro quando o marcador pedido não existe', () => 
 
 // O bloco de regras essenciais é LIDO pelo 6c (`aula-usp pacotes` o injeta nos quatro pacotes), não
 // escrito por npm run guia — então nada mais no 6b o exercita, e um bloco vazio atravessaria o marco
-// inteiro sem ninguém notar. guia/00-principios.md é da Tarefa 2: enquanto ele não existir o teste
-// PULA; assim que existir, cobra marcadores presentes e conteúdo não vazio entre eles.
-test('o bloco de regras essenciais de guia/00-principios.md existe e não está vazio', (t) => {
-  const caminho = new URL('guia/00-principios.md', RAIZ);
-  if (!existsSync(caminho)) {
-    t.skip('guia/00-principios.md ainda não existe (Tarefa 2 do marco 6b)');
-    return;
-  }
+// inteiro sem ninguém notar. O teste pulava enquanto guia/00-principios.md não existisse, condição
+// da Tarefa 2, que acabou: o galho morreu e saiu, porque um teste que PULA quando o arquivo some é
+// um teste que se cala justamente no caso que ele existe para pegar.
+test('o bloco de regras essenciais de guia/00-principios.md existe e não está vazio', () => {
   // normalize: os marcadores têm acento (`início`), e um editor que grave em NFD faria a busca
   // falhar por um motivo que não é o que este teste quer medir.
-  const texto = readFileSync(caminho, 'utf8').normalize('NFC');
+  const texto = readFileSync(new URL('guia/00-principios.md', RAIZ), 'utf8').normalize('NFC');
   const entre = texto.match(/<!-- regras-essenciais:início -->\n([\s\S]*?)<!-- regras-essenciais:fim -->/);
   assert.ok(
     entre,
