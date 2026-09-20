@@ -21,7 +21,7 @@ A CLI vive em `bin/aula-usp.mjs`. Sem `npm link`, chame por `node bin/aula-usp.m
 
 Códigos de saída (spec 8.1): 0 sem erros, avisos permitidos; 1 com erros de validação; 2 com falha de ambiente. Cada comando aceita **só as suas** flags: `--json` em `build` ou `--porta` em `validar` saem com o uso e código 2, como uma flag inexistente — melhor recusar que ignorar em silêncio.
 
-Dois comandos que a spec 8.1 lista ainda não existem: `aula-usp pacotes`, que chega no marco 6c, e `aula-usp novo <pasta> --unidade ime`, que não está atribuído a nenhum marco.
+Dois comandos que a spec 8.1 lista ainda não existem: `aula-usp pacotes` e `aula-usp novo <pasta> --unidade ime`. Os dois chegam no marco 6c.
 
 Scripts de `package.json`: `npm test`, `npm run test:integracao`, `npm run servir`, `npm run tokens`, `npm run fontes:css`, `npm run fontes`, `npm run marcas`. `aula-usp dist` não tem script npm. **`npm run fontes` e `npm run marcas` baixam da rede** e só rodam com autorização do autor (spec 8.3) — os dois já rodaram na fase 1 e seus resultados estão no repositório.
 
@@ -42,7 +42,7 @@ Os de integração são pesados — abrem Chrome, constroem decks, comparam pixe
 node --test tests/integracao/composicao.test.mjs
 ```
 
-Uma distinção que confunde: **"falta de Chrome não é falha" é regra da CLI**, não dos testes. `validar` e `build` degradam sozinhos — pulam composição e PDF, emitem aviso no stderr e terminam com 0 se não houver erros (spec 8.1). Os testes de integração não têm essa tolerância: chamam `chromium.launch()` direto (`tests/integracao/utilitarios.mjs:34`) e falham sem Chrome.
+Uma distinção que confunde: **"falta de Chrome não é falha" é regra da CLI**, não dos testes. `validar` e `build` degradam sozinhos — pulam composição e PDF, emitem aviso no stderr e terminam com 0 se não houver erros (spec 8.1). Os testes de integração não têm essa tolerância: chamam `chromium.launch()` direto (`tests/integracao/utilitarios.mjs:35`) e falham sem Chrome.
 
 ## `dist/` é rastreado, e os testes comparam byte a byte
 
@@ -97,7 +97,7 @@ Número que **não** vem do contrato — porque é da spec — entra como consta
 
 1. A entrada em `contrato.regras` — `severidade`, `grupo`, `fase`, `acao` — e o número em `contrato.limites`, se houver.
 2. A implementação em `validador/regras/<grupo>.js`, registrada em `validador/regras/index.js`.
-3. Para regra **estática**, um par `bom.html` / `ruim.html` em `tests/fixtures/validador/<nome-da-regra>/`. `tests/unit/validador.test.mjs` gera um teste por pasta de fixture e exige que toda estática implementada tenha a sua: hoje são 56 pastas, uma para cada regra de estrutura, vocabulário, limites, recursos, matemática, carga e composição.
+3. Para regra **estática**, um par `bom.html` / `ruim.html` em `tests/fixtures/validador/<nome-da-regra>/`. `tests/unit/validador.test.mjs` gera um teste por pasta de fixture e exige que toda estática implementada tenha a sua. Hoje são 56 pastas, uma por regra, com seis prefixos: `limites` (20), `estrutura` (13), `vocabulario` (8), `recursos` (6), `composicao` (5) e `matematica` (4). O prefixo é o nome da regra, não o grupo do contrato — as quatro regras de carga da fase 1 se chamam `recursos.*` e `matematica.*`.
 4. Carga, composição e saída não se provam por fixture de linkedom: as de carga precisam de recursos de verdade, as de composição só existem dentro do Chrome (`tests/integracao/composicao.test.mjs`), e as quatro `saida.*` medem o artefato construído — por isso são as únicas quatro regras de fase 1 sem pasta de fixture.
 
 A ordem dos grupos não é detalhe: composição mede o documento montado **antes** de o motor iniciar, porque depois disso todo slide que não é o atual mede 0×0 e o transbordo deixa de existir para o validador.
