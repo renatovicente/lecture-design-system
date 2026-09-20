@@ -128,6 +128,17 @@ test('o esqueleto de guia/10-estrutura.md é modelos/aula/index.html, byte a byt
   );
 });
 
+// A lista dos onze blocos de corpo em guia/30-componentes.md é escrita à mão, e era conferida à
+// mão. `tex-destaque` está na lista do contrato mas NÃO é uma tag — o arquivo o documenta como
+// texto solto entre \[ e \], e é por isso que a guarda cobra a citação, não um elemento.
+test('todo bloco de corpo do contrato é citado em guia/30-componentes.md', () => {
+  const componentes = readFileSync(new URL('guia/30-componentes.md', RAIZ), 'utf8');
+  assert.ok(contrato.blocosDeCorpo.length > 0, 'o contrato não declarou nenhum bloco de corpo');
+  for (const bloco of contrato.blocosDeCorpo) {
+    assert.ok(componentes.includes(`\`${bloco}\``), `o bloco de corpo ${bloco} não é citado no arquivo`);
+  }
+});
+
 // Um bloco que silenciosamente não é escrito é a forma deste projeto de produzir documentação que
 // mente: o aplicador erra alto quando o marcador pedido não existe.
 test('aplicarMarcadores ergue erro quando o marcador pedido não existe', () => {
