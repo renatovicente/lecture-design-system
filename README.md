@@ -8,21 +8,21 @@ Feito para o IME-USP e o IFUSP, com a identidade visual da USP.
 
 ## Estado
 
-**Fase 1, marcos 1 a 4 prontos e integrados.** O que funciona hoje:
+**Fase 1, marcos 1 a 5 prontos e integrados.** O que funciona hoje:
 
 | | |
 |---|---|
 | Layouts | `capa`, `abertura`, `conteudo`, `afirmacao`, `figura`, `demo`, `encerramento` |
 | Motor | navegação, passos revelados, notas do apresentador, visão geral, ajuda, janela do apresentador, impressão |
 | Componentes | campos, exercício, listas, tabela, figura, código com destaque (Shiki), matemática (KaTeX, com `\passo`) |
-| Validador | **55 das 56 regras** da fase 1: estrutura, vocabulário, limites, carga e composição |
-| Testes | 341 unitários e 99 de integração, estes últimos em Chrome de verdade |
+| Validador | as **60 regras** da fase 1: estrutura, vocabulário, limites, carga, composição e saída |
+| Testes | 419 unitários e 200 de integração, estes últimos em Chrome de verdade |
 
-**O que ainda não existe:** `aula-usp build`, `aula-usp dist`, o PDF e o HTML autocontido (marco 5); o guia do autor e os pacotes para agentes (marco 6). A regra `matematica.simbolo-fora-do-tex` está adiada para o marco 5, porque depende da cobertura de glifos que o `dist` gera.
+**O que ainda não existe:** o guia do autor e os pacotes para agentes (marco 6), e com eles os dois últimos comandos da spec 8.1 — `aula-usp pacotes` e `aula-usp novo`.
 
 ## Comandos
 
-Hoje a CLI tem dois comandos. Antes da publicação no npm, `npm link` põe `aula-usp` no PATH.
+Hoje a CLI tem quatro comandos. Antes da publicação no npm, `npm link` põe `aula-usp` no PATH.
 
 ```bash
 aula-usp servir <pasta> [--porta 8765]
@@ -42,6 +42,18 @@ AVISO · slide 12 #residuos · estrutura.notas-ausentes · slide sem notas do ap
 ```
 
 `--json` dá a mesma lista como objetos, para um agente consumir.
+
+```bash
+aula-usp build <pasta> [--sem-pdf]
+```
+
+Constrói a aula: valida, monta, pré-renderiza, embute tudo num HTML autocontido e gera o PDF. Escreve só em `<pasta>/dist/`.
+
+```bash
+aula-usp dist
+```
+
+Regenera `validador/cobertura.json` e o runtime versionado em `dist/`. É manutenção do sistema, não de uma aula.
 
 ## Como rodar aqui
 
@@ -77,7 +89,7 @@ montar/                  transforma o fonte do autor no slide montado
 motor/                   navegação, passos, notas, apresentador, painéis, impressão
 componentes/             matemática (KaTeX) e código (Shiki), nos dois modos
 validador/               validar.js e regras/*.js — executam o contrato, não o repetem
-build/                   glue de Node: servir, validar, carregar, composição
+build/                   glue de Node: servir, validar, construir, PDF, empacotar
 especime/                seis decks que exercitam tudo
 tests/                   unit/, integracao/, fixtures/
 docs/superpowers/        a spec, os planos de cada marco e as revisões finais
@@ -96,7 +108,7 @@ As 64 regras vivem em `contrato/contrato.json` com severidade, grupo, fase e o t
 | estáticas | o fonte do autor | antes de montar |
 | carga | o fonte, depois de bibliotecas, imagens e scripts carregarem | depois do `load` |
 | composição | o documento montado e renderizado | medido no Chrome, antes do motor iniciar |
-| saída | o HTML e o PDF finais | marco 5 |
+| saída | o HTML e o PDF finais | dentro do `build`, sobre o que foi escrito em `<pasta>/dist/` |
 
 A ordem do grupo de composição não é detalhe: depois que o motor inicia, todo slide que não é o atual mede 0×0, e o transbordo deixaria de existir para o validador. Há testes que falham se alguém mover essa chamada.
 
