@@ -25,10 +25,13 @@
     "@shikijs/primitive": "4.4.3",
     "katex": "0.18.7",
     "linkedom": "^0.18.13",
+    "pdf-lib": "^1.17.1",
     "playwright-core": "^1.63.0"
   },
   "devDependencies": {
     "esbuild": "^0.28.2",
-    "fontkit": "^2.0.4"
+    "fontkit": "^2.0.4",
+    "pixelmatch": "^7.2.0",
+    "pngjs": "^7.0.0"
   }
 }
