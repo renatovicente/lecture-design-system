@@ -220,10 +220,17 @@ Quatro itens cabem no limite de 5 (`lista.itens`, Fato 5).
 
 - [ ] **Passo 3: o trecho de Python do slide `codigo`**
 
-Dezesseis linhas é o teto e 64 colunas a largura (Fato 5). Este trecho tem 12 linhas e nenhuma passa de 52 colunas:
+Dezesseis linhas é o teto e 64 colunas a largura (Fato 5). Este trecho tem 11 linhas e a mais larga
+tem 54 colunas (a do docstring) — medido com `codigoDoBloco`, a mesma função que o validador usa.
+
+**A marcação é `<pre data-lang="python">`, sem `<code>`.** Esta linha foi corrigida depois que a
+execução a derrubou: eu tinha escrito `<pre><code class="linguagem-python">`, e o contrato não tem
+classe `linguagem-*` — sai `vocabulario.classe · classe "linguagem-python" não existe no contrato`.
+A forma certa é a do espécime, que a usa em oito blocos, com `data-linhas` e `data-numeros`
+opcionais ao lado.
 
 ```html
-<pre><code class="linguagem-python">def descida(w, X, y, eta=0.1, passos=100):
+<pre data-lang="python">def descida(w, X, y, eta=0.1, passos=100):
     """Descida do gradiente para o erro quadrático."""
     for _ in range(passos):
         erro = y - X @ w
@@ -234,7 +241,7 @@ Dezesseis linhas é o teto e 64 colunas a largura (Fato 5). Este trecho tem 12 l
 
 w = descida(np.zeros(X.shape[1]), X, y)
 print(f"pesos: {w}")
-</code></pre>
+</pre>
 ```
 
 - [ ] **Passo 4: o exercício do slide `exercicio`**
