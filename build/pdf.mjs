@@ -9,7 +9,14 @@ export async function gerarPdf({ caminhoDoHtml, navegador, metadados = {} }) {
     await pagina.goto(`file://${caminhoDoHtml}`);
     await pagina.waitForFunction(() => document.body?.dataset.montado === 'sim');
     await pagina.evaluate(() => document.fonts.ready);
-    // Spec 6.9: explicitamente, não pelo evento beforeprint — no build ninguém imprime.
+    // Spec 6.9: explicitamente, e não SÓ pelo beforeprint — o page.pdf() do Chrome também dispara
+    // beforeprint/afterprint, e o motor embutido registra os dois (motor/impressao.js:82-83). As duas
+    // vias convergem porque preparar() é idempotente (`if (salvo) return`), e é por isso que apagar
+    // esta linha não muda o PDF: o beforeprint faz o mesmo trabalho um instante depois. Quem mede a
+    // diferença é o teste "gerarPdf chama prepararImpressao() explicitamente" em
+    // tests/integracao/pdf.test.mjs, que fotografa o DOM no instante em que pdf() é chamado.
+    // (A primeira versão deste comentário dizia "não pelo evento beforeprint — no build ninguém
+    // imprime", o que é falso: no build o Chrome imprime, e é o pdf() que o faz.)
     await pagina.evaluate(() => window.AulaUSP.prepararImpressao());
     // A spec 8.4 também pede estrutura marcada e marcadores "quando a versão do Chrome oferecer"
     // (tagged/outline de pagina.pdf()) — e o Chrome 153 oferece os dois. tagged grava /StructTreeRoot
@@ -27,6 +34,12 @@ export async function gerarPdf({ caminhoDoHtml, navegador, metadados = {} }) {
     // de diferença no PDF bruto do Chrome, que a compressão do save() consome quase inteira. Medição
     // completa no relatório da tarefa 1 (.superpowers/sdd/2026-09-19-aula-usp-m5c-pdf-pipeline/).
     const bytes = await pagina.pdf({
+      // M3 da revisão final: esta linha NÃO tem teste, e a lacuna é deliberada. Apagá-la deixa os
+      // testes de pdf.test.mjs verdes, e a verificação óbvia — procurar a cor do campo no content
+      // stream da página — é ela própria vazia: medido, `.9882,.7059,.1294 rg` aparece com e sem
+      // printBackground, porque o mesmo operador também pinta traço e texto. Uma verificação honesta
+      // exigiria rasterizar a página (poppler ou equivalente) e olhar o pixel do fundo. Não escreva
+      // o teste fácil: ele passaria dos dois jeitos e só daria a impressão de cobertura.
       printBackground: true,      // spec 8.4: o campo amarelo e o azul de sinal precisam sair
       preferCSSPageSize: true,    // honra o @page de estilos/impressao.css; sem isto o Chrome usa Letter
       tagged: true,               // spec 8.4: estrutura marcada — sobrevive ao save (ver comentário acima)
