@@ -2,9 +2,9 @@
 
 O Aula USP é um design system de slides de aula, em HTML, para as disciplinas do IME e do IFUSP. Uma aula é **um arquivo**: você escreve o conteúdo, e o sistema faz o resto — tipografia, grade, cor, mapa de blocos, cabeçalho, rodapé, numeração, matemática, destaque de código, navegação, janela do apresentador e PDF.
 
-O mesmo arquivo serve às duas entregas de uma aula: projetado na sala e distribuído em PDF, uma página por slide. Não há duas versões para manter em dia.
+O mesmo arquivo serve às duas entregas de uma aula: projetado na sala e distribuído em PDF. Não há duas versões para manter em dia.
 
-Este guia é a fonte de tudo que se pode escrever numa aula, e tem dois leitores ao mesmo tempo: o professor, que quer saber por que uma regra existe, e o modelo de linguagem a quem ele pede a aula, que precisa da forma exata. Por isso o porquê vem em prosa e a forma vem em bloco de código. Quando os dois parecerem discordar, **o bloco de código é a autoridade**: todo trecho deste guia foi tirado de um arquivo que o validador aprova.
+Este guia é a fonte de tudo que se pode escrever numa aula, e tem dois leitores ao mesmo tempo: o professor, que quer saber por que uma regra existe, e o modelo de linguagem a quem ele pede a aula, que precisa da forma exata. Por isso o porquê vem em prosa e a forma vem em bloco de código. Quando os dois parecerem discordar, **o bloco de código é a autoridade**: a marcação deste guia é tirada de arquivos que o validador aprova, e vem com o endereço de onde saiu.
 
 ## O que você escreve e o que o sistema desenha
 
@@ -19,7 +19,7 @@ O sistema deriva das seções, e desenha sozinho:
 - a faixa de marca, com os logos da unidade e da USP, na capa e no encerramento;
 - a matemática, o destaque do código, a revelação por passos e a paginação do PDF.
 
-Nada disso se escreve à mão. Um slide com o número da aula digitado no rodapé é um slide com o número duas vezes — é o engano de origem de quem vem do Beamer ou do PowerPoint, onde o cromo é responsabilidade do autor.
+Nada disso se escreve à mão: um slide com o número da aula digitado no rodapé é um slide com o número duas vezes. É o engano mais comum de quem chega de uma ferramenta em que o autor desenha o próprio rodapé.
 
 ## Por que as restrições são estas
 
@@ -27,7 +27,7 @@ Quase todas as regras deste guia descendem de três decisões.
 
 **A aula é lida de longe.** O sistema fixa um tamanho mínimo de letra para cada papel — leitura, código, legenda, rótulo — e o validador o mede no slide montado. A consequência é a regra mais importante de todas: quando o conteúdo não cabe, **corte ou divida o slide em dois; nunca diminua a letra**. Os limites de título, de lide, de palavras e de itens existem para que você descubra que não cabe enquanto escreve, e não na hora de projetar.
 
-**Cor é informação, nunca enfeite.** A paleta tem cinco papéis e nada além deles: preto para o texto de leitura e para os traços, cinza para legenda e comentário, um tom claro para régua fina, o azul da USP para sinalizar e o amarelo da USP para destacar como campo atrás do texto. Você não escolhe cor: escolhe papel, e a cor vem junto. Como o atributo `style` é proibido, o único caminho pelo qual uma cor estranha entra numa aula é um SVG ou um comando de cor em TeX — e o validador fecha os dois.
+**Cor é informação, nunca enfeite.** A paleta é curta, e cada cor tem um papel: preto para o texto de leitura e para os traços, cinza para legenda e comentário, um tom claro para régua fina, o azul da USP para sinalizar e o amarelo da USP para destacar como campo atrás do texto. Você não escolhe cor: escolhe papel, e a cor vem junto. Como o atributo `style` é proibido, o único caminho pelo qual uma cor estranha entra numa aula é um SVG ou um comando de cor em TeX — e o validador fecha os dois.
 
 **O vocabulário é fechado para poder ser conferido.** Tudo que uma aula pode conter está descrito em `contrato/contrato.json`, e o mesmo contrato é lido pelo validador. É isso que torna possível pedir a aula a um modelo de linguagem e saber, sem abrir o arquivo, se ela está dentro do sistema: o que não está no contrato vira erro com nome, lugar e conserto. O guia explica o contrato; o contrato é quem manda.
 
