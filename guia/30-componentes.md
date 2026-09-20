@@ -201,6 +201,8 @@ O autor não tem como mexer nesse tamanho: não há `style`, e nada no sistema e
 
 `composicao.tamanho-minimo` mede o tamanho que chegou à tela, não o que está no fonte, e acusa quem ficar abaixo do mínimo do seu papel. Quando dois seletores casam o mesmo elemento, vence o mais específico: o `li` do roteiro da capa é rótulo, não leitura.
 
+A tabela sai de `contrato/contrato.json` por `npm run guia`, como a de layouts e a de regras. Editá-la à mão muda o guia por uma geração, até alguém rodar o gerador; o que muda o sistema é o contrato.
+
 <!-- gerado:tabela-de-papeis -->
 | papel | tamanho mínimo | onde vale |
 |---|---|---|
