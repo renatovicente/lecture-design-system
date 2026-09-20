@@ -231,7 +231,7 @@ O que as seis tarefas têm em comum, e vale ler uma vez:
 
 **Três pontos por tarefa que merecem atenção:**
 
-- **Tarefa 2** — o bloco de regras essenciais é o texto mais reutilizado do sistema: entra literalmente nos quatro pacotes. Um protótipo dele mediu **1.246 caracteres**, o que deixa ~6.750 dos 8.000 do GPT para o procedimento. Mantenha-o curto e sem número solto.
+- **Tarefa 2** — o bloco de regras essenciais é o texto mais reutilizado do sistema: entra literalmente nos quatro pacotes. Um protótipo dele mediu 1.246 caracteres; **o escrito mede 1.667**, e o `gpt-instrucoes.md` montado saiu em **5.008**, com folga de 2.992 sob o teto de 8.000. (Números medidos na execução; os do protótipo ficam aqui só como história.) Mantenha-o curto e sem número solto.
 - **Tarefa 3** — `30-componentes.md` documenta onze blocos de corpo, e o décimo primeiro é o `tex-destaque` do Fato 2: **documente-o como equação em bloco `\[ … \]`, nunca como tag.**
 - **Tarefa 6** — `72-artifact-claude.md` sai da seção 14 da spec (a tabela de riscos): o que não funciona dentro de um artifact do Claude e o que fazer em vez disso.
 
