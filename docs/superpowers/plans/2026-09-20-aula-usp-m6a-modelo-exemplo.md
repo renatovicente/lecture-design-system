@@ -22,7 +22,12 @@ A divisão segue a dependência real, não o tamanho:
 |---|---|---|
 | **6a** (este plano) | `modelos/aula/`, `exemplos/descida-do-gradiente/`, `AGENTS.md`, `CLAUDE.md`, teste de tamanho de `dist/` | nada — só das ferramentas prontas |
 | **6b** | `guia/` — os 13 arquivos, com as tabelas geradas do contrato | 6a: o guia descreve o modelo e o exemplo, e cita trechos deles |
-| **6c** | `build/pacotes.mjs`, `aula-usp pacotes`, os 4 pacotes gerados, `tests/aceite/roteiro.md` | 6a e 6b: os pacotes empacotam guia, modelo e exemplo |
+| **6c** | `build/pacotes.mjs`, `aula-usp pacotes`, **`aula-usp novo`**, os 4 pacotes gerados, `tests/aceite/roteiro.md`, **o `README.md` reescrito** | 6a e 6b: os pacotes empacotam guia, modelo e exemplo |
+
+`aula-usp novo <pasta> --unidade ime` entrou nesta tabela depois: a spec 8.1 lista **seis** comandos e a
+primeira divisão cobria cinco — `novo` não estava em marco nenhum. Ele copia `modelos/aula/` com os
+metadados preenchidos, então depende do 6a. O `README.md` está desatualizado hoje (diz dois comandos e
+contagens de teste do marco 4) e vai junto, no fim, quando os números pararem de se mexer.
 
 Artefatos primeiro, documentação depois, empacotamento por último. Cada parte é rejeitável por um revisor sem depender das outras.
 
@@ -47,7 +52,16 @@ Tudo abaixo foi medido no repositório em `085635a`, não lembrado. Os números 
 
 **Fato 2 — a abertura tem limite de nome curto.** `estrutura.nome-curto` exige `data-curto` com até 10 caracteres quando o `<h2>` da abertura passa de 10. "Primeiro bloco" (14) e "Segundo bloco" (13) acusam; "Intuição" (8) não. O modelo e o exemplo precisam de `data-curto` em toda abertura de nome longo.
 
-**Fato 3 — a tag do runtime tem duas formas, e a de dentro do repositório é a relativa.** `build/embutir.mjs:134-136` acha a tag por `src.endsWith('/aula-usp.js')`, então tanto `../../dist/aula-usp.js` quanto `https://cdn.jsdelivr.net/npm/aula-usp@0.1.0/dist/aula-usp.js` são encontradas e trocadas pelo motor embutido. Mas a URL do jsDelivr **só resolve na fase 3**, quando o pacote for publicado; hoje ela dá 404, a aula não monta no Chrome, e as regras de composição do `build` falham. **Decisão: os fontes no repositório usam caminho relativo, e o gerador de pacotes (6c) reescreve a tag para a URL fixada com `integrity`.** Assim o exemplo abre e constrói hoje, e o pacote sai correto para a fase 3.
+**Fato 3 — a tag do runtime tem duas formas, e nenhuma delas chega ao navegador durante `validar` ou `build`.** (Corrigido depois que a execução do 6a mostrou que a primeira versão deste fato tinha a premissa errada; a decisão é a mesma, o motivo não.)
+
+Três lugares tratam a tag, e vale saber os três:
+- `build/embutir.mjs:134-136` a acha por `src.endsWith('/aula-usp.js')` e a troca pelo motor embutido — vale para `../../dist/aula-usp.js` e para `https://cdn.jsdelivr.net/npm/aula-usp@0.1.0/dist/aula-usp.js` igualmente;
+- `build/servir.mjs:79` (`reescreverRuntime`) troca **qualquer** `<script src="…/aula-usp.js">` pelo importmap mais `montar/carregador.js`, e isso roda em todo `.html` servido (linha 142);
+- `build/composicao.mjs:6,39` mede a composição **através desse mesmo servidor**.
+
+Ou seja: uma URL de CDN morta **não** quebraria a composição, porque o Chrome nunca a vê. O que a spec 8.1 de fato manda é o contrário do que eu supus — `pacotes` "reescreve a tag do runtime em `modelos/`, `especime/` e `exemplos/`", em lugar, e `servir` "troca o endereço pelo local e remove o `integrity`".
+
+**Decisão, inalterada: o 6a escreve caminho relativo**, que é o que `especime/` já faz e o que mantém os arquivos abríveis direto do disco. **Quem fixa a tag com versão e `integrity` é o `aula-usp pacotes`, no 6c**, e ele a escreve nas três pastas, não só nos pacotes gerados.
 
 **Fato 4 — a tag do CDN não conflita com `saida.referencia-externa`.** Essa regra é do grupo `saida` (roda sobre o HTML construído, spec 9.3) e o build já tirou a tag antes de ela rodar. Não há tensão a resolver.
 
