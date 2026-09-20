@@ -41,6 +41,19 @@ function achadosDeTex(contrato, doc, errosDeTex) {
 // prerenderizarCodigo só relata a mesma condição que recursos.linguagem já nomeia (data-lang fora de
 // contrato.linguagens) — reusa nome, severidade e ação dela em vez de inventar uma regra nova para o
 // mesmo defeito. Sem elemento/trecho (o erro do Shiki só traz linguagem e mensagem).
+//
+// Pendência herdada do marco 5b ("recursos.linguagem passa a ser alcançável por dois caminhos quando
+// a etapa 1 rodar antes da 3; confirmar se o segundo vira inalcançável ou fica como defesa em
+// profundidade"), agora medida, não deduzida. Os dois caminhos disparam na MESMA condição:
+// renderizarCodigo (componentes/codigo.js) só erra quando a linguagem está fora de
+// destacador.linguagens, e esse conjunto é exatamente `usadas ∩ contrato.linguagens` — é o que
+// prerenderizarCodigo filtra antes de importar gramática (build/embutir.mjs). Mesmo assim não sai
+// duplicata dentro de build(): a regra é do grupo estático e tem severidade erro, então a etapa 1
+// para no primeiro final e construir() nem chega a rodar. Medido pela CLI, numa aula com
+// data-lang="cobol": "etapa 1/7 — erro; parando antes de montar", dist/ só com validacao.json, um
+// único achado de recursos.linguagem. Fica, então, como defesa em profundidade — para quem chama
+// construir() direto (a porta do marco 5b, que os testes usam) e para um pre[data-lang] fora de
+// qualquer slide, que a regra, varrendo `slides`, não enxerga.
 function achadosDeCodigo(contrato, errosDeCodigo) {
   const definicao = contrato.regras['recursos.linguagem'];
   return errosDeCodigo.map((erro) => ({
@@ -54,6 +67,12 @@ function achadosDeCodigo(contrato, errosDeCodigo) {
   }));
 }
 
+// Outra pendência herdada do 5b ("construir() não parametriza `fase` — a tarefa 3 decide se
+// precisa"), resolvida por não: o pipeline inteiro do 5c roda fase 1 (validar() usa fase = 1 por
+// padrão — validador/validar.js — e nem `aula-usp validar` nem `aula-usp build` têm por onde pedir
+// outra; a spec 8.1 não lista flag para isso). Quando a fase 2 existir, o parâmetro entra pelos DOIS
+// lados na mesma leva — a etapa 1, em build/validar.mjs, e esta função —, porque um validacao.json
+// com metades de fases diferentes é pior que nenhum.
 export async function construir({ raiz, caminhoDaAula, destino }) {
   // O mesmo contrato que construirHtml já leu por conta própria (ele não o devolve): a leitura dobrada
   // é dois usos do mesmo arquivo-fonte, não duas implementações de um cálculo — sem risco de divergir.
