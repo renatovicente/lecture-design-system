@@ -4,36 +4,74 @@
 // navegador só recebe HTML pronto) produzem A MESMA IMAGEM. São dois caminhos de código totalmente
 // diferentes — este arquivo é o que garante que eles não divergem.
 //
-// A comparação segue a spec 11.2 ao pé da letra: pixelmatch, limiar 0,1, no máximo 0,5 % de pixels
-// diferentes por slide, área das demos mascarada.
+// A comparação usa o pixelmatch e o limiar 0,1 da spec 11.2, com a área das demos mascarada. A
+// TOLERÂNCIA por slide é mais estrita do que a spec: os 0,5 % da spec 11.2 são um TETO (4.608
+// pixels), não um alvo — um teste mais estrito sempre foi conforme, e o teste "o orçamento por slide
+// cabe no teto da spec 11.2" prova que o orçamento abaixo continua dentro dele.
 //
-// Até a rodada de correção da revisão final este arquivo era MAIS estrito que a spec — limiar 0 e
-// igualdade exata — e a escolha tinha medição por trás: o fato 8 do plano mediu zero pixels
-// diferentes em todos os slides de matematica.html e codigo.html. O que invalidou essa escolha foi
-// o item I8 da própria revisão, que mandou cobrir os SEIS decks em vez de dois: com codigo.html
-// dentro, a suíte inteira passou a dar 193/195 em 3 de 4 rodadas, sempre no mesmo slide e sempre
-// exatamente 131 pixels.
+// == O QUE FOI MEDIDO NESTA ÁRVORE ==
 //
-// Investigado até a causa, porque "o teste ficou intermitente" não é diagnóstico. Os 131 pixels são
-// rebordo de antialiasing, não glifo trocado nem deslocado: mesmas coordenadas, intensidades
-// diferentes, 597 pixels escuros do lado navegador contra 467 do lado build na mesma caixa de
-// 92×72 — e a diferença entre as duas contagens (130) é a própria contagem de pixels divergentes.
-// Perguntado ao CDP qual arquivo pinta o token, os dois lados respondem o mesmo
+// Por que não gastar o teto: com ele inteiro, um defeito de produto visível passa verde. Um erro de
+// mais-um na numeração de blocos (montar/cromo.js — atinge SÓ o lado build, porque o lado navegador
+// carrega o bundle pronto de dist/) muda 50 dos 63 slides e este arquivo passa 71/71. 4.608 pixels
+// são um quadrado de 68 × 68: quase todo defeito de texto, rótulo, número ou ícone cabe nele.
+//
+// RUÍDO — árvore limpa, `npm run test:integracao` inteiro, 3 de 3 rodadas: 63 pixels em
+// codigo.html#javascript-e-bash, sempre o mesmo número, sempre a mesma caixa; numa das três, mais 31
+// pixels em codigo.html#r-e-sql. Este arquivo rodando SOZINHO dá 0 nos 63 slides — a divergência
+// depende da carga, e um defeito de produto não some quando o teste roda sozinho. O pior ruído já
+// registrado aqui foi 131 pixels, antes de f7d2e97 (document.fonts.ready); o orçamento fica acima
+// também dele, para que uma regressão daquela não volte como intermitência.
+//
+// MUDANÇA REAL — a renumeração acima, determinística em 3 de 3 rodadas (duas com o arquivo sozinho,
+// uma sob a suíte inteira), idêntica pixel a pixel nas três: 24, 25, 32 e 38 pixels nos slides de
+// CONTEÚDO (um dígito do rótulo "NN · Título" do cabeçalho, caixa medida de 6 × 9 em (76, 47)) e
+// 190, 551, 638, 1.186, 1.278, 1.290, 1.349, 1.458 e 3.148 nos slides data-layout="abertura" (o
+// número grande do quadrado do campo, caixas medidas de 45 × 55 a 103 × 64). Todo deck do espécime
+// tem pelo menos dois slides acima de 551.
+//
+// == O QUE ISTO NÃO RESOLVE ==
+//
+// Escrito aqui para ninguém redescobrir por acidente: NENHUM orçamento por slide separa ruído de
+// mudança real nos 28 slides de baixo — 24 pixels de mudança de verdade ficam ABAIXO dos 63 de
+// ruído. O que derruba o teste é que o mesmo defeito também mexe nos slides de abertura. Um
+// discriminador agregado ("no máximo N slides do deck podem diferir de zero") separaria 50 de 1,
+// mas o ruído já tocou 2 slides numa das três rodadas e o deck mais magro do espécime (ifusp.html)
+// só tem 4 slides tocados pela mutação: a margem real seria de 2× contra um ruído que varia, o que
+// é trocar um problema de dose por um de intermitência. Fica medido e NÃO asserido; o resumo que
+// cada deck imprime traz a contagem, para quem for reabrir isso ter o dado na frente.
+//
+// == A INTERMITÊNCIA: AS FALHAS ACABARAM, A DIVERGÊNCIA NÃO ==
+//
+// O que o item I8 da revisão final expôs ao cobrir os SEIS decks em vez de dois: com codigo.html
+// dentro, a suíte inteira dava 193/195 em 3 de 4 rodadas, sempre no mesmo slide e sempre exatamente
+// 131 pixels. Investigado até a causa, porque "o teste ficou intermitente" não é diagnóstico. Os
+// pixels são rebordo de antialiasing, não glifo trocado nem deslocado: mesmas coordenadas,
+// intensidades diferentes, 597 pixels escuros do lado navegador contra 467 do lado build na mesma
+// caixa de 92×72 — e a diferença entre as duas contagens (130) é a própria contagem de pixels
+// divergentes. Perguntado ao CDP qual arquivo pinta o token, os dois lados respondem o mesmo
 // (GeistMono-SemiBold, isCustomFont, peso 600, mesma caixa), e as faces embutidas no HTML
 // construído são as mesmas oito do CSS de desenvolvimento. Ou seja: os dois modos usam a mesma
 // fonte e desenham no mesmo lugar; o que varia é o suavizado, sob carga.
 //
-// 131 em 921.600 é 0,014 % — trinta e cinco vezes abaixo dos 0,5 % que a spec permite. Insistir na
-// igualdade exata não deixa o teste mais forte: deixa-o intermitente, e um teste intermitente
-// ensina a ignorá-lo, o que custa o sinal inteiro e não só o excedente. A asserção de inversão
-// (lá embaixo) é o que impede a tolerância de engolir uma mudança de verdade: ela exige que uma
-// cor trocada de propósito ESTOURE a tolerância, não apenas que difira de zero.
+// O document.fonts.ready de navegarEFotografar REDUZIU o resíduo (131 → 63); não o eliminou. Sob
+// carga ele continua acontecendo em toda rodada, no mesmo slide, com o PNG de diff indo para o
+// disco — o que acabou foram as FALHAS, porque 63 cabe no orçamento. Quem ler este arquivo antes de
+// decidir se pode subir o limiar tem de ler isto: a divergência não foi resolvida, foi coberta, e o
+// número que ela consome hoje é 63 de 150. É por isso que o log de cada slide imprime a contagem de
+// verdade em vez do zero que estava escrito nele, e por isso que existem DOIS testes de inversão lá
+// embaixo — o da cor, que só cai se alguém subir o orçamento acima de ~24.000, e o da renumeração,
+// que cai se alguém subir acima de 551.
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtemp, writeFile } from 'node:fs/promises';
 import { readdirSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+// pathToFileURL, não `file://${...}`: é o mesmo defeito que o I4 da revisão final tirou de
+// build/pdf.mjs — o Chrome corta a URL no `#` e no `?`. Hoje estes caminhos vêm todos de mkdtemp e
+// nenhum tem esses caracteres, mas o padrão certo é o padrão certo nos dois lados da fronteira.
+import { pathToFileURL } from 'node:url';
 import pixelmatch from 'pixelmatch';
 import { PNG } from 'pngjs';
 import { iniciarChrome, servirPastaCrua, esperarMontagem } from './utilitarios.mjs';
@@ -57,10 +95,33 @@ const LARGURA = LARGURA_DO_PALCO;
 const ALTURA = ALTURA_DO_PALCO;
 
 // Spec 11.2, literal: "comparada com pixelmatch, limiar 0,1 e no máximo 0,5 % de pixels diferentes
-// por slide". Estes dois números são da spec, não escolhidos aqui.
+// por slide". O LIMIAR é da spec e é usado como está. Os 0,5 % são o teto da spec — o máximo que um
+// teste conforme pode tolerar, não a dose que ele deve gastar.
 const LIMIAR = 0.1;
-const FRACAO_TOLERADA = 0.005;
-const PIXELS_TOLERADOS = Math.floor(LARGURA * ALTURA * FRACAO_TOLERADA);
+const FRACAO_DO_TETO_DA_SPEC = 0.005;
+const TETO_DA_SPEC = Math.floor(LARGURA * ALTURA * FRACAO_DO_TETO_DA_SPEC);
+
+// Os dois números medidos que decidem o orçamento (medição completa no cabeçalho). Estão aqui como
+// constantes, e não só em comentário, porque o teste logo abaixo os confere: quem mudar o orçamento
+// sem refazer a medição tem de mexer nestes nomes e vai ler o que eles significam.
+const RUIDO_MEDIDO = 63;                 // pixels, codigo.html#javascript-e-bash, 3 de 3 rodadas sob carga
+const RUIDO_HISTORICO = 131;             // pixels, o pior já registrado aqui (antes de f7d2e97)
+const MENOR_MUDANCA_ACIMA_DO_RUIDO = 190; // pixels, muitos-blocos.html#integrais sob a renumeração
+
+// 150 pixels: 2,4× o ruído medido hoje, acima também do pior ruído já visto neste arquivo, e abaixo
+// da menor mudança de produto que a renumeração produz acima da faixa de ruído. É 30× mais apertado
+// que o teto da spec, e 150 em 921.600 é 0,016 %.
+const PIXELS_TOLERADOS = 150;
+
+test('o orçamento por slide cabe no teto da spec 11.2 e fica entre o ruído medido e a mudança real', () => {
+  assert.ok(PIXELS_TOLERADOS <= TETO_DA_SPEC,
+    `o orçamento (${PIXELS_TOLERADOS}) passou do teto da spec 11.2 (${TETO_DA_SPEC}) — isto deixaria de ser conforme`);
+  assert.ok(PIXELS_TOLERADOS > RUIDO_HISTORICO,
+    `o orçamento (${PIXELS_TOLERADOS}) não cobre o pior ruído já medido aqui (${RUIDO_HISTORICO}) — o teste volta a ser intermitente`);
+  assert.ok(PIXELS_TOLERADOS < MENOR_MUDANCA_ACIMA_DO_RUIDO,
+    `o orçamento (${PIXELS_TOLERADOS}) engole a menor mudança de produto medida acima do ruído (${MENOR_MUDANCA_ACIMA_DO_RUIDO})`);
+  assert.ok(RUIDO_MEDIDO < RUIDO_HISTORICO, 'o ruído medido hoje devia ser menor que o histórico; refaça a medição do cabeçalho');
+});
 
 let navegador;
 let sitio;
@@ -203,8 +264,11 @@ function comparar(ladoA, ladoB) {
   mascarar(a, retangulos);
   mascarar(b, retangulos);
   const diff = new PNG({ width: LARGURA, height: ALTURA });
-  // threshold: 0 é o próprio ponto da tarefa (fato 8) — a medição encontrou igualdade exata, e um
-  // limiar frouxo escureceria essa informação em vez de expressá-la.
+  // LIMIAR é o 0,1 que a spec 11.2 manda, não zero. (Este comentário já afirmou "threshold: 0" por
+  // uma rodada inteira depois de o código ter passado a usar LIMIAR — a mesma classe de defeito que
+  // a revisão cobrou em I1 e I2: um texto que afirma o que o código não faz.) pixelmatch conta os
+  // pixels cuja diferença de cor passa do limiar e NÃO conta os que ele classifica como
+  // antisserrilhado — o resíduo de 63 pixels do cabeçalho é o que sobra depois dessas duas peneiras.
   const diferentes = pixelmatch(a.data, b.data, diff.data, LARGURA, ALTURA, { threshold: LIMIAR });
   return { diferentes, diff };
 }
@@ -215,7 +279,7 @@ for (const deck of DECKS) {
     const { caminhoDoHtml } = await construir({ raiz: RAIZ, caminhoDaAula: new URL(`especime/${deck}`, RAIZ), destino });
 
     const paginaNavegador = await abrirPagina(`${sitio.endereco}/especime/${deck}`);
-    const paginaBuild = await abrirPagina(`file://${caminhoDoHtml}`);
+    const paginaBuild = await abrirPagina(pathToFileURL(caminhoDoHtml).href);
     t.after(() => Promise.all([paginaNavegador.close(), paginaBuild.close()]));
 
     const idsNavegador = await idsDosSlides(paginaNavegador);
@@ -229,6 +293,13 @@ for (const deck of DECKS) {
     // de navegador, várias páginas"; rodar em paralelo faria duas navegações de hash disputarem a
     // MESMA página ao mesmo tempo).
     console.log(`  [visual] ${deck}: ${idsNavegador.length} slides — ${idsNavegador.join(', ')}`);
+    // O número de verdade, não um zero escrito no literal. Enquanto a asserção era igualdade exata,
+    // chegar à linha de log IMPLICAVA zero e o literal era verdade; com orçamento, qualquer valor
+    // dentro dele chegava aqui e era impresso como zero — o único sinal que mostraria a tolerância
+    // sendo consumida afirmava a conclusão em vez de medi-la. Medido: numa rodada verde da suíte
+    // inteira, codigo.html#javascript-e-bash grava um PNG de diff no disco enquanto o console
+    // afirmava zero nos 63 slides.
+    const medidos = [];
     for (const id of idsNavegador) {
       await t.test(`slide "${id}"`, async () => {
         const [ladoNavegador, ladoBuild] = await Promise.all([
@@ -236,14 +307,24 @@ for (const deck of DECKS) {
           navegarEFotografar(paginaBuild, id),
         ]);
         const { diferentes, diff } = comparar(ladoNavegador, ladoBuild);
+        medidos.push({ id, diferentes });
         if (diferentes > 0) {
           const caminhoDoDiff = await gravarDiff(`${deck.replace('.html', '')}-${id}`, diff.data);
           assert.ok(diferentes <= PIXELS_TOLERADOS,
-            `${deck} slide ${id}: ${diferentes} pixels diferentes entre os modos, acima dos ${PIXELS_TOLERADOS} que a spec 11.2 tolera — diff em ${caminhoDoDiff}`);
+            `${deck} slide ${id}: ${diferentes} pixels diferentes entre os modos, acima do orçamento de ${PIXELS_TOLERADOS} (teto da spec 11.2: ${TETO_DA_SPEC}) — diff em ${caminhoDoDiff}`);
         }
-        console.log(`    [visual] ${deck} slide "${id}": 0 pixels diferentes (${LARGURA}×${ALTURA})`);
+        console.log(`    [visual] ${deck} slide "${id}": ${diferentes} pixels diferentes (${LARGURA}×${ALTURA}, orçamento ${PIXELS_TOLERADOS})`);
       });
     }
+    // Resumo do deck: é o agregado que o orçamento por slide não assere (ver "o que isto não
+    // resolve", no cabeçalho). O ruído toca 1 slide, às vezes 2; a renumeração toca de 4 a 13 por
+    // deck. Quem olhar a saída vê a diferença de forma sem precisar somar 63 linhas na cabeça.
+    const diferiram = medidos.filter(({ diferentes }) => diferentes > 0)
+      .sort((a, b) => b.diferentes - a.diferentes);
+    const pior = diferiram.length
+      ? `maior = ${diferiram[0].diferentes} pixels em "${diferiram[0].id}"`
+      : 'nenhum slide consumiu orçamento';
+    console.log(`  [visual] ${deck}: ${diferiram.length} de ${medidos.length} slides diferiram de zero; ${pior} (orçamento ${PIXELS_TOLERADOS} por slide)`);
   });
 }
 
@@ -260,7 +341,7 @@ test('a máscara das demos cobre a área pintada da demo, e só ela (spec 11.2)'
   }
   const destino = await mkdtemp(join(tmpdir(), 'visual-mascara-'));
   const { caminhoDoHtml } = await construir({ raiz: RAIZ, caminhoDaAula: new URL(`especime/${DECK_COM_DEMO}`, RAIZ), destino });
-  const pagina = await abrirPagina(`file://${caminhoDoHtml}`);
+  const pagina = await abrirPagina(pathToFileURL(caminhoDoHtml).href);
   t.after(() => pagina.close());
 
   const idDaDemo = await pagina.evaluate(() => document.querySelector('section.slide:has(div.demo)')?.id);
@@ -308,7 +389,7 @@ test('a comparação de fato compara: uma cor trocada só do lado build faz o te
   await writeFile(caminhoMutante, htmlMutante, 'utf8');
 
   const paginaNavegador = await abrirPagina(`${sitio.endereco}/especime/${deck}`);
-  const paginaMutante = await abrirPagina(`file://${caminhoMutante}`);
+  const paginaMutante = await abrirPagina(pathToFileURL(caminhoMutante).href);
   t.after(() => Promise.all([paginaNavegador.close(), paginaMutante.close()]));
 
   const [idPrimeiroSlide] = await idsDosSlides(paginaNavegador);
@@ -320,10 +401,93 @@ test('a comparação de fato compara: uma cor trocada só do lado build faz o te
   ]);
   const { diferentes, diff } = comparar(ladoNavegador, ladoMutante);
 
-  // Maior que a TOLERÂNCIA, não que zero: é esta asserção que impede a tolerância da spec de
-  // engolir uma mudança real. Sem ela, subir o limiar até tudo passar continuaria "verde".
+  // Maior que o ORÇAMENTO, não que zero: é esta asserção que impede a tolerância de engolir uma
+  // mudança real. Sem ela, subir o limiar até tudo passar continuaria "verde". O que ela NÃO faz,
+  // medido: o piso dela é a magnitude desta mutação (~24.000 pixels, um h1 de 96 px inteiro trocado
+  // de cor), então ela só reage a afrouxamentos enormes — com FRACAO 0,025, cinco vezes a spec,
+  // este arquivo ainda passava. Quem desce esse piso para perto de onde ele deve ficar é o teste
+  // seguinte, com uma mudança pequena.
   assert.ok(diferentes > PIXELS_TOLERADOS,
     `a cor mudou só no lado build e a diferença (${diferentes}) não passou dos ${PIXELS_TOLERADOS} tolerados — a comparação acima não está comparando de verdade`);
   const caminhoDoDiff = await gravarDiff(`${deck.replace('.html', '')}-inversao-${idPrimeiroSlide}`, diff.data);
   console.log(`  [visual] inversão: ${diferentes} pixels diferentes (esperado), diff em ${caminhoDoDiff}`);
+});
+
+
+// O irmão pequeno do teste da cor, e o mais importante dos dois: uma mudança SUTIL de produto, do
+// tamanho do que aparece num defeito de verdade — um número errado, não uma cor berrante. Um número
+// que eu escolho envelhece; um teste que exige pegar a renumeração de blocos, não. Sem ele, a
+// próxima pessoa que afrouxar o orçamento para calar uma intermitência continua verde, que é
+// exatamente o que já aconteceu uma vez neste marco.
+//
+// A mutação é a que a re-revisão mediu: um erro de mais-um em doisDigitos (montar/cromo.js), que
+// faria todo número de bloco exibir o seguinte — no rótulo "NN · Título" do cabeçalho e no número
+// grande do quadrado do campo, nos slides data-layout="abertura". Aqui ela é aplicada ao DOM do lado
+// build DEPOIS da montagem, pelos mesmos dois lugares que doisDigitos alimenta: nem montar/cromo.js
+// nem o espécime são tocados, e nada é escrito fora do diretório temporário deste teste.
+//
+// Por que isto não pode passar medindo nada: se a montagem ou a navegação por hash reescrevessem o
+// cromo (não reescrevem — em modo build montar() já rodou em Node e o motor só alterna `.ativo`), a
+// reescrita sumiria antes da foto e a diferença cairia para zero; a asserção abaixo exige que ela
+// ESTOURE o orçamento, então ela cai alto em vez de passar quieta. E a contagem de nós renumerados é
+// conferida antes, para o dia em que a marcação do cromo mudar de nome.
+test('a comparação pega uma mudança sutil: um número de bloco renumerado só do lado build', async (t) => {
+  const deck = 'matematica.html';
+  // Um slide de ABERTURA (data-layout="abertura"): é onde o número do campo é desenhado grande, e é
+  // a parte da renumeração que fica acima do ruído. Medido quando este teste foi escrito: 551 pixels
+  // neste slide (o segundo campo, "02" → "03"). O primeiro campo dá 1.186 — este é o mais apertado
+  // dos dois de propósito, para travar o orçamento no ponto mais baixo que a medição sustenta.
+  const SLIDE_DE_ABERTURA = 'derivacao';
+  // E um slide de CONTEÚDO, onde a MESMA renumeração mexe só no dígito do rótulo do cabeçalho: 24
+  // pixels medidos, ABAIXO dos 63 de ruído. Ele está aqui para o limite honesto do orçamento ficar
+  // executável e não só escrito no cabeçalho — nenhum orçamento por slide pega este caso.
+  const SLIDE_DE_CONTEUDO = 'no-texto';
+
+  const destino = await mkdtemp(join(tmpdir(), 'visual-build-renumerado-'));
+  const { caminhoDoHtml } = await construir({ raiz: RAIZ, caminhoDaAula: new URL(`especime/${deck}`, RAIZ), destino });
+
+  const paginaNavegador = await abrirPagina(`${sitio.endereco}/especime/${deck}`);
+  const paginaRenumerada = await abrirPagina(pathToFileURL(caminhoDoHtml).href);
+  t.after(() => Promise.all([paginaNavegador.close(), paginaRenumerada.close()]));
+
+  const renumerados = await paginaRenumerada.evaluate(() => {
+    const doisDigitos = (numero) => String(numero).padStart(2, '0');
+    let tocados = 0;
+    // montar/cromo.js:57 — o número dentro do quadrado atual da fileira (slides de abertura).
+    for (const alvo of document.querySelectorAll('span.numero-bloco')) {
+      const numero = Number(alvo.textContent);
+      if (!Number.isInteger(numero)) continue;
+      alvo.textContent = doisDigitos(numero + 1);
+      tocados += 1;
+    }
+    // montar/montar.js:86 — o rótulo "NN · Título" do cabeçalho (slides de conteúdo). Os rótulos de
+    // introdução e encerramento são palavras, não números, e o casamento simplesmente não pega.
+    for (const alvo of document.querySelectorAll('header.cabecalho > span.rotulo')) {
+      const casado = /^(\d\d)(\D[\s\S]*)$/.exec(alvo.textContent);
+      if (!casado) continue;
+      alvo.textContent = `${doisDigitos(Number(casado[1]) + 1)}${casado[2]}`;
+      tocados += 1;
+    }
+    return tocados;
+  });
+  assert.ok(renumerados >= 2,
+    `${deck}: a renumeração encontrou ${renumerados} número(s) de bloco no HTML construído — a marcação do cromo mudou e este teste parou de medir o que diz medir`);
+
+  const [ladoNavegador, ladoRenumerado] = await Promise.all([
+    navegarEFotografar(paginaNavegador, SLIDE_DE_ABERTURA),
+    navegarEFotografar(paginaRenumerada, SLIDE_DE_ABERTURA),
+  ]);
+  const naAbertura = comparar(ladoNavegador, ladoRenumerado);
+  const caminhoDoDiff = await gravarDiff(`${deck.replace('.html', '')}-renumerado-${SLIDE_DE_ABERTURA}`, naAbertura.diff.data);
+  assert.ok(naAbertura.diferentes > PIXELS_TOLERADOS,
+    `um número de bloco a mais só no lado build mudou ${naAbertura.diferentes} pixels no slide "${SLIDE_DE_ABERTURA}", dentro dos ${PIXELS_TOLERADOS} do orçamento — a tolerância está frouxa demais para pegar a classe de defeito mais provável neste sistema (texto, rótulo, número, ícone). Medido quando este teste foi escrito: 551 pixels. Diff em ${caminhoDoDiff}`);
+
+  const [navegadorConteudo, renumeradoConteudo] = await Promise.all([
+    navegarEFotografar(paginaNavegador, SLIDE_DE_CONTEUDO),
+    navegarEFotografar(paginaRenumerada, SLIDE_DE_CONTEUDO),
+  ]);
+  const noConteudo = comparar(navegadorConteudo, renumeradoConteudo);
+  assert.ok(noConteudo.diferentes > 0,
+    `a renumeração não mudou pixel nenhum no slide de conteúdo "${SLIDE_DE_CONTEUDO}" — ou o rótulo do cabeçalho deixou de mostrar o número do campo, ou a reescrita não chegou lá`);
+  console.log(`  [visual] renumeração: ${renumerados} números trocados · abertura "${SLIDE_DE_ABERTURA}" = ${naAbertura.diferentes} pixels (orçamento ${PIXELS_TOLERADOS}, cai como deve) · conteúdo "${SLIDE_DE_CONTEUDO}" = ${noConteudo.diferentes} pixels (abaixo do ruído de ${RUIDO_MEDIDO}: nenhum orçamento por slide pega este) · diff em ${caminhoDoDiff}`);
 });
