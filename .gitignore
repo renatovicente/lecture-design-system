@@ -11,3 +11,9 @@ node_modules/
 
 # saídas de teste
 tests/integracao/saida/
+
+# saída do build de uma aula: `aula-usp build <pasta>` escreve <pasta>/dist/ (spec 3.3), inclusive
+# dentro de especime/. A negação é o que preserva o /dist da raiz, que é RASTREADO (é o bundle que
+# `aula-usp dist` gera e que as aulas carregam) — e a ordem importa: a negação precisa vir depois.
+dist/
+!/dist/
