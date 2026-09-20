@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Fixture do build: metadado faltando</title>
+<meta name="unidade" content="ime">
+<meta name="disciplina" content="Fixture do build">
+<meta name="aula" content="1">
+<meta name="data" content="2026-09-19">
+<!-- Falta de propósito: sem <meta name="professor">, estrutura.metadados (erro, fase 1, grupo
+     estatica) acusa na etapa 1 — antes de qualquer navegador, antes de construir() gravar o HTML. -->
+<script src="../../../../dist/aula-usp.js"></script>
+</head>
+<body>
+
+<section data-layout="capa">
+  <h1>Falta um metadado</h1>
+</section>
+
+<section data-layout="abertura" id="um">
+  <h2>Tópico</h2>
+</section>
+
+<section data-layout="encerramento">
+  <h2>Fim</h2>
+  <ol class="sintese">
+    <li>Esta aula nunca deveria construir HTML nenhum.</li>
+  </ol>
+</section>
+
+</body>
+</html>

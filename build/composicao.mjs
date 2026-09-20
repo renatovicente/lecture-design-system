@@ -21,7 +21,10 @@ const NA_PAGINA = async (contrato) => {
   return { achados, demos };
 };
 
-function abrirChrome() {
+// Exportada: build/build.mjs (marco 5c) precisa do mesmo Chrome, com o mesmo CHROME_PATH, para a
+// etapa 6 (gerarPdf) — não duplica a lógica de "qual executável abrir" numa terceira cópia (a
+// segunda já existe em tests/integracao/utilitarios.mjs, de antes deste marco).
+export function abrirChrome() {
   const opcoes = process.env.CHROME_PATH ? { executablePath: process.env.CHROME_PATH } : { channel: 'chrome' };
   return chromium.launch(opcoes);
 }

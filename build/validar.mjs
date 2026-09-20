@@ -70,12 +70,15 @@ function lerCoberturaDoSistema(raizDoSistema) {
   return existsSync(caminho) ? lerCobertura(JSON.parse(readFileSync(caminho, 'utf8'))) : undefined;
 }
 
-// async porque o grupo de carga precisa do await import('katex') abaixo, e a composição do await
-// import('./composicao.mjs') mais adiante: os dois só carregam aqui dentro, e não no topo do módulo,
-// porque build/composicao.mjs importa playwright-core e build/servir.mjs (que lê contrato.json no
-// escopo do módulo) — o mesmo custo que o KaTeX, evitado para quem importa este arquivo só por
-// lerAula (dois testes de validar-cli.test.mjs fazem isso).
-export async function validarArquivo(alvo, { regras = REGRAS_ESTATICAS, raizDoSistema = RAIZ_SISTEMA } = {}) {
+// Etapa 1 da spec 3.3 (estática + carga, SEM navegador): lê a aula, roda o grupo estático e prepara
+// os recursos de carga — mas não valida "carga" ainda; quem chama decide isso. A fronteira fica
+// aqui, antes do grupo de carga, e não depois dele, porque validarArquivo, logo abaixo, enriquece
+// recursos.demos com o que o Chrome mediu (medirComposicao, disparado em paralelo) ANTES de validar
+// carga: só o Chrome sabe se uma demo de fato captura. build/build.mjs (marco 5c) chama esta função
+// sozinha, sem esse enriquecimento: a composição dele (etapa 5, três etapas depois desta) mede o
+// MESMO fonte de novo, e SÓ nesse ponto — não aqui, na etapa 1 — porque a spec 3.3 pede as duas
+// coisas em momentos diferentes do pipeline, mesmo rodando sobre o mesmo arquivo.
+export async function lerERodarEstatica(alvo, { regras = REGRAS_ESTATICAS, raizDoSistema = RAIZ_SISTEMA } = {}) {
   const caminho = caminhoDaAula(alvo);
   const contrato = JSON.parse(readFileSync(join(raizDoSistema, 'contrato/contrato.json'), 'utf8'));
   const unidades = JSON.parse(readFileSync(join(raizDoSistema, 'assets/marcas/unidades.json'), 'utf8'));
@@ -83,20 +86,42 @@ export async function validarArquivo(alvo, { regras = REGRAS_ESTATICAS, raizDoSi
   const doc = lerAula(caminho, contrato);
   // Nesta ordem: validar() normaliza doc.body como efeito colateral (validador/validar.js:28), e
   // carregarNoNode (build/carregar.mjs:texInvalido) depende disso já ter acontecido.
-  const daEstatica = validar(doc, { contrato, regras, grupo: 'estatica', unidades, cobertura });
+  const achadosEstatica = validar(doc, { contrato, regras, grupo: 'estatica', unidades, cobertura });
   const { default: katex } = await import('katex');
-  const { medirComposicao } = await import('./composicao.mjs');
-  // Dispara o Chrome antes de carregarNoNode e só espera a resposta depois de terminar o trabalho
-  // local: o navegador sobe um servidor e renderiza a aula inteira enquanto o KaTeX e o disco rodam
-  // aqui no Node, sem nada em comum entre os dois lados até recursos.demos, logo abaixo.
-  const composicao = medirComposicao(caminho, { contrato });
   const recursos = carregarNoNode(doc, { pastaDaAula: dirname(caminho), katex });
+  return { caminho, contrato, doc, recursos, achadosEstatica };
+}
+
+// O grupo de carga (spec 9.3), dado o doc e os recursos que lerERodarEstatica já preparou — função à
+// parte só por causa do enriquecimento de recursos.demos entre uma chamada e outra (comentário acima).
+export function validarCarga(doc, { contrato, recursos }) {
+  return validar(doc, { contrato, regras: REGRAS_DE_CARGA, grupo: 'carga', recursos });
+}
+
+// async porque o grupo de carga precisa do await import('katex') (dentro de lerERodarEstatica), e a
+// composição do await import('./composicao.mjs') mais adiante: os dois só carregam aqui dentro, e não
+// no topo do módulo, porque build/composicao.mjs importa playwright-core e build/servir.mjs (que lê
+// contrato.json no escopo do módulo) — o mesmo custo que o KaTeX, evitado para quem importa este
+// arquivo só por lerAula (dois testes de validar-cli.test.mjs fazem isso).
+export async function validarArquivo(alvo, { regras = REGRAS_ESTATICAS, raizDoSistema = RAIZ_SISTEMA } = {}) {
+  const caminho = caminhoDaAula(alvo);
+  // Mesma leitura que lerERodarEstatica faz por conta própria, repetida de propósito (não duas
+  // implementações — build/construir.mjs já aceita essa mesma duplicação de contrato/contrato.json,
+  // pela mesma razão): só para poder disparar medirComposicao antes do resto do trabalho local
+  // começar, comentário abaixo.
+  const contrato = JSON.parse(readFileSync(join(raizDoSistema, 'contrato/contrato.json'), 'utf8'));
+  const { medirComposicao } = await import('./composicao.mjs');
+  // Dispara o Chrome antes do resto e só espera a resposta depois de terminar o trabalho local: o
+  // navegador sobe um servidor e renderiza a aula inteira enquanto o KaTeX e o disco rodam aqui no
+  // Node, sem nada em comum entre os dois lados até recursos.demos, logo abaixo.
+  const composicao = medirComposicao(caminho, { contrato });
+  const { doc, recursos, achadosEstatica } = await lerERodarEstatica(alvo, { regras, raizDoSistema });
   const { achados: daComposicao, demos: demosDoChrome, motivo: semChrome } = await composicao;
   // Com Chrome, o registro de demos vem do que a página realmente executou, não do scanner de texto
   // de build/carregar.mjs — instrução do controlador para o marco 4c (ver build/composicao.mjs).
   if (demosDoChrome) recursos.demos = demosDoChrome;
-  const deCarga = validar(doc, { contrato, regras: REGRAS_DE_CARGA, grupo: 'carga', recursos });
-  const achados = [...daEstatica, ...deCarga, ...(daComposicao ?? [])];
+  const deCarga = validarCarga(doc, { contrato, recursos });
+  const achados = [...achadosEstatica, ...deCarga, ...(daComposicao ?? [])];
   // Falta de Chrome não é falha (spec 8.1): achados fica sem o grupo de composição, e erros/avisos
   // conta só o que os outros dois grupos acharam; o motivo vai num campo à parte para a CLI avisar
   // o autor por fora do JSON de --json (bin/aula-usp.mjs).

@@ -2,9 +2,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync, spawn, spawnSync } from 'node:child_process';
-import { mkdtempSync, writeFileSync, readFileSync } from 'node:fs';
+import { mkdtempSync, writeFileSync, readFileSync, readdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { validarArquivo, lerAula } from '../../build/validar.mjs';
 
@@ -201,16 +201,94 @@ test('caminho que não existe ainda sai com 2 e "não encontrei"', () => {
   }
 });
 
-test('bin/aula-usp.mjs não importa build/servir.mjs nem build/validar.mjs no topo do módulo', () => {
-  // import estático rodaria a leitura de disco desses módulos (contrato.json nos dois; linkedom
-  // em build/validar.mjs) antes de qualquer try/catch do comando, transformando um arquivo do
+test('bin/aula-usp.mjs não importa build/servir.mjs, build/validar.mjs nem build/build.mjs no topo do módulo', () => {
+  // import estático rodaria a leitura de disco desses módulos (contrato.json nos três; linkedom em
+  // build/validar.mjs; playwright-core e pdf-lib em build/build.mjs, arrastados de build/pdf.mjs e
+  // build/composicao.mjs) antes de qualquer try/catch do comando, transformando um arquivo do
   // sistema ou uma dependência ausente em stack trace e saída 1 em vez da saída 2 da spec 8.1 — o
-  // bug que ce7a824 corrigiu para servir.mjs e esta rodada corrige para validar.mjs, a mesma
-  // dependência que faltar derruba a CLI. Um teste de comportamento exigiria uma segunda cópia do
-  // sistema em disco sem a dependência; este guard de código-fonte é o substituto barato e honesto.
+  // bug que ce7a824 corrigiu para servir.mjs, uma rodada seguinte corrigiu para validar.mjs, e esta
+  // tarefa (build/build.mjs, o comando `build`) segue a mesma regra desde o primeiro commit. Um
+  // teste de comportamento exigiria uma segunda cópia do sistema em disco sem a dependência; este
+  // guard de código-fonte é o substituto barato e honesto.
   const fonte = readFileSync(CLI, 'utf8');
   assert.doesNotMatch(fonte, /^\s*import\b.*build\/servir\.mjs/m);
   assert.doesNotMatch(fonte, /^\s*import\b.*build\/validar\.mjs/m);
+  assert.doesNotMatch(fonte, /^\s*import\b.*build\/build\.mjs/m);
+});
+
+// A partir daqui, testes do comando `build` (tarefa 3 do marco 5c) — só os que não precisam de
+// Chrome de verdade: os quatro finais da spec 3.3, com Chrome real, têm teste próprio e mais lento
+// em tests/unit/build.test.mjs (um Chrome só, aberto uma vez, reaproveitado entre eles). Aqui é só a
+// CLI por cima: despacho, uso, e os dois casos que já são rápidos sem Chrome — erro estático (nunca
+// chega a abrir um navegador) e CHROME_PATH inexistente (abre e falha na hora).
+function aulaTemporariaDoArquivo(caminho) {
+  return aulaTemporaria(readFileSync(caminho, 'utf8'));
+}
+
+const FIXTURE_BUILD = (nome) => join(RAIZ, `tests/fixtures/build/${nome}/aula.html`);
+
+test('build: sem pasta sai com 2 e imprime o uso', () => {
+  try {
+    execFileSync('node', [CLI, 'build'], { encoding: 'utf8' });
+    assert.fail('deveria ter saído com 2');
+  } catch (erro) {
+    assert.equal(erro.status, 2);
+    assert.match(erro.stderr, /uso: aula-usp servir/);
+  }
+});
+
+test('build: pasta que não existe sai com 2 e "não encontrei"', () => {
+  try {
+    execFileSync('node', [CLI, 'build', join(RAIZ, 'especime/nao-existe.html')], { encoding: 'utf8' });
+    assert.fail('deveria ter saído com 2');
+  } catch (erro) {
+    assert.equal(erro.status, 2);
+    assert.match(erro.stderr, /não encontrei/);
+  }
+});
+
+// Etapa 1 (sem navegador): a CLI nunca chega a abrir Chrome nenhum aqui, então este teste continua
+// rápido — a mesma razão de tests/unit/build.test.mjs chamar build() diretamente para os finais que
+// precisam de Chrome de verdade, em vez de passar todos pela CLI.
+test('build: erro estático sai com 1, cita estrutura.metadados e grava só validacao.json em <pasta>/dist', () => {
+  const pasta = aulaTemporariaDoArquivo(FIXTURE_BUILD('erro-estatico'));
+  try {
+    execFileSync('node', [CLI, 'build', pasta], { encoding: 'utf8' });
+    assert.fail('deveria ter saído com 1');
+  } catch (erro) {
+    assert.equal(erro.status, 1);
+    assert.match(erro.stdout, /estrutura\.metadados/);
+    assert.deepEqual(readdirSync(join(pasta, 'dist')), ['validacao.json']);
+  }
+});
+
+// Spec 8.1: "Falta de Chrome não é falha: vira aviso e pula composição e PDF" — o mesmo CHROME_PATH
+// inexistente do teste equivalente de `validar`, agora sobre `build`: grava o HTML (sem PDF), avisa
+// no stderr e sai 0, porque a fixture não tem nenhum erro estático nem de carga.
+test('build: CHROME_PATH inexistente avisa no stderr, grava o HTML (sem PDF) e sai 0 numa aula limpa', () => {
+  const pasta = aulaTemporariaDoArquivo(FIXTURE_BUILD('aula-limpa'));
+  const resultado = spawnSync('node', [CLI, 'build', pasta], {
+    encoding: 'utf8',
+    env: { ...process.env, CHROME_PATH: '/caminho/que/nao/existe/de-verdade' },
+  });
+  assert.equal(resultado.status, 0, resultado.stderr);
+  assert.match(resultado.stderr, /aviso.*composição pulada, sem Chrome/i);
+  // <slug> vem do nome da PASTA da aula (build/build.mjs: slugDaAula), não do nome do arquivo —
+  // aulaTemporaria grava index.html dentro de uma pasta com nome aleatório (mkdtempSync), então o
+  // HTML final se chama "<nome da pasta>.html", nunca "index.html".
+  assert.deepEqual(readdirSync(join(pasta, 'dist')).sort(), [`${basename(pasta)}.html`, 'validacao.json'].sort());
+});
+
+test('build: --sem-pdf é reconhecida, não "flag desconhecida"', () => {
+  const pasta = aulaTemporariaDoArquivo(FIXTURE_BUILD('erro-estatico'));
+  try {
+    // Mesma fixture do teste de erro estático: falha na etapa 1, antes de --sem-pdf importar — o
+    // ponto aqui não é o efeito da flag, só que ela não cai no "flag desconhecida" (saída 2, uso).
+    execFileSync('node', [CLI, 'build', pasta, '--sem-pdf'], { encoding: 'utf8' });
+    assert.fail('deveria ter saído com 1');
+  } catch (erro) {
+    assert.equal(erro.status, 1, erro.stderr);
+  }
 });
 
 test('--json não trunca em 64 KiB quando a saída é lida por um cano', async () => {

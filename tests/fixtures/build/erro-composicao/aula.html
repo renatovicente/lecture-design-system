@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Fixture do build: transbordo</title>
+<meta name="unidade" content="ime">
+<meta name="disciplina" content="Fixture do build">
+<meta name="aula" content="1">
+<meta name="data" content="2026-09-19">
+<meta name="professor" content="Prof. Renato Vicente">
+<script src="../../../../dist/aula-usp.js"></script>
+</head>
+<body>
+
+<section data-layout="capa">
+  <h1>Transbordo grande</h1>
+</section>
+
+<section data-layout="abertura" id="um">
+  <h2>Tópico</h2>
+</section>
+
+<!-- Transbordo de propósito, sem tropeçar em nenhum limite ESTÁTICO (fase 1, sem navegador): uma
+     tabela de 30 linhas (a técnica de tests/fixtures/validador/composicao.transbordo/ruim.html)
+     também aciona limites.tabela (máx. 8 linhas de dados) na etapa 1, o que faria esta fixture
+     terminar no final "erro estático", não no "erro de composição" — os dois finais têm de ser
+     alcançáveis por caminhos DIFERENTES. Em vez disso: um <p> com muitos <br> em sequência. Cada
+     <br> força uma quebra de linha sem contar como palavra (limites.palavras-corpo conta zero aqui)
+     nem como item de lista, linha de tabela ou de código — nenhum limite estático mede "quantos
+     <br> tem um parágrafo". 60 quebras, a ~30 px de entrelinha no mínimo, passam de 1800 px — bem
+     acima dos ~556 px da zona de conteúdo de "conteudo", com folga grande o bastante para não
+     depender da fonte. Só composicao.transbordo, na etapa 5, dentro do Chrome, mede isto. -->
+<section data-layout="conteudo" id="paragrafo-alto">
+  <h2>Parágrafo alto</h2>
+  <p>Alto.<br><br><br><br><br><br><br><br><br><br>
+<br><br><br><br><br><br><br><br><br><br>
+<br><br><br><br><br><br><br><br><br><br>
+<br><br><br><br><br><br><br><br><br><br>
+<br><br><br><br><br><br><br><br><br><br>
+<br><br><br><br><br><br><br><br><br><br>Fim.</p>
+</section>
+
+<section data-layout="encerramento">
+  <h2>Fim</h2>
+  <ol class="sintese">
+    <li>O HTML deve gravar; o PDF, não.</li>
+  </ol>
+</section>
+
+</body>
+</html>

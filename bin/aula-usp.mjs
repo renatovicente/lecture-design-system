@@ -1,7 +1,8 @@
 #!/usr/bin/env node
-// CLI do Aula USP (spec 8.1). Neste marco, `servir` e `validar`.
+// CLI do Aula USP (spec 8.1). Neste marco, `servir`, `validar`, `build` e `dist`.
 import { statSync } from 'node:fs';
-import { resolve, join } from 'node:path';
+import { resolve, join, dirname } from 'node:path';
+import { pathToFileURL } from 'node:url';
 // build/servir.mjs, build/validar.mjs, build/bundle.mjs e build/cobertura.mjs só são importados
 // dentro do comando que precisa de cada um (import dinâmico): todos leem disco ou uma dependência
 // externa no escopo do próprio módulo (contrato/contrato.json; build/validar.mjs ainda importa
@@ -10,10 +11,11 @@ import { resolve, join } from 'node:path';
 // sistema ausente viraria stack trace e saída 1 para o comando (a spec 8.1 pede saída 2). A regra
 // vale para todo módulo de build/: nada que leia disco ou dependência externa no escopo do módulo
 // entra na CLI por import estático.
-import { linhaDe, cabecalhoDe } from '../validador/validar.js';
+import { linhaDe, cabecalhoDe, plural } from '../validador/validar.js';
 
 const USO = 'uso: aula-usp servir <pasta> [--porta 8765]\n'
   + '       aula-usp validar <pasta> [--json]\n'
+  + '       aula-usp build <pasta> [--sem-pdf]\n'
   + '       aula-usp dist';
 
 function sair(mensagem) {
@@ -27,6 +29,7 @@ function lerArgumentos(argumentos) {
   for (let i = 0; i < argumentos.length; i++) {
     if (argumentos[i] === '--porta') opcoes.porta = Number(argumentos[++i]);
     else if (argumentos[i] === '--json') opcoes.json = true;
+    else if (argumentos[i] === '--sem-pdf') opcoes.semPdf = true;
     else if (argumentos[i].startsWith('--')) sair(USO); // flag desconhecida: melhor recusar que ignorar em silêncio
     else posicionais.push(argumentos[i]);
   }
@@ -90,6 +93,44 @@ async function validarComando(argumentos) {
   process.exitCode = erros > 0 ? 1 : 0;
 }
 
+async function buildComando(argumentos) {
+  const { opcoes, posicionais } = lerArgumentos(argumentos);
+  const [pasta] = posicionais;
+  if (!pasta) sair(USO);
+  let resultado;
+  try {
+    // build/validar.mjs e build/build.mjs só entram por import dinâmico, e os dois aqui dentro do
+    // try (mesma regra do topo do arquivo): build/build.mjs arrasta playwright-core e pdf-lib, e uma
+    // dependência ausente tem de virar saída 2 (spec 8.1), não stack trace.
+    const { caminhoDaAula } = await import('../build/validar.mjs');
+    const { build } = await import('../build/build.mjs');
+    const alvo = caminhoDaAula(pasta); // ENOENT sobe: mesma origem de erro que validarComando trata abaixo
+    resultado = await build({
+      raiz: new URL('../', import.meta.url),
+      caminhoDaAula: pathToFileURL(alvo),
+      destino: join(dirname(alvo), 'dist'), // spec 3.3: "escreve só em <pasta>/dist/"
+      semPdf: opcoes.semPdf ?? false,
+    });
+  } catch (erro) {
+    // Mesmo critério de validarComando: "não encontrei" só quando o caminho ausente é o da própria
+    // aula; qualquer outro ENOENT (contrato, unidades, dependência do import acima) é o ambiente.
+    const alvoAbsoluto = resolve(pasta);
+    const ehCaminhoDaAula = erro.code === 'ENOENT'
+      && (erro.path === alvoAbsoluto || erro.path === join(alvoAbsoluto, 'index.html'));
+    if (ehCaminhoDaAula) sair(`não encontrei a aula em ${pasta}: ${erro.message}`);
+    else sair(`falha de ambiente: ${erro.message}\nrode npm install na pasta do sistema`);
+  }
+  const { achados, codigo, avisoSemChrome, paginas } = resultado;
+  // Vai para stderr, como o aviso equivalente de validarComando: spec 8.1, falta de Chrome não é
+  // falha, é aviso para o autor — `build` não tem --json (spec 8.1 só lista --sem-pdf para este
+  // comando), mas o aviso fica fora do stdout de qualquer forma, pela mesma razão daquele comando.
+  if (avisoSemChrome) console.error(`Aula USP: aviso: ${avisoSemChrome}`);
+  for (const achado of achados) console.log(linhaDe(achado));
+  console.log(cabecalhoDe(achados));
+  if (paginas !== undefined) console.log(`PDF: ${plural(paginas, 'página', 'páginas')}.`);
+  process.exitCode = codigo;
+}
+
 async function distComando(argumentos) {
   if (argumentos.length > 0) sair(USO); // dist não recebe alvo: gera sempre o do próprio sistema
   const raiz = new URL('../', import.meta.url);
@@ -114,5 +155,6 @@ async function distComando(argumentos) {
 const [comando, ...argumentos] = process.argv.slice(2);
 if (comando === 'servir') servir(argumentos);
 else if (comando === 'validar') validarComando(argumentos);
+else if (comando === 'build') buildComando(argumentos);
 else if (comando === 'dist') distComando(argumentos);
 else sair(USO);
