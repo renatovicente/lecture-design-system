@@ -138,7 +138,7 @@ A coluna "como corrigir" diz o que fazer; ela não tem espaço para dizer o que 
 
 **`matematica.*` — delimitador, comando ou símbolo.** Os três casos e os consertos estão em `40-matematica-e-codigo.md`.
 
-**`recursos.*` — a imagem, a linguagem ou a demo.** `recursos.imagem` é caminho errado ou arquivo que não veio junto; `recursos.linguagem` traz na própria mensagem a lista das aceitas; as duas de demo estão em `50-graficos-diagramas-demos.md`.
+**`recursos.*` — a imagem, a linguagem ou a demo.** `recursos.imagem` é caminho errado ou arquivo que não veio junto; `recursos.linguagem` traz a lista das aceitas na **ação** da regra — a coluna "como corrigir" da tabela acima, e o campo `acao` do `--json` —, não na mensagem, que diz só qual valor você escreveu; as duas de demo estão em `50-graficos-diagramas-demos.md`.
 
 **`saida.*` — o produto final.** São raras, e uma delas não é culpa sua: `saida.pdf-paginas` pede que você **relate o defeito**, porque o número de páginas é conta do sistema, não escolha do autor.
 

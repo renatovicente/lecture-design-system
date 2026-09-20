@@ -136,7 +136,7 @@ Do espécime: `especime/componentes.html#tabela`, que também mostra o `td.desta
 
 ## Código
 
-Um `pre` com `data-lang`, numa das linguagens do contrato — `recursos.linguagem` recusa as demais e a mensagem em `60-validador.md` lista as aceitas.
+Um `pre` com `data-lang`, numa das linguagens do contrato — `recursos.linguagem` recusa as demais, e a ação da regra, na tabela de `60-validador.md`, lista as aceitas.
 
 ```html
 <pre data-lang="sql" data-linhas="2" data-numeros>

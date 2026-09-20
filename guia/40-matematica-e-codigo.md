@@ -120,7 +120,7 @@ Do espécime: `especime/codigo.html#linhas-marcadas`. Quatro coisas que esse tre
 - **não há `<code>` dentro do `<pre>`, e não há classe de linguagem.** A linguagem mora em `data-lang`, e só ali. Uma classe como `linguagem-python`, que outros sistemas usam, é `vocabulario.classe` (medido): ela não existe no contrato.
 - **o `<pre>` não é indentado no fonte.** Ele começa na primeira coluna do arquivo, mesmo dentro de uma `section` ou de uma coluna, porque o espaço dentro dele é conteúdo: a indentação do arquivo entraria no código na tela.
 - **os sinais de maior e menor viram entidades.** Dentro de um `pre` você ainda está escrevendo HTML: o espécime escreve `media_movel &lt;- function(x, k = 3)`, `if yi * (xi @ w + b) &lt;= 0` e `(w, g, eta = 0.1) =&gt; w - eta * g`, e na tela aparecem `<-`, `<=` e `=>`. Um `&` que possa ser lido como início de entidade pede o mesmo cuidado.
-- **a linguagem vem da lista do contrato.** Outro valor é `recursos.linguagem`, e a mensagem da regra traz a lista inteira das aceitas (`60-validador.md`). Um `pre` sem `data-lang` nenhum não é erro, mas também não é destacado: ele sai como texto monoespaçado.
+- **a linguagem vem da lista do contrato.** Outro valor é `recursos.linguagem`, e a **ação** da regra traz a lista inteira das aceitas (`60-validador.md`). A `mensagem` diz só qual valor você escreveu; é no campo `acao` que a lista está, e a linha de comando imprime os dois. Um `pre` sem `data-lang` nenhum não é erro, mas também não é destacado: ele sai como texto monoespaçado.
 
 O destaque é monocromático de propósito — negrito nas palavras-chave, cinza nos comentários, tinta no resto —, e é o mesmo em todas as linguagens da lista. É o que deixa a cor livre para dizer outra coisa.
 
