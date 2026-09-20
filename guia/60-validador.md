@@ -10,7 +10,7 @@ O validador é o contrato lido como regras. Ele abre a sua aula, confere item po
 
 **Aviso não bloqueia** — a aula monta e o PDF sai. Um aviso é uma coisa que costuma ser engano e às vezes é escolha: um slide sem notas, uma imagem que mora em outro servidor, uma aula com um bloco só. Leia cada um e decida; o que não se faz é acumulá-los sem olhar, porque no meio deles um dia estará o que ia dar errado na sala.
 
-O painel dentro da aula abre sozinho quando há erro, e traz um botão **Copiar para o chat**, que copia a lista inteira no mesmo formato da linha de comando. É esse botão que fecha o ciclo de quem escreve a aula num chat, sem terminal (`71-fluxo-chat.md`).
+O painel dentro da aula abre sozinho quando há erro — fora do modo de tela cheia, para não interromper uma apresentação —, e traz um botão **Copiar para o chat**, que copia a lista inteira no mesmo formato da linha de comando. É esse botão que fecha o ciclo de quem escreve a aula num chat, sem terminal (`71-fluxo-chat.md`). Aviso não abre painel nenhum, mas vai para o console do navegador, onde quem quiser o encontra.
 
 ## Quando cada grupo roda
 
@@ -53,7 +53,7 @@ Um aviso tem a mesma forma:
 AVISO · slide 4 #lista-grande · estrutura.notas-ausentes · slide de layout "conteudo" sem notas do apresentador. Acrescente <aside class="notas"> com o que dizer neste slide.
 ```
 
-A lista sai ordenada pela aula: primeiro o que é da aula inteira, depois slide a slide, e dentro de cada slide na ordem das regras. Ler de cima para baixo é percorrer a aula na ordem em que ela acontece.
+A lista vem por grupo, e **dentro de cada grupo** ordenada pela aula: primeiro o que é da aula inteira, depois slide a slide, e dentro de um slide na ordem das regras. Como um grupo vem depois do outro, o número do slide volta atrás quando o grupo seguinte começa — leia pelo `#id`, não pela posição na lista.
 
 ## As regras da fase 1
 

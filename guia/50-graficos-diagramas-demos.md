@@ -1,6 +1,6 @@
 # Gráficos, diagramas e demos
 
-Três nomes num arquivo só, com estados diferentes: **a demo interativa existe e funciona hoje; o gráfico, o diagrama e os controles do sistema são da fase 2 e ainda não existem.** Eles estão desenhados na especificação e já têm lugar reservado no contrato, marcado como fase 2 — e o validador de hoje recusa os três, com erro.
+Três nomes num arquivo só, com estados diferentes: **a demo interativa existe e funciona hoje; o gráfico, o diagrama e os controles do sistema são da fase 2 e ainda não existem.** Os três estão desenhados na especificação, e parte deles já tem lugar reservado no contrato, marcado como fase 2 — mas o validador de hoje recusa os três, com erro.
 
 Este arquivo diz o que você pode usar agora, mostra a forma da demo, e depois diz o que a fase 2 vai trazer, sem mostrar marcação de coisa que não roda. Documentar como pronto o que não existe é pior do que não documentar.
 
@@ -16,7 +16,7 @@ Este arquivo diz o que você pode usar agora, mostra a forma da demo, e depois d
 | controles do sistema, como `button.controle` | fase 2: erro hoje |
 | captura automática da demo no build (`data-captura-ms`) | fase 2: erro hoje |
 
-Quem decide isso não é esta tabela: é `contrato/contrato.json`, onde as entradas de fase 2 estão marcadas, e é dele que o validador lê. A tabela de vocabulário de `10-estrutura.md` é gerada **da fase 1**, e é por isso que nenhuma dessas quatro últimas linhas aparece lá.
+Quem decide isso não é esta tabela: é `contrato/contrato.json`, onde as entradas de fase 2 estão marcadas, e é dele que o validador lê. A tabela de vocabulário de `10-estrutura.md` é gerada **da fase 1**, e é por isso que nenhuma das linhas de fase 2 acima aparece lá — se um dia aparecerem, é porque passaram a valer.
 
 ## Uma demo
 
@@ -32,7 +32,7 @@ Um slide de demo tem o título e a demo, e nada mais:
 </section>
 ```
 
-Do espécime: `especime/index.html#demo`. Os três atributos:
+Do espécime: `especime/index.html#demo`. O que há nele:
 
 - **`data-demo` é o nome**, em minúsculas, números e hífens. É por ele que o sistema acha o registro correspondente.
 - **`data-opcoes` é um objeto JSON**, entregue ao registro quando a demo é montada. É o que deixa a mesma demo servir a duas aulas com parâmetros diferentes, sem copiar código.
@@ -120,10 +120,10 @@ Do espécime: `especime/index.html#figura`. O vocabulário de SVG do contrato es
 
 Duas coisas que surpreendem quem desenha um gráfico à mão, as duas medidas:
 
-- **o texto dentro do SVG conta no orçamento de palavras do slide.** Rótulo de eixo, nome de série, valor anotado: tudo entra em `limites.palavras-corpo`. Um gráfico muito anotado estoura o orçamento do slide sem uma frase de prosa sequer.
+- **o texto dentro do SVG conta no orçamento de palavras.** Rótulo de eixo, nome de série, valor anotado: num slide de `conteudo`, tudo isso entra em `limites.palavras-corpo`, e dentro de uma coluna, também em `limites.palavras-coluna`. Um gráfico muito anotado estoura o orçamento sem uma frase de prosa sequer. No layout `figura`, que não tem orçamento de corpo, a conta não corre.
 - **o texto dentro do SVG fica fora da conferência de tamanho mínimo**, porque um desenho tem escala própria. Ninguém vai medi-lo por você: se o rótulo for pequeno demais, só a projeção vai dizer.
 
-**Um diagrama hoje** é o mesmo caso: SVG escrito à mão, com as caixas e as setas que você precisa, ou uma imagem exportada de outra ferramenta.
+**Um diagrama hoje** é o mesmo caso: SVG escrito à mão, com as caixas e as setas de que você precisa, ou uma imagem exportada de outra ferramenta.
 
 ## O que a fase 2 vai trazer
 

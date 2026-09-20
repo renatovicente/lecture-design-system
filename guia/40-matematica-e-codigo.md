@@ -46,7 +46,7 @@ Do espécime: `especime/matematica.html#em-campos`. A equação segue o ritmo do
 
 Uma derivação que aparece inteira de uma vez é uma derivação que a turma lê em silêncio enquanto você fala. Há duas formas de revelá-la aos poucos, e a escolha é sobre o que está sendo revelado.
 
-**Linha a linha, dentro de uma equação só:** `\passo{n}{…}` marca um pedaço do TeX com o número do passo. O KaTeX o traduz em `data-passo="n"`, e o sistema o revela junto com todo o resto que tem o mesmo número — é o mesmo mecanismo em grupos de `10-estrutura.md`, chegando pelo TeX em vez de pelo atributo.
+**Linha a linha, dentro de uma equação só:** `\passo{n}{…}` marca um pedaço do TeX com o número do passo. O KaTeX o traduz em `data-passo="n"`, e o sistema o revela junto com todo o resto que tem o mesmo número — é o mecanismo de passos em grupos de `10-estrutura.md`, chegando pelo TeX em vez de pelo atributo.
 
 ```html
 <section data-layout="conteudo" id="passo-a-passo" data-pdf="passos">
@@ -86,7 +86,7 @@ Da aula-exemplo: `exemplos/descida-do-gradiente/index.html#derivacao`. Cada item
 
 ## O que o TeX recusa
 
-**Cor e estilo, sempre.** `\color`, `\textcolor`, `\colorbox`, os comandos de `html…` e os atalhos como `\red` estão na lista de proibidos do contrato (`10-estrutura.md`), e `matematica.comando-proibido` acusa cada ocorrência com o comando na mensagem — `comando proibido no TeX: \textcolor`. A razão é a de sempre: cor é papel, e a paleta não tem um papel "equação vermelha". Para destacar uma equação, o que existe é o campo amarelo em volta (`aside.destaque`) ou a revelação por passos.
+**Cor e estilo, sempre.** `\color`, `\textcolor`, `\colorbox`, os `\html…` e os atalhos como `\red` estão na lista de proibidos do contrato (`10-estrutura.md`), e `matematica.comando-proibido` acusa cada ocorrência com o comando na mensagem — `comando proibido no TeX: \textcolor`. A razão é a de sempre: cor é papel, e a paleta não tem um papel "equação vermelha". Para destacar uma equação, o que existe é o campo amarelo em volta (`aside.destaque`) ou a revelação por passos.
 
 **Comandos que saem do TeX e mexem na página.** O sistema compila com a confiança restrita a `\htmlData`, que é por onde o `\passo` funciona. Tudo o mais que o KaTeX classifica como comando de confiança — `\href`, `\url`, `\includegraphics` — é recusado na compilação, e chega até você como `matematica.tex-invalido` com a mensagem `comando não permitido no TeX` (medido). O nome da regra é diferente do caso acima; o conserto é o mesmo: tire o comando.
 
@@ -119,10 +119,10 @@ Do espécime: `especime/codigo.html#linhas-marcadas`. Quatro coisas que esse tre
 
 - **não há `<code>` dentro do `<pre>`, e não há classe de linguagem.** A linguagem mora em `data-lang`, e só ali. Uma classe como `linguagem-python`, que outros sistemas usam, é `vocabulario.classe` (medido): ela não existe no contrato.
 - **o `<pre>` não é indentado no fonte.** Ele começa na primeira coluna do arquivo, mesmo dentro de uma `section` ou de uma coluna, porque o espaço dentro dele é conteúdo: a indentação do arquivo entraria no código na tela.
-- **`<` e `&` viram `&lt;` e `&amp;`.** Dentro de um `pre` você ainda está escrevendo HTML, e o espécime escreve `media_movel &lt;- function(x, k = 3)` e `if yi * (xi @ w + b) &lt;= 0` por essa razão. Na tela aparecem `<-` e `<=`.
+- **os sinais de maior e menor viram entidades.** Dentro de um `pre` você ainda está escrevendo HTML: o espécime escreve `media_movel &lt;- function(x, k = 3)`, `if yi * (xi @ w + b) &lt;= 0` e `(w, g, eta = 0.1) =&gt; w - eta * g`, e na tela aparecem `<-`, `<=` e `=>`. Um `&` que possa ser lido como início de entidade pede o mesmo cuidado.
 - **a linguagem vem da lista do contrato.** Outro valor é `recursos.linguagem`, e a mensagem da regra traz a lista inteira das aceitas (`60-validador.md`). Um `pre` sem `data-lang` nenhum não é erro, mas também não é destacado: ele sai como texto monoespaçado.
 
-O destaque é monocromático de propósito — negrito nas palavras-chave, cinza nos comentários, tinta no resto —, e vale igual nas sete linguagens. É o que deixa a cor livre para dizer outra coisa.
+O destaque é monocromático de propósito — negrito nas palavras-chave, cinza nos comentários, tinta no resto —, e é o mesmo em todas as linguagens da lista. É o que deixa a cor livre para dizer outra coisa.
 
 ## Linhas marcadas e numeradas
 
@@ -139,7 +139,7 @@ Dois limites medem cada `pre` do slide, com ou sem `data-lang`: o número de lin
 Quando um deles acusa, o conserto **não** é diminuir a letra — não há como, e é essa a regra que atravessa o guia inteiro. O que funciona, em ordem de preferência:
 
 - **corte o que não é a ideia.** Importações, tratamento de erro, validação de argumento: nada disso é o que você vai explicar. O espécime mostra o laço, não o programa.
-- **quebre a linha longa.** Uma expressão comprida cabe em duas linhas em qualquer das sete linguagens, e na projeção a segunda linha é mais legível que uma barra de rolagem que ninguém vai rolar.
+- **quebre a linha longa.** Uma expressão comprida cabe em duas linhas em qualquer dessas linguagens, e na projeção a segunda linha é mais legível que um texto que sai pela borda.
 - **divida em dois slides**, um por etapa, ou mostre duas partes lado a lado numa grade de colunas. Dentro de uma coluna, o `pre` continua começando na primeira coluna do arquivo:
 
 ```html
