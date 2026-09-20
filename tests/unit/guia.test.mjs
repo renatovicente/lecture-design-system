@@ -214,6 +214,62 @@ test('todo bloco de corpo do contrato tem a sua documentação em guia/30-compon
   }
 });
 
+// Os arquivos de guia/, lidos da tabela "Onde está o resto" que guia/00-principios.md escreve à mão.
+// A primeira coluna é o nome do arquivo em crase.
+function arquivosDaTabela(texto) {
+  const linhas = texto.split('\n');
+  const cabecalho = linhas.findIndex((linha) => /^\|\s*arquivo\s*\|/.test(linha));
+  assert.notEqual(cabecalho, -1, 'guia/00-principios.md não tem a tabela "Onde está o resto"');
+  const nomes = [];
+  for (const linha of linhas.slice(cabecalho + 2)) { // +2: pula o cabeçalho e a linha de traços
+    if (!linha.startsWith('|')) break;
+    nomes.push(linha.split('|')[1].trim().replaceAll('`', ''));
+  }
+  return nomes;
+}
+
+// Seis dos onze arquivos de guia/ não eram nomeados por teste nenhum nem pelo gerador: apagar
+// 40-, 50-, 70-, 71-, 72- ou 73- deixava `npm test` verde. O contraste era dentro do próprio marco —
+// guia/pacotes/ tem guarda de conjunto exato desde a Tarefa 7.
+//
+// A lista dos onze não é escrita aqui: ela vem da tabela "Onde está o resto" de 00-principios.md,
+// mais o próprio 00-principios.md, que é o único arquivo que a tabela não pode listar por ser quem a
+// escreve. Essa tabela é a fonte certa porque é o sumário que o leitor usa: um arquivo sem linha
+// nela é um arquivo que ninguém acha, e uma linha sem arquivo é um link morto. As alternativas são
+// piores — a spec 10.1 lista dezesseis arquivos e mora fora do repositório, BLOCOS_POR_ARQUIVO só
+// nomeia quatro, e a tabela de `references/` de skill.md é consumidora, não fonte: ela deixa 72 e 73
+// de fora de propósito, porque são fluxos do autor e não do agente.
+//
+// É o mesmo molde do teste das metas, logo abaixo: uma tabela escrita à mão, conferida contra a
+// fonte que manda — ali contrato.metadados, aqui o próprio diretório.
+test('a tabela de guia/00-principios.md nomeia exatamente os arquivos de guia/', () => {
+  const principios = readFileSync(new URL('guia/00-principios.md', RAIZ), 'utf8');
+  const emDisco = readdirSync(new URL('guia/', RAIZ)).filter((nome) => nome.endsWith('.md')).sort();
+  assert.ok(emDisco.length > 0, 'guia/ não tem arquivo .md nenhum');
+  assert.deepEqual(
+    [...arquivosDaTabela(principios), '00-principios.md'].sort(),
+    emDisco,
+    'a tabela "Onde está o resto" de guia/00-principios.md divergiu de guia/ — um arquivo novo precisa '
+      + 'de uma linha nela, e uma linha sem arquivo é um link morto no guia',
+  );
+});
+
+// O `aula-usp pacotes` do 6c copia guia/ para references/ dentro dos pacotes, e os arquivos-fonte
+// apontam para lá pelo nome. Um nome errado, ou um arquivo de guia/ renomeado, vira link morto
+// dentro de um pacote entregue — e só apareceria um marco depois, na mão de quem o usa.
+test('todo references/ citado em guia/pacotes/ existe em guia/', () => {
+  const emDisco = new Set(readdirSync(new URL('guia/', RAIZ)).filter((nome) => nome.endsWith('.md')));
+  let citados = 0;
+  for (const caminho of Object.keys(FONTES_DE_PACOTE)) {
+    const fonte = readFileSync(new URL(caminho, RAIZ), 'utf8');
+    for (const [, nome] of fonte.matchAll(/references\/([0-9A-Za-z._-]+\.md)/g)) {
+      citados += 1;
+      assert.ok(emDisco.has(nome), `${caminho} aponta para references/${nome}, que não existe em guia/`);
+    }
+  }
+  assert.ok(citados > 0, 'nenhum arquivo-fonte de pacote cita references/ — a guarda virou decoração');
+});
+
 // Os nomes das metas de guia/10-estrutura.md, lidos da tabela que o arquivo escreve à mão.
 function metasDaTabela(texto) {
   const linhas = texto.split('\n');
