@@ -119,7 +119,7 @@ test('o grupo de carga roda no build: TeX inválido, imagem ausente e demo sem r
 // composicao.linhas-titulo/ruim.html, já provado que estoura para 3 linhas (máx. 2) no Chrome — num
 // slide de conteúdo: a mesma repetição de texto numa abertura mede 8 linhas (coluna mais estreita)
 // e também transbordo, o que provaria a regra errada.
-test('a CLI mede composição no Chrome: título que estoura em 3 linhas sai com 1 e nomeia composicao.linhas-titulo', () => {
+test('a CLI mede composição no Chrome: título que estoura em 3 linhas sai com 1 e nomeia composicao.linhas-titulo', (t) => {
   const tituloComprido = 'Um título muito comprido '.repeat(6);
   const pasta = aulaTemporaria(BOA.replace('<section data-layout="encerramento">',
     `<section data-layout="conteudo" id="longo"><h2>${tituloComprido}</h2><p>C.</p></section>\n<section data-layout="encerramento">`));
@@ -128,6 +128,17 @@ test('a CLI mede composição no Chrome: título que estoura em 3 linhas sai com
     assert.fail('deveria ter saído com 1');
   } catch (erro) {
     assert.equal(erro.status, 1);
+    // Spec 8.1, "falta de Chrome não é falha": este é o único teste deste arquivo que EXIGE Chrome,
+    // e sem a degradação abaixo ele derruba o `npm test` numa máquina sem Chrome — medido, antes
+    // desta linha, com CHROME_PATH apontando para um caminho inexistente: 415 passam, 1 falha, e era
+    // este. (Mover tests/unit/build.test.mjs para integração, na mesma rodada de correção, era
+    // necessário mas não suficiente: a CLI também abre Chrome.) O sinal é o aviso que a própria CLI
+    // imprime quando pula a composição — o mesmo que o teste seguinte afirma —, então o teste não
+    // inventa uma sonda de Chrome própria: ele pergunta ao programa sob teste.
+    if (/composição pulada/i.test(erro.stderr ?? '')) {
+      t.skip('sem Chrome: a CLI pulou a composição (spec 8.1)');
+      return;
+    }
     const regras = JSON.parse(erro.stdout).map((achado) => achado.regra);
     assert.ok(regras.includes('composicao.linhas-titulo'), regras.join(', '));
   }

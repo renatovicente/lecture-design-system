@@ -1,3 +1,10 @@
+// Integração (spec 11.2), não unitário: este arquivo abre Chrome de verdade no before(). Ele nasceu
+// em tests/unit/, e ali derrubava o `npm test` inteiro numa máquina sem Chrome — medido antes da
+// mudança: CHROME_PATH apontando para um caminho inexistente dava 0 passam, 7 falham, porque o
+// before() estoura e leva o arquivo junto. A spec 8.1 diz o contrário ("falta de Chrome não é
+// falha") e a 11.1/11.2 separa unitário de integração justamente por isto. `npm run test:integracao`
+// já o pega, e o ritmo de Chrome dele não mudou.
+//
 // Comando `aula-usp build` (spec 3.3): a tarefa de orquestração não acrescenta capacidade — tudo o
 // que ela chama já existe e já foi testado por conta própria (construir, medirComposicao, gerarPdf,
 // saida.pdf-paginas). O que ela decide são as TRANSIÇÕES, e a spec 3.3 define quatro finais
@@ -19,7 +26,7 @@ import { mkdtemp, readdir, readFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { parseHTML } from 'linkedom';
-import { chromium } from 'playwright-core';
+import { iniciarChrome } from './utilitarios.mjs';
 import { build } from '../../build/build.mjs';
 import { paginasEsperadas } from '../../motor/impressao.js';
 
@@ -30,9 +37,7 @@ const fixture = (nome) => new URL(`../fixtures/build/${nome}/aula.html`, import.
 let navegador;
 before(async () => {
   console.error('build.test.mjs: abrindo o Chrome (uma vez para o arquivo inteiro)');
-  navegador = await chromium.launch(process.env.CHROME_PATH
-    ? { executablePath: process.env.CHROME_PATH }
-    : { channel: 'chrome' });
+  navegador = await iniciarChrome(); // a mesma abertura de todos os arquivos desta pasta (utilitarios.mjs).
 });
 after(async () => {
   await navegador?.close();
@@ -46,6 +51,12 @@ test('final 1 — erro estático na etapa 1: grava só validacao.json, sem HTML,
   assert.ok(r.achados.some((a) => a.regra === 'estrutura.metadados'), JSON.stringify(r.achados));
   assert.equal(r.avisoSemChrome, undefined);
   assert.equal(r.paginas, undefined);
+  // M8 da revisão final: este é o único final em que o validacao.json é o ÚNICO artefato entregue —
+  // e era o único que não o lia, conferindo só a lista de arquivos. O que o autor abre quando o
+  // build sai 1 na etapa 1 é este arquivo; se ele discordar de r.achados, o que a CLI imprime e o
+  // que fica no disco contam histórias diferentes.
+  const validacao = JSON.parse(await readFile(join(destino, 'validacao.json'), 'utf8'));
+  assert.deepEqual(validacao, r.achados);
 });
 
 test('final 2 — erro de composição na etapa 5: grava HTML e validacao.json, sem PDF, e sai 1', async () => {
