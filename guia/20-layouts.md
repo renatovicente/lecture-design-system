@@ -1,10 +1,12 @@
 # Layouts
 
-Os sete layouts de slide do Aula USP: o que cada um aceita, em que ordem, e um exemplo de cada um tirado do espécime.
+Um layout é o papel de um slide. O `data-layout` da seção decide o que ela aceita, em que ordem, e o que o sistema desenha em volta. Não há layout livre: tudo que uma aula mostra cabe nos que estão na tabela abaixo.
 
-> Esqueleto: a prosa deste arquivo ainda será escrita. O que está entre `<!-- gerado:… -->` e `<!-- /gerado -->` é escrito por `npm run guia` a partir de `contrato/contrato.json` e de `especime/` — não edite à mão; edite a fonte e regere.
+A restrição é de propósito. O que se ganha com ela é que a aula inteira tem um ritmo só, que o cromo sai de graça e sempre igual, e que o slide cheio demais é acusado enquanto você escreve, e não na sala.
 
-## A gramática dos sete layouts
+## A gramática dos layouts
+
+Cada linha é um layout: o valor de `data-layout`, o que a seção aceita — **na ordem em que a coluna do meio lista** — e o cromo que o sistema desenha naquele layout.
 
 <!-- gerado:tabela-de-layouts -->
 | layout | conteúdo, na ordem | cromo automático |
@@ -18,7 +20,60 @@ Os sete layouts de slide do Aula USP: o que cada um aceita, em que ordem, e um e
 | `encerramento` | `h2`, `ol.sintese`, `p.proxima` (opcional) | cabecalho, faixa-de-marca |
 <!-- /gerado -->
 
+Como ler a tabela:
+
+- **a ordem é literal.** O `h2` vem antes do `p.lide`, que vem antes do corpo. Elemento na ordem errada, ou de um tipo que o layout não aceita, é `estrutura.fora-do-layout`.
+- **`(opcional)` é o que pode faltar.** Tudo o mais na coluna é obrigatório, e a falta é `estrutura.obrigatorio`.
+- **`um bloco de corpo`** é qualquer um dos blocos de `30-componentes.md`: parágrafo, lista, campo, exercício, tabela, código, figura ou equação em destaque.
+- **`ou`** separa alternativas que não se somam: no `conteudo`, ou uma `div.colunas`, ou blocos de corpo soltos — não os dois.
+- **cromo automático** é a lista do que você **não** escreve. Ela não é conteúdo permitido: é o que já vem pronto.
+
+`aside.notas` não aparece na tabela porque não entra na sequência de nenhum layout: pode vir em qualquer slide, e o lugar habitual é o fim da seção.
+
+A tabela sai de `contrato/contrato.json` por `npm run guia`, e é do mesmo contrato que o validador lê as regras. Editá-la à mão muda o guia por uma geração, até alguém rodar o gerador; o que muda o sistema é o contrato.
+
+## Quando usar cada layout
+
+**`capa`** abre a aula, e traz só o título. A linha de metadados, o roteiro dos blocos e a faixa de marca com os logos vêm do `<head>` e das aberturas. Um `<br>` seguido de `<span class="sinal">` parte o título em duas linhas e põe a segunda em azul — é o subtítulo.
+
+**`abertura`** abre um bloco, e é a promessa que os slides seguintes cumprem. O título é curto porque vira o rótulo do cabeçalho e o nome sob o quadrado do mapa (`10-estrutura.md`); a pergunta, opcional, diz o que o bloco responde. Escrita como pergunta de verdade, ela dá ao aluno um motivo para prestar atenção no bloco inteiro.
+
+**`conteudo`** é o slide de trabalho, e é onde a aula passa a maior parte do tempo. Título, lide opcional, e o corpo — em colunas ou solto.
+
+**`afirmacao`** é uma frase sozinha na tela, grande, sem título, com a origem opcional embaixo em `p.fonte`. Serve para virar a chave da aula: você lê em voz alta, para, e deixa a turma ler. Gasta um slide inteiro numa frase, e é esse o efeito.
+
+**`figura`** dá à figura a zona de conteúdo inteira, com a legenda embaixo. O título é opcional, porque muitas vezes a legenda já diz o que é. Uma figura por slide: para figura ao lado de texto, o layout é `conteudo` com colunas.
+
+**`demo`** dá a mesma área a uma demo interativa, que você conduz ao vivo. É uma demo por slide, e a imagem estática dentro dela é o que sai no PDF — sem ela, `recursos.demo-sem-estatico` avisa (`50-graficos-diagramas-demos.md`).
+
+**`encerramento`** fecha a aula com a síntese — os pontos que o aluno leva — e, opcionalmente, o anúncio da próxima. O cabeçalho volta com todos os blocos marcados como vistos, e a faixa de marca toma o lugar do rodapé.
+
+## O corpo de um slide de conteúdo
+
+Ou o corpo é **uma** `div.colunas`, ou é uma sequência de blocos de corpo soltos, um embaixo do outro. As duas formas não se misturam no mesmo slide, e não há duas `div.colunas` no mesmo slide: quando o conteúdo pede isso, são dois slides.
+
+A `div.colunas` tem um `data-grade` e **um `div` filho para cada parte da grade** — `estrutura.colunas` compara os dois e acusa a diferença. Cada `div` filho contém blocos de corpo, e só isso:
+
+```html
+<div class="colunas" data-grade="8-4">
+  <div>
+    <p>A coluna larga tem oito colunas do grid, com 760 px. Ela recebe o argumento principal do slide.</p>
+  </div>
+  <div>
+    <p>A estreita tem quatro colunas, com 368 px.</p>
+  </div>
+</div>
+```
+
+Do espécime: `especime/index.html#grade-8-4`. Os valores de `data-grade` estão em `contrato/contrato.json`, e são as divisões do grid em números de colunas que somam a largura útil: uma coluna só, duas iguais, duas desiguais — numa ordem ou na outra — ou três iguais. Um valor que não exista no contrato é `vocabulario.atributo`.
+
+A escolha da grade é de significado, não de estética: colunas iguais quando as duas partes têm o mesmo peso — antes e depois, texto e figura —, e desiguais quando uma argumenta e a outra comenta.
+
+Duas contas correm no corpo, e as duas acusam por cortar, nunca por encolher a letra: o total de palavras do slide (`limites.palavras-corpo`) e o de cada coluna (`limites.palavras-coluna`). O total **não** conta o título nem o lide, que têm limite próprio, nem o que está em código, em matemática ou nas notas — é o texto de leitura do corpo, e só ele.
+
 ## Um exemplo de cada layout
+
+Um por layout, extraído de `especime/`. Os decks do espécime são validados a cada rodada do sistema, então todo trecho abaixo é, por construção, um trecho que passa. Copie a forma; o texto é de demonstração e existe para exercitar o layout.
 
 <!-- gerado:exemplos-por-layout -->
 #### `capa`
@@ -107,3 +162,7 @@ Extraído de `especime/index.html`.
 
 Extraído de `especime/muitos-blocos.html`.
 <!-- /gerado -->
+
+Repare no que **não** está em nenhum deles: cabeçalho, rodapé, número do slide, mapa de blocos, logo. O fonte de um slide só tem o conteúdo do slide.
+
+O trecho pronto de cada bloco de corpo — parágrafo, lista, campo, exercício, tabela, código, figura e equação em destaque — está em `30-componentes.md`.
