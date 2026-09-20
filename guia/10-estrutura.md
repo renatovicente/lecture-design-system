@@ -105,9 +105,11 @@ O `lang` do `<html>` escolhe o idioma dos rótulos que o sistema escreve — "Bl
 
 ## A tag do runtime
 
-A linha do `<script>` no `<head>` é a única que muda de um fluxo de trabalho para o outro: no repositório do sistema ela aponta para o runtime local, como no esqueleto acima; numa aula sua, ela aponta para a versão publicada, com a sua soma de integridade. O arquivo do seu fluxo diz qual usar — `70-fluxo-terminal.md`, `71-fluxo-chat.md`, `72-artifact-claude.md` ou `73-chatgpt.md`.
+A linha do `<script>` no `<head>` é a única que muda de um fluxo de trabalho para o outro: no repositório do sistema ela aponta para o runtime local, como no esqueleto acima; numa aula sua, ela apontará para a versão publicada, com a sua soma de integridade. O arquivo do seu fluxo diz qual usar — `70-fluxo-terminal.md`, `71-fluxo-chat.md`, `72-artifact-claude.md` ou `73-chatgpt.md`.
 
-Duas propriedades dessa tag valem conhecer. A versão é exata e vem com `integrity`, então uma aula fica presa à versão com que foi feita e não muda de aparência sozinha; atualizar é trocar a tag. E se o runtime não carregar — sem internet, por exemplo —, o HTML aparece cru, feio mas legível, em vez de aparecer em branco.
+**A tag pronta, com a versão e o hash reais, ainda não existe:** o pacote não está publicado no npm, e a publicação é da fase 3. O modelo, o espécime e os exemplos apontam todos para o runtime local, por caminho relativo. Até lá, a aula se experimenta com `aula-usp servir`; `71-fluxo-chat.md` conta o resto.
+
+Uma propriedade que essa tag terá quando existir: a versão será exata e virá com `integrity`, de modo que uma aula fique presa à versão com que foi feita e não mude de aparência sozinha; atualizar será trocar a tag. E uma que já vale hoje, com o runtime local: se ele não carregar — sem internet, por exemplo —, o HTML aparece cru, feio mas legível, em vez de aparecer em branco.
 
 ## Os blocos
 
