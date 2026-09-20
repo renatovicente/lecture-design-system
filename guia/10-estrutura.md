@@ -85,7 +85,7 @@ Comece copiando o arquivo inteiro e trocando o conteúdo. É mais rápido do que
 
 ## Os metadados
 
-As cinco metas do `<head>` são obrigatórias, e `estrutura.metadados` acusa a que faltar:
+As metas do `<head>` são todas obrigatórias, e `estrutura.metadados` acusa a que faltar:
 
 | meta | o que faz |
 |---|---|
@@ -94,6 +94,8 @@ As cinco metas do `<head>` são obrigatórias, e `estrutura.metadados` acusa a q
 | `aula` | idem; é um número ou um texto curto, como `4` ou `3b` |
 | `data` | em `AAAA-MM-DD`; o sistema a escreve por extenso curto, no idioma da aula |
 | `professor` | entra na linha de metadados da capa |
+
+Esta é a única tabela do guia que não é gerada, porque o contrato tem os nomes das metas mas não tem a coluna da direita, que é justamente o que há para ler aqui. Em lugar do gerador, uma guarda: `tests/unit/guia.test.mjs` compara os nomes desta tabela com `contrato.metadados` e cobra que sejam os mesmos, na mesma ordem.
 
 `unidade` é uma chave de `assets/marcas/unidades.json`; se a sua não estiver lá, o validador recusa o valor e diz, na mensagem, quais existem. Uma unidade nova entra com uma linha nesse arquivo e o arquivo do logo, sem tocar em código.
 

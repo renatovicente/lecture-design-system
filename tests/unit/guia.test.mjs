@@ -139,6 +139,51 @@ test('todo bloco de corpo do contrato é citado em guia/30-componentes.md', () =
   }
 });
 
+// Os nomes das metas de guia/10-estrutura.md, lidos da tabela que o arquivo escreve à mão.
+function metasDaTabela(texto) {
+  const linhas = texto.split('\n');
+  const cabecalho = linhas.findIndex((linha) => /^\|\s*meta\s*\|/.test(linha));
+  assert.notEqual(cabecalho, -1, 'guia/10-estrutura.md não tem a tabela de metadados');
+  const nomes = [];
+  for (const linha of linhas.slice(cabecalho + 2)) { // +2: pula o cabeçalho e a linha de traços
+    if (!linha.startsWith('|')) break;
+    nomes.push(linha.split('|')[1].trim().replaceAll('`', ''));
+  }
+  return nomes;
+}
+
+// Esta tabela é a única das cinco do guia que NÃO é gerada, e de propósito: o contrato tem os nomes
+// das metas, mas não tem a coluna "o que faz", que é a única coisa que o autor precisa ler ali.
+// Gerá-la custaria pôr prosa dentro de contrato.json. Em troca, uma guarda: os nomes da tabela são
+// exatamente os de contrato.metadados, na mesma ordem. Sem ela, uma meta nova no contrato virava
+// uma meta que o guia não pede, e o autor entregava uma aula sem ela.
+test('a tabela de metadados de guia/10-estrutura.md traz as metas do contrato, e só elas', () => {
+  const estrutura = readFileSync(new URL('guia/10-estrutura.md', RAIZ), 'utf8');
+  assert.ok(Object.keys(contrato.metadados).length > 0, 'o contrato não declarou nenhum metadado');
+  assert.deepEqual(
+    metasDaTabela(estrutura),
+    Object.keys(contrato.metadados),
+    'a tabela de metadados de guia/10-estrutura.md divergiu de contrato.metadados — acerte a tabela à mão',
+  );
+});
+
+// O grupo de uma regra é o que decide QUANDO ela roda, e é a pergunta que guia/60-validador.md
+// responde em prosa. Dos quatro grupos, três se deduzem do prefixo do nome (composicao.*, saida.* e,
+// por exclusão, as estáticas); o de carga não — ele junta uma regra de matematica.* e três de
+// recursos.*, e o arquivo as nomeia à mão. A busca é na prosa, com o bloco gerado FORA: a tabela de
+// regras cita todas as regras da fase 1, então procurar no arquivo inteiro passaria sempre.
+test('guia/60-validador.md nomeia, na prosa, todas as regras do grupo de carga da fase 1', () => {
+  const validador = readFileSync(new URL('guia/60-validador.md', RAIZ), 'utf8');
+  const prosa = validador.replace(/<!-- gerado:[\s\S]*?<!-- \/gerado -->/g, '');
+  const daCarga = Object.entries(contrato.regras)
+    .filter(([, regra]) => regra.grupo === 'carga' && !(regra.fase > 1))
+    .map(([nome]) => nome);
+  assert.ok(daCarga.length > 0, 'o contrato não declarou nenhuma regra de fase 1 no grupo de carga');
+  for (const nome of daCarga) {
+    assert.ok(prosa.includes(`\`${nome}\``), `a regra de carga ${nome} não é nomeada na prosa de guia/60-validador.md`);
+  }
+});
+
 // Um bloco que silenciosamente não é escrito é a forma deste projeto de produzir documentação que
 // mente: o aplicador erra alto quando o marcador pedido não existe.
 test('aplicarMarcadores ergue erro quando o marcador pedido não existe', () => {
