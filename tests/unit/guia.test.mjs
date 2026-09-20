@@ -174,14 +174,43 @@ test('o esqueleto de guia/10-estrutura.md é modelos/aula/index.html, byte a byt
   );
 });
 
-// A lista dos onze blocos de corpo em guia/30-componentes.md é escrita à mão, e era conferida à
-// mão. `tex-destaque` está na lista do contrato mas NÃO é uma tag — o arquivo o documenta como
-// texto solto entre \[ e \], e é por isso que a guarda cobra a citação, não um elemento.
-test('todo bloco de corpo do contrato é citado em guia/30-componentes.md', () => {
+// A lista dos onze blocos de corpo é do contrato. O que guia/30-componentes.md promete sobre eles
+// está na sua terceira linha: "Cada um tem aqui o seu trecho pronto … com o endereço da seção de
+// onde veio". É isso que esta guarda cobra, e NÃO a simples menção ao nome — porque a menção passa
+// sempre, por dois motivos independentes, e só o primeiro estava no relatório de revisão:
+//
+//   1. o arquivo termina com a tabela de papéis GERADA, que cita `aside.destaque`, `aside.quadro`,
+//      `aside.alerta` e `pre` (a mesma classe de defeito que o despacho C pegou em 60-validador.md);
+//   2. o arquivo ABRE enumerando os onze nomes em crase — "são estes onze: `p`, `ul`, …" —, e essa
+//      linha, por desenho, cita todos os onze. Ela sozinha sustenta a guarda inteira. Medido: com o
+//      bloco gerado já fora da busca, apagar as seções "## Destaque", "## Quadro", "## Alerta" e
+//      "## Código" da prosa — 52 linhas fora — ainda deixava a guarda VERDE.
+//
+// Fora as duas, a busca é na prosa a partir da primeira seção, e o que se cobra é a documentação de
+// fato. Os dez blocos cujo tag está em contrato.html.elementos são elemento de verdade, e a forma
+// que o guia lhes dá é um trecho pronto: cobra-se a marcação dentro de um bloco ```html. O décimo
+// primeiro, `tex-destaque`, NÃO está lá — não é uma tag, é texto solto entre \[ e \] —, e para ele a
+// citação pelo nome é a única forma possível. Os dois caminhos saem do contrato, não de uma lista
+// escrita aqui: um bloco de corpo novo cai sozinho no caminho certo.
+test('todo bloco de corpo do contrato tem a sua documentação em guia/30-componentes.md', () => {
   const componentes = readFileSync(new URL('guia/30-componentes.md', RAIZ), 'utf8');
+  const semGerado = componentes.replace(/<!-- gerado:[\s\S]*?<!-- \/gerado -->/g, '');
+  const primeiraSecao = semGerado.indexOf('\n## ');
+  assert.notEqual(primeiraSecao, -1, 'guia/30-componentes.md não tem seção nenhuma');
+  const corpo = semGerado.slice(primeiraSecao);
+  const emCodigo = [...corpo.matchAll(/```html\n([\s\S]*?)```/g)].map(([, trecho]) => trecho).join('\n');
   assert.ok(contrato.blocosDeCorpo.length > 0, 'o contrato não declarou nenhum bloco de corpo');
   for (const bloco of contrato.blocosDeCorpo) {
-    assert.ok(componentes.includes(`\`${bloco}\``), `o bloco de corpo ${bloco} não é citado no arquivo`);
+    const [tag, classe] = bloco.split('.');
+    if (!contrato.html.elementos.includes(tag)) {
+      assert.ok(corpo.includes(`\`${bloco}\``), `${bloco} não é elemento do contrato, e a prosa não o cita pelo nome`);
+      continue;
+    }
+    // `<p` casaria com `<pre`: o lookahead exige que o nome da tag termine ali.
+    const marcacao = classe
+      ? new RegExp(`<${tag}(?=[\\s>])[^>]*class="[^"]*\\b${classe}\\b`)
+      : new RegExp(`<${tag}(?=[\\s>])`);
+    assert.match(emCodigo, marcacao, `o bloco de corpo ${bloco} não tem trecho pronto em nenhum bloco \`\`\`html`);
   }
 });
 
