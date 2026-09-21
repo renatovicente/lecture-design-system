@@ -99,6 +99,12 @@ export async function servirPastaCrua(pastaRelativaARaiz) {
   };
 }
 
+// Os dois bytes da corrupção, e `;\n` não é lixo qualquer: é JavaScript VÁLIDO no topo de um módulo
+// e de um script clássico (declaração vazia). Bytes que quebrassem a sintaxe também impediriam a
+// carga — só que por erro de sintaxe, e a asserção de recusa ficaria verde sem provar nada sobre o
+// `integrity`. Com estes, a ÚNICA razão possível para o navegador não executar o arquivo é o hash.
+const DOIS_BYTES = Buffer.from(';\n');
+
 // A CDN ainda não existe — publicar é da fase 3 —, mas a tag que o autor escreveu É pedida pelo
 // navegador, e quem responde são os bytes locais de dist/. Isto é o que deixa `especime/` carregar a
 // tag FIXADA (spec 3.2, 8.1 e 12) sem abrir mão do que dist.test.mjs e visual.test.mjs medem:
@@ -110,7 +116,7 @@ export async function servirPastaCrua(pastaRelativaARaiz) {
 //
 //   1. o `integrity` passa a ser conferido por um NAVEGADOR. A guarda de tests/unit/pacotes.test.mjs
 //      compara a string do atributo com a string do manifesto: prova que os dois textos batem, não
-//      que o hash valida os bytes. Aqui o Chrome decide. `bytesExtras` existe para essa inversão ser
+//      que o hash valida os bytes. Aqui o Chrome decide. `corromper` existe para essa inversão ser
 //      um teste, e não um experimento que alguém fez uma vez (ver dist.test.mjs).
 //   2. a cadeia de scripts secundários roda pela BASE DA CDN: `aula-usp.js` resolve
 //      `aula-usp-tex.js`, `aula-usp-codigo.js` e as gramáticas a partir de `currentScript.src`
@@ -120,9 +126,15 @@ export async function servirPastaCrua(pastaRelativaARaiz) {
 // `access-control-allow-origin` não é enfeite: `crossorigin="anonymous"` + `integrity` exigem CORS, e
 // sem o cabeçalho o Chrome recusa o script ANTES de conferir o hash — a falha pareceria de SRI sem
 // ser. Devolve a base e a lista (viva) dos nomes pedidos, para o teste medir a cadeia.
-export async function rotearCdn(pagina, { raiz = RAIZ, bytesExtras = '' } = {}) {
+//
+// `corromper` recebe o NOME de arquivo (ou vários) a estragar, e não um "estraga tudo": a prova dos
+// satélites precisa entregar `aula-usp.js` íntegro e trocar os bytes de UM secundário — é esse
+// recorte que separa "o navegador confere o script principal" (já provado no marco 6c) de "confere
+// também os nove que o principal carrega", que é o que a tarefa 3 fecha.
+export async function rotearCdn(pagina, { raiz = RAIZ, corromper = [] } = {}) {
   const { version } = JSON.parse(await readFile(new URL('package.json', raiz), 'utf8'));
   const base = `https://cdn.jsdelivr.net/npm/aula-usp@${version}/dist/`;
+  const estragados = new Set([corromper].flat());
   const pedidos = [];
   await pagina.route(`${base}*`, async (rota) => {
     const nome = new URL(rota.request().url()).pathname.split('/').pop();
@@ -138,7 +150,7 @@ export async function rotearCdn(pagina, { raiz = RAIZ, bytesExtras = '' } = {}) 
     await rota.fulfill({
       status: 200,
       headers: { 'content-type': 'text/javascript; charset=utf-8', 'access-control-allow-origin': '*' },
-      body: bytesExtras ? Buffer.concat([corpo, Buffer.from(bytesExtras)]) : corpo,
+      body: estragados.has(nome) ? Buffer.concat([corpo, DOIS_BYTES]) : corpo,
     });
   });
   return { base, pedidos };

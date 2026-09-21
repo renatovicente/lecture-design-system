@@ -64,7 +64,7 @@ for (const deck of ['index.html', 'matematica.html', 'codigo.html']) {
 // existe e a aula não monta. A frase entra como /integrity/, que é o que sobrevive a uma versão nova
 // do navegador.
 test('dois bytes a mais em aula-usp.js e o Chrome recusa o script: o integrity da tag é conferido de verdade', async (t) => {
-  const { pagina, erros } = await abrirPeloDist('especime/index.html', { bytesExtras: ';\n' });
+  const { pagina, erros } = await abrirPeloDist('especime/index.html', { corromper: 'aula-usp.js' });
   t.after(() => pagina.close());
   const montado = await pagina.evaluate(() => document.body?.dataset.montado);
   assert.equal(montado, undefined, 'a aula montou com o runtime corrompido — o integrity não está sendo conferido');
