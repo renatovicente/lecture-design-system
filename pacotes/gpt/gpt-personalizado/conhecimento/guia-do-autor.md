@@ -263,9 +263,57 @@ Do espécime: `especime/matematica.html#passo-a-passo`.
 - **Cromo escrito à mão** — cabeçalho, rodapé, número de slide, logo, mapa. Tudo isso o sistema desenha; escrito de novo, aparece duas vezes.
 - **`style`, em qualquer forma**, e qualquer elemento ou atributo fora do contrato. É `vocabulario.style` e companhia, e a correção é sempre usar o layout ou o componente que faz aquilo.
 - **`script` dentro de uma `section`.** O registro de uma demo mora fora dos slides (`50-graficos-diagramas-demos.md`).
-- **Conteúdo que não cabe.** Os limites do contrato estão medidos para a projeção: quando um deles acusa, a resposta é cortar ou dividir o slide, nunca reduzir o texto.
+- **Conteúdo que não cabe.** Os limites do contrato estão medidos para a projeção: quando um deles acusa, a resposta é cortar ou dividir o slide, nunca reduzir o texto. Quanto é "não cabe", em cada caso, está na seção seguinte.
 
 O que pode entrar em cada layout, na ordem, está em `20-layouts.md`; o trecho pronto de cada componente, em `30-componentes.md`.
+
+## Quanto cabe
+
+Esta é a tabela dos números: todo limite que o contrato declara, com a medida e o que ela mede. Ela sai de `contrato/contrato.json` por `npm run guia`, e é do mesmo contrato que o validador lê — o que está aqui é o que ele vai cobrar. Escrever dentro dos limites desde a primeira versão sai mais barato do que descobri-los um a um pelo que o validador recusou.
+
+Três avisos de leitura:
+
+- **um segmento é o trecho entre `<br>`.** Um título de duas linhas tem dois segmentos, e o limite de caracteres vale para cada um separadamente, não para a soma. O limite de linhas é o irmão dele medido na página desenhada, quando o título quebra sozinho.
+- **no código, a coluna é o caractere:** o limite de colunas de um `pre` é o comprimento da linha mais longa, e o de uma `table` é o número de colunas dela.
+- **aqui está o número; a regra que o cobra e a frase que ela imprime estão em `60-validador.md`.** A mensagem de um limite traz sempre a medida encontrada e, entre parênteses, o máximo — de modo que você saiba de quanto está passando.
+
+<!-- gerado:tabela-de-limites -->
+| limite | quanto cabe | onde |
+|---|---|---|
+| `blocos.min` | no mínimo 2 | os blocos da aula |
+| `blocos.maxFileira` | no máximo 8 na fileira de quadrados do cabeçalho | os blocos da aula |
+| `capa.h1.caracteresPorSegmento` | no máximo 23 caracteres por segmento | o título da capa |
+| `capa.h1.segmentos` | no máximo 2 segmentos | o título da capa |
+| `capa.h1.linhas` | no máximo 2 linhas | o título da capa |
+| `abertura.h2.caracteresPorSegmento` | no máximo 20 caracteres por segmento | o título da abertura |
+| `abertura.h2.segmentos` | no máximo 2 segmentos | o título da abertura |
+| `abertura.h2.linhas` | no máximo 2 linhas | o título da abertura |
+| `abertura.dataCurto.caracteres` | no máximo 10 caracteres | o `data-curto` da abertura |
+| `abertura.h2.caracteresSemDataCurto` | no máximo 10 caracteres, quando a abertura não traz `data-curto` | o título da abertura |
+| `pergunta.caracteres` | no máximo 90 caracteres | a `p.pergunta` da abertura |
+| `titulo.caracteresPorSegmento` | no máximo 50 caracteres por segmento | o título dos outros layouts |
+| `titulo.segmentos` | no máximo 2 segmentos | o título dos outros layouts |
+| `titulo.linhas` | no máximo 2 linhas | o título dos outros layouts |
+| `lide.caracteres` | no máximo 120 caracteres | o `p.lide` |
+| `corpo.palavras` | no máximo 90 palavras | o corpo do slide de conteúdo, sem título, lide, código, TeX nem notas |
+| `coluna.palavras` | no máximo 60 palavras | cada coluna de `div.colunas` |
+| `lista.itens` | no máximo 5 itens | cada `ul` ou `ol.passos` |
+| `destaque.maxPorSlide` | no máximo 2 por slide | os `aside.destaque` |
+| `alerta.maxPorSlide` | no máximo 1 por slide | os `aside.alerta` |
+| `rotulo.caracteres` | no máximo 24 caracteres | o `data-rotulo` |
+| `afirmacao.caracteres` | no máximo 120 caracteres | o `p.afirmacao` |
+| `fonte.caracteres` | no máximo 80 caracteres | o `p.fonte` |
+| `legenda.caracteres` | no máximo 140 caracteres | o `figcaption` |
+| `sintese.itens` | no máximo 3 itens | a `ol.sintese` do encerramento |
+| `sintese.caracteresPorItem` | no máximo 80 caracteres por item | a `ol.sintese` do encerramento |
+| `proxima.caracteres` | no máximo 90 caracteres | o `p.proxima` do encerramento |
+| `codigo.linhas` | no máximo 16 linhas | cada `pre` |
+| `codigo.colunas` | no máximo 64 colunas | cada `pre` |
+| `tabela.linhasDeDados` | no máximo 8 linhas de dados | cada `table` |
+| `tabela.colunas` | no máximo 6 colunas | cada `table` |
+| `diagrama.nos` | no máximo 15 nós | cada `figure.diagrama` (fase 2: erro hoje) |
+| `saida.megabytes` | no máximo 10 megabytes | o arquivo que `aula-usp build` escreve |
+<!-- /gerado -->
 
 ## O vocabulário inteiro
 

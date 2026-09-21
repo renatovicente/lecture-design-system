@@ -8,11 +8,12 @@ import { fileURLToPath } from 'node:url';
 const RAIZ = new URL('../', import.meta.url);
 
 // Que bloco gerado entra em que arquivo. A prosa em volta é escrita à mão (Tarefas 3 e 5); só o
-// que está entre os marcadores é sobrescrito. As quatro tabelas são as que a spec 5.6 nomeia —
+// que está entre os marcadores é sobrescrito. Quatro das cinco tabelas são as que a spec 5.6 nomeia —
 // "as tabelas de layouts, vocabulário, papéis e regras do guia são geradas dele" —, mais o
-// esqueleto, que é o próprio modelo copiado.
+// esqueleto, que é o próprio modelo copiado, e mais a de limites, que a spec não pede e o aceite do
+// marco 7 cobrou (ver tabelaDeLimites).
 export const BLOCOS_POR_ARQUIVO = {
-  'guia/10-estrutura.md': ['modelo', 'tabela-de-vocabulario'],
+  'guia/10-estrutura.md': ['modelo', 'tabela-de-vocabulario', 'tabela-de-limites'],
   'guia/20-layouts.md': ['tabela-de-layouts', 'exemplos-por-layout'],
   'guia/30-componentes.md': ['tabela-de-papeis'],
   'guia/60-validador.md': ['tabela-de-regras'],
@@ -159,6 +160,94 @@ export function tabelaDePapeis(contrato) {
     + `Fora da medição: ${emCodigo(contrato.papeis.excecoes)}.`;
 }
 
+// O que a ÚLTIMA parte da chave mede, em palavras. A chave traz o número e quase sempre a unidade,
+// mas nem sempre: `blocos.maxFileira` são oito o quê? Sem isto a tabela publicaria número sem
+// unidade, que é o que um professor não consegue usar. O mapa é pela última parte, e não pela chave
+// inteira, porque o vocabulário é fechado e reusado — oito dos 33 limites terminam em `caracteres` —,
+// então um limite novo com terminação conhecida não precisa de palavra nova nenhuma.
+const UNIDADE = {
+  min: '',
+  maxFileira: 'na fileira de quadrados do cabeçalho',
+  maxPorSlide: 'por slide',
+  caracteres: 'caracteres',
+  caracteresPorSegmento: 'caracteres por segmento',
+  caracteresPorItem: 'caracteres por item',
+  caracteresSemDataCurto: 'caracteres, quando a abertura não traz `data-curto`',
+  segmentos: 'segmentos',
+  linhas: 'linhas',
+  linhasDeDados: 'linhas de dados',
+  colunas: 'colunas',
+  palavras: 'palavras',
+  itens: 'itens',
+  nos: 'nós',
+  megabytes: 'megabytes',
+};
+
+// Um só dos 33 é piso, e não teto. Uma tabela com "máximo" no cabeçalho mentiria sobre ele — a aula
+// precisa de PELO MENOS dois blocos —, então o sentido entra na célula, e a linha se lê inteira fora
+// de contexto, que é como um modelo a cita.
+const PISOS = new Set(['min']);
+
+// O que o PREFIXO da chave nomeia. É o "onde" que a chave abrevia: `sintese` é a `ol.sintese` do
+// encerramento, `saida` é o arquivo que o build escreve. Vinte e dois prefixos para 33 limites, e
+// aqui também um limite novo de prefixo conhecido entra sem palavra nova.
+const ONDE = {
+  blocos: 'os blocos da aula',
+  'capa.h1': 'o título da capa',
+  'abertura.h2': 'o título da abertura',
+  'abertura.dataCurto': 'o `data-curto` da abertura',
+  pergunta: 'a `p.pergunta` da abertura',
+  titulo: 'o título dos outros layouts',
+  lide: 'o `p.lide`',
+  corpo: 'o corpo do slide de conteúdo, sem título, lide, código, TeX nem notas',
+  coluna: 'cada coluna de `div.colunas`',
+  lista: 'cada `ul` ou `ol.passos`',
+  destaque: 'os `aside.destaque`',
+  alerta: 'os `aside.alerta`',
+  rotulo: 'o `data-rotulo`',
+  afirmacao: 'o `p.afirmacao`',
+  fonte: 'o `p.fonte`',
+  legenda: 'o `figcaption`',
+  sintese: 'a `ol.sintese` do encerramento',
+  proxima: 'o `p.proxima` do encerramento',
+  codigo: 'cada `pre`',
+  tabela: 'cada `table`',
+  diagrama: 'cada `figure.diagrama` (fase 2: erro hoje)',
+  saida: 'o arquivo que `aula-usp build` escreve',
+};
+
+// A quinta tabela, e a única que a spec 5.6 não pede. Ela existe porque o aceite do marco 7 mediu o
+// custo de ela não existir: um agente com só o pacote na mão errou o título da capa na primeira
+// tentativa, porque `capa.h1.caracteresPorSegmento` não aparecia em nenhum dos onze arquivos do guia
+// — o `acao` de `limites.titulo` não cita número, e o único exemplo de mensagem do guia mostra o do
+// `h2`. O número é sempre do contrato; o que se escreve aqui são as PALAVRAS em volta dele.
+//
+// Plana, e na ordem do contrato. As chaves agrupam por prefixo, e a tentação é virar subtítulos —
+// mas 33 limites cabem em 22 prefixos, e dezessete desses prefixos têm um limite só: seriam 22
+// subtítulos para 33 linhas, e a chave inteira deixaria de existir numa linha só, que é justamente o
+// que um modelo procura. O agrupamento que as chaves carregam vira a coluna "onde", não subtítulo. A
+// ordem é a do contrato porque ela é a de quem escreve a aula — capa, abertura, título, corpo,
+// componentes, encerramento, saída —, e nela as chaves de mesmo prefixo já saem vizinhas.
+//
+// Erra alto quando falta palavra para uma chave, pelo mesmo motivo de blocoDeExemplos: um limite
+// publicado como "no máximo 8 undefined" é pior do que um `npm run guia` que para e diz o que falta.
+export function tabelaDeLimites(contrato) {
+  const linhas = Object.entries(contrato.limites).map(([chave, valor]) => {
+    const corte = chave.lastIndexOf('.');
+    if (corte < 0) throw new Error(`o limite "${chave}" não tem prefixo — a chave precisa de um ponto`);
+    const prefixo = chave.slice(0, corte);
+    const ultima = chave.slice(corte + 1);
+    if (ONDE[prefixo] === undefined) throw new Error(`o limite "${chave}" não tem palavra para o prefixo "${prefixo}"`);
+    if (UNIDADE[ultima] === undefined) throw new Error(`o limite "${chave}" não tem unidade para "${ultima}"`);
+    // String(valor) e o filtro por string vazia, não por falsidade: um limite de valor 0 é um número
+    // como outro qualquer, e `filter(Boolean)` o apagaria da frase sem ninguém ver.
+    const quanto = [PISOS.has(ultima) ? 'no mínimo' : 'no máximo', String(valor), UNIDADE[ultima]]
+      .filter((parte) => parte !== '').join(' ');
+    return `| \`${chave}\` | ${quanto} | ${ONDE[prefixo]} |`;
+  });
+  return tabela(['limite', 'quanto cabe', 'onde'], linhas);
+}
+
 // O esqueleto, lido do próprio modelo. É a guarda que faltava ao trecho que o guia mostrava: antes,
 // a cópia era conferida à mão uma vez e nunca mais.
 export function blocoDoModelo(raiz) {
@@ -302,6 +391,7 @@ export async function blocosGerados({ raiz = RAIZ } = {}) {
     'tabela-de-vocabulario': tabelaDeVocabulario(contrato),
     'tabela-de-layouts': tabelaDeLayouts(contrato),
     'exemplos-por-layout': blocoDeExemplos(contrato, await exemplosPorLayout(raiz)),
+    'tabela-de-limites': tabelaDeLimites(contrato),
     'tabela-de-papeis': tabelaDePapeis(contrato),
     'tabela-de-regras': tabelaDeRegras(contrato),
   };
