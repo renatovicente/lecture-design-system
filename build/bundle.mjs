@@ -93,8 +93,14 @@ export async function empacotar({ raiz, escrever = true } = {}) {
   // 1. o motor de interação, que o build do marco 5b põe no lugar da tag do runtime (spec 3.3 etapa
   //    4). motor/dist.js, não motor/motor.js sozinho: motor.js só cobre navegação e passos, e a spec
   //    pede também notas, visão geral, apresentador e impressão (achado I1 da revisão final do 5a).
-  //    NÃO é satélite: entra por <script src> na aula construída, não por import() — quem confere o
-  //    integrity dele, quando houver, é a tag, como a de aula-usp.js.
+  //    NÃO é satélite, e também NÃO tem lacuna de SRI — este comentário já disse o contrário, e o
+  //    contrário era falso. `build/embutir.mjs` lê ESTE arquivo do disco e o põe como `textContent`
+  //    de um <script> SEM src (`motor.textContent = await readFile(...)`): ele nunca é buscado pela
+  //    rede, em modo nenhum. Guardado por 'a tag do runtime some e o motor embutido entra no lugar
+  //    dela', em tests/unit/embutir.test.mjs, que exige a IGUALDADE entre um script sem src da aula
+  //    construída e os bytes deste arquivo. SRI protege as buscas que o sistema faz; aqui não há
+  //    busca, e um `integrity` seria guarda sem superfície — os bytes já estão dentro do arquivo que
+  //    o leitor abre, e quem adultera o HTML construído adultera o motor direto.
   guardar('aula-usp-motor.js', await esbuild.build({ ...COMUM, absWorkingDir: dir, entryPoints: ['motor/dist.js'], format: 'iife', globalName: 'AulaUSPMotor' }));
 
   // 2. matemática: KaTeX + a CSS dele + as fontes dele. Injeta a própria folha ao ser importado,
