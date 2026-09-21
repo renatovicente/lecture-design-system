@@ -10,7 +10,7 @@ Como os outros dois fluxos de navegador, ele depende da tag do runtime apontando
 
 O jeito bom de usar este fluxo é com o GPT personalizado do Aula USP, que vem pronto no pacote do sistema. Nele:
 
-- **os arquivos de conhecimento trazem o guia inteiro**, mais o modelo e a aula-exemplo;
+- **os arquivos de conhecimento trazem o guia inteiro**, mais o modelo, a aula-exemplo, o contrato que o validador lê e os seis decks do espécime;
 - **as instruções trazem as regras essenciais e o procedimento**, e só isso: elas têm um teto de oito mil caracteres, que não dá para o guia inteiro — só a tabela de regras do validador já ocuparia a maior parte dele. Por isso o guia mora no conhecimento, e as instruções mandam consultá-lo;
 - **os iniciadores de conversa** já pedem a aula na forma certa.
 

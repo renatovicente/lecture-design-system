@@ -1637,7 +1637,7 @@ O botão de copiar depende de contexto seguro, e um artifact é servido por `htt
 
 ## Como trabalhar, na prática
 
-1. **Dê o guia ao modelo.** Num Projeto do Claude, os arquivos de conhecimento do projeto trazem o guia inteiro, o modelo e a aula-exemplo; num fio avulso, anexe o pacote. Sem isso, o modelo escreve HTML comum e você passa a primeira meia hora corrigindo vocabulário.
+1. **Dê o guia ao modelo.** Num Projeto do Claude, os arquivos de conhecimento do projeto trazem o guia inteiro, o modelo, a aula-exemplo, o contrato que o validador lê e os seis decks do espécime; num fio avulso, anexe o pacote. Sem isso, o modelo escreve HTML comum e você passa a primeira meia hora corrigindo vocabulário.
 2. **Peça a aula como artifact**, e escreva com ele: um bloco por vez, conferindo na tela.
 3. **Tecle V a cada rodada**, copie a lista e cole na conversa. Zero erros antes de seguir para o bloco seguinte.
 4. **Peça o arquivo num bloco de código** quando a aula estiver pronta, e salve como `.html`.
@@ -1659,7 +1659,7 @@ Como os outros dois fluxos de navegador, ele depende da tag do runtime apontando
 
 O jeito bom de usar este fluxo é com o GPT personalizado do Aula USP, que vem pronto no pacote do sistema. Nele:
 
-- **os arquivos de conhecimento trazem o guia inteiro**, mais o modelo e a aula-exemplo;
+- **os arquivos de conhecimento trazem o guia inteiro**, mais o modelo, a aula-exemplo, o contrato que o validador lê e os seis decks do espécime;
 - **as instruções trazem as regras essenciais e o procedimento**, e só isso: elas têm um teto de oito mil caracteres, que não dá para o guia inteiro — só a tabela de regras do validador já ocuparia a maior parte dele. Por isso o guia mora no conhecimento, e as instruções mandam consultá-lo;
 - **os iniciadores de conversa** já pedem a aula na forma certa.
 
