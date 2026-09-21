@@ -27,10 +27,12 @@ aula-usp
 Ela imprime o uso e termina com código 2:
 
 ```
-uso: aula-usp servir <pasta> [--porta 8765]
+uso: aula-usp novo <pasta> --unidade ime
+       aula-usp servir <pasta> [--porta 8765]
        aula-usp validar <pasta> [--json]
        aula-usp build <pasta> [--sem-pdf]
        aula-usp dist
+       aula-usp pacotes
 ```
 
 Se em vez disso vier "comando não encontrado", não insista no `npm link`: chame o arquivo pelo caminho, que faz exatamente o mesmo.
@@ -39,7 +41,7 @@ Se em vez disso vier "comando não encontrado", não insista no `npm link`: cham
 node caminho/para/lecture-design-system/bin/aula-usp.mjs validar minha-aula
 ```
 
-Dos quatro comandos, três são seus. `aula-usp dist` é manutenção do sistema, e quem escreve aula não tem motivo para chamá-lo.
+Dos seis comandos, quatro são seus. `aula-usp dist` e `aula-usp pacotes` são manutenção do sistema, e quem escreve aula não tem motivo para chamá-los.
 
 ## Começar uma aula
 
