@@ -15,11 +15,12 @@ Este repositório guarda as **aulas** de uma disciplina, escritas no design syst
 
 O `index.html` é o fonte: o `<head>` com as metas e a tag do runtime, e o `<body>` como uma sequência de `<section>`, uma por slide. Não há folha de estilo, script de página nem pasta de projeto — o runtime traz o sistema consigo.
 
-Comece toda aula copiando o modelo do Aula USP, ou uma aula anterior deste repositório que já valide.
+Comece toda aula com `aula-usp novo`: ele cria a pasta a partir do esqueleto do sistema, já com `unidade` e `data` preenchidas. Não copie o modelo à mão nem parta de um caminho do repositório do Aula USP — quem instalou a CLI não precisa dele.
 
 ## Os comandos
 
 ```bash
+aula-usp novo    <pasta> --unidade ime   # cria a aula; --unidade é obrigatória
 aula-usp validar <pasta>        # o ciclo curto: rode a cada bloco novo
 aula-usp servir  <pasta>        # ver a aula no navegador enquanto escreve
 aula-usp build   <pasta>        # o HTML autocontido e o PDF, em <pasta>/dist/

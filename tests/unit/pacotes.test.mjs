@@ -246,3 +246,71 @@ test('references/ traz exatamente os arquivos de guia/, e nenhum de guia/pacotes
     );
   }
 });
+
+// ---------------------------------------------------------------------------------------------
+// 7. Um começo só, e ele é um comando (I2 da revisão final do 6c).
+
+// O pacote entregue ensinava TRÊS começos diferentes para uma aula — `assets/modelo.html` no
+// SKILL.md, `copie modelos/aula/index.html` em 00-principios.md e um `cp -r` em 70-fluxo-terminal.md
+// —, nenhum deles `aula-usp novo`, e dois mandando o agente para caminhos do repositório do SISTEMA.
+// `tests/aceite/roteiro.md` proíbe exatamente isso: "Nada mais deste repositório. … Se o agente
+// puder ler o repositório, o aceite deixa de medir o pacote" — e é este pacote que o marco 7 mede.
+//
+// O que esta guarda NÃO é: análise semântica de prosa. Ela é um alarme sobre as formas concretas que
+// estavam escritas — um `cp -r` do modelo, "copie modelos/aula/index.html", "copiando o modelo do
+// Aula USP". Uma quarta forma de dizer a mesma coisa passa por ela; o que ela garante é que ESTAS
+// não voltam caladas, e que os dois arquivos de instrução que pressupõem terminal continuam
+// ensinando o comando que cria a aula.
+//
+// Os outros dois pacotes (Claude e GPT) ficam de fora da primeira metade de propósito: naqueles
+// ambientes não há terminal, e mandar chamar `aula-usp novo` ali seria ensinar o impossível.
+const ENSINAM_NOVO = [
+  'pacotes/skill/aula-usp/SKILL.md',
+  'pacotes/repositorio-de-disciplina/AGENTS.md',
+];
+
+// Instalar a CLI é outra coisa: `cd caminho/para/lecture-design-system` + `npm link` é o único jeito
+// que existe hoje (publicar é da fase 3), e continua legítimo dentro dos pacotes.
+const COPIA_DO_MODELO = [
+  /cp\s+-r[^\n]*modelos\/aula/,
+  /copi[ae][^\n]{0,60}modelos\/aula\/index\.html/i,
+  /copiando o modelo do Aula USP/i,
+];
+
+test('os pacotes ensinam `aula-usp novo` como começo, e nenhum manda copiar o modelo do repositório', () => {
+  for (const destino of ENSINAM_NOVO) {
+    assert.match(
+      texto(destino),
+      /aula-usp novo/,
+      `${destino} pressupõe terminal e não ensina \`aula-usp novo\` — é o comando que cria a aula`,
+    );
+  }
+  const arquivos = PACOTES.flatMap((pacote) => arquivosDe(pacote));
+  assert.ok(arquivos.length > 0, 'pacotes/ está vazio — o resto desta guarda não mede nada');
+  for (const caminho of arquivos) {
+    const conteudo = texto(caminho);
+    for (const padrao of COPIA_DO_MODELO) {
+      assert.doesNotMatch(
+        conteudo,
+        padrao,
+        `${caminho} manda copiar o modelo por um caminho do repositório do sistema, que quem instala o pacote não tem`,
+      );
+    }
+  }
+});
+
+// ---------------------------------------------------------------------------------------------
+// 8. A tabela "Onde procurar cada coisa" cobre todo o references/ (M8 da revisão final).
+
+// Ela cobria 9 dos 11 — faltavam justamente 72-artifact-claude.md e 73-chatgpt.md, os dois ambientes
+// em que a spec 10.2 diz que a skill é usada "sem alteração". Um arquivo que está em references/ e
+// não está na tabela é um arquivo que o agente não sabe que pode abrir.
+test('a tabela do SKILL.md lista todos os arquivos de references/', () => {
+  const naTabela = [...texto('pacotes/skill/aula-usp/SKILL.md').matchAll(/^\| `references\/([^`]+)` \|/gm)]
+    .map(([, nome]) => nome).sort();
+  assert.deepEqual(
+    naTabela,
+    arquivosDoGuia(RAIZ),
+    'a tabela "Onde procurar cada coisa" divergiu de references/ — acerte guia/pacotes/skill.md',
+  );
+});

@@ -72,7 +72,7 @@ O bloco abaixo é o sistema inteiro em um punhado de linhas. Ele entra **literal
 | `72-artifact-claude.md` | a aula como artifact do Claude, e o que não funciona lá dentro |
 | `73-chatgpt.md` | entregar a aula pelo ChatGPT |
 
-Um caminho curto para a primeira aula: leia este arquivo e `10-estrutura.md`, copie `modelos/aula/index.html`, escreva, e use `60-validador.md` quando o validador falar. `exemplos/descida-do-gradiente/index.html` é uma aula inteira, escrita dentro do sistema, para ver como fica.
+Um caminho curto para a primeira aula: leia este arquivo e `10-estrutura.md`, crie a pasta com `aula-usp novo minha-aula --unidade ime` — que copia o esqueleto já com `unidade` e `data` preenchidas —, escreva, e use `60-validador.md` quando o validador falar. Sem terminal, o esqueleto é o que `10-estrutura.md` mostra inteiro, e `71-fluxo-chat.md` conta o resto. A aula-exemplo — `assets/exemplo.html` nos pacotes para agentes, `exemplos/descida-do-gradiente/` no repositório — é uma aula inteira, escrita dentro do sistema, para ver como fica.
 
 <!-- guia/10-estrutura.md -->
 
@@ -160,7 +160,7 @@ O que há para reparar nele:
 - entre uma abertura e a seguinte ficam os slides daquele bloco — aqui, um de cada;
 - a indentação é livre; o sistema não a lê. A exceção é o interior de `<pre>`, onde o espaço é conteúdo (`30-componentes.md`).
 
-Comece copiando o arquivo inteiro e trocando o conteúdo. É mais rápido do que montá-lo de memória, e você herda de graça a ordem das seções e o par de aberturas.
+Com terminal, `aula-usp novo minha-aula --unidade ime` cria a pasta com este arquivo dentro e duas metas já preenchidas (`70-fluxo-terminal.md`). Sem terminal, copie o arquivo inteiro e troque o conteúdo. De um jeito ou de outro, partir deste esqueleto é mais rápido do que montá-lo de memória, e você herda de graça a ordem das seções e o par de aberturas.
 
 ## Os metadados
 
@@ -1285,23 +1285,31 @@ Se em vez disso vier "comando não encontrado", não insista no `npm link`: cham
 node caminho/para/lecture-design-system/bin/aula-usp.mjs validar minha-aula
 ```
 
-Dos seis comandos, quatro são seus. `aula-usp dist` e `aula-usp pacotes` são manutenção do sistema, e quem escreve aula não tem motivo para chamá-los.
+Dos seis comandos, quatro são seus — `novo`, `validar`, `servir` e `build`, nesta ordem, e as quatro seções seguintes são eles. `aula-usp dist` e `aula-usp pacotes` são manutenção do sistema, e quem escreve aula não tem motivo para chamá-los.
 
-## Começar uma aula
+## `aula-usp novo` — começar uma aula
 
-A aula é uma pasta com um `index.html` dentro, e um `img/` ao lado quando há imagens de arquivo. Comece copiando o modelo:
+A aula é uma pasta com um `index.html` dentro, e um `img/` ao lado quando há imagens de arquivo. É este comando que a cria:
 
 ```bash
-cp -r caminho/para/lecture-design-system/modelos/aula minha-aula
+aula-usp novo minha-aula --unidade ime
 ```
 
-O que você copiou é o esqueleto de `10-estrutura.md`, com capa, duas aberturas, dois slides de conteúdo e encerramento. Troque o conteúdo, preencha as metas do `<head>` e acrescente seções.
+```
+minha-aula criada a partir de modelos/aula — unidade ime, data 2026-09-20
+```
 
-Uma observação sobre a tag do `<script>` que veio no modelo: ela aponta para a CDN, com a versão exata e a soma de integridade — é a forma que o `aula-usp pacotes` escreve. Esse endereço ainda não resolve, porque o pacote não está publicado (fase 3), e **não faz diferença neste fluxo**, porque `aula-usp servir` troca a tag pelo runtime local e `aula-usp build` a troca pelo motor embutido. Os dois a reconhecem pelo `src` terminado em `/aula-usp.js`, não pelo endereço. O que não funciona, até a publicação, é abrir o arquivo copiado direto no navegador com dois cliques: para ver a aula, use `servir`.
+`--unidade` é obrigatória e aceita as unidades do sistema (`ime` ou `ifusp` hoje); a data é a de hoje, pelo relógio da sua máquina. As outras três metas — `disciplina`, `aula` e `professor` — ficam com o texto de exemplo, para você as preencher: um nome de professor inventado pelo comando seria pior que um lugar visivelmente vazio.
+
+O comando não sobrescreve pasta que já tenha conteúdo, e recusa uma unidade que não exista, com código 2 e sem criar nada. Uma pasta vazia que você já tenha criado é aceita.
+
+O que ele cria é o esqueleto de `10-estrutura.md`, com capa, duas aberturas, dois slides de conteúdo e encerramento. Troque o conteúdo, preencha as metas que faltam e acrescente seções.
+
+Uma observação sobre a tag do `<script>` que veio no esqueleto: ela aponta para a CDN, com a versão exata e a soma de integridade — é a forma que o `aula-usp pacotes` escreve. Esse endereço ainda não resolve, porque o pacote não está publicado (fase 3), e **não faz diferença neste fluxo**, porque `aula-usp servir` troca a tag pelo runtime local e `aula-usp build` a troca pelo motor embutido. Os dois a reconhecem pelo `src` terminado em `/aula-usp.js`, não pelo endereço. O que não funciona, até a publicação, é abrir o arquivo criado direto no navegador com dois cliques: para ver a aula, use `servir`.
 
 ## O ciclo
 
-Três comandos, e você passa a aula inteira nos dois primeiros.
+Criada a pasta, são três comandos, e você passa a aula inteira nos dois primeiros.
 
 ### `aula-usp validar` — o ciclo curto
 

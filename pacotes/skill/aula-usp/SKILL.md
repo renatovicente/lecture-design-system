@@ -26,7 +26,7 @@ Não invente o ambiente: rode o comando e leia a resposta.
 ## Procedimento
 
 1. **Leia `references/00-principios.md` e `references/10-estrutura.md`** antes do primeiro slide.
-2. **Comece de `assets/modelo.html`.** É o esqueleto que valida; trocar o conteúdo dele é mais rápido e mais seguro que montar o arquivo de memória.
+2. **Comece com `aula-usp novo <pasta> --unidade <ime|ifusp>`.** Ele cria a pasta com o esqueleto que valida e já preenche `unidade` e `data`; as outras três metas ficam para o passo 3. No modo navegador, onde não há comando, o mesmo esqueleto é `assets/modelo.html`. Não monte o arquivo de memória, e não copie nada de um caminho do repositório do sistema: você não o tem.
 3. **Pergunte o que falta** para preencher o `<head>`: unidade, disciplina, número da aula, data e professor. Todas as metas são obrigatórias.
 4. **Escreva bloco a bloco**, não a aula inteira de uma vez. Cada `section data-layout="abertura"` abre um bloco; os slides seguintes pertencem a ele.
 5. **Valide a cada bloco.** No modo terminal, `aula-usp validar <pasta>`; no modo navegador, peça a lista ao autor.
@@ -68,9 +68,11 @@ Quando uma regra acusar e você não souber o conserto, abra `references/60-vali
 | `references/60-validador.md` | a tabela de regras e o que fazer quando cada uma acusa |
 | `references/70-fluxo-terminal.md` | o modo terminal, de ponta a ponta |
 | `references/71-fluxo-chat.md` | o modo navegador, de ponta a ponta |
+| `references/72-artifact-claude.md` | a aula como artifact do Claude: fluxo do autor, e o que não funciona lá dentro |
+| `references/73-chatgpt.md` | a entrega pelo ChatGPT: fluxo do autor, e onde o arquivo costuma sair cortado |
 | `assets/modelo.html` | o esqueleto de onde toda aula começa |
 | `assets/exemplo.html` | uma aula inteira escrita dentro do sistema |
 
-A tabela lista o que você vai abrir; `references/` traz o guia inteiro, e nele também estão os dois fluxos que são do autor e não seus — a aula como artifact do Claude e a entrega pelo ChatGPT.
+A tabela cobre os onze arquivos de `references/`, que são o guia inteiro. Os dois últimos são fluxos do **autor**, não seus: você os lê para saber o que ele vai fazer com o arquivo que receber.
 
 Dois erros que este sistema vê o tempo todo, e que não custam nada evitar: **escrever o cromo à mão** — cabeçalho, rodapé, número de slide, logo — quando o sistema já o desenha, e **reduzir o texto para caber**, o que não existe aqui. Quando não couber, corte o conteúdo ou divida o slide em dois.

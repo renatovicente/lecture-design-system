@@ -82,7 +82,7 @@ O que há para reparar nele:
 - entre uma abertura e a seguinte ficam os slides daquele bloco — aqui, um de cada;
 - a indentação é livre; o sistema não a lê. A exceção é o interior de `<pre>`, onde o espaço é conteúdo (`30-componentes.md`).
 
-Comece copiando o arquivo inteiro e trocando o conteúdo. É mais rápido do que montá-lo de memória, e você herda de graça a ordem das seções e o par de aberturas.
+Com terminal, `aula-usp novo minha-aula --unidade ime` cria a pasta com este arquivo dentro e duas metas já preenchidas (`70-fluxo-terminal.md`). Sem terminal, copie o arquivo inteiro e troque o conteúdo. De um jeito ou de outro, partir deste esqueleto é mais rápido do que montá-lo de memória, e você herda de graça a ordem das seções e o par de aberturas.
 
 ## Os metadados
 
