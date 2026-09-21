@@ -1,0 +1,7 @@
+Quero começar uma aula nova — me pergunte o que você precisa saber antes de escrever.
+
+Faça uma aula de 12 slides sobre um tema que eu vou dizer, com três blocos, uma derivação passo a passo e um exercício.
+
+Aqui está a lista do validador da minha aula; corrija a causa de cada achado.
+
+Mostre o esqueleto de uma aula e explique o que o sistema desenha sozinho.
