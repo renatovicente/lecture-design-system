@@ -17,8 +17,6 @@ A versão é exata e vem acompanhada de um hash de integridade: se o arquivo na 
 
 **A tag já traz a versão e o hash reais; o endereço é que ainda não resolve.** Quem a escreve é o `aula-usp pacotes`, lendo a versão de `package.json` e o `integrity` de `dist/manifesto.json`, e ela chega pronta no modelo, nos exemplos e nos quatro pacotes para agentes. O que falta é o outro lado: o pacote não está publicado no npm — a publicação é da fase 3 do projeto —, então buscar esse endereço hoje não traz nada. Até lá, este fluxo se experimenta com `aula-usp servir` (`70-fluxo-terminal.md`), que troca a tag pelo runtime local; o resto deste arquivo vale igual nos dois casos.
 
-Um arquivo do repositório é exceção, e é deliberado: `especime/` continua apontando para o runtime local por caminho relativo, em todos os seus decks. O espécime é a base dos testes de integração, e um deles serve os arquivos por um servidor que não reescreve nada — é assim que ele prova que a tag escrita pelo autor chega ao navegador —, de modo que um endereço que ainda não resolve o deixaria sem o que carregar. O espécime também não vai dentro de nenhum pacote: o que vai é o modelo e o exemplo.
-
 Uma propriedade da tag vale conhecer antes de precisar dela: **se o runtime não carregar, a aula não some.** Sem internet, ou com a CDN fora do ar, nada é escondido e o HTML aparece cru — feio, sem grade e sem cor, mas legível, com o texto de todos os slides na tela.
 
 ## O que acontece quando a página abre
