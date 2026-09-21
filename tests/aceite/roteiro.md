@@ -42,13 +42,16 @@ ambientes carrega o sistema.
 
 Em cada ambiente da fase 1, o agente tem, e **só**:
 
-- `pacotes/skill/aula-usp/` — o `SKILL.md`, os onze `references/` e os dois `assets/`;
+- `pacotes/skill/aula-usp/` — **21 arquivos**: o `SKILL.md`, os onze `references/`, os dois
+  `assets/` e o acervo que o guia manda abrir, que o pacote passou a levar (`contrato/contrato.json`
+  e os seis decks de `especime/`);
 - a CLI no PATH, por `npm link` no repositório do sistema.
 
-**Nada mais deste repositório.** Nem `guia/`, nem `especime/`, nem `exemplos/`, nem o `AGENTS.md`.
-Se o agente puder ler o repositório, o aceite deixa de medir o pacote e passa a medir o repositório —
-que é justamente o que quem instala a skill não vai ter. Por isso a aula se escreve **fora** da
-árvore do sistema, numa pasta própria.
+**Nada mais deste repositório.** Nem `guia/`, nem `exemplos/`, nem o `AGENTS.md`, e nem as pastas
+`contrato/` e `especime/` do repositório — o que o agente tem delas é a cópia que viaja **dentro**
+do pacote, e é dessa cópia que o aceite mede. Se o agente puder ler o repositório, o aceite deixa de
+medir o pacote e passa a medir o repositório — que é justamente o que quem instala a skill não vai
+ter. Por isso a aula se escreve **fora** da árvore do sistema, numa pasta própria.
 
 ## Preparação
 
