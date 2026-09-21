@@ -14,6 +14,7 @@ A CLI vive em `bin/aula-usp.mjs`. Sem `npm link`, chame por `node bin/aula-usp.m
 
 | comando | faz |
 |---|---|
+| `aula-usp novo <pasta> --unidade ime` | copia `modelos/aula/` preenchendo `unidade` (da opção) e `data` (de hoje); não sobrescreve pasta que já tenha conteúdo |
 | `aula-usp servir <pasta> [--porta 8765]` | serve a aula com o runtime local de `dist/`; troca o endereço da tag e remove o `integrity` |
 | `aula-usp validar <pasta> [--json]` | regras estáticas e de carga e, havendo Chrome, as de composição |
 | `aula-usp build <pasta> [--sem-pdf]` | as sete etapas da spec 3.3; escreve só em `<pasta>/dist/` |
@@ -22,7 +23,7 @@ A CLI vive em `bin/aula-usp.mjs`. Sem `npm link`, chame por `node bin/aula-usp.m
 
 Códigos de saída (spec 8.1): 0 sem erros, avisos permitidos; 1 com erros de validação; 2 com falha de ambiente. Cada comando aceita **só as suas** flags: `--json` em `build` ou `--porta` em `validar` saem com o uso e código 2, como uma flag inexistente — melhor recusar que ignorar em silêncio.
 
-Um comando que a spec 8.1 lista ainda não existe: `aula-usp novo <pasta> --unidade ime`. Ele chega no marco 6c.
+Os seis comandos da spec 8.1 existem. Das cinco metas do contrato, `novo` preenche duas: as outras três ficam com o texto de exemplo do modelo, porque um `professor` inventado seria pior que um lugar visivelmente vazio.
 
 `aula-usp pacotes` reescreve a tag em `modelos/` e `exemplos/`, e **não** em `especime/`, que a spec 8.1 também nomeia. É desvio consciente, com a razão inteira ao lado de `PASTAS_COM_TAG` em `build/pacotes.mjs`: enquanto o pacote não está publicado (fase 3) a URL da CDN não resolve, e o espécime é servido por um segundo servidor que **não** reescreve a tag — é ele que prova o caminho de produção. Medido: com as seis tags do espécime fixadas, 12 testes de integração caem. O espécime não vai dentro de nenhum pacote; o modelo e o exemplo vão.
 
@@ -33,7 +34,7 @@ Node ≥ 20.6, ES modules. `playwright-core` usa o Google Chrome instalado (cana
 ## Testes
 
 ```bash
-npm test                 # 34 arquivos em tests/unit/, sem navegador (linkedom)
+npm test                 # 37 arquivos em tests/unit/, sem navegador (linkedom)
 npm run test:integracao  # 22 arquivos em tests/integracao/, Chrome de verdade
 ```
 
