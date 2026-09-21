@@ -351,6 +351,38 @@ test('figure sem classe não aceita script nem dispensa img/svg, em nenhuma fase
   }
 });
 
+// Achado da revisão da Tarefa 1 (Important 2): as duas chaves do Passo 1 aceitavam qualquer
+// <script>, sem olhar o atributo type — a spec 5.5 pareia o tipo ao pai, literal: "script com
+// type="application/json" dentro de figure.grafico ou com type="text/vnd.graphviz" dentro de
+// figure.diagrama". exatamenteUmDe:["script"] media só "existe um script", não "existe o script
+// certo", e a revisão mediu isso trocando o contrato em memória e achando figure.grafico limpo com
+// um script sem type nenhum. O conserto pareia o tipo dentro do próprio seletor do contrato
+// (script[type="…"]) — casaSeletor (validador/sequencia.js:26) já usa elemento.matches(seletor), e
+// matches() aceita seletor de atributo; nenhum código novo, só o dado ficando mais preciso.
+test('o type do script casa com a classe do pai: json em grafico, graphviz em diagrama', () => {
+  const casos = [
+    ['grafico', 'text/vnd.graphviz'], // tipo de diagrama dentro de grafico
+    ['diagrama', 'application/json'], // tipo de grafico dentro de diagrama
+    ['grafico', ''], // sem type nenhum — o <script>window.x = 1</script> que a revisão mediu
+  ];
+  for (const [classe, tipo] of casos) {
+    const atributoType = tipo ? ` type="${tipo}"` : '';
+    const html = slide(`  <h2>Título</h2>\n  <figure class="${classe}"><script${atributoType}>{}</script></figure>\n`);
+    const achados = rodar(html, todas, { fase: 2 }).filter((a) => a.severidade === 'erro');
+    assert.deepEqual(
+      achados.map((a) => a.regra).sort(),
+      ['estrutura.fora-do-layout', 'estrutura.obrigatorio'],
+      `figure.${classe} com script tipo "${tipo || '(ausente)'}" deveria acusar na fase 2`,
+    );
+  }
+
+  // Os dois pareamentos certos continuam limpos na fase 2: não é um afrouxamento geral do script.
+  const grafico = slide('  <h2>Título</h2>\n  <figure class="grafico"><script type="application/json">{}</script></figure>\n');
+  assert.deepEqual(rodar(grafico, todas, { fase: 2 }).filter((a) => a.severidade === 'erro'), []);
+  const diagrama = slide('  <h2>Título</h2>\n  <figure class="diagrama"><script type="text/vnd.graphviz">digraph{}</script></figure>\n');
+  assert.deepEqual(rodar(diagrama, todas, { fase: 2 }).filter((a) => a.severidade === 'erro'), []);
+});
+
 // Achado da revisão final (Minor, item 8): um data-curto comprido fora da abertura era acusado duas
 // vezes — por vocabulario.atributo (layout errado) e por limites.nome-curto (comprimento), que varria
 // toda section, não só abertura. Um dono só: vocabulario.atributo, que já sabe de layout.

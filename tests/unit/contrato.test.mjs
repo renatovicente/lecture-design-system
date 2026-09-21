@@ -34,6 +34,15 @@ test('blocos de corpo, grades e filhos (5.3)', () => {
   assert.deepEqual(contrato.blocosDeCorpoFase2, ['figure.grafico', 'figure.diagrama']);
   assert.deepEqual(contrato.grades, { '12': 1, '6-6': 2, '8-4': 2, '4-8': 2, '4-4-4': 3 });
   assert.deepEqual(contrato.filhos.figure, { exatamenteUmDe: ['img', 'svg'], opcionais: ['figcaption'] });
+  // Spec 5.5, literal: "na fase 2, também script com type="application/json" dentro de
+  // figure.grafico ou com type="text/vnd.graphviz" dentro de figure.diagrama" — o tipo é pareado
+  // ao pai, não uma lista solta de tipos aceitos em qualquer um dos dois. Sem esta guarda, uma
+  // mudança que igualasse as duas chaves (ou trocasse o seletor por um "script" sem o atributo)
+  // passaria muda aqui e só apareceria no comportamento do validador.
+  assert.deepEqual(contrato.filhos['figure.grafico'],
+    { exatamenteUmDe: ['script[type="application/json"]'], opcionais: ['figcaption'], fase: 2 });
+  assert.deepEqual(contrato.filhos['figure.diagrama'],
+    { exatamenteUmDe: ['script[type="text/vnd.graphviz"]'], opcionais: ['figcaption'], fase: 2 });
   assert.deepEqual(contrato.filhos['div.demo'], { opcionais: ['img.estatico'] });
 });
 
