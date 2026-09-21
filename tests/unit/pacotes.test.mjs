@@ -291,6 +291,31 @@ test('nenhum arquivo de pacote cita o modelo ou o exemplo pelo caminho do reposi
   }
 });
 
+// E a terceira metade, que é sobre o SENTIDO do que sai da troca, não sobre a mecânica dela.
+//
+// `apontar` troca uma das formas por um arquivo: `exemplos/descida-do-gradiente/` — uma PASTA — vira
+// `assets/exemplo.html`. A única ocorrência de hoje lê bem ("A aula-exemplo — `assets/exemplo.html`
+// — é uma aula inteira"), porque a frase não chama aquilo de pasta. Uma frase futura do tipo "a
+// pasta `exemplos/descida-do-gradiente/` tem o index e as imagens" sairia como "a pasta
+// `assets/exemplo.html`", com a guarda da mecânica verde e a guarda de caminhos verde: o arquivo
+// existe, e o que ficou errado foi o substantivo.
+//
+// O que esta guarda É: um alarme sobre a forma concreta, como a de baixo. Um `.html` nunca é uma
+// pasta, em pacote nenhum, venha ele de `apontar` ou da mão de quem escreve a prosa. Medido nesta
+// árvore: zero ocorrências de "pasta `…`" nos quatro pacotes, com ou sem `.html`.
+test('nenhum arquivo de pacote chama de pasta um caminho que é arquivo', () => {
+  const arquivos = PACOTES.flatMap((pacote) => arquivosDe(pacote));
+  assert.ok(arquivos.length > 0, 'pacotes/ está vazio — esta guarda não mede nada');
+  for (const caminho of arquivos) {
+    for (const [achado] of texto(caminho).matchAll(/\bpastas?\s+`[^`\n]+\.[A-Za-z0-9]+`/g)) {
+      assert.fail(
+        `${caminho} diz "${achado}" — um arquivo não é uma pasta. Se veio de \`apontar\`, a frase da`
+          + ' fonte em guia/ chama de pasta algo que no pacote é arquivo, e é ela que muda',
+      );
+    }
+  }
+});
+
 // ---------------------------------------------------------------------------------------------
 // 7. Um começo só, e ele é um comando (I2 da revisão final do 6c).
 
@@ -403,7 +428,7 @@ test('o contrato e os seis decks do espécime chegam inteiros aos três pacotes 
 });
 
 // ---------------------------------------------------------------------------------------------
-// 10. TODO CAMINHO CITADO DENTRO DO PACOTE EXISTE DENTRO DO PACOTE.
+// 10. TODO CAMINHO E TODO CAPÍTULO CITADO ENTRE CRASES DENTRO DO PACOTE EXISTE DENTRO DO PACOTE.
 
 // A guarda que faltava. O aceite do marco 7 a descobriu do jeito caro: um agente com só o pacote
 // relatou que os endereços do guia não existiam para ele. Medido depois, nos quatro pacotes: 164
@@ -417,23 +442,41 @@ test('o contrato e os seis decks do espécime chegam inteiros aos três pacotes 
 // seguida, a guarda de igualdade ficou VERDE e o comando saiu com 0, enquanto esta ficou vermelha
 // com 122 citações mortas.
 //
+// O TÍTULO DIZ "ENTRE CRASES" porque é isso que ela olha, e porque a primeira versão dela dizia
+// mais do que cobria. Ela nasceu exigindo uma barra na citação, com a justificativa certa para
+// PASTA (`dist/`, `img/`) e o efeito errado para o NOME NU DE ARQUIVO, que é a convenção de
+// referência cruzada do próprio guia ("é o assunto de `20-layouts.md`"). Nos dois pacotes em que o
+// guia vira um arquivo só, esses nomes não existem: medido, **86 por pacote, 172 no total**, fora
+// do alcance dela, numa guarda que se anunciava como "todo caminho citado existe". Hoje ela
+// reconhece o nome nu — e é `citarSecoes` (build/pacotes.mjs) que faz os 172 pararem de ser
+// caminho, trocando-os pelo título da seção. Inversão medida: com `citarSecoes` devolvendo o texto
+// intocado e `aula-usp pacotes` rodado em seguida, esta guarda fica VERMELHA com 172 citações
+// mortas, enquanto a de igualdade fica verde.
+//
 // O que conta como CITAÇÃO, e por quê:
 // - dentro de crase, e fora de bloco cercado. A crase é a convenção do guia para nomear arquivo; o
 //   bloco cercado é transcrição ou fonte, e ali um caminho pode ser literal de outro mundo — a
 //   saída de `aula-usp novo` diz "a partir de modelos/aula", e reescrevê-la faria o guia mentir
 //   sobre o que o comando imprime na tela.
-// - dois segmentos ou mais. Um nome só com barra (`dist/`, `img/`, `references/`) é uma PASTA
-//   mencionada, e no guia essas são pastas da aula do autor, não do pacote.
-// - primeiro segmento nomeando algo na raiz do repositório ou na raiz do pacote. É o que separa um
-//   endereço de verdade de um caminho inventado como exemplo (`minha-aula/dist/`) — e é também a
-//   forma do defeito: o guia foi escrito por quem está dentro do repositório.
+// - com barra: dois segmentos ou mais, e o primeiro nomeando algo na raiz do repositório ou na raiz
+//   do pacote. É o que separa um endereço de verdade de um caminho inventado como exemplo
+//   (`minha-aula/dist/`) — e é também a forma do defeito: o guia foi escrito por quem está dentro
+//   do repositório.
+// - sem barra: SÓ o nome de um capítulo do guia, e a lista vem de `arquivosDoGuia`, do disco. Não
+//   é timidez, é o que a medição manda: dos nomes nus com ponto que os pacotes citam entre crases,
+//   **124 distintos em 658 ocorrências** não são arquivo nenhum — são seletor (`div.colunas`,
+//   `p.lide`) e nome de regra ou de limite do contrato (`limites.titulo`, `blocos.min`). Um
+//   reconhecedor largo de nome nu acusaria todos eles.
 //
-// O que ela NÃO pega, dito para que ninguém a leia como mais do que é: um caminho citado fora de
-// crase, um dentro de bloco cercado, e um `foo/bar.md` cujo primeiro segmento não existe nem aqui
-// nem no pacote. Para os dois caminhos que MAIS importam — o modelo e o exemplo — a guarda de cima
-// ("nenhum arquivo de pacote cita o modelo ou o exemplo pelo caminho do repositório") cobre todos
-// esses casos por busca literal, sem depender deste reconhecimento.
+// O que ela NÃO pega, dito para que ninguém a leia como mais do que é: um caminho citado FORA DE
+// CRASE (medido: 22, todas o cabeçalho `<!-- guia/NN-….md -->` que `guiaNumArquivo` insere, que é
+// procedência e não ponteiro), um DENTRO DE BLOCO CERCADO, um nome nu que não seja capítulo do
+// guia, um `foo/bar.md` cujo primeiro segmento não existe nem aqui nem no pacote, e a ÂNCORA de uma
+// citação — ela confere o arquivo, não o `id=`. Para os dois caminhos que MAIS importam — o modelo
+// e o exemplo — a guarda de cima ("nenhum arquivo de pacote cita o modelo ou o exemplo pelo caminho
+// do repositório") cobre todos esses casos por busca literal, sem depender deste reconhecimento.
 const CITACAO = /^[A-Za-z0-9._-]+(?:\/[A-Za-z0-9._-]+)+\/?(?:#[A-Za-z0-9._-]+)?$/;
+const NOME_NU = /^[A-Za-z0-9._-]+(?:#[A-Za-z0-9._-]+)?$/;
 
 // O texto sem os blocos cercados. A linha da cerca também sai: ela é delimitador, não conteúdo.
 function foraDeBlocoCercado(conteudo) {
@@ -444,24 +487,31 @@ function foraDeBlocoCercado(conteudo) {
   }).join('\n');
 }
 
-test('todo caminho citado dentro do pacote existe dentro do pacote', () => {
+test('todo caminho e todo capítulo citado entre crases dentro do pacote existe dentro do pacote', () => {
   const naRaizDoRepositorio = new Set(readdirSync(RAIZ));
+  // A única coisa que esta guarda importa do gerador, e ela só ALARGA o reconhecimento: uma lista
+  // encolhida confere menos, nunca aprova mais. E ela não tem como encolher calada — a guarda 6
+  // compara `references/` com `arquivosDoGuia` e com `guia/` em disco.
+  const capitulos = new Set(arquivosDoGuia(RAIZ));
   const mortas = [];
-  let conferidas = 0;
+  const porPacote = {};
 
   for (const pacote of PACOTES) {
     const naRaizDoPacote = new Set(readdirSync(new URL(`${pacote}/`, RAIZ)));
+    porPacote[pacote] = 0;
     for (const arquivo of arquivosDe(pacote)) {
       const pasta = arquivo.slice(0, arquivo.lastIndexOf('/') + 1);
       for (const [, citacao] of foraDeBlocoCercado(texto(arquivo)).matchAll(/`([^`\n]+)`/g)) {
-        if (!CITACAO.test(citacao)) continue;
-        const [primeiro] = citacao.split('/');
-        if (!naRaizDoRepositorio.has(primeiro) && !naRaizDoPacote.has(primeiro)) continue;
-        conferidas += 1;
-        // Duas chances, e são as duas que um leitor tem: ao lado do arquivo que cita — é assim que
-        // `conhecimento/guia-do-autor.md` alcança `especime/index.html` — ou a partir da raiz do
-        // pacote, que é de onde o SKILL.md já cita `references/` e `assets/`.
         const alvo = citacao.split('#')[0];
+        const reconhecida = CITACAO.test(citacao)
+          ? naRaizDoRepositorio.has(citacao.split('/')[0]) || naRaizDoPacote.has(citacao.split('/')[0])
+          : NOME_NU.test(citacao) && capitulos.has(alvo);
+        if (!reconhecida) continue;
+        porPacote[pacote] += 1;
+        // Duas chances, e são as duas que um leitor tem: ao lado do arquivo que cita — é assim que
+        // `conhecimento/guia-do-autor.md` alcança `especime/index.html` e `references/20-layouts.md`
+        // alcança `30-componentes.md` — ou a partir da raiz do pacote, que é de onde o SKILL.md já
+        // cita `references/` e `assets/`.
         const existe = existsSync(new URL(`${pasta}${alvo}`, RAIZ))
           || existsSync(new URL(`${pacote}/${alvo}`, RAIZ));
         if (!existe) mortas.push(`${arquivo}: \`${citacao}\``);
@@ -469,16 +519,25 @@ test('todo caminho citado dentro do pacote existe dentro do pacote', () => {
     }
   }
 
-  // Medido nesta árvore: 149 citações conferidas. O piso é contra a varredura vazia — um
-  // reconhecimento que deixe de achar citação passa neste teste sem asseverar coisa nenhuma, que é
-  // como três guardas deste repositório já nasceram.
-  assert.ok(conferidas >= 100, `só ${conferidas} citações conferidas — o reconhecimento virou decoração`);
+  // Os dois pisos são contra a varredura vazia — um reconhecimento que deixe de achar citação passa
+  // neste teste sem asseverar coisa nenhuma, que é como três guardas deste repositório já nasceram.
+  //
+  // O piso POR PACOTE é o apertado, e existe porque o global sozinho tem folga: medido nesta árvore,
+  // 235 conferidas (40 + 40 + 0 + 155), e o sumiço de um pacote de chat inteiro deixaria 195 — que
+  // um piso global generoso deixaria passar. O da disciplina fica de fora porque ele não leva o
+  // guia e não cita caminho nenhum; os três que levam o guia têm de citar.
+  for (const pacote of Object.keys(BASE_DO_ACERVO)) {
+    assert.ok(porPacote[pacote] > 0, `${pacote} leva o guia e não teve uma única citação conferida`);
+  }
+  const conferidas = Object.values(porPacote).reduce((soma, n) => soma + n, 0);
+  assert.ok(conferidas >= 200, `só ${conferidas} citações conferidas — o reconhecimento virou decoração`);
   assert.deepEqual(
     mortas,
     [],
-    `${mortas.length} caminho(s) citado(s) no pacote que não existem nele — quem instala o pacote não`
-      + ' os tem. Ou o arquivo viaja junto (`acervo`, em build/pacotes.mjs), ou a prosa cita o'
-      + ' caminho que o pacote tem (`apontar`), ou ela não cita caminho nenhum',
+    `${mortas.length} caminho(s) ou capítulo(s) citado(s) entre crases no pacote que não existem`
+      + ' nele — quem instala o pacote não os tem. Ou o arquivo viaja junto (`acervo`, em'
+      + ' build/pacotes.mjs), ou a prosa cita o caminho que o pacote tem (`apontar`, `citarSecoes`),'
+      + ' ou ela não cita caminho nenhum',
   );
 });
 
