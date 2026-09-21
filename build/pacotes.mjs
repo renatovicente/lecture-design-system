@@ -7,13 +7,46 @@
 // pedidas por escrito: o cabeçalho que diz de que arquivo veio cada trecho do guia num arquivo, e a
 // linha `@AGENTS.md` do CLAUDE.md do repositório de disciplina (spec 10.2).
 import { mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
-import { FONTES_DE_PACOTE, montarPacote, regrasEssenciais } from './guia.mjs';
+import { FONTES_DE_PACOTE, decksDoEspecime, montarPacote, regrasEssenciais } from './guia.mjs';
 
 const RAIZ = new URL('../', import.meta.url);
 
 // Spec 10.2: "`exemplo.html` é `exemplos/descida-do-gradiente/`". O modelo é o da spec 10.3.
 const MODELO = 'modelos/aula/index.html';
 const EXEMPLO = 'exemplos/descida-do-gradiente/index.html';
+
+// Os TRÊS pacotes que levam o guia, e o caminho que cada um dá ao que o guia manda abrir.
+//
+// `base` é a pasta, dentro do pacote, a partir da qual o guia daquele pacote é lido — e por isso é
+// também a raiz dos caminhos que ele cita: na skill o guia está em `references/` e o ponteiro
+// resolve da raiz do pacote (base vazia, como em `assets/modelo.html`, que o SKILL.md já cita
+// assim); no Projeto do Claude e no GPT o guia é um arquivo de `conhecimento/`, e o que está ao
+// lado dele resolve dali.
+//
+// Esta tabela é a ÚNICA verdade sobre o par (arquivo, caminho no pacote): quem COPIA os bytes e
+// quem REESCREVE a citação do guia (`apontar`) leem a mesma linha. Medido antes dela existir: o
+// guia citava `assets/exemplo.html` e `assets/modelo.html` dentro dos pacotes do Claude e do GPT,
+// que não têm `assets/` — a prosa tinha sido escrita para um pacote e viajava nos três.
+export const PACOTES_COM_GUIA = {
+  'pacotes/skill/aula-usp': { base: '', modelo: 'assets/modelo.html', exemplo: 'assets/exemplo.html' },
+  'pacotes/claude/projeto': { base: 'conhecimento/', modelo: 'modelo.html', exemplo: 'exemplo.html' },
+  'pacotes/gpt/gpt-personalizado': { base: 'conhecimento/', modelo: 'modelo.html', exemplo: 'exemplo.html' },
+};
+
+// O acervo que viaja junto do guia, além do modelo e do exemplo. O critério é um só e é medido, não
+// opinado: **são os arquivos que o guia manda abrir**. Antes disto, nos três pacotes acima, eram 33
+// ponteiros para `especime/…` e 9 citações de `contrato/contrato.json` — todos mortos para quem
+// instala o pacote, porque o guia foi escrito por quem está dentro do repositório.
+//
+// O caminho dentro do pacote é o MESMO do repositório, de propósito: é o que faz esses 42 ponteiros
+// resolverem sem reescrita nenhuma. O modelo e o exemplo são a exceção — o pacote já os levava com
+// outro nome antes deste acervo existir —, e é para eles, e só para eles, que `apontar` existe.
+//
+// Os decks saem de `decksDoEspecime`, nunca de uma lista escrita aqui: um sétimo deck entra no
+// pacote sozinho, como já entra no guia.
+export function acervo(raiz = RAIZ) {
+  return ['contrato/contrato.json', ...decksDoEspecime(raiz).map((nome) => `especime/${nome}`)];
+}
 
 // As TRÊS pastas que a spec 8.1 nomeia, `especime/` inclusive.
 //
@@ -168,12 +201,17 @@ export function montarPacotes({ raiz = RAIZ, escrever: gravar = false } = {}) {
   for (const nome of arquivosDoGuia(raiz)) {
     arquivos.set(`pacotes/skill/aula-usp/references/${nome}`, readFileSync(new URL(`guia/${nome}`, raiz), 'utf8'));
   }
-  arquivos.set('pacotes/skill/aula-usp/assets/modelo.html', modelo);
-  arquivos.set('pacotes/skill/aula-usp/assets/exemplo.html', exemplo);
   for (const pasta of ['pacotes/claude/projeto', 'pacotes/gpt/gpt-personalizado']) {
     arquivos.set(`${pasta}/conhecimento/guia-do-autor.md`, guia);
-    arquivos.set(`${pasta}/conhecimento/modelo.html`, modelo);
-    arquivos.set(`${pasta}/conhecimento/exemplo.html`, exemplo);
+  }
+  // O modelo, o exemplo e o acervo, nos três pacotes que levam o guia, cada um no caminho que a
+  // tabela lhe dá. Os bytes são os mesmos do repositório: o acervo é cópia, não uma segunda versão.
+  for (const [pacote, { base, modelo: nomeModelo, exemplo: nomeExemplo }] of Object.entries(PACOTES_COM_GUIA)) {
+    arquivos.set(`${pacote}/${base}${nomeModelo}`, modelo);
+    arquivos.set(`${pacote}/${base}${nomeExemplo}`, exemplo);
+    for (const caminho of acervo(raiz)) {
+      arquivos.set(`${pacote}/${base}${caminho}`, readFileSync(new URL(caminho, raiz), 'utf8'));
+    }
   }
   // Spec 10.2: "trecho de `AGENTS.md` e `CLAUDE.md` com `@AGENTS.md`". É a mesma linha única do
   // CLAUDE.md da raiz deste repositório, e a razão é a mesma: o Claude Code lê CLAUDE.md, o resto

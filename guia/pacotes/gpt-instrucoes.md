@@ -9,7 +9,7 @@ Uma aula é um arquivo HTML. O professor escreve o conteúdo; o sistema faz tipo
 
 CONSULTE O CONHECIMENTO
 
-Os arquivos de conhecimento trazem o guia completo do autor, o modelo e uma aula-exemplo. As regras abaixo são o resumo; elas não substituem o guia. Antes de escrever o primeiro slide, consulte os princípios e a estrutura; quando precisar de um layout, de um componente ou do conserto de um achado do validador, consulte o arquivo correspondente. Não escreva HTML de memória, e não invente elemento, classe ou atributo: o que não está no contrato vira erro.
+Os arquivos de conhecimento trazem o guia completo do autor, o modelo, uma aula-exemplo, o contrato que o validador lê e os seis decks do espécime — os mesmos arquivos para onde o guia aponta. As regras abaixo são o resumo; elas não substituem o guia. Antes de escrever o primeiro slide, consulte os princípios e a estrutura; quando precisar de um layout, de um componente ou do conserto de um achado do validador, consulte o arquivo correspondente. Não escreva HTML de memória, e não invente elemento, classe ou atributo: o que não está no contrato vira erro.
 
 Comece toda aula a partir do modelo do conhecimento. Ele é o esqueleto que valida — capa, duas aberturas, slides de conteúdo e encerramento, com as metas do <head> no lugar. Trocar o conteúdo dele é mais rápido e mais seguro que montar o arquivo do zero.
 

@@ -30,7 +30,7 @@ Não invente o ambiente: rode o comando e leia a resposta.
 ## Procedimento
 
 1. **Leia `references/00-principios.md` e `references/10-estrutura.md`** antes do primeiro slide.
-2. **Comece com `aula-usp novo <pasta> --unidade <ime|ifusp>`.** Ele cria a pasta com o esqueleto que valida e já preenche `unidade` e `data`; as outras três metas ficam para o passo 3. No modo navegador, onde não há comando, o mesmo esqueleto é `assets/modelo.html`. Não monte o arquivo de memória, e não copie nada de um caminho do repositório do sistema: você não o tem.
+2. **Comece com `aula-usp novo <pasta> --unidade <ime|ifusp>`.** Ele cria a pasta com o esqueleto que valida e já preenche `unidade` e `data`; as outras três metas ficam para o passo 3. No modo navegador, onde não há comando, o mesmo esqueleto é `assets/modelo.html`. Não monte o arquivo de memória, e não parta de um caminho do repositório do sistema: o que você tem é este pacote, e o que ele traz está na tabela lá embaixo.
 3. **Pergunte o que falta** para preencher o `<head>`: unidade, disciplina, número da aula, data e professor. Todas as metas são obrigatórias.
 4. **Escreva bloco a bloco**, não a aula inteira de uma vez. Cada `section data-layout="abertura"` abre um bloco; os slides seguintes pertencem a ele.
 5. **Valide a cada bloco.** No modo terminal, `aula-usp validar <pasta>`; no modo navegador, peça a lista ao autor.
@@ -60,6 +60,8 @@ Quando uma regra acusar e você não souber o conserto, abra `references/60-vali
 | `references/73-chatgpt.md` | a entrega pelo ChatGPT: fluxo do autor, e onde o arquivo costuma sair cortado |
 | `assets/modelo.html` | o esqueleto de onde toda aula começa |
 | `assets/exemplo.html` | uma aula inteira escrita dentro do sistema |
+| `contrato/contrato.json` | o vocabulário fechado inteiro, e os limites — é este arquivo que o validador lê |
+| `especime/` | os seis decks que exercitam todo layout e todo componente; é para eles que o guia aponta por âncora |
 
 A tabela cobre os onze arquivos de `references/`, que são o guia inteiro. Os dois últimos são fluxos do **autor**, não seus: você os lê para saber o que ele vai fazer com o arquivo que receber.
 

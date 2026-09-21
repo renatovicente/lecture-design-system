@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Matemática no Aula USP</title>
+<meta name="unidade" content="ime">
+<meta name="disciplina" content="Espécime do Aula USP">
+<meta name="aula" content="3b">
+<meta name="data" content="2026-09-17">
+<meta name="professor" content="Prof. Renato Vicente">
+<script src="https://cdn.jsdelivr.net/npm/aula-usp@0.1.0/dist/aula-usp.js"
+        integrity="sha384-r5XJHUJ4P95ySBFOxWPXVOi6ea3bP54gzi4nCb2l76cGgR1DPCl5CfGk7uB7B6AR" crossorigin="anonymous"></script>
+</head>
+<body>
+
+<section data-layout="capa">
+  <h1>Matemática em TeX<br><span class="sinal">no texto e em passos</span></h1>
+</section>
+
+<section data-layout="abertura" id="o-papel-de-eta" data-curto="Taxa">
+  <h2>O papel de \(\eta\)</h2>
+  <p class="pergunta">Por que \(\eta\) decide o tamanho de cada passo?</p>
+</section>
+
+<section data-layout="conteudo" id="no-texto">
+  <h2>Matemática no meio do texto</h2>
+  <p>A cada passo, \(w \leftarrow w - \eta \nabla E(w)\): os pesos andam contra o gradiente.</p>
+  <p>A média \(\frac{1}{N}\sum_{i=1}^{N} x_i\) e o peso \(w_{ij}\) acompanham o tamanho do texto.</p>
+  <aside class="destaque" data-rotulo="Definição">Taxa de aprendizado \(\eta > 0\): quanto da inclinação medida vira movimento.</aside>
+  <aside class="notas">Ler \(\eta\) como "eta".</aside>
+</section>
+
+<section data-layout="conteudo" id="em-destaque">
+  <h2>Uma equação em destaque</h2>
+  <p class="lide">O erro quadrático mede a distância ao alvo.</p>
+  \[ E(w) = \frac{1}{2N} \sum_{i=1}^{N} \left(y_i - w^\top x_i\right)^2 \tag{1} \]
+  <p>A equação fica alinhada à esquerda, e o número vai para a margem direita.</p>
+  <aside class="notas">A equação (1) volta na derivação.</aside>
+</section>
+
+<section data-layout="abertura" id="derivacao">
+  <h2>Derivação</h2>
+  <p class="pergunta">Como revelar uma conta linha a linha?</p>
+</section>
+
+<section data-layout="conteudo" id="passo-a-passo" data-pdf="passos">
+  <h2>Uma derivação passo a passo</h2>
+  \[ \begin{aligned}
+    \nabla E(w) &= \frac{1}{N} \sum_{i=1}^{N} \left(w^\top x_i - y_i\right) x_i \\
+    \passo{1}{w_{t+1}} &\passo{1}{= w_t - \eta \nabla E(w_t)} \\
+    \passo{2}{w_{t+1}} &\passo{2}{= w_t - \frac{\eta}{N} \sum_{i} \left(w_t^\top x_i - y_i\right) x_i}
+  \end{aligned} \]
+  <p data-passo="3">Cada passo usa todos os exemplos: é a descida em lote.</p>
+  <aside class="notas">Revelar uma linha por vez; a última frase fecha a ideia.</aside>
+</section>
+
+<section data-layout="conteudo" id="em-campos">
+  <h2>Matemática em campos e listas</h2>
+  <div class="colunas" data-grade="6-6">
+    <div>
+      <aside class="quadro" data-rotulo="Exemplo">Com \(\eta = 0{,}1\) e gradiente 4, o peso anda
+        \[ \Delta w = -0{,}1 \cdot 4 = -0{,}4 \]
+      </aside>
+    </div>
+    <div>
+      <ol class="passos">
+        <li>Calcule \(E(w)\).</li>
+        <li>Calcule \(\nabla E(w)\).</li>
+        <li>Ande \(-\eta \nabla E(w)\).</li>
+      </ol>
+    </div>
+  </div>
+  <aside class="notas">A equação dentro do quadro segue o ritmo do campo.</aside>
+</section>
+
+<section data-layout="encerramento">
+  <h2>O que fica</h2>
+  <ol class="sintese">
+    <li>\(\eta\) controla o tamanho do passo.</li>
+    <li>O gradiente \(\nabla E\) aponta a subida.</li>
+  </ol>
+  <p class="proxima">Próximo marco: código com destaque.</p>
+</section>
+
+</body>
+</html>

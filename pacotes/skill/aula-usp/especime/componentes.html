@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Componentes do Aula USP</title>
+<meta name="unidade" content="ime">
+<meta name="disciplina" content="Espécime do Aula USP">
+<meta name="aula" content="3a">
+<meta name="data" content="2026-09-16">
+<meta name="professor" content="Prof. Renato Vicente">
+<script src="https://cdn.jsdelivr.net/npm/aula-usp@0.1.0/dist/aula-usp.js"
+        integrity="sha384-r5XJHUJ4P95ySBFOxWPXVOi6ea3bP54gzi4nCb2l76cGgR1DPCl5CfGk7uB7B6AR" crossorigin="anonymous"></script>
+</head>
+<body>
+
+<section data-layout="capa">
+  <h1>Componentes de corpo<br><span class="sinal">campos, listas, tabelas</span></h1>
+</section>
+
+<section data-layout="abertura" id="campos">
+  <h2>Campos</h2>
+  <p class="pergunta">Como separar definição, exemplo e cuidado?</p>
+</section>
+
+<section data-layout="conteudo" id="destaque-quadro-alerta">
+  <h2>Destaque, quadro e alerta</h2>
+  <div class="colunas" data-grade="6-6">
+    <div>
+      <aside class="destaque" data-rotulo="Definição">Taxa de aprendizado: quanto da inclinação medida vira movimento.</aside>
+      <aside class="destaque" data-rotulo="Resultado">Com taxa pequena, o erro cai devagar, mas sem oscilar.</aside>
+    </div>
+    <div>
+      <aside class="quadro">Com taxa 0,1 e gradiente 4, o peso anda 0,4 no sentido oposto.</aside>
+      <aside class="alerta" data-rotulo="Cuidado">Taxa grande demais faz o erro subir em vez de cair.</aside>
+    </div>
+  </div>
+  <aside class="notas">O quadro sem data-rotulo não mostra rótulo.</aside>
+</section>
+
+<section data-layout="conteudo" id="exercicio">
+  <h2>Exercício com a resposta em passo</h2>
+  <div class="exercicio">
+    <div class="enunciado">Um peso vale 2, o gradiente vale 5 e a taxa é 0,1. Qual é o novo peso?</div>
+    <div class="resposta" data-passo>O peso anda 0,5 contra o gradiente e vai para 1,5.</div>
+  </div>
+  <aside class="notas">Deixar a turma tentar antes de revelar a resposta.</aside>
+</section>
+
+<section data-layout="abertura" id="listas">
+  <h2>Listas</h2>
+  <p class="pergunta">Quando usar marcadores e quando numerar?</p>
+</section>
+
+<section data-layout="conteudo" id="marcadores-e-passos">
+  <h2>Marcadores e passos numerados</h2>
+  <div class="colunas" data-grade="6-6">
+    <div>
+      <ul>
+        <li>O erro mede a distância ao alvo.</li>
+        <li>O gradiente aponta a subida.</li>
+        <li>A taxa controla o passo.</li>
+        <li>Os pesos começam ao acaso.</li>
+        <li>Um item longo quebra a linha, e a segunda linha segue o texto.</li>
+      </ul>
+    </div>
+    <div>
+      <ol class="passos">
+        <li>Calcule o erro.</li>
+        <li data-passo>Calcule o gradiente com <code>grad(E)</code>.</li>
+        <li data-passo>Ande <strong>contra</strong> o gradiente.</li>
+        <li data-passo>Repita até o erro parar de cair.</li>
+        <li data-passo>Um passo longo também quebra a linha e segue o texto.</li>
+      </ol>
+    </div>
+  </div>
+  <aside class="notas">Marcadores para itens sem ordem; números para uma sequência.</aside>
+</section>
+
+<section data-layout="conteudo" id="texto-em-linha">
+  <h2>Código e índices no meio do texto</h2>
+  <p class="lide">Código em linha e índices não mudam o espaço entre as linhas.</p>
+  <p>A atualização <code>w -= lr * grad</code> repete a cada passo, e a primeira linha deste parágrafo tem a mesma altura que a segunda.</p>
+  <p>O peso w<sub>ij</sub> liga a unidade i à unidade j, e o custo de uma camada cresce com n<sup>2</sup>, então esta linha quebra e as duas linhas ficam com a mesma altura.</p>
+  <aside class="notas">Comparar a altura das linhas com e sem código.</aside>
+</section>
+
+<section data-layout="abertura" id="tabelas">
+  <h2>Tabelas</h2>
+  <p class="pergunta">Como comparar números lado a lado?</p>
+</section>
+
+<section data-layout="conteudo" id="tabela">
+  <h2>Oito linhas de dados em seis colunas</h2>
+  <table>
+    <thead>
+      <tr><th scope="col">modelo</th><th scope="col">épocas</th><th scope="col">erro</th><th scope="col">tempo (s)</th><th scope="col">custo</th><th scope="col">ganho</th></tr>
+    </thead>
+    <tbody>
+      <tr><th scope="row">Linear</th><td>10</td><td>12,5%</td><td>0,8</td><td>R$ 120</td><td>0,0</td></tr>
+      <tr><th scope="row">Logística</th><td>20</td><td>9,1%</td><td>1,2</td><td>R$ 150</td><td>+3,4</td></tr>
+      <tr><th scope="row">Árvore</th><td>1</td><td>8,4%</td><td>0,3</td><td>R$ 90</td><td>+0,7</td></tr>
+      <tr class="destaque"><th scope="row">Floresta</th><td>1</td><td>6,2%</td><td>4,7</td><td>R$ 400</td><td>+2,2</td></tr>
+      <tr><th scope="row">Boosting</th><td>200</td><td>5,9%</td><td>12,1</td><td>R$ 1.250</td><td>+0,3</td></tr>
+      <tr><th scope="row">Rede rasa</th><td>50</td><td>7,3%</td><td>8,5</td><td>R$ 600</td><td>−1,4</td></tr>
+      <tr><th scope="row">Rede funda</th><td>300</td><td class="destaque">4,8%</td><td>95,0</td><td>R$ 2.400</td><td>+2,5</td></tr>
+      <tr><th scope="row">Conjunto</th><td>1.000</td><td>4,6%</td><td>210,4</td><td>R$ 5.100</td><td>+0,2</td></tr>
+    </tbody>
+  </table>
+  <aside class="notas">Números à direita, com algarismos de mesma largura; texto à esquerda.</aside>
+</section>
+
+<section data-layout="conteudo" id="tabela-na-coluna">
+  <h2>Uma tabela curta ao lado do texto</h2>
+  <div class="colunas" data-grade="6-6">
+    <div>
+      <p>Numa coluna, a tabela ocupa a largura da coluna, e as réguas marcam essa largura.</p>
+    </div>
+    <div>
+      <table>
+        <thead>
+          <tr><th scope="col">taxa</th><th scope="col">épocas até parar</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>0,01</td><td>840</td></tr>
+          <tr><td>0,1</td><td>95</td></tr>
+          <tr><td>1,0</td><td>diverge</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <aside class="notas">Com taxa 1,0 o erro não para de subir.</aside>
+</section>
+
+<section data-layout="abertura" id="figuras">
+  <h2>Figuras</h2>
+  <p class="pergunta">Como uma imagem ocupa a zona de conteúdo?</p>
+</section>
+
+<section data-layout="figura" id="imagem-pequena">
+  <h2>Uma imagem pequena não é ampliada</h2>
+  <figure>
+    <img alt="Retângulo cinza de 320 por 180 com um canto preto" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='180' viewBox='0 0 320 180'%3E%3Crect width='320' height='180' fill='%23D9D9D9'/%3E%3Crect width='80' height='45' fill='%230A0A0A'/%3E%3C/svg%3E">
+    <figcaption>A imagem mantém os 320 por 180 px originais, alinhada à esquerda, e a legenda vem logo abaixo.</figcaption>
+  </figure>
+  <aside class="notas">Ampliar uma imagem pequena a deixaria borrada no projetor.</aside>
+</section>
+
+<section data-layout="figura" id="foto-em-cinza">
+  <h2>Uma foto em tons de cinza</h2>
+  <figure data-foto="pb">
+    <img alt="Faixas vermelha, verde e azul" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='2400' height='1600' viewBox='0 0 3 2'%3E%3Crect width='1' height='2' fill='%23CC3311'/%3E%3Crect x='1' width='1' height='2' fill='%23009944'/%3E%3Crect x='2' width='1' height='2' fill='%230044CC'/%3E%3C/svg%3E">
+    <figcaption>Com data-foto="pb", a foto sai em cinza; grande demais, ela é reduzida para caber na zona.</figcaption>
+  </figure>
+  <aside class="notas">Fotos coloridas competiriam com o azul e o amarelo do sistema.</aside>
+</section>
+
+<section data-layout="conteudo" id="figura-no-corpo">
+  <h2>Uma figura ao lado do texto</h2>
+  <div class="colunas" data-grade="4-8">
+    <div>
+      <p>No corpo de um slide de conteúdo, a figura ocupa a largura da sua coluna.</p>
+    </div>
+    <div>
+      <figure>
+        <svg viewBox="0 0 760 320" role="img" aria-label="Três barras crescentes">
+          <rect x="0" y="200" width="200" height="120" fill="#0A0A0A"/>
+          <rect x="280" y="120" width="200" height="200" fill="#1094AB"/>
+          <rect x="560" y="0" width="200" height="320" fill="#FCB421"/>
+        </svg>
+        <figcaption>Três barras crescentes.</figcaption>
+      </figure>
+    </div>
+  </div>
+  <aside class="notas">O SVG escala para a coluna, sem distorcer.</aside>
+</section>
+
+<section data-layout="encerramento">
+  <h2>O que fica</h2>
+  <ol class="sintese">
+    <li>Campos separam definição, exemplo e cuidado.</li>
+    <li>Listas numeradas carregam uma sequência.</li>
+    <li>Tabelas alinham números pela direita.</li>
+  </ol>
+  <p class="proxima">Próximo marco: matemática e código com destaque.</p>
+</section>
+
+</body>
+</html>

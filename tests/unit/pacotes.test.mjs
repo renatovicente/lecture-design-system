@@ -13,8 +13,8 @@
 // `package.json`, o `dist/manifesto.json` —, nunca com o que o gerador achou que ia escrever.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync, readdirSync, statSync } from 'node:fs';
-import { FONTES_DE_PACOTE, regrasEssenciais } from '../../build/guia.mjs';
+import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
+import { FONTES_DE_PACOTE, decksDoEspecime, regrasEssenciais } from '../../build/guia.mjs';
 import { PASTAS_COM_TAG, arquivosComTag, arquivosDoGuia, montarPacotes } from '../../build/pacotes.mjs';
 
 const RAIZ = new URL('../../', import.meta.url);
@@ -186,11 +186,13 @@ test('toda tag fixada traz a versão do package.json e o integrity de dist/aula-
     }
   }
   // Se a varredura deixar de achar tag, ela vira decoração e nada acima roda. Medido nesta árvore:
-  // 20 tags nas quatro pastas, 3 delas o marcador `aula-usp@<versão>` de 71-fluxo-chat.md (uma em
-  // references/ e uma em cada guia-do-autor.md), 17 conferidas — os 8 `.html` de fonte reescritos
-  // (o modelo, o exemplo e os 6 decks do espécime), os 6 `.html` dos pacotes e os 3 blocos ```html
-  // que mostram o modelo (references/10-estrutura.md e os dois guia-do-autor.md). O piso é folgado
-  // de propósito: é contra a varredura vazia, não contra o pacote ganhar ou perder um arquivo.
+  // 38 tags nas quatro pastas, 3 delas o marcador `aula-usp@<versão>` de 71-fluxo-chat.md (uma em
+  // references/ e uma em cada guia-do-autor.md), 35 conferidas — os 8 `.html` de fonte reescritos
+  // (o modelo, o exemplo e os 6 decks do espécime), os 24 `.html` dos pacotes (esses mesmos oito em
+  // cada um dos três pacotes que levam o guia, desde que o acervo passou a viajar junto) e os 3
+  // blocos ```html que mostram o modelo (references/10-estrutura.md e os dois guia-do-autor.md). O
+  // piso é folgado de propósito: é contra a varredura vazia, não contra o pacote ganhar ou perder
+  // um arquivo.
   assert.ok(conferidas >= 8, `só ${conferidas} tags conferidas — a varredura de ${COM_TAG_FIXADA.join(', ')} virou decoração`);
 });
 
@@ -313,4 +315,47 @@ test('a tabela do SKILL.md lista todos os arquivos de references/', () => {
     arquivosDoGuia(RAIZ),
     'a tabela "Onde procurar cada coisa" divergiu de references/ — acerte guia/pacotes/skill.md',
   );
+});
+
+// ---------------------------------------------------------------------------------------------
+// 9. O acervo: o que o guia manda abrir viaja com o guia.
+
+// O achado do aceite do marco 7: um agente com só o pacote relatou que os endereços citados pelo
+// guia não existiam para ele. Medidos depois, nos três pacotes que levam o guia: 33 ponteiros para
+// `especime/…` e 9 citações de `contrato/contrato.json`, todos mortos. O conserto é o acervo — e
+// esta guarda é sobre ele chegar inteiro e igual, não sobre o gerador ter a intenção de copiá-lo.
+//
+// As três raízes e as duas bases estão ESCRITAS aqui, e não importadas de PACOTES_COM_GUIA, pela
+// mesma razão do teto de 8.000: uma guarda que pergunta ao gerador o que ele copia aprova um
+// gerador que deixou de copiar. O que é importado é `decksDoEspecime`, porque o número de decks é
+// do REPOSITÓRIO e não desta guarda: um sétimo deck tem de entrar no pacote sem ninguém tocar aqui.
+const BASE_DO_ACERVO = {
+  'pacotes/skill/aula-usp': '',
+  'pacotes/claude/projeto': 'conhecimento/',
+  'pacotes/gpt/gpt-personalizado': 'conhecimento/',
+};
+
+test('o contrato e os seis decks do espécime chegam inteiros aos três pacotes que levam o guia', () => {
+  const decks = decksDoEspecime(RAIZ);
+  assert.ok(decks.length > 0, 'especime/ não tem deck nenhum — o resto desta guarda não mede nada');
+  const doRepositorio = ['contrato/contrato.json', ...decks.map((nome) => `especime/${nome}`)];
+
+  for (const [pacote, base] of Object.entries(BASE_DO_ACERVO)) {
+    for (const caminho of doRepositorio) {
+      const noPacote = `${pacote}/${base}${caminho}`;
+      assert.equal(
+        existsSync(new URL(noPacote, RAIZ)),
+        true,
+        `${noPacote} não existe, e o guia deste pacote manda abrir \`${caminho}\``,
+      );
+      // Cópia, e não uma segunda versão: um contrato do pacote que divergisse do contrato do
+      // repositório seria a pior forma deste conserto — o leitor obedecendo a um contrato que o
+      // validador não lê.
+      assert.equal(
+        texto(noPacote),
+        texto(caminho),
+        `${noPacote} divergiu de ${caminho} — rode \`aula-usp pacotes\``,
+      );
+    }
+  }
 });

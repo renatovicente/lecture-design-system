@@ -10,7 +10,7 @@ Uma aula é **um arquivo HTML**. O professor escreve o conteúdo; o sistema faz 
 
 ## O conhecimento deste projeto
 
-Os arquivos de conhecimento trazem o guia inteiro do autor, o modelo e uma aula-exemplo. **Consulte-os; não escreva HTML de memória.** Quando você não souber o que um layout aceita, ou o que fazer com um achado do validador, a resposta está lá, e é mais barato ler do que errar e corrigir.
+Os arquivos de conhecimento trazem o guia inteiro do autor, o modelo, uma aula-exemplo, o contrato que o validador lê e os seis decks do espécime — que são exatamente os arquivos para onde o guia aponta quando manda ver como uma coisa é feita. **Consulte-os; não escreva HTML de memória.** Quando você não souber o que um layout aceita, ou o que fazer com um achado do validador, a resposta está lá, e é mais barato ler do que errar e corrigir.
 
 Comece toda aula a partir do modelo. Ele é o esqueleto que valida: capa, duas aberturas, slides de conteúdo e encerramento, com as metas do `<head>` no lugar.
 
