@@ -69,6 +69,13 @@ que é justamente o que quem instala a skill não vai ter. Por isso a aula se es
 
 Entregue o pedido, uma vez, e **não ajude**. A partir daí:
 
+- **responder as cinco metas do `<head>` não conta como ajuda.** Unidade, disciplina, número da
+  aula, data e professor são dados do autor, não informação sobre o sistema: se o agente parar e
+  perguntar, responda; onde a execução não admitir resposta no meio — um `exec` de uma volta só —,
+  forneça as cinco ao lado do pedido e registre que foi assim. Um agente que não pergunta, deixa o
+  texto de exemplo do esqueleto e diz na entrega o que falta preencher também está seguindo o
+  `SKILL.md` (passo 3): as duas saídas são conformes, e qual delas você viu é observação sobre o
+  ambiente, não achado contra o agente;
 - uma **rodada** é uma volta completa: o agente entrega uma versão da aula → `aula-usp validar
   <pasta>` roda sobre ela → os achados voltam para o agente, inteiros e sem tradução;
 - a **primeira versão** é a primeira aula que o agente diz estar pronta. É dela que sai a coluna
