@@ -115,6 +115,14 @@ pacote**, não "o modelo errou" — o consumidor do aceite é `guia/`, e é lá 
 a revisão visual do autor, que aprovou os dois PDFs. As aulas produzidas estão em `aulas/`, e a saída
 de `--json` de cada rodada em `rodada-<ambiente>-1.json` — as duas com array vazio.
 
+> **A tag do runtime dessas duas aulas é a de `e9a1a70`, e fica como está.** O `integrity` delas
+> (`sha384-r5XJHUJ4P95y…`) era o de `aula-usp.js` até o marco do SRI dos satélites, que mudou os bytes
+> do pacote; o manifesto de hoje registra `sha384-dAAkK0S84e8o…`. Quando a CDN resolver (fase 3), o
+> navegador vai **recusar** o runtime ao abrir essas duas páginas, e isso não é defeito: elas são
+> registro datado do aceite, não aula viva. Reescrevê-las seria reescrever história; quem precisar
+> abrir uma delas funcionando faz isso numa cópia fora daqui, com o `integrity` que
+> `dist/manifesto.json` registra na versão do dia.
+
 As medições da tabela foram refeitas por quem conduziu o aceite, **com Chrome presente e os quatro
 grupos de regras rodando**, sobre o arquivo que cada agente entregou. Ambas as aulas: 13 slides, três
 blocos, derivação em passos, um bloco de Python, um exercício e notas em 8 slides. PDF de 17 páginas
