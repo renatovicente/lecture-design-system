@@ -706,10 +706,12 @@ O bloco de regras essenciais de `00-principios.md` fica entre marcadores e entra
 
 | saída | conteúdo | uso |
 |---|---|---|
-| `pacotes/skill/aula-usp/` | `SKILL.md` com os metadados do padrão Agent Skills e o procedimento; `references/` com o guia completo; `assets/modelo.html` e `assets/exemplo.html` | Claude Code, claude.ai, Codex CLI e ChatGPT, sem alteração |
-| `pacotes/claude/projeto/` | `instrucoes.md`; `conhecimento/` com o guia num arquivo, o modelo e o exemplo | Projetos do Claude, com a aula como artifact |
-| `pacotes/gpt/gpt-personalizado/` | `instrucoes.txt` com até 8.000 caracteres; `conhecimento/` com o guia num arquivo, o modelo e o exemplo; `iniciadores.txt` | GPT personalizado |
+| `pacotes/skill/aula-usp/` | `SKILL.md` com os metadados do padrão Agent Skills e o procedimento; `references/` com o guia completo; `assets/modelo.html` e `assets/exemplo.html`; o acervo, em `contrato/contrato.json` e `especime/` | Claude Code, claude.ai, Codex CLI e ChatGPT, sem alteração |
+| `pacotes/claude/projeto/` | `instrucoes.md`; `conhecimento/` com o guia num arquivo, o modelo, o exemplo e o acervo | Projetos do Claude, com a aula como artifact |
+| `pacotes/gpt/gpt-personalizado/` | `instrucoes.txt` com até 8.000 caracteres; `conhecimento/` com o guia num arquivo, o modelo, o exemplo e o acervo; `iniciadores.txt` | GPT personalizado |
 | `pacotes/repositorio-de-disciplina/` | trecho de `AGENTS.md` e `CLAUDE.md` com `@AGENTS.md` | repositórios das disciplinas |
+
+**O acervo** são os arquivos que o guia manda abrir: `contrato/contrato.json` e os decks de `especime/`. Eles viajam nos três pacotes que levam o guia, no MESMO caminho que têm no repositório — é isso que faz o ponteiro do guia resolver sem reescrita. Entraram no marco 7 para fechar um achado medido do aceite: um agente com só o pacote relatou que os endereços citados pelo guia não existiam para ele, e sem o acervo cada pacote de chat saía com **8 citações falsas do contrato e 32 ponteiros mortos para o espécime**. O modelo e o exemplo são a exceção, porque o pacote já os levava com outro nome.
 
 `exemplo.html` é `exemplos/descida-do-gradiente/`. Na fase 2, entra também `exemplo-recursos.html`, de `exemplos/regressao-linear/`. Na raiz do sistema ficam `AGENTS.md` (comandos, testes e regras para desenvolver o Aula USP) e `CLAUDE.md` com `@AGENTS.md`.
 
