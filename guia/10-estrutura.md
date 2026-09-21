@@ -106,11 +106,11 @@ O `lang` do `<html>` escolhe o idioma dos rótulos que o sistema escreve — "Bl
 
 ## A tag do runtime
 
-A linha do `<script>` no `<head>` é a única que muda de um fluxo de trabalho para o outro: no repositório do sistema ela aponta para o runtime local, como no esqueleto acima; numa aula sua, ela apontará para a versão publicada, com a sua soma de integridade. O arquivo do seu fluxo diz qual usar — `70-fluxo-terminal.md`, `71-fluxo-chat.md`, `72-artifact-claude.md` ou `73-chatgpt.md`.
+A linha do `<script>` no `<head>` é a única que muda de um fluxo de trabalho para o outro. No esqueleto acima ela aparece como o `aula-usp pacotes` a escreve: o endereço da CDN, com a versão exata e a soma de integridade que o sistema mediu. Numa aula sua ela é essa mesma linha — nos fluxos com terminal, `aula-usp servir` e `aula-usp build` a reconhecem pelo `src` terminado em `/aula-usp.js` e a trocam, respectivamente, pelo runtime local e pelo motor embutido. O arquivo do seu fluxo diz o que esperar — `70-fluxo-terminal.md`, `71-fluxo-chat.md`, `72-artifact-claude.md` ou `73-chatgpt.md`.
 
-**A tag pronta, com a versão e o hash reais, ainda não existe:** o pacote não está publicado no npm, e a publicação é da fase 3. O modelo, o espécime e os exemplos apontam todos para o runtime local, por caminho relativo. Até lá, a aula se experimenta com `aula-usp servir`; `71-fluxo-chat.md` conta o resto.
+**A versão e o hash são reais; o endereço é que ainda não resolve:** o pacote não está publicado no npm, e a publicação é da fase 3. O modelo e os exemplos já trazem a tag fixada. A exceção é `especime/`, que continua no runtime local por caminho relativo, de propósito: é sobre ele que rodam os testes de integração que servem o arquivo **sem** reescrever a tag, para provar que ela chega ao navegador do jeito que o autor a escreveu — e um endereço que não resolve não teria o que carregar. Até a publicação, a aula se experimenta com `aula-usp servir`; `71-fluxo-chat.md` conta o resto.
 
-Uma propriedade que essa tag terá quando existir: a versão será exata e virá com `integrity`, de modo que uma aula fique presa à versão com que foi feita e não mude de aparência sozinha; atualizar será trocar a tag. E uma que já vale hoje, com o runtime local: se ele não carregar — sem internet, por exemplo —, o HTML aparece cru, feio mas legível, em vez de aparecer em branco.
+Duas propriedades dessa tag. A primeira já está escrita nela: a versão é exata e vem com `integrity`, de modo que uma aula fique presa à versão com que foi feita e não mude de aparência sozinha; atualizar é trocar a tag — e ela passa a valer de fato no dia em que o endereço resolver. A segunda vale hoje, aqui e no runtime local: se o runtime não carregar — sem internet, por exemplo —, o HTML aparece cru, feio mas legível, em vez de aparecer em branco.
 
 ## Os blocos
 

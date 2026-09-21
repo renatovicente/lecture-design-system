@@ -51,7 +51,7 @@ cp -r caminho/para/lecture-design-system/modelos/aula minha-aula
 
 O que você copiou é o esqueleto de `10-estrutura.md`, com capa, duas aberturas, dois slides de conteúdo e encerramento. Troque o conteúdo, preencha as metas do `<head>` e acrescente seções.
 
-Uma observação sobre a tag do `<script>` que veio no modelo: ela aponta para o runtime local por um caminho relativo, que só resolve de dentro de `modelos/aula/`. Na pasta copiada, esse caminho não aponta mais para lugar nenhum — e **não faz diferença neste fluxo**, porque `aula-usp servir` troca a tag pelo runtime local e `aula-usp build` a troca pelo motor embutido. Os dois a reconhecem pelo `src` terminado em `/aula-usp.js`, não pelo endereço. O que não funciona é abrir o arquivo copiado direto no navegador com dois cliques: para ver a aula, use `servir`.
+Uma observação sobre a tag do `<script>` que veio no modelo: ela aponta para a CDN, com a versão exata e a soma de integridade — é a forma que o `aula-usp pacotes` escreve. Esse endereço ainda não resolve, porque o pacote não está publicado (fase 3), e **não faz diferença neste fluxo**, porque `aula-usp servir` troca a tag pelo runtime local e `aula-usp build` a troca pelo motor embutido. Os dois a reconhecem pelo `src` terminado em `/aula-usp.js`, não pelo endereço. O que não funciona, até a publicação, é abrir o arquivo copiado direto no navegador com dois cliques: para ver a aula, use `servir`.
 
 ## O ciclo
 
