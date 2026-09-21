@@ -37,9 +37,9 @@ const BASE = aula(`<section data-layout="capa"><h1>Capa</h1></section>
 <section data-layout="abertura" id="bloco-dois"><h2>Dois</h2></section>
 <section data-layout="encerramento"><h2>Fim</h2><ol class="sintese"><li>Um.</li></ol></section>`);
 
-function rodar(html, regras = estrutura) {
+function rodar(html, regras = estrutura, opcoes = {}) {
   const { document } = parseHTML(html);
-  return validar(document, { contrato, regras, grupo: 'estatica', unidades, cobertura });
+  return validar(document, { contrato, regras, grupo: 'estatica', unidades, cobertura, ...opcoes });
 }
 
 test('a aula de base não tem erro nenhum', () => {
@@ -296,6 +296,59 @@ test('misturar colunas com blocos soltos acusa o que está em minoria', () => {
     rodar(misto, todas).filter((a) => a.regra === 'estrutura.fora-do-layout').map((a) => a.mensagem),
     ['<div> não é permitido no layout "conteudo".'],
   );
+});
+
+// Tarefa 1 da fase 2a (docs/superpowers/plans/2026-09-21-aula-usp-f2a-graficos.md): o exemplo
+// literal da spec 7.2, byte a byte — inclusive o JSON da especificação, que a Tarefa 2 vai ler,
+// mas que aqui só precisa ser um <script type="application/json"> válido para o vocabulário.
+const FIGURE_GRAFICO_7_2 = `<figure class="grafico">
+  <script type="application/json">
+  { "tipo": "linha", "dados": "data/erro.csv", "x": "epoca", "y": ["treino", "teste"], "foco": "teste",
+    "eixos": { "x": "época", "y": "erro" }, "faixas": [{ "x": [120, 245], "rotulo": "platô" }] }
+  </script>
+  <figcaption>Erro de treino e de teste ao longo das épocas.</figcaption>
+</figure>`;
+
+test('figure.grafico do exemplo literal da spec 7.2 não produz erro estático na fase 2', () => {
+  const achados = rodar(slide(`  <h2>Título</h2>\n  ${FIGURE_GRAFICO_7_2}\n`), todas, { fase: 2 });
+  assert.deepEqual(achados.filter((a) => a.severidade === 'erro'), []);
+});
+
+// O mesmo exemplo, sem pedir fase 2 (rodar() usa fase 1 por padrão): os quatro erros que o Fato 1
+// do plano mediu continuam de pé — a regra não afrouxou para quem ainda está na fase 1, só aprendeu
+// que a fase 2 existe. vocabulario.classe e vocabulario.script vêm de portas próprias;
+// estrutura.obrigatorio e estrutura.fora-do-layout vêm os dois da mesma linha de filhos.figure.
+test('o mesmo exemplo produz erro na fase 1: a regra não afrouxou, só aprendeu a fase', () => {
+  const achados = rodar(slide(`  <h2>Título</h2>\n  ${FIGURE_GRAFICO_7_2}\n`), todas)
+    .filter((a) => a.severidade === 'erro');
+  assert.deepEqual(
+    achados.map((a) => a.regra).sort(),
+    ['estrutura.fora-do-layout', 'estrutura.obrigatorio', 'vocabulario.classe', 'vocabulario.script'],
+  );
+});
+
+// A garantia mais estreita da Tarefa 1 (Passo 1 do brief): "uma figure sem classe não pode passar
+// a aceitar script, nem a dispensar o img/svg, em nenhuma fase." Sem a classe grafico/diagrama, o
+// elemento só casa a chave genérica "figure" de filhos — que não tem "fase" nenhuma — nas duas
+// fases. Confere as duas metades pela regra que é dona de cada achado, não pelo total agregado:
+// um total agregado continuaria vermelho mesmo se só uma das duas regras parasse de acusar, e é
+// exatamente essa a inversão que a linha abaixo descreve.
+test('figure sem classe não aceita script nem dispensa img/svg, em nenhuma fase', () => {
+  const comScript = slide('  <h2>Título</h2>\n  <figure><script type="application/json">{}</script></figure>\n');
+  for (const fase of [1, 2]) {
+    const doScript = rodar(comScript, todas, { fase }).filter((a) => a.regra === 'vocabulario.script');
+    assert.deepEqual(
+      doScript.map((a) => a.mensagem),
+      ['script dentro da section: registros de demo ficam fora dos slides.'],
+      `fase ${fase}`,
+    );
+  }
+
+  const semImagem = slide('  <h2>Título</h2>\n  <figure><figcaption>Sem imagem.</figcaption></figure>\n');
+  for (const fase of [1, 2]) {
+    const doObrigatorio = rodar(semImagem, todas, { fase }).filter((a) => a.regra === 'estrutura.obrigatorio');
+    assert.deepEqual(doObrigatorio.map((a) => a.mensagem), ['<figure> sem img nem svg.'], `fase ${fase}`);
+  }
 });
 
 // Achado da revisão final (Minor, item 8): um data-curto comprido fora da abertura era acusado duas

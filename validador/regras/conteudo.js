@@ -58,19 +58,27 @@ function conferirFilhos(elemento, seletor, regra, contrato) {
 // "div.colunas > div" e "div.exercicio". Vale a mais específica — mais classes no último seletor
 // composto, empate pela ordem do contrato —, senão o mesmo elemento é conferido sob regras que se
 // contradizem e ganha um erro falso.
-function chavesPorEspecificidade(contrato) {
+//
+// Uma chave pode trazer "fase" (figure.grafico, figure.diagrama: spec 7.2), pelo mesmo teste que
+// vocabulario.classe e vocabulario.atributo já fazem (regra.fase > fase). Fora da fase dela, a
+// chave nem entra na lista: um <figure class="grafico"> na fase 1 cai de volta em "figure" —
+// exige img ou svg, recusa o script — porque a classe ainda não é vocabulário válido nessa fase.
+// Sem este filtro, a chave mais específica venceria em qualquer fase e a estrutura de fase 2
+// passaria a validar limpo mesmo com o contrato ainda recusando a classe (vocabulario.classe).
+function chavesPorEspecificidade(contrato, fase) {
   return Object.keys(contrato.filhos)
+    .filter((chave) => !(contrato.filhos[chave].fase > fase))
     .map((chave, ordem) => ({ chave, ordem, classes: (chave.split('>').at(-1).match(/\./g) ?? []).length }))
     .sort((a, b) => b.classes - a.classes || a.ordem - b.ordem)
     .map(({ chave }) => chave);
 }
 
 // Um achado por alvo: a própria section, e cada elemento que o contrato descreve em "filhos".
-function* conferir(secao, contrato) {
+function* conferir(secao, contrato, fase) {
   const layout = contrato.layouts[secao.getAttribute('data-layout')];
   if (!layout) return; // layout fora do contrato já é estrutura.layout
   yield { alvo: secao, ...casarSequencia(semOpcionais(secao, contrato), layout.sequencia, contrato) };
-  const chaves = chavesPorEspecificidade(contrato);
+  const chaves = chavesPorEspecificidade(contrato, fase);
   for (const elemento of secao.querySelectorAll('*')) {
     const chave = chaves.find((candidata) => elemento.matches(candidata));
     if (chave) yield { alvo: elemento, ...conferirFilhos(elemento, chave, contrato.filhos[chave], contrato) };
@@ -89,9 +97,9 @@ function nomeDoItem(item) {
 export const regras = [
   {
     nome: 'estrutura.obrigatorio',
-    *aplicar({ slides, contrato }) {
+    *aplicar({ slides, contrato, fase }) {
       for (const secao of slides) {
-        for (const { alvo, faltando } of conferir(secao, contrato)) {
+        for (const { alvo, faltando } of conferir(secao, contrato, fase)) {
           for (const entrada of faltando) {
             yield {
               ...onde(slides, secao),
@@ -105,9 +113,9 @@ export const regras = [
   },
   {
     nome: 'estrutura.fora-do-layout',
-    *aplicar({ slides, contrato }) {
+    *aplicar({ slides, contrato, fase }) {
       for (const secao of slides) {
-        for (const { alvo, sobrando } of conferir(secao, contrato)) {
+        for (const { alvo, sobrando } of conferir(secao, contrato, fase)) {
           for (const { item, foraDeOrdem, excedente } of sobrando) {
             const lugar = alvo === secao ? dentroDe(alvo, secao, 'no') : dentroDe(alvo, secao, 'dentro de');
             const nome = nomeDoItem(item);

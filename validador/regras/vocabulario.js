@@ -281,11 +281,15 @@ export const regras = [
   },
   {
     nome: 'vocabulario.script',
-    *aplicar({ slides, contrato }) {
+    *aplicar({ slides, contrato, fase }) {
       const permitido = contrato.html.elementosFase2?.script;
       for (const { secao, elemento } of elementosDoCorpo(slides)) {
         if (nomeDe(elemento) !== 'script') continue;
         const dentro = permitido?.dentro?.some((pai) => elemento.closest(pai));
+        // Na fase 2 o script de gráfico e de diagrama é legítimo; na fase 1 ele é recusado com a
+        // frase que diz por quê. Fora desses pais, é recusado em qualquer fase: registro de demo
+        // não entra em slide.
+        if (dentro && fase >= 2) continue;
         yield {
           ...onde(slides, secao),
           mensagem: dentro ? 'script dentro da section: gráficos e diagramas são da fase 2.' : 'script dentro da section: registros de demo ficam fora dos slides.',
