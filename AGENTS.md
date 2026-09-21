@@ -18,10 +18,13 @@ A CLI vive em `bin/aula-usp.mjs`. Sem `npm link`, chame por `node bin/aula-usp.m
 | `aula-usp validar <pasta> [--json]` | regras estáticas e de carga e, havendo Chrome, as de composição |
 | `aula-usp build <pasta> [--sem-pdf]` | as sete etapas da spec 3.3; escreve só em `<pasta>/dist/` |
 | `aula-usp dist` | gera `validador/cobertura.json` e os 11 scripts de `dist/` (manutenção do sistema) |
+| `aula-usp pacotes` | fixa a tag do runtime, gera o guia e monta `pacotes/`, nessa ordem; confere os limites da spec 11.1 (manutenção do sistema) |
 
 Códigos de saída (spec 8.1): 0 sem erros, avisos permitidos; 1 com erros de validação; 2 com falha de ambiente. Cada comando aceita **só as suas** flags: `--json` em `build` ou `--porta` em `validar` saem com o uso e código 2, como uma flag inexistente — melhor recusar que ignorar em silêncio.
 
-Dois comandos que a spec 8.1 lista ainda não existem: `aula-usp pacotes` e `aula-usp novo <pasta> --unidade ime`. Os dois chegam no marco 6c.
+Um comando que a spec 8.1 lista ainda não existe: `aula-usp novo <pasta> --unidade ime`. Ele chega no marco 6c.
+
+`aula-usp pacotes` reescreve a tag em `modelos/` e `exemplos/`, e **não** em `especime/`, que a spec 8.1 também nomeia. É desvio consciente, com a razão inteira ao lado de `PASTAS_COM_TAG` em `build/pacotes.mjs`: enquanto o pacote não está publicado (fase 3) a URL da CDN não resolve, e o espécime é servido por um segundo servidor que **não** reescreve a tag — é ele que prova o caminho de produção. Medido: com as seis tags do espécime fixadas, 12 testes de integração caem. O espécime não vai dentro de nenhum pacote; o modelo e o exemplo vão.
 
 Scripts de `package.json`: `npm test`, `npm run test:integracao`, `npm run servir`, `npm run tokens`, `npm run fontes:css`, `npm run fontes`, `npm run marcas`. `aula-usp dist` não tem script npm. **`npm run fontes` e `npm run marcas` baixam da rede** e só rodam com autorização do autor (spec 8.3) — os dois já rodaram na fase 1 e seus resultados estão no repositório.
 
@@ -66,10 +69,13 @@ Consequência prática: **mexeu no empacotador (`build/bundle.mjs`), nos pontos 
 | `validador/cobertura.json` | `aula-usp dist` | `tests/unit/cobertura.test.mjs:74` |
 | `dist/` (11 scripts + manifesto) | `aula-usp dist` | `tests/unit/bundle.test.mjs:115` e `:135` |
 | `guia/10-estrutura.md`, `20-layouts.md`, `30-componentes.md` e `60-validador.md`, só entre `<!-- gerado:… -->` e `<!-- /gerado -->` | `npm run guia` | `tests/unit/guia.test.mjs:27` |
+| `pacotes/` (os quatro da spec 10.2, 25 arquivos) e a tag do runtime em `modelos/` e `exemplos/` | `aula-usp pacotes` | `tests/unit/pacotes.test.mjs:58` |
 
 Todos são rastreados no git e trazem, quando o formato permite, o cabeçalho "Gerado por … Não editar à mão". Editar um à mão quebra a guarda, e a correção é sempre a mesma: edite a **fonte** e regere.
 
-**O que uma guarda dessas NÃO prova.** Todas as cinco são da forma "regerar e comparar", e uma guarda dessa forma prova que o **arquivo** está em dia com o **gerador** — e nada sobre o gerador. Quebre o gerador, regere, e as duas voltam a bater: a guarda fica verde, e a mensagem que ela imprime ("rode … e commite o resultado") manda commitar a regressão. Medido no 6b: tirando do extrator de exemplos o filtro que só aceita deck em português, `npm run guia` publicou "The cloud spreads" e "Takeaways" como exemplos canônicos do guia, e esta guarda seguiu verde. O que fecha essa janela é asseverar **propriedades do resultado** ao lado da igualdade — no guia, que todo exemplo publicado é trecho literal de um deck pt-BR que valida limpo (`tests/unit/guia.test.mjs`). Ao acrescentar um gerado a esta tabela, pergunte também que propriedade o artefato promete, e não só se ele foi regerado.
+**O que uma guarda dessas NÃO prova.** Todas as seis são da forma "regerar e comparar", e uma guarda dessa forma prova que o **arquivo** está em dia com o **gerador** — e nada sobre o gerador. Quebre o gerador, regere, e as duas voltam a bater: a guarda fica verde, e a mensagem que ela imprime ("rode … e commite o resultado") manda commitar a regressão. Medido no 6b: tirando do extrator de exemplos o filtro que só aceita deck em português, `npm run guia` publicou "The cloud spreads" e "Takeaways" como exemplos canônicos do guia, e esta guarda seguiu verde. Medido de novo no 6c, com a tag do runtime: trocando `aula-usp@${version}` por `aula-usp@1.0.0` dentro de `tagFixada()` e regerando, a igualdade ficou verde **e o próprio `aula-usp pacotes` saiu com 0** — a conferência dele também compara o resultado com o gerador. O que fecha essa janela é asseverar **propriedades do resultado** ao lado da igualdade — no guia, que todo exemplo publicado é trecho literal de um deck pt-BR que valida limpo (`tests/unit/guia.test.mjs`); nos pacotes, as três que a spec 11.1 nomeia, medidas contra a spec, o `package.json` e o `dist/manifesto.json` (`tests/unit/pacotes.test.mjs`). Ao acrescentar um gerado a esta tabela, pergunte também que propriedade o artefato promete, e não só se ele foi regerado.
+
+E uma armadilha a mais, medida no 6c: **quando a guarda procura um texto, confira que a fonte da busca não contém o próprio gabarito.** A conferência do bloco de regras essenciais procurava o bloco em "algum arquivo do pacote" — e três dos quatro pacotes levam uma cópia do guia (`references/00-principios.md` ou `conhecimento/guia-do-autor.md`), que contém o bloco. Medido: esvaziando o bloco dos quatro arquivos de instrução, a busca larga acusou **1 dos 4**. A busca agora é no arquivo de instrução declarado de cada pacote.
 
 `aula-usp dist` gera a cobertura **antes** de empacotar, de propósito: `montar/dist.js` importa `validador/cobertura.json` para embuti-lo em `aula-usp.js`, e na ordem inversa o artefato sairia sempre uma geração atrasado.
 
