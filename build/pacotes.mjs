@@ -177,15 +177,29 @@ export function conferirPacotes({ arquivos, bloco, raiz = RAIZ }) {
   }
 
   // 2. o bloco de regras essenciais idêntico em todos os pacotes (spec 11.1). Conferido por
-  // presença literal do bloco em cada um dos quatro: os quatro o recebem da mesma leitura de
-  // 00-principios.md, e é justamente por isso que a asserção tem de ser sobre o arquivo escrito —
-  // conferir a variável contra ela mesma não prova nada sobre o que foi para o disco.
+  // presença literal do bloco no arquivo de INSTRUÇÃO de cada pacote — o destino declarado com
+  // `essenciais: true` —, nunca por "algum arquivo do pacote o contém".
+  //
+  // A diferença não é estilo: dois dos quatro pacotes levam `conhecimento/guia-do-autor.md`, que é
+  // o guia inteiro concatenado e portanto contém 00-principios.md, que contém o bloco. Uma busca
+  // pelo pacote todo passa por esse arquivo mesmo que instrucoes.md e instrucoes.txt tenham perdido
+  // o bloco inteiro — a fonte da busca contendo o próprio gabarito, que é a forma como três guardas
+  // deste projeto nasceram vazias. Medido: com a busca larga, apagar o bloco do instrucoes.txt
+  // deixava esta conferência sem violação nenhuma.
+  //
+  // E a cobertura dos quatro é conferida, não suposta: um pacote sem destino de instrução sairia
+  // sem as regras e esta lista passaria batido, porque não haveria o que iterar.
   const pacotes = ['pacotes/skill/aula-usp', 'pacotes/claude/projeto',
     'pacotes/gpt/gpt-personalizado', 'pacotes/repositorio-de-disciplina'];
+  const comRegras = Object.values(FONTES_DE_PACOTE).filter(({ essenciais }) => essenciais);
+  for (const { destino } of comRegras) {
+    if (!arquivos.get(destino)?.includes(bloco)) {
+      violacoes.push(`${destino}: não traz o bloco de regras essenciais`);
+    }
+  }
   for (const pacote of pacotes) {
-    const dentro = [...arquivos].filter(([caminho]) => caminho.startsWith(`${pacote}/`));
-    if (!dentro.some(([, texto]) => texto.includes(bloco))) {
-      violacoes.push(`${pacote}: nenhum arquivo traz o bloco de regras essenciais`);
+    if (!comRegras.some(({ destino }) => destino.startsWith(`${pacote}/`))) {
+      violacoes.push(`${pacote}: nenhum arquivo dele leva as regras essenciais`);
     }
   }
 
