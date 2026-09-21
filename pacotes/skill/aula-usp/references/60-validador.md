@@ -44,7 +44,7 @@ ERRO · slide 3 #texto-solto · estrutura.fora-do-layout · texto solto não é 
 - **`slide 3 #texto-solto`** — onde. O número é a posição da seção no arquivo, contada a partir da capa, e o `#id` é o seu. Achados sobre a aula inteira, como um metadado que falta, trazem `aula` no lugar do slide.
 - **`estrutura.fora-do-layout`** — qual regra. O prefixo já diz de que tipo é o problema: `estrutura` é a forma do slide, `vocabulario` é o que não existe no contrato, `limites` é o que não cabe, `composicao` é o que a página desenhada revelou, `matematica`, `recursos` e `saida` dizem-se sozinhos.
 - **o que ele encontrou** — a frase até o ponto. Em `limites.*` ela traz sempre a medida encontrada e, entre parênteses, o máximo do contrato: você sabe de quanto está passando.
-- **o que fazer** — a última frase. É literalmente a coluna "como corrigir" da tabela abaixo, a mesma para todas as ocorrências daquela regra.
+- **o que fazer** — a última frase. É literalmente a coluna "como corrigir" da tabela abaixo, a mesma para todas as ocorrências daquela regra. Quando ela manda cortar sem dizer até quanto, é porque o limite depende do layout: os números todos estão na tabela de limites de `10-estrutura.md`.
 - **a linha indentada**, quando existe, é o trecho do seu arquivo a que o achado se refere.
 
 Um aviso tem a mesma forma:
