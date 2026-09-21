@@ -141,3 +141,68 @@ test('os arquivos em dist/ batem byte a byte com o que empacotar regera', async 
       `dist/${nome} em disco não bate byte a byte com o regenerado — rode \`aula-usp dist\` de novo`);
   }
 });
+
+// Os nomes de satélite que o resolver de montar/dist.js sabe pedir, lidos do FONTE dele. Comparação
+// por texto, no mesmo estilo de tests/unit/entrada.test.mjs, e pelo mesmo motivo: sem tirar os
+// comentários primeiro, um comentário que cite um nome de arquivo entraria na medida.
+async function satelitesQueDistSabePedir() {
+  const { readFile } = await import('node:fs/promises');
+  const codigo = (await readFile(new URL('montar/dist.js', RAIZ), 'utf8'))
+    .replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+  const { linguagens } = JSON.parse(await readFile(new URL('contrato/contrato.json', RAIZ), 'utf8'));
+  const literais = [...codigo.matchAll(/'(aula-usp-[\w-]+\.js)'/g)].map((m) => m[1]);
+  // O gabarito das gramáticas é uma template string, e por isso não cai no regex acima. Conferido, e
+  // não presumido: se ele sumir ou virar outra coisa, esta lista ficaria curta em sete nomes calada.
+  const gabaritos = [...codigo.matchAll(/`aula-usp-lang-\$\{[^`]+\}\.js`/g)];
+  assert.equal(gabaritos.length, 1,
+    `esperava um gabarito \`aula-usp-lang-\${…}.js\` em montar/dist.js, achei ${gabaritos.length}`);
+  return new Set([...literais, ...linguagens.map((linguagem) => `aula-usp-lang-${linguagem}.js`)]);
+}
+
+// Guarda de PROPRIEDADE, no sentido do AGENTS.md: não regera e compara nada: afirma que, para cada
+// satélite, o hash dele está dentro do pacote principal — a promessa da spec 3.2, passo 5, que até
+// aqui não era cumprida (medido: `grep -c integrity dist/aula-usp.js` dava 0).
+//
+// As duas listas, e as duas de propósito. Só a marca `satelite` do empacotador não bastaria: ela é a
+// MESMA fonte que alimenta o `define`, então esquecê-la num satélite novo — os dois da fase 2, por
+// exemplo (spec 3.5) — tiraria o hash e a conferência ao mesmo tempo, e a guarda ficaria verde com o
+// satélite desprotegido. É a sétima repetição da armadilha que o AGENTS.md documenta. A segunda lista
+// vem do resolver de montar/dist.js, que é quem de fato decide o que o import() vai buscar, e a
+// igualdade das duas é o que fecha o buraco.
+test('todo satélite tem o seu integrity embutido em aula-usp.js, e nada além deles', async () => {
+  const saidas = await empacotar({ raiz: RAIZ, escrever: false });
+  const doEmpacotador = new Set([...saidas].filter(([, saida]) => saida.satelite).map(([nome]) => nome));
+  const doResolver = await satelitesQueDistSabePedir();
+  assert.deepEqual([...doEmpacotador].sort(), [...doResolver].sort(),
+    'o que o empacotador marca como satélite e o que montar/dist.js sabe pedir divergem — um satélite '
+    + 'novo sem `{ satelite: true }` sai do pacote sem integrity, e sem esta comparação sairia calado');
+  const texto = saidas.get('aula-usp.js').texto;
+  for (const nome of doResolver) {
+    const { integrity } = saidas.get(nome);
+    assert.ok(texto.includes(`${JSON.stringify(nome)}:${JSON.stringify(integrity)}`),
+      `aula-usp.js não traz o integrity de ${nome} — spec 3.2, passo 5`);
+  }
+  // E nada a mais: um hash sobrando no mapa aponta para um arquivo que o resolver nunca pede, e um
+  // integrity que não casa com nenhum pedido é um integrity que o navegador nunca vai conferir.
+  assert.equal([...texto.matchAll(/sha384-/g)].length, doResolver.size,
+    `aula-usp.js tem ${[...texto.matchAll(/sha384-/g)].length} hashes para ${doResolver.size} satélites`);
+});
+
+// Os dois lugares que guardam o mesmo número, sobre os arquivos COMMITADOS — é entre commits que eles
+// divergem, e a guarda de bytes acima não vê essa divergência: ela compara cada arquivo com o que o
+// empacotador regera AGORA, um de cada vez, e nunca um arquivo de dist/ com o outro. Um merge que
+// resolva dist/manifesto.json por um lado e dist/aula-usp.js pelo outro passa por ela em silêncio.
+test('o integrity que dist/aula-usp.js embute é o mesmo que dist/manifesto.json registra', async () => {
+  const { readFile } = await import('node:fs/promises');
+  const manifesto = JSON.parse(await readFile(new URL('dist/manifesto.json', RAIZ), 'utf8'));
+  const pacote = await readFile(new URL('dist/aula-usp.js', RAIZ), 'utf8');
+  const satelites = await satelitesQueDistSabePedir();
+  assert.ok(satelites.size > 0, 'nenhum satélite: montar/dist.js deixou de resolver alguma coisa?');
+  for (const nome of satelites) {
+    const integrity = manifesto.arquivos[nome]?.integrity;
+    assert.match(integrity ?? '', /^sha384-[A-Za-z0-9+/]{64}$/,
+      `dist/manifesto.json não traz um integrity sha384 de ${nome}`);
+    assert.ok(pacote.includes(`${JSON.stringify(nome)}:${JSON.stringify(integrity)}`),
+      `dist/aula-usp.js embute para ${nome} um integrity diferente do de dist/manifesto.json`);
+  }
+});
