@@ -1,6 +1,6 @@
 # A aula pelo ChatGPT
 
-Aqui a aula chega como **arquivo**. Você conversa, o modelo escreve o HTML, você salva em disco e abre no navegador — e a partir daí tudo se passa como em `71-fluxo-chat.md`, que é o arquivo a ler junto com este.
+Aqui a aula chega como **arquivo**. Você conversa, o modelo escreve o HTML, você salva em disco e abre no navegador — e a partir daí tudo se passa como em `71-fluxo-chat.md`, que é o capítulo a ler junto com este.
 
 O que este tem de próprio é o começo e o fim: como dar o guia ao modelo, e como tirar dele o arquivo inteiro sem perder um pedaço no caminho.
 

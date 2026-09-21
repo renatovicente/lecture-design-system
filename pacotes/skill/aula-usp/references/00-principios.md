@@ -57,7 +57,7 @@ O bloco abaixo é o sistema inteiro em um punhado de linhas. Ele entra **literal
 
 ## Onde está o resto
 
-| arquivo | quando abrir |
+| capítulo | quando abrir |
 |---|---|
 | `10-estrutura.md` | o esqueleto do arquivo, os metadados do `<head>` e os blocos da aula |
 | `20-layouts.md` | o que cada layout aceita, em que ordem, e um exemplo de cada |
@@ -70,4 +70,4 @@ O bloco abaixo é o sistema inteiro em um punhado de linhas. Ele entra **literal
 | `72-artifact-claude.md` | a aula como artifact do Claude, e o que não funciona lá dentro |
 | `73-chatgpt.md` | entregar a aula pelo ChatGPT |
 
-Um caminho curto para a primeira aula: leia este arquivo e `10-estrutura.md`, crie a pasta com `aula-usp novo minha-aula --unidade ime` — que copia o esqueleto já com `unidade` e `data` preenchidas —, escreva, e use `60-validador.md` quando o validador falar. Sem terminal, o esqueleto é o que `10-estrutura.md` mostra inteiro, e `71-fluxo-chat.md` conta o resto. A aula-exemplo — `assets/exemplo.html` — é uma aula inteira, escrita dentro do sistema, para ver como fica.
+Um caminho curto para a primeira aula: leia este capítulo e `10-estrutura.md`, crie a pasta com `aula-usp novo minha-aula --unidade ime` — que copia o esqueleto já com `unidade` e `data` preenchidas —, escreva, e use `60-validador.md` quando o validador falar. Sem terminal, o esqueleto é o que `10-estrutura.md` mostra inteiro, e `71-fluxo-chat.md` conta o resto. A aula-exemplo — `assets/exemplo.html` — é uma aula inteira, escrita dentro do sistema, para ver como fica.

@@ -303,10 +303,12 @@ test('todo bloco de corpo do contrato tem a sua documentação em guia/30-compon
 });
 
 // Os arquivos de guia/, lidos da tabela "Onde está o resto" que guia/00-principios.md escreve à mão.
-// A primeira coluna é o nome do arquivo em crase.
+// A primeira coluna é o nome do capítulo em crase, que é o nome do arquivo em guia/ — a tabela diz
+// "capítulo" e não "arquivo" porque nos pacotes de chat o guia inteiro vira um arquivo só, e ali
+// cada capítulo é uma seção dele.
 function arquivosDaTabela(texto) {
   const linhas = texto.split('\n');
-  const cabecalho = linhas.findIndex((linha) => /^\|\s*arquivo\s*\|/.test(linha));
+  const cabecalho = linhas.findIndex((linha) => /^\|\s*capítulo\s*\|/.test(linha));
   assert.notEqual(cabecalho, -1, 'guia/00-principios.md não tem a tabela "Onde está o resto"');
   const nomes = [];
   for (const linha of linhas.slice(cabecalho + 2)) { // +2: pula o cabeçalho e a linha de traços

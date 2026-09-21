@@ -59,7 +59,7 @@ O bloco abaixo é o sistema inteiro em um punhado de linhas. Ele entra **literal
 
 ## Onde está o resto
 
-| arquivo | quando abrir |
+| capítulo | quando abrir |
 |---|---|
 | `10-estrutura.md` | o esqueleto do arquivo, os metadados do `<head>` e os blocos da aula |
 | `20-layouts.md` | o que cada layout aceita, em que ordem, e um exemplo de cada |
@@ -72,7 +72,7 @@ O bloco abaixo é o sistema inteiro em um punhado de linhas. Ele entra **literal
 | `72-artifact-claude.md` | a aula como artifact do Claude, e o que não funciona lá dentro |
 | `73-chatgpt.md` | entregar a aula pelo ChatGPT |
 
-Um caminho curto para a primeira aula: leia este arquivo e `10-estrutura.md`, crie a pasta com `aula-usp novo minha-aula --unidade ime` — que copia o esqueleto já com `unidade` e `data` preenchidas —, escreva, e use `60-validador.md` quando o validador falar. Sem terminal, o esqueleto é o que `10-estrutura.md` mostra inteiro, e `71-fluxo-chat.md` conta o resto. A aula-exemplo — `exemplo.html` — é uma aula inteira, escrita dentro do sistema, para ver como fica.
+Um caminho curto para a primeira aula: leia este capítulo e `10-estrutura.md`, crie a pasta com `aula-usp novo minha-aula --unidade ime` — que copia o esqueleto já com `unidade` e `data` preenchidas —, escreva, e use `60-validador.md` quando o validador falar. Sem terminal, o esqueleto é o que `10-estrutura.md` mostra inteiro, e `71-fluxo-chat.md` conta o resto. A aula-exemplo — `exemplo.html` — é uma aula inteira, escrita dentro do sistema, para ver como fica.
 
 <!-- guia/10-estrutura.md -->
 
@@ -184,7 +184,7 @@ O `lang` do `<html>` escolhe o idioma dos rótulos que o sistema escreve — "Bl
 
 ## A tag do runtime
 
-A linha do `<script>` no `<head>` é a única que muda de um fluxo de trabalho para o outro. No esqueleto acima ela aparece como o `aula-usp pacotes` a escreve: o endereço da CDN, com a versão exata e a soma de integridade que o sistema mediu. Numa aula sua ela é essa mesma linha — nos fluxos com terminal, `aula-usp servir` e `aula-usp build` a reconhecem pelo `src` terminado em `/aula-usp.js` e a trocam, respectivamente, pelo runtime local e pelo motor embutido. O arquivo do seu fluxo diz o que esperar — `70-fluxo-terminal.md`, `71-fluxo-chat.md`, `72-artifact-claude.md` ou `73-chatgpt.md`.
+A linha do `<script>` no `<head>` é a única que muda de um fluxo de trabalho para o outro. No esqueleto acima ela aparece como o `aula-usp pacotes` a escreve: o endereço da CDN, com a versão exata e a soma de integridade que o sistema mediu. Numa aula sua ela é essa mesma linha — nos fluxos com terminal, `aula-usp servir` e `aula-usp build` a reconhecem pelo `src` terminado em `/aula-usp.js` e a trocam, respectivamente, pelo runtime local e pelo motor embutido. O capítulo do seu fluxo diz o que esperar — `70-fluxo-terminal.md`, `71-fluxo-chat.md`, `72-artifact-claude.md` ou `73-chatgpt.md`.
 
 **A versão e o hash são reais; o endereço é que ainda não resolve:** o pacote não está publicado no npm, e a publicação é da fase 3. O modelo, os exemplos e o espécime do repositório já trazem a tag fixada. Até a publicação, a aula se experimenta com `aula-usp servir`; `71-fluxo-chat.md` conta o resto.
 
@@ -1649,7 +1649,7 @@ O artifact é onde a aula se escreve. O arquivo salvo é onde ela se dá.
 
 # A aula pelo ChatGPT
 
-Aqui a aula chega como **arquivo**. Você conversa, o modelo escreve o HTML, você salva em disco e abre no navegador — e a partir daí tudo se passa como em `71-fluxo-chat.md`, que é o arquivo a ler junto com este.
+Aqui a aula chega como **arquivo**. Você conversa, o modelo escreve o HTML, você salva em disco e abre no navegador — e a partir daí tudo se passa como em `71-fluxo-chat.md`, que é o capítulo a ler junto com este.
 
 O que este tem de próprio é o começo e o fim: como dar o guia ao modelo, e como tirar dele o arquivo inteiro sem perder um pedaço no caminho.
 
