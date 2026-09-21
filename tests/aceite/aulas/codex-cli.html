@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Passeio aleatório e difusão</title>
+<meta name="unidade" content="ifusp">
+<meta name="disciplina" content="Física Estatística">
+<meta name="aula" content="9">
+<meta name="data" content="2026-09-21">
+<meta name="professor" content="Prof. Renato Vicente">
+<script src="https://cdn.jsdelivr.net/npm/aula-usp@0.1.0/dist/aula-usp.js"
+        integrity="sha384-r5XJHUJ4P95ySBFOxWPXVOi6ea3bP54gzi4nCb2l76cGgR1DPCl5CfGk7uB7B6AR" crossorigin="anonymous"></script>
+</head>
+<body>
+
+<section data-layout="capa">
+  <h1>Passeio aleatório<br><span class="sinal">difusão entre escalas</span></h1>
+</section>
+
+<section data-layout="abertura" id="passos-ao-acaso" data-curto="Passeio">
+  <h2>Passos ao acaso</h2>
+  <p class="pergunta">O que podemos prever quando cada passo é imprevisível?</p>
+</section>
+
+<section data-layout="conteudo" id="modelo-microscopico">
+  <h2>Uma regra mínima produz<br><span class="sinal">trajetórias muito diferentes.</span></h2>
+  <p class="lide">A cada intervalo \(\tau\), a partícula anda \(+a\) ou \(-a\) com probabilidades iguais.</p>
+  <div class="colunas" data-grade="6-6">
+    <div>
+      \[ X_N = \sum_{i=1}^{N} \xi_i, \qquad \xi_i \in \{-a,+a\} \]
+    </div>
+    <div>
+      <aside class="destaque" data-rotulo="Hipótese">Os incrementos são independentes e não têm direção preferida.</aside>
+    </div>
+  </div>
+  <aside class="notas">Desenhar três trajetórias diferentes no quadro. Distinguir a posição X_N do incremento xi_i.</aside>
+</section>
+
+<section data-layout="conteudo" id="media-e-dispersao">
+  <h2>A média fica parada;<br><span class="sinal">a nuvem se espalha.</span></h2>
+  <p class="lide">A posição média é zero, mas o deslocamento quadrático médio cresce linearmente com o número de passos.</p>
+  <div class="colunas" data-grade="6-6">
+    <div>
+      \[ \langle X_N \rangle = \sum_i \langle \xi_i \rangle = 0 \]
+    </div>
+    <div>
+      \[ \langle X_N^2 \rangle = \sum_i \langle \xi_i^2 \rangle = Na^2 \]
+    </div>
+  </div>
+  <aside class="notas">Ao expandir o quadrado, os termos cruzados somem pela independência e pela média nula. A distância típica cresce como raiz de N.</aside>
+</section>
+
+<section data-layout="abertura" id="do-discreto-ao-continuo" data-curto="Difusão">
+  <h2>Do salto à difusão</h2>
+  <p class="pergunta">Como a regra dos saltos vira uma equação de campo?</p>
+</section>
+
+<section data-layout="conteudo" id="equacao-mestra">
+  <h2>A probabilidade em um ponto<br><span class="sinal">vem de seus vizinhos.</span></h2>
+  <p class="lide">O balanço de um passo liga a distribuição futura às duas posições que podem alcançar \(x\).</p>
+  \[ P(x,t+\tau)=\frac{1}{2}P(x-a,t)+\frac{1}{2}P(x+a,t) \tag{1} \]
+  <aside class="quadro" data-rotulo="Conservação">Somar a equação (1) sobre todas as posições preserva a probabilidade total.</aside>
+  <aside class="notas">Perguntar de quais sítios uma partícula pode chegar a x. Esta é a equação mestra do passeio simétrico.</aside>
+</section>
+
+<section data-layout="conteudo" id="derivacao-difusao" data-pdf="passos">
+  <h2>A equação de difusão emerge<br><span class="sinal">no limite de passos pequenos.</span></h2>
+  \[ \begin{aligned}
+    P(x,t)+\tau\,\partial_t P+O(\tau^2)
+      &= \tfrac12\left[P(x-a,t)+P(x+a,t)\right] \\
+    \passo{1}{P(x\!\pm\!a,t)}
+      &\passo{1}{=P\pm a\,\partial_xP+\tfrac{a^2}{2}\partial_x^2P+O(a^3)} \\
+    \passo{2}{\tau\,\partial_tP}
+      &\passo{2}{=\tfrac{a^2}{2}\partial_x^2P} \\
+    \passo{3}{\partial_tP}
+      &\passo{3}{=D\,\partial_x^2P,\qquad D=\tfrac{a^2}{2\tau}}
+  \end{aligned} \]
+  <p data-passo="4">Mantemos \(D\) finito quando \(a\to0\) e \(\tau\to0\): detalhes dos saltos desaparecem, mas sua razão de escalas permanece.</p>
+  <aside class="notas">Revelar uma linha por vez. Enfatizar o cancelamento dos termos ímpares e a necessidade do limite com D fixo.</aside>
+</section>
+
+<section data-layout="conteudo" id="solucao-gaussiana">
+  <h2>Um pulso localizado<br><span class="sinal">se alarga como uma gaussiana.</span></h2>
+  <p class="lide">Para \(P(x,0)=\delta(x)\), a solução conserva a área e aumenta sua largura como \(\sqrt{t}\).</p>
+  \[ P(x,t)=\frac{1}{\sqrt{4\pi Dt}}\exp\!\left(-\frac{x^2}{4Dt}\right) \]
+  <aside class="destaque" data-rotulo="Assinatura da difusão">\(\langle X^2(t)\rangle=2Dt\) em uma dimensão.</aside>
+  <aside class="notas">Compare com a distribuição normal de variância 2Dt. A altura cai para que a integral continue igual a um.</aside>
+</section>
+
+<section data-layout="abertura" id="simular-e-testar" data-curto="Teste">
+  <h2>Simular e testar</h2>
+  <p class="pergunta">Como reconhecer difusão em dados e em uma simulação?</p>
+</section>
+
+<section data-layout="conteudo" id="codigo-passeios">
+  <h2>Muitos passeios revelam<br><span class="sinal">uma lei que um só esconde.</span></h2>
+  <p class="lide">A média de \(X^2\) sobre muitas trajetórias estima o deslocamento quadrático médio.</p>
+<pre data-lang="python" data-linhas="5-7" data-numeros>import numpy as np
+
+rng = np.random.default_rng(9)
+n_traj, n_passos = 20_000, 500
+passos = rng.choice([-1, 1], size=(n_traj, n_passos))
+x = np.cumsum(passos, axis=1)
+msd = np.mean(x**2, axis=0)
+print(msd[-1])  # aproximadamente 500</pre>
+  <aside class="notas">Nas linhas destacadas estão o experimento, as trajetórias acumuladas e a média de conjunto. A semente torna a demonstração reproduzível.</aside>
+</section>
+
+<section data-layout="conteudo" id="diagnostico-de-difusao">
+  <h2>O expoente separa<br><span class="sinal">regimes de transporte.</span></h2>
+  <p class="lide">A relação \(\langle X^2(t)\rangle\propto t^\alpha\) transforma o crescimento da nuvem em um diagnóstico.</p>
+  <table>
+    <thead>
+      <tr><th scope="col">Expoente</th><th scope="col">Regime</th><th scope="col">Exemplo</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>\(\alpha&lt;1\)</td><td>subdifusão</td><td>aprisionamento</td></tr>
+      <tr class="destaque"><td>\(\alpha=1\)</td><td>difusão normal</td><td>passeio independente</td></tr>
+      <tr><td>\(\alpha&gt;1\)</td><td>superdifusão</td><td>correlações persistentes</td></tr>
+    </tbody>
+  </table>
+  <aside class="notas">Em um gráfico log-log, alpha é a inclinação. Não confundir média da posição com média do quadrado da posição.</aside>
+</section>
+
+<section data-layout="conteudo" id="exercicio-difusao" data-pdf="passos">
+  <h2>Exercício: extraia \(D\)<br><span class="sinal">de uma caminhada microscópica.</span></h2>
+  <div class="exercicio">
+    <div class="enunciado">
+      <p>Uma partícula dá saltos independentes de \(2\,\mu\mathrm{m}\) a cada \(0{,}5\,\mathrm{s}\), para esquerda ou direita. Determine \(D\) e \(\langle X^2\rangle\) após \(10\,\mathrm{s}\).</p>
+    </div>
+    <div class="resposta" data-passo>
+      <p>\(D=a^2/(2\tau)=4\,\mu\mathrm{m}^2/\mathrm{s}\) e \(\langle X^2\rangle=2Dt=80\,\mu\mathrm{m}^2\).</p>
+    </div>
+  </div>
+  <aside class="notas">Dar dois minutos. Pedir primeiro uma previsão dimensional; depois revelar. A distância quadrática média não é uma distância.</aside>
+</section>
+
+<section data-layout="encerramento">
+  <h2>O que fica</h2>
+  <ol class="sintese">
+    <li>Passos sem viés dão posição média nula, mas \(\langle X^2\rangle\) cresce.</li>
+    <li>O limite contínuo do balanço microscópico produz \(\partial_tP=D\partial_x^2P\).</li>
+    <li>A lei \(\langle X^2\rangle=2Dt\) identifica a difusão normal.</li>
+  </ol>
+  <p class="proxima">Próxima aula: difusão com deriva e equação de Fokker–Planck.</p>
+</section>
+
+</body>
+</html>
