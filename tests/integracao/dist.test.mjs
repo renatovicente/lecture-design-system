@@ -199,6 +199,12 @@ test('todo satélite que o navegador pede tem integrity no import map, e o mapa 
   const pedidos = new Set();
   for (const { deck, base, erros, mapa, satelites } of decks) {
     assert.deepEqual(erros, [], `${deck}: ${erros.join('\n')}`);
+    // O `1` guarda "ninguém injetou dois mapas por engano" — não a conferência. Medido, com um
+    // <script type="importmap"> vazio do autor antes da tag: o documento fica com 2 mapas e o
+    // satélite corrompido continua recusado (montado=erro, erro de integrity no console); só esta
+    // asserção cairia. Hoje o caso é inalcançável por um deck válido (`script` não está em
+    // `html.elementos` do contrato, e a regra vocabulario.script acusa `script` dentro de section);
+    // se a fase 2 o tornar alcançável, é esta linha que muda, e não o mecanismo.
     assert.equal(mapa.quantos, 1, `${deck}: ${mapa.quantos} import maps no documento, esperava 1`);
     assert.ok(satelites.length > 0, `${deck} não pediu satélite nenhum — o deck deixou de exercitar a cadeia`);
     for (const nome of satelites) {
