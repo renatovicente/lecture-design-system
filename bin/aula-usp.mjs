@@ -282,7 +282,13 @@ async function pacotesComando(argumentos) {
     sair(`não foi possível montar os pacotes: ${erro.message}`);
   }
   const { tags, arquivos, violacoes } = resultado;
-  console.log(`${plural(tags.size, 'tag do runtime fixada', 'tags do runtime fixadas')}`);
+  // O que MUDOU, não o que foi visitado: `reescreverTags` visita toda tag das três pastas, e numa
+  // árvore já em dia — o caso normal, porque o comando é idempotente — nenhuma delas muda. Contar as
+  // visitadas fazia o comando afirmar um trabalho que ele não fez.
+  const fixadas = [...tags.values()].filter(({ mudou }) => mudou).length;
+  console.log(fixadas > 0
+    ? `${plural(fixadas, 'tag do runtime fixada', 'tags do runtime fixadas')} (de ${tags.size} conferidas)`
+    : `nenhuma tag do runtime mudou — as ${tags.size} conferidas já estavam fixadas`);
   for (const [caminho, texto] of arquivos) console.log(`${caminho} · ${texto.length} caracteres`);
   for (const violacao of violacoes) console.error(`Aula USP: ${violacao}`);
   // Saída 1, não 2 (spec 8.1): o ambiente rodou, os arquivos estão no disco, e o que falhou foi o

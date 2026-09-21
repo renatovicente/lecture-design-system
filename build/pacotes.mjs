@@ -94,13 +94,18 @@ export function arquivosComTag(raiz = RAIZ) {
 
 // Devolve o texto novo de cada arquivo com tag, sempre; grava só quando pedido — a mesma separação
 // de gerarGuia(), e pela mesma razão: a guarda regera em memória sem sujar o disco.
+//
+// `mudou` sai junto, e não é detalhe de contabilidade: sem ele, quem chama só sabe quantos arquivos
+// foram VISITADOS, e numa árvore já em dia — o caso normal — o comando afirmava ter fixado tags que
+// já estavam fixadas. Quem sabe a diferença é esta função, que compara antes e depois; dizê-la aqui
+// evita que o chamador a recalcule (e erre).
 export function reescreverTags({ raiz = RAIZ, escrever = false } = {}) {
   const tag = tagFixada({ raiz });
   const saida = new Map();
   for (const caminho of arquivosComTag(raiz)) {
     const antes = readFileSync(new URL(caminho, raiz), 'utf8');
     const depois = trocar(antes, TAG, tag);
-    saida.set(caminho, depois);
+    saida.set(caminho, { texto: depois, mudou: depois !== antes });
     if (escrever && depois !== antes) writeFileSync(new URL(caminho, raiz), depois);
   }
   return saida;
@@ -185,7 +190,12 @@ export function montarPacotes({ raiz = RAIZ, escrever: gravar = false } = {}) {
 // As três conferências que a spec 11.1 nomeia, medidas sobre o que foi montado — nunca sobre o que
 // se pretendeu montar. Devolve a lista de violações; vazia quer dizer que os quatro pacotes estão
 // dentro do que a spec promete.
-export function conferirPacotes({ arquivos, bloco, raiz = RAIZ }) {
+// `fontes` são os arquivos que o comando acabou de REESCREVER (caminho -> texto), e entram só na
+// terceira conferência: sem eles, `aula-usp pacotes` não conferia o que ele mesmo tinha escrito em
+// `modelos/`, `especime/` e `exemplos/` — corretos por construção, mas "por construção" é
+// exatamente o que uma conferência existe para não ter de supor. Opcional, porque a guarda de
+// tests/unit/pacotes.test.mjs confere o disco por outro caminho e monta sem reescrever nada.
+export function conferirPacotes({ arquivos, bloco, raiz = RAIZ, fontes = new Map() }) {
   const violacoes = [];
 
   // 1. o teto de 8.000 caracteres do instrucoes.txt (spec 10.2 e 11.1). O número é da spec, não do
@@ -235,15 +245,16 @@ export function conferirPacotes({ arquivos, bloco, raiz = RAIZ }) {
   // seria pior — envelheceria a cada `aula-usp dist` sem ninguém reescrever prosa.
   const tag = tagFixada({ raiz });
   const todas = new RegExp(TAG.source, 'g');
-  for (const [caminho, texto] of arquivos) {
+  const conferiveis = new Map([...fontes, ...arquivos]);
+  for (const [caminho, texto] of conferiveis) {
     for (const achado of texto.match(todas) ?? []) {
       if (achado === tag || /aula-usp@</.test(achado)) continue;
       violacoes.push(`${caminho}: tag de runtime que não é a fixada — ${achado.split('\n')[0]}`);
     }
   }
   // E presença, não só ausência de tag errada: um modelo sem tag nenhuma passaria no laço acima.
-  for (const caminho of [...arquivos.keys()].filter((nome) => nome.endsWith('.html'))) {
-    if (!arquivos.get(caminho).includes(tag)) violacoes.push(`${caminho}: não traz a tag fixada do runtime`);
+  for (const [caminho, texto] of conferiveis) {
+    if (caminho.endsWith('.html') && !texto.includes(tag)) violacoes.push(`${caminho}: não traz a tag fixada do runtime`);
   }
 
   return violacoes;
@@ -275,5 +286,8 @@ export async function gerarPacotes({ raiz = RAIZ } = {}) {
   const { gerarGuia } = await import('./guia.mjs');
   const guia = await gerarGuia({ raiz, escrever: true });
   const { arquivos, bloco } = montarPacotes({ raiz, escrever: true });
-  return { tags, guia, arquivos, violacoes: conferirPacotes({ arquivos, bloco, raiz }) };
+  // As fontes reescritas entram na conferência junto com o que vai nos pacotes: o comando confere o
+  // que ele mesmo escreveu, e não só o que copiou.
+  const fontes = new Map([...tags].map(([caminho, { texto }]) => [caminho, texto]));
+  return { tags, guia, arquivos, violacoes: conferirPacotes({ arquivos, bloco, raiz, fontes }) };
 }
