@@ -18,7 +18,7 @@ Feito para o IME-USP e o IFUSP, com a identidade visual da USP.
 | Validador | as **60 regras da fase 1, todas implementadas**: 47 estáticas, 4 de carga, 5 de composição e 4 de saída |
 | CLI | os **6 comandos** da spec 8.1 |
 | Guia e pacotes | 11 arquivos de guia do autor e 4 pacotes montados a partir deles, para Claude, GPT e um repositório de disciplina |
-| Testes | **457 unitários** (37 arquivos, sem navegador) e **200 de integração** (22 arquivos, em Chrome de verdade), zero pulos |
+| Testes | **464 unitários** (38 arquivos; 36 sem navegador, e 2 que sobem um Chrome de verdade) e **202 de integração** (22 arquivos, em Chrome de verdade), zero pulos |
 
 ## O que ainda não existe
 

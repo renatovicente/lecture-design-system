@@ -60,6 +60,26 @@ test('o que sai de `novo` valida limpo, em cada unidade que o comando aceita', a
   }
 });
 
+// A metade que a guarda acima NÃO mede, e por isso está aqui e não dentro dela (M1 da revisão final
+// do 6c): `validarArquivo` também roda o grupo de COMPOSIÇÃO, que precisa de Chrome, e conta o que
+// aconteceu em `avisoDeComposicao` — null quando mediu, uma frase quando pulou. Asseverar só
+// `achados` vazio passa igual numa máquina sem Chrome, medindo um grupo de regras a menos, e sem
+// dizer. Aqui a degradação da spec 8.1 ("falta de Chrome não é falha") aparece como um PULO
+// anunciado, que é o mesmo idioma de validar-cli.test.mjs.
+test('e "limpa" inclui a composição: o grupo que precisa de Chrome rodou de verdade', async (t) => {
+  const pasta = alvoNovo();
+  novo(pasta, '--unidade', 'ime');
+  const { avisoDeComposicao } = await validarArquivo(pasta);
+  // O pulo é SÓ para a falta de Chrome, e reconhecida pela frase que build/validar.mjs escreve
+  // (mesma leitura de validar-cli.test.mjs). Qualquer outro valor não-nulo cai: um grupo de
+  // composição que deixasse de rodar por outra razão viraria um pulo permanente e mudo.
+  if (/composição pulada, sem Chrome/.test(avisoDeComposicao ?? '')) {
+    t.skip(`sem Chrome: a validação pulou a composição (spec 8.1) — ${avisoDeComposicao}`);
+    return;
+  }
+  assert.equal(avisoDeComposicao, null, `a composição não rodou sobre a aula criada por \`novo\`: ${avisoDeComposicao}`);
+});
+
 // ---------------------------------------------------------------------------------------------
 // 2. As duas metas que o comando sabe, e as três que ele deixa em paz.
 
@@ -107,16 +127,30 @@ test('fora as duas metas, a aula criada é o modelo linha a linha', () => {
 // Consequência da decisão do 6c de fixar a tag em `modelos/`: a aula recém-criada nasce com a tag da
 // CDN, que só resolve na fase 3. Medido neste marco: `validar` e `build` continuam limpos nela,
 // porque os dois passam pelo servidor interno, que reconhece a tag pelo `src` terminado em
-// `/aula-usp.js` e a troca. Esta guarda registra o acoplamento — se um dia `novo` passar a escrever
-// outra tag, é aqui que a divergência com `modelos/aula/` aparece.
-test('a aula criada carrega a mesma tag do runtime que o modelo', () => {
+// `/aula-usp.js` e a troca.
+//
+// O gabarito é o par `package.json` + `dist/manifesto.json`, e não o modelo (M3 da revisão final do
+// 6c): comparar a aula criada com o modelo que ela acaba de copiar é estritamente mais fraco que a
+// guarda de cima ("fora as duas metas, a aula criada é o modelo linha a linha"), e nenhuma mutação
+// derrubava esta sem derrubar aquela junto. Contra as duas fontes, ela mede o que a de cima não vê:
+// um modelo que perdeu a tag fixada — por um `aula-usp pacotes` não rodado, por uma edição à mão —
+// faz toda aula nova nascer com uma tag que não é a do sistema, e a comparação com o modelo
+// continuaria verde.
+test('a aula criada carrega a tag fixada: a versão de package.json e o integrity do manifesto', () => {
   const pasta = alvoNovo();
   novo(pasta, '--unidade', 'ime');
-  const tag = /<script\b[^>]*\bsrc="([^"]*\/aula-usp\.js)"[^>]*>/;
+  const { version } = JSON.parse(readFileSync(join(RAIZ, 'package.json'), 'utf8'));
+  const { integrity } = JSON.parse(readFileSync(join(RAIZ, 'dist/manifesto.json'), 'utf8')).arquivos['aula-usp.js'];
+  assert.match(integrity, /^sha384-/, 'dist/manifesto.json não traz o integrity de aula-usp.js');
+  const tag = /<script\b[^>]*\bsrc="([^"]*\/aula-usp\.js)"([^>]*)>/;
   const daCriada = readFileSync(join(pasta, 'index.html'), 'utf8').match(tag);
-  const doModelo = MODELO.match(tag);
-  assert.ok(doModelo, 'modelos/aula/index.html não traz a tag do runtime');
-  assert.equal(daCriada?.[1], doModelo[1]);
+  assert.ok(daCriada, 'a aula criada não traz a tag do runtime');
+  assert.equal(
+    daCriada[1],
+    `https://cdn.jsdelivr.net/npm/aula-usp@${version}/dist/aula-usp.js`,
+    'a tag da aula criada não é a fixada — rode `aula-usp pacotes` e confira modelos/aula/index.html',
+  );
+  assert.ok(daCriada[2].includes(`integrity="${integrity}"`), 'a tag da aula criada não traz o integrity de dist/aula-usp.js');
 });
 
 // ---------------------------------------------------------------------------------------------
