@@ -34,9 +34,11 @@ export const PACOTES_COM_GUIA = {
 };
 
 // O acervo que viaja junto do guia, além do modelo e do exemplo. O critério é um só e é medido, não
-// opinado: **são os arquivos que o guia manda abrir**. Antes disto, nos três pacotes acima, eram 33
-// ponteiros para `especime/…` e 9 citações de `contrato/contrato.json` — todos mortos para quem
-// instala o pacote, porque o guia foi escrito por quem está dentro do repositório.
+// opinado: **são os arquivos que o guia manda abrir**. Antes disto eram, por pacote de chat, 32
+// ponteiros para `especime/…` e 8 citações de `contrato/contrato.json` (na skill, 32 e 10 — o
+// `SKILL.md` cita o contrato duas vezes a mais) — todos mortos para quem instala o pacote, porque o
+// guia foi escrito por quem está dentro do repositório. Os números "33 e 9" que este comentário
+// trazia eram de uma contagem anterior e não se reproduziram; estes são os medidos.
 //
 // O caminho dentro do pacote é o MESMO do repositório, de propósito: é o que faz esses 42 ponteiros
 // resolverem sem reescrita nenhuma. O modelo e o exemplo são a exceção — o pacote já os levava com

@@ -93,7 +93,7 @@ Com erros de composição na etapa 5, o build grava `<slug>.html` e `validacao.j
 
 ### 3.4. Pacotes
 
-Os pacotes são gerados por `aula-usp pacotes` a partir de `guia/`, `contrato/`, `tokens/`, `modelos/` e `exemplos/` (seção 10). Nenhum texto de instrução é mantido à mão fora de `guia/`.
+Os pacotes são gerados por `aula-usp pacotes` a partir de `guia/`, `contrato/`, `tokens/`, `modelos/`, `exemplos/` e `especime/` (seção 10). Nenhum texto de instrução é mantido à mão fora de `guia/`.
 
 ### 3.5. Estrutura do repositório
 
