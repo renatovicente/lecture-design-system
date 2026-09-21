@@ -179,14 +179,55 @@ export function arquivosDoGuia(raiz = RAIZ) {
   return readdirSync(new URL('guia/', raiz)).filter((nome) => nome.endsWith('.md')).sort();
 }
 
+// O título de cada capítulo, lido do `# ` da primeira linha do próprio capítulo — nunca digitado
+// aqui. É o mesmo princípio de `decksDoEspecime`: um capítulo renomeado, ou um capítulo novo, entra
+// sozinho. Erra alto se um capítulo não começar por um título de primeiro nível, porque aí a
+// referência cruzada reescrita mandaria procurar uma seção que o leitor não tem como achar.
+export function titulosDoGuia(raiz = RAIZ) {
+  const titulos = new Map();
+  for (const nome of arquivosDoGuia(raiz)) {
+    const [primeira] = readFileSync(new URL(`guia/${nome}`, raiz), 'utf8').split('\n');
+    if (!primeira.startsWith('# ')) throw new Error(`guia/${nome} não começa com um título de primeiro nível`);
+    titulos.set(nome, primeira.slice(2).trim());
+  }
+  return titulos;
+}
+
+// A referência cruzada de um capítulo, reescrita para o guia que virou UM arquivo.
+//
+// O guia se refere aos seus capítulos pelo nome do arquivo — "é o assunto de `20-layouts.md`",
+// "use `60-validador.md` quando o validador falar". Em `guia/` e em `references/` isso é um
+// endereço de verdade: o capítulo está ao lado de quem o cita. Num arquivo só, não é: medido nesta
+// árvore, eram **86 por pacote de chat, 172 no total**, mandando o leitor abrir um arquivo que ali
+// não existe — a mesma classe de defeito que o acervo fechou, pelo lado da referência interna.
+//
+// O que resolve sem criar duas verdades é o mesmo caminho de `apontar`: escrever o ponteiro uma vez
+// na fonte e trocá-lo na MONTAGEM pelo que aquele pacote tem. Aqui o que o pacote tem é uma SEÇÃO,
+// e o nome dela é o título do capítulo — que é o `# ` que o leitor vê no arquivo, e portanto a
+// única coisa que ele consegue procurar.
+//
+// A troca é por split/join, nunca por `replace` com string de substituição, pela razão de sempre
+// (ver `trocar`). E ela só pega o nome ENTRE CRASES: o cabeçalho `<!-- guia/NN-….md -->` que este
+// arquivo insere é procedência, não ponteiro, e continua dizendo de onde o trecho veio.
+export function citarSecoes(texto, titulos) {
+  let saida = texto;
+  for (const [nome, titulo] of titulos) saida = saida.split(`\`${nome}\``).join(`**${titulo}**`);
+  return saida;
+}
+
 // O guia num arquivo só, que é o que `conhecimento/` recebe nos pacotes do Claude e do GPT (spec
 // 10.2). A ordem é a numérica dos nomes, pelo `.sort()` acima. Cada trecho vem precedido do nome do
 // arquivo de onde saiu, porque num arquivo único de 100 KB a única forma de o leitor — humano ou
 // modelo — voltar à fonte é essa.
+//
+// A concatenação é feita antes da reescrita de propósito: o que decide se um nome de capítulo é
+// ponteiro morto é a FORMA DE ENTREGA, não o capítulo em que ele aparece, e reescrever o texto
+// inteiro de uma vez é a única maneira de nenhum escapar.
 export function guiaNumArquivo(raiz = RAIZ) {
-  return `${arquivosDoGuia(raiz)
+  const inteiro = `${arquivosDoGuia(raiz)
     .map((nome) => `<!-- guia/${nome} -->\n\n${readFileSync(new URL(`guia/${nome}`, raiz), 'utf8').trimEnd()}`)
     .join('\n\n')}\n`;
+  return citarSecoes(inteiro, titulosDoGuia(raiz));
 }
 
 // Um fonte de guia/pacotes/ montado: marcador trocado pelo bloco essencial, comentários fora.

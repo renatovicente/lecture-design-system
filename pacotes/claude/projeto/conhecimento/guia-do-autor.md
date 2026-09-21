@@ -10,7 +10,7 @@ Este guia é a fonte de tudo que se pode escrever numa aula, e tem dois leitores
 
 ## O que você escreve e o que o sistema desenha
 
-Cada `<section>` do corpo do arquivo é um slide. O `data-layout` da seção diz que papel esse slide tem, e cada layout aceita um conjunto fechado de elementos, numa ordem fixa — é o assunto de `20-layouts.md`.
+Cada `<section>` do corpo do arquivo é um slide. O `data-layout` da seção diz que papel esse slide tem, e cada layout aceita um conjunto fechado de elementos, numa ordem fixa — é o assunto de **Layouts**.
 
 O sistema deriva das seções, e desenha sozinho:
 
@@ -61,18 +61,18 @@ O bloco abaixo é o sistema inteiro em um punhado de linhas. Ele entra **literal
 
 | capítulo | quando abrir |
 |---|---|
-| `10-estrutura.md` | o esqueleto do arquivo, os metadados do `<head>` e os blocos da aula |
-| `20-layouts.md` | o que cada layout aceita, em que ordem, e um exemplo de cada |
-| `30-componentes.md` | o trecho pronto de cada bloco de corpo |
-| `40-matematica-e-codigo.md` | delimitadores, `\passo`, derivações reveladas e linhas marcadas de código |
-| `50-graficos-diagramas-demos.md` | demos e, na fase 2, gráficos e diagramas |
-| `60-validador.md` | a tabela de regras e o que fazer quando cada uma acusa |
-| `70-fluxo-terminal.md` | escrever a aula com a CLI instalada |
-| `71-fluxo-chat.md` | escrever a aula num chat, sem terminal |
-| `72-artifact-claude.md` | a aula como artifact do Claude, e o que não funciona lá dentro |
-| `73-chatgpt.md` | entregar a aula pelo ChatGPT |
+| **A estrutura de uma aula** | o esqueleto do arquivo, os metadados do `<head>` e os blocos da aula |
+| **Layouts** | o que cada layout aceita, em que ordem, e um exemplo de cada |
+| **Componentes** | o trecho pronto de cada bloco de corpo |
+| **Matemática e código** | delimitadores, `\passo`, derivações reveladas e linhas marcadas de código |
+| **Gráficos, diagramas e demos** | demos e, na fase 2, gráficos e diagramas |
+| **O validador** | a tabela de regras e o que fazer quando cada uma acusa |
+| **O fluxo com terminal** | escrever a aula com a CLI instalada |
+| **O fluxo no chat, sem terminal** | escrever a aula num chat, sem terminal |
+| **A aula como artifact do Claude** | a aula como artifact do Claude, e o que não funciona lá dentro |
+| **A aula pelo ChatGPT** | entregar a aula pelo ChatGPT |
 
-Um caminho curto para a primeira aula: leia este capítulo e `10-estrutura.md`, crie a pasta com `aula-usp novo minha-aula --unidade ime` — que copia o esqueleto já com `unidade` e `data` preenchidas —, escreva, e use `60-validador.md` quando o validador falar. Sem terminal, o esqueleto é o que `10-estrutura.md` mostra inteiro, e `71-fluxo-chat.md` conta o resto. A aula-exemplo — `exemplo.html` — é uma aula inteira, escrita dentro do sistema, para ver como fica.
+Um caminho curto para a primeira aula: leia este capítulo e **A estrutura de uma aula**, crie a pasta com `aula-usp novo minha-aula --unidade ime` — que copia o esqueleto já com `unidade` e `data` preenchidas —, escreva, e use **O validador** quando o validador falar. Sem terminal, o esqueleto é o que **A estrutura de uma aula** mostra inteiro, e **O fluxo no chat, sem terminal** conta o resto. A aula-exemplo — `exemplo.html` — é uma aula inteira, escrita dentro do sistema, para ver como fica.
 
 <!-- guia/10-estrutura.md -->
 
@@ -158,9 +158,9 @@ O que há para reparar nele:
 
 - a ordem é obrigatória: a aula **começa** na `capa` e **termina** no `encerramento`;
 - entre uma abertura e a seguinte ficam os slides daquele bloco — aqui, um de cada;
-- a indentação é livre; o sistema não a lê. A exceção é o interior de `<pre>`, onde o espaço é conteúdo (`30-componentes.md`).
+- a indentação é livre; o sistema não a lê. A exceção é o interior de `<pre>`, onde o espaço é conteúdo (**Componentes**).
 
-Com terminal, `aula-usp novo minha-aula --unidade ime` cria a pasta com este arquivo dentro e duas metas já preenchidas (`70-fluxo-terminal.md`). Sem terminal, copie o arquivo inteiro e troque o conteúdo. De um jeito ou de outro, partir deste esqueleto é mais rápido do que montá-lo de memória, e você herda de graça a ordem das seções e o par de aberturas.
+Com terminal, `aula-usp novo minha-aula --unidade ime` cria a pasta com este arquivo dentro e duas metas já preenchidas (**O fluxo com terminal**). Sem terminal, copie o arquivo inteiro e troque o conteúdo. De um jeito ou de outro, partir deste esqueleto é mais rápido do que montá-lo de memória, e você herda de graça a ordem das seções e o par de aberturas.
 
 ## Os metadados
 
@@ -184,9 +184,9 @@ O `lang` do `<html>` escolhe o idioma dos rótulos que o sistema escreve — "Bl
 
 ## A tag do runtime
 
-A linha do `<script>` no `<head>` é a única que muda de um fluxo de trabalho para o outro. No esqueleto acima ela aparece como o `aula-usp pacotes` a escreve: o endereço da CDN, com a versão exata e a soma de integridade que o sistema mediu. Numa aula sua ela é essa mesma linha — nos fluxos com terminal, `aula-usp servir` e `aula-usp build` a reconhecem pelo `src` terminado em `/aula-usp.js` e a trocam, respectivamente, pelo runtime local e pelo motor embutido. O capítulo do seu fluxo diz o que esperar — `70-fluxo-terminal.md`, `71-fluxo-chat.md`, `72-artifact-claude.md` ou `73-chatgpt.md`.
+A linha do `<script>` no `<head>` é a única que muda de um fluxo de trabalho para o outro. No esqueleto acima ela aparece como o `aula-usp pacotes` a escreve: o endereço da CDN, com a versão exata e a soma de integridade que o sistema mediu. Numa aula sua ela é essa mesma linha — nos fluxos com terminal, `aula-usp servir` e `aula-usp build` a reconhecem pelo `src` terminado em `/aula-usp.js` e a trocam, respectivamente, pelo runtime local e pelo motor embutido. O capítulo do seu fluxo diz o que esperar — **O fluxo com terminal**, **O fluxo no chat, sem terminal**, **A aula como artifact do Claude** ou **A aula pelo ChatGPT**.
 
-**A versão e o hash são reais; o endereço é que ainda não resolve:** o pacote não está publicado no npm, e a publicação é da fase 3. O modelo, os exemplos e o espécime do repositório já trazem a tag fixada. Até a publicação, a aula se experimenta com `aula-usp servir`; `71-fluxo-chat.md` conta o resto.
+**A versão e o hash são reais; o endereço é que ainda não resolve:** o pacote não está publicado no npm, e a publicação é da fase 3. O modelo, os exemplos e o espécime do repositório já trazem a tag fixada. Até a publicação, a aula se experimenta com `aula-usp servir`; **O fluxo no chat, sem terminal** conta o resto.
 
 Duas propriedades dessa tag. A primeira já está escrita nela: a versão é exata e vem com `integrity`, de modo que uma aula fique presa à versão com que foi feita e não mude de aparência sozinha; atualizar é trocar a tag — e ela passa a valer de fato no dia em que o endereço resolver. A segunda vale hoje, aqui e no runtime local: se o runtime não carregar — sem internet, por exemplo —, o HTML aparece cru, feio mas legível, em vez de aparecer em branco.
 
@@ -262,10 +262,10 @@ Do espécime: `especime/matematica.html#passo-a-passo`.
 
 - **Cromo escrito à mão** — cabeçalho, rodapé, número de slide, logo, mapa. Tudo isso o sistema desenha; escrito de novo, aparece duas vezes.
 - **`style`, em qualquer forma**, e qualquer elemento ou atributo fora do contrato. É `vocabulario.style` e companhia, e a correção é sempre usar o layout ou o componente que faz aquilo.
-- **`script` dentro de uma `section`.** O registro de uma demo mora fora dos slides (`50-graficos-diagramas-demos.md`).
+- **`script` dentro de uma `section`.** O registro de uma demo mora fora dos slides (**Gráficos, diagramas e demos**).
 - **Conteúdo que não cabe.** Os limites do contrato estão medidos para a projeção: quando um deles acusa, a resposta é cortar ou dividir o slide, nunca reduzir o texto. Quanto é "não cabe", em cada caso, está na seção seguinte.
 
-O que pode entrar em cada layout, na ordem, está em `20-layouts.md`; o trecho pronto de cada componente, em `30-componentes.md`.
+O que pode entrar em cada layout, na ordem, está em **Layouts**; o trecho pronto de cada componente, em **Componentes**.
 
 ## Quanto cabe
 
@@ -275,7 +275,7 @@ Três avisos de leitura:
 
 - **um segmento é o trecho entre `<br>`.** Um título de duas linhas tem dois segmentos, e o limite de caracteres vale para cada um separadamente, não para a soma. O limite de linhas é o irmão dele medido na página desenhada, quando o título quebra sozinho.
 - **no código, a coluna é o caractere:** o limite de colunas de um `pre` é o comprimento da linha mais longa, e o de uma `table` é o número de colunas dela.
-- **aqui está o número; a regra que o cobra e a frase que ela imprime estão em `60-validador.md`.** A mensagem de um limite traz sempre a medida encontrada e, entre parênteses, o máximo — de modo que você saiba de quanto está passando.
+- **aqui está o número; a regra que o cobra e a frase que ela imprime estão em **O validador**.** A mensagem de um limite traz sempre a medida encontrada e, entre parênteses, o máximo — de modo que você saiba de quanto está passando.
 
 <!-- gerado:tabela-de-limites -->
 | limite | quanto cabe | onde |
@@ -322,9 +322,9 @@ A seção acima diz o que não entra. Esta é a lista do que entra — todo elem
 Quatro avisos de leitura:
 
 - **as tabelas são da fase 1.** Classe e atributo marcados como fase 2 no contrato ficam de fora, porque o validador de hoje os recusa.
-- **`section` não está na lista de elementos**, porque ela não é conteúdo: ela é o slide. O que cada `data-layout` aceita dentro dela está em `20-layouts.md`.
+- **`section` não está na lista de elementos**, porque ela não é conteúdo: ela é o slide. O que cada `data-layout` aceita dentro dela está em **Layouts**.
 - **na tabela de classes, `em` é o elemento que recebe a classe e `só dentro de` é o ancestral obrigatório.** `enunciado` é classe de `div`, e um `div.enunciado` fora de um `div.exercicio` é erro.
-- **na tabela de atributos, "na forma" traz a expressão exata que o validador aplica ao valor.** Ela é para quem precisa da forma literal; o que ela quer dizer em português está no arquivo do componente. O `src` de uma imagem, por exemplo, é um caminho em `img/`, um URI `data:` ou um endereço `https://`, e é isso que `30-componentes.md` diz.
+- **na tabela de atributos, "na forma" traz a expressão exata que o validador aplica ao valor.** Ela é para quem precisa da forma literal; o que ela quer dizer em português está no arquivo do componente. O `src` de uma imagem, por exemplo, é um caminho em `img/`, um URI `data:` ou um endereço `https://`, e é isso que **Componentes** diz.
 
 <!-- gerado:tabela-de-vocabulario -->
 ### Elementos
@@ -441,7 +441,7 @@ Como ler a tabela:
 
 - **a ordem é literal.** O `h2` vem antes do `p.lide`, que vem antes do corpo. Elemento na ordem errada, ou de um tipo que o layout não aceita, é `estrutura.fora-do-layout`.
 - **`(opcional)` é o que pode faltar.** Tudo o mais na coluna é obrigatório, e a falta é `estrutura.obrigatorio`.
-- **`um bloco de corpo`** é qualquer um dos blocos de `30-componentes.md`: parágrafo, lista, campo, exercício, tabela, código, figura ou equação em destaque.
+- **`um bloco de corpo`** é qualquer um dos blocos de **Componentes**: parágrafo, lista, campo, exercício, tabela, código, figura ou equação em destaque.
 - **`ou`** separa alternativas que não se somam: no `conteudo`, ou uma `div.colunas`, ou blocos de corpo soltos — não os dois.
 - **cromo automático** é a lista do que você **não** escreve. Ela não é conteúdo permitido: é o que já vem pronto.
 
@@ -453,7 +453,7 @@ A tabela sai de `contrato/contrato.json` por `npm run guia`, e é do mesmo contr
 
 **`capa`** abre a aula, e traz só o título. A linha de metadados, o roteiro dos blocos e a faixa de marca com os logos vêm do `<head>` e das aberturas. Um `<br>` seguido de `<span class="sinal">` parte o título em duas linhas e põe a segunda em azul — é o subtítulo.
 
-**`abertura`** abre um bloco, e é a promessa que os slides seguintes cumprem. O título é curto porque vira o rótulo do cabeçalho e o nome sob o quadrado do mapa (`10-estrutura.md`); a pergunta, opcional, diz o que o bloco responde. Escrita como pergunta de verdade, ela dá ao aluno um motivo para prestar atenção no bloco inteiro.
+**`abertura`** abre um bloco, e é a promessa que os slides seguintes cumprem. O título é curto porque vira o rótulo do cabeçalho e o nome sob o quadrado do mapa (**A estrutura de uma aula**); a pergunta, opcional, diz o que o bloco responde. Escrita como pergunta de verdade, ela dá ao aluno um motivo para prestar atenção no bloco inteiro.
 
 **`conteudo`** é o slide de trabalho, e é onde a aula passa a maior parte do tempo. Título, lide opcional, e o corpo — em colunas ou solto.
 
@@ -461,7 +461,7 @@ A tabela sai de `contrato/contrato.json` por `npm run guia`, e é do mesmo contr
 
 **`figura`** dá à figura a zona de conteúdo inteira, com a legenda embaixo. O título é opcional, porque muitas vezes a legenda já diz o que é. Uma figura por slide: para figura ao lado de texto, o layout é `conteudo` com colunas.
 
-**`demo`** dá a mesma área a uma demo interativa, que você conduz ao vivo. É uma demo por slide, e a imagem estática dentro dela é o que sai no PDF — sem ela, `recursos.demo-sem-estatico` avisa (`50-graficos-diagramas-demos.md`).
+**`demo`** dá a mesma área a uma demo interativa, que você conduz ao vivo. É uma demo por slide, e a imagem estática dentro dela é o que sai no PDF — sem ela, `recursos.demo-sem-estatico` avisa (**Gráficos, diagramas e demos**).
 
 **`encerramento`** fecha a aula com a síntese — os pontos que o aluno leva — e, opcionalmente, o anúncio da próxima. O cabeçalho volta com todos os blocos marcados como vistos, e a faixa de marca toma o lugar do rodapé.
 
@@ -482,7 +482,7 @@ A `div.colunas` tem um `data-grade` e **um `div` filho para cada parte da grade*
 </div>
 ```
 
-Do espécime: `especime/index.html#grade-8-4`. Os valores de `data-grade` são as divisões do grid em números de colunas que somam a largura útil, e estão todos na tabela de vocabulário de `10-estrutura.md`, cada um com o número de `div` filhos que pede. Um valor que não exista no contrato é `vocabulario.atributo`.
+Do espécime: `especime/index.html#grade-8-4`. Os valores de `data-grade` são as divisões do grid em números de colunas que somam a largura útil, e estão todos na tabela de vocabulário de **A estrutura de uma aula**, cada um com o número de `div` filhos que pede. Um valor que não exista no contrato é `vocabulario.atributo`.
 
 A escolha da grade é de significado, não de estética: colunas iguais quando as duas partes têm o mesmo peso — antes e depois, texto e figura —, e desiguais quando uma argumenta e a outra comenta.
 
@@ -588,13 +588,13 @@ Extraído de `especime/index.html`.
 
 Repare no que **não** está em nenhum deles: cabeçalho, rodapé, número do slide, mapa de blocos, logo. O fonte de um slide só tem o conteúdo do slide.
 
-O trecho pronto de cada bloco de corpo — parágrafo, lista, campo, exercício, tabela, código, figura e equação em destaque — está em `30-componentes.md`.
+O trecho pronto de cada bloco de corpo — parágrafo, lista, campo, exercício, tabela, código, figura e equação em destaque — está em **Componentes**.
 
 <!-- guia/30-componentes.md -->
 
 # Componentes
 
-Os **blocos de corpo** são as peças com que se preenche um slide de conteúdo — soltas uma embaixo da outra, ou dentro de um `div` de uma `div.colunas` (`20-layouts.md`). O contrato os lista nesta ordem, e são estes onze:
+Os **blocos de corpo** são as peças com que se preenche um slide de conteúdo — soltas uma embaixo da outra, ou dentro de um `div` de uma `div.colunas` (**Layouts**). O contrato os lista nesta ordem, e são estes onze:
 
 `p`, `ul`, `ol.passos`, `aside.destaque`, `aside.quadro`, `aside.alerta`, `div.exercicio`, `table`, `pre`, `figure` e `tex-destaque` — que, apesar do nome, **não é uma tag**: é a equação em destaque, escrita como texto solto entre `\[` e `\]`. A última seção deste arquivo trata dela.
 
@@ -652,7 +652,7 @@ Uma sequência: o numeral grande é parte da composição, e a régua entre os i
 </ol>
 ```
 
-Do espécime: `especime/componentes.html#marcadores-e-passos`. Os itens com `data-passo` aparecem um a um conforme você avança (`10-estrutura.md`); o primeiro, sem o atributo, já está na tela quando o slide abre. É o jeito de fazer a turma pensar no passo seguinte antes de vê-lo.
+Do espécime: `especime/componentes.html#marcadores-e-passos`. Os itens com `data-passo` aparecem um a um conforme você avança (**A estrutura de uma aula**); o primeiro, sem o atributo, já está na tela quando o slide abre. É o jeito de fazer a turma pensar no passo seguinte antes de vê-lo.
 
 ## Destaque
 
@@ -730,7 +730,7 @@ Do espécime: `especime/componentes.html#tabela`, que também mostra o `td.desta
 
 ## Código
 
-Um `pre` com `data-lang`, numa das linguagens do contrato — `recursos.linguagem` recusa as demais, e a ação da regra, na tabela de `60-validador.md`, lista as aceitas.
+Um `pre` com `data-lang`, numa das linguagens do contrato — `recursos.linguagem` recusa as demais, e a ação da regra, na tabela de **O validador**, lista as aceitas.
 
 ```html
 <pre data-lang="sql" data-linhas="2" data-numeros>
@@ -748,7 +748,7 @@ Do espécime: `especime/codigo.html#r-e-sql`. Três coisas a reparar:
 - **`data-linhas` marca em amarelo as linhas que importam** — uma linha, uma faixa de linhas, ou várias das duas coisas separadas por vírgula. O destaque de sintaxe é monocromático de propósito: negrito nas palavras-chave, cinza nos comentários. A cor é reservada para a linha que você quer que a turma olhe.
 - **`data-numeros`, sem valor, numera as linhas.** Use quando for falar "na linha três".
 
-Há limite de linhas e de colunas (`limites.codigo-linhas`, `limites.codigo-colunas`): o que não couber num slide vira dois, ou um trecho menor. `40-matematica-e-codigo.md` trata do resto.
+Há limite de linhas e de colunas (`limites.codigo-linhas`, `limites.codigo-colunas`): o que não couber num slide vira dois, ou um trecho menor. **Matemática e código** trata do resto.
 
 ## Figura
 
@@ -787,7 +787,7 @@ Por isso o trecho abaixo vem com a seção inteira em volta — para não restar
 </section>
 ```
 
-Do espécime: `especime/matematica.html#em-destaque`. A matemática no meio de uma frase é a mesma coisa com os outros delimitadores, `\( … \)`, e não é bloco de corpo: é parte do texto onde está. Delimitadores, `\passo` e derivações reveladas linha a linha estão em `40-matematica-e-codigo.md`.
+Do espécime: `especime/matematica.html#em-destaque`. A matemática no meio de uma frase é a mesma coisa com os outros delimitadores, `\( … \)`, e não é bloco de corpo: é parte do texto onde está. Delimitadores, `\passo` e derivações reveladas linha a linha estão em **Matemática e código**.
 
 ## O tamanho mínimo de cada papel
 
@@ -837,7 +837,7 @@ Do espécime: `especime/matematica.html#no-texto`. A matemática no meio da fras
 
 ## A equação em linha própria
 
-**Não existe elemento de equação.** A equação em bloco é o próprio `\[ … \]` escrito como texto solto dentro da `section`, entre os outros elementos — é isso, e nada mais, que o contrato chama de `tex-destaque` ao listá-la entre os blocos de corpo, ao lado de `p`, `ul` e `table` (`30-componentes.md`). Não há `<tex-destaque>`, nem uma classe, nem um `div` para envolvê-la.
+**Não existe elemento de equação.** A equação em bloco é o próprio `\[ … \]` escrito como texto solto dentro da `section`, entre os outros elementos — é isso, e nada mais, que o contrato chama de `tex-destaque` ao listá-la entre os blocos de corpo, ao lado de `p`, `ul` e `table` (**Componentes**). Não há `<tex-destaque>`, nem uma classe, nem um `div` para envolvê-la.
 
 ```html
   \[ E(w) = \frac{1}{2N} \sum_{i=1}^{N} \left(y_i - w^\top x_i\right)^2 \tag{1} \]
@@ -864,7 +864,7 @@ Do espécime: `especime/matematica.html#em-campos`. A equação segue o ritmo do
 
 Uma derivação que aparece inteira de uma vez é uma derivação que a turma lê em silêncio enquanto você fala. Há duas formas de revelá-la aos poucos, e a escolha é sobre o que está sendo revelado.
 
-**Linha a linha, dentro de uma equação só:** `\passo{n}{…}` marca um pedaço do TeX com o número do passo. O KaTeX o traduz em `data-passo="n"`, e o sistema o revela junto com todo o resto que tem o mesmo número — é o mecanismo de passos em grupos de `10-estrutura.md`, chegando pelo TeX em vez de pelo atributo.
+**Linha a linha, dentro de uma equação só:** `\passo{n}{…}` marca um pedaço do TeX com o número do passo. O KaTeX o traduz em `data-passo="n"`, e o sistema o revela junto com todo o resto que tem o mesmo número — é o mecanismo de passos em grupos de **A estrutura de uma aula**, chegando pelo TeX em vez de pelo atributo.
 
 ```html
 <section data-layout="conteudo" id="passo-a-passo" data-pdf="passos">
@@ -904,7 +904,7 @@ Da aula-exemplo: `exemplo.html#derivacao`. Cada item diz em português o que a c
 
 ## O que o TeX recusa
 
-**Cor e estilo, sempre.** `\color`, `\textcolor`, `\colorbox`, os `\html…` e os atalhos como `\red` estão na lista de proibidos do contrato (`10-estrutura.md`), e `matematica.comando-proibido` acusa cada ocorrência com o comando na mensagem — `comando proibido no TeX: \textcolor`. A razão é a de sempre: cor é papel, e a paleta não tem um papel "equação vermelha". Para destacar uma equação, o que existe é o campo amarelo em volta (`aside.destaque`) ou a revelação por passos.
+**Cor e estilo, sempre.** `\color`, `\textcolor`, `\colorbox`, os `\html…` e os atalhos como `\red` estão na lista de proibidos do contrato (**A estrutura de uma aula**), e `matematica.comando-proibido` acusa cada ocorrência com o comando na mensagem — `comando proibido no TeX: \textcolor`. A razão é a de sempre: cor é papel, e a paleta não tem um papel "equação vermelha". Para destacar uma equação, o que existe é o campo amarelo em volta (`aside.destaque`) ou a revelação por passos.
 
 **Comandos que saem do TeX e mexem na página.** O sistema compila com a confiança restrita a `\htmlData`, que é por onde o `\passo` funciona. Tudo o mais que o KaTeX classifica como comando de confiança — `\href`, `\url`, `\includegraphics` — é recusado na compilação, e chega até você como `matematica.tex-invalido` com a mensagem `comando não permitido no TeX` (medido). O nome da regra é diferente do caso acima; o conserto é o mesmo: tire o comando.
 
@@ -938,7 +938,7 @@ Do espécime: `especime/codigo.html#linhas-marcadas`. Quatro coisas que esse tre
 - **não há `<code>` dentro do `<pre>`, e não há classe de linguagem.** A linguagem mora em `data-lang`, e só ali. Uma classe como `linguagem-python`, que outros sistemas usam, é `vocabulario.classe` (medido): ela não existe no contrato.
 - **o `<pre>` não é indentado no fonte.** Ele começa na primeira coluna do arquivo, mesmo dentro de uma `section` ou de uma coluna, porque o espaço dentro dele é conteúdo: a indentação do arquivo entraria no código na tela.
 - **os sinais de maior e menor viram entidades.** Dentro de um `pre` você ainda está escrevendo HTML: o espécime escreve `media_movel &lt;- function(x, k = 3)`, `if yi * (xi @ w + b) &lt;= 0` e `(w, g, eta = 0.1) =&gt; w - eta * g`, e na tela aparecem `<-`, `<=` e `=>`. Um `&` que possa ser lido como início de entidade pede o mesmo cuidado.
-- **a linguagem vem da lista do contrato.** Outro valor é `recursos.linguagem`, e a **ação** da regra traz a lista inteira das aceitas (`60-validador.md`). A `mensagem` diz só qual valor você escreveu; é no campo `acao` que a lista está, e a linha de comando imprime os dois. Um `pre` sem `data-lang` nenhum não é erro, mas também não é destacado: ele sai como texto monoespaçado.
+- **a linguagem vem da lista do contrato.** Outro valor é `recursos.linguagem`, e a **ação** da regra traz a lista inteira das aceitas (**O validador**). A `mensagem` diz só qual valor você escreveu; é no campo `acao` que a lista está, e a linha de comando imprime os dois. Um `pre` sem `data-lang` nenhum não é erro, mas também não é destacado: ele sai como texto monoespaçado.
 
 O destaque é monocromático de propósito — negrito nas palavras-chave, cinza nos comentários, tinta no resto —, e é o mesmo em todas as linguagens da lista. É o que deixa a cor livre para dizer outra coisa.
 
@@ -952,7 +952,7 @@ Marcar é a forma de dizer "olhe estas duas linhas" sem dizer em voz alta "repar
 
 ## Código que não cabe
 
-Dois limites medem cada `pre` do slide, com ou sem `data-lang`: o número de linhas (`limites.codigo-linhas`) e o comprimento da linha mais longa (`limites.codigo-colunas`). Os dois estão na tabela de `60-validador.md`, com os números do contrato.
+Dois limites medem cada `pre` do slide, com ou sem `data-lang`: o número de linhas (`limites.codigo-linhas`) e o comprimento da linha mais longa (`limites.codigo-colunas`). Os dois estão na tabela de **O validador**, com os números do contrato.
 
 Quando um deles acusa, o conserto **não** é diminuir a letra — não há como, e é essa a regra que atravessa o guia inteiro. O que funciona, em ordem de preferência:
 
@@ -983,7 +983,7 @@ Um nome de função, uma variável, um comando curto: `<code>` dentro do parágr
 <p>A atualização <code>w -= lr * grad</code> repete a cada passo, e a primeira linha deste parágrafo tem a mesma altura que a segunda.</p>
 ```
 
-Do espécime: `especime/componentes.html#texto-em-linha`. O texto dentro dele não conta no orçamento de palavras, como o do `pre`; e numa legenda ou numa linha de fonte, o `code` acompanha o tamanho menor do texto em volta, em vez do mínimo do papel `codigo` (`30-componentes.md`).
+Do espécime: `especime/componentes.html#texto-em-linha`. O texto dentro dele não conta no orçamento de palavras, como o do `pre`; e numa legenda ou numa linha de fonte, o `code` acompanha o tamanho menor do texto em volta, em vez do mínimo do papel `codigo` (**Componentes**).
 
 Um trecho que precise de mais de uma linha não é `code` no meio da frase: é um bloco de código, e volta para o começo deste arquivo.
 
@@ -1000,14 +1000,14 @@ Este arquivo diz o que você pode usar agora, mostra a forma da demo, e depois d
 | recurso | hoje |
 |---|---|
 | demo interativa (`div.demo`, `AulaUSP.demo`) | funciona |
-| figura em SVG escrito à mão, dentro de `figure` | funciona (`30-componentes.md`) |
-| imagem de arquivo em `img/`, ou URI `data:` | funciona (`30-componentes.md`) |
+| figura em SVG escrito à mão, dentro de `figure` | funciona (**Componentes**) |
+| imagem de arquivo em `img/`, ou URI `data:` | funciona (**Componentes**) |
 | `figure.grafico` com a especificação do gráfico em JSON | fase 2: erro hoje |
 | `figure.diagrama` com o grafo em DOT | fase 2: erro hoje |
 | controles do sistema, como `button.controle` | fase 2: erro hoje |
 | captura automática da demo no build (`data-captura-ms`) | fase 2: erro hoje |
 
-Quem decide isso não é esta tabela: é `contrato/contrato.json`, onde as entradas de fase 2 estão marcadas, e é dele que o validador lê. A tabela de vocabulário de `10-estrutura.md` é gerada **da fase 1**, e é por isso que nenhuma das linhas de fase 2 acima aparece lá — se um dia aparecerem, é porque passaram a valer.
+Quem decide isso não é esta tabela: é `contrato/contrato.json`, onde as entradas de fase 2 estão marcadas, e é dele que o validador lê. A tabela de vocabulário de **A estrutura de uma aula** é gerada **da fase 1**, e é por isso que nenhuma das linhas de fase 2 acima aparece lá — se um dia aparecerem, é porque passaram a valer.
 
 ## Uma demo
 
@@ -1092,7 +1092,7 @@ O PDF é papel: nada nele é interativo. O que sai no lugar da demo, em ordem:
 
 Sem `figure.grafico`, restam dois caminhos, e os dois já estão no sistema.
 
-**A figura pronta.** Gere o gráfico onde você já o gera — notebook, R, o que for —, exporte como arquivo, guarde ao lado da aula em `img/` e use `<img>` dentro de `figure`, com `alt` (`30-componentes.md`). No build, a imagem é embutida no HTML final, então a aula continua sendo um arquivo só. Vale conferir o que o sistema não confere por você: cores da paleta, eixos legíveis de longe, e nada de legenda em caixa.
+**A figura pronta.** Gere o gráfico onde você já o gera — notebook, R, o que for —, exporte como arquivo, guarde ao lado da aula em `img/` e use `<img>` dentro de `figure`, com `alt` (**Componentes**). No build, a imagem é embutida no HTML final, então a aula continua sendo um arquivo só. Vale conferir o que o sistema não confere por você: cores da paleta, eixos legíveis de longe, e nada de legenda em caixa.
 
 **O SVG escrito à mão**, quando o desenho é simples e você quer que ele siga o sistema por construção:
 
@@ -1107,7 +1107,7 @@ Sem `figure.grafico`, restam dois caminhos, e os dois já estão no sistema.
   </figure>
 ```
 
-Do espécime: `especime/index.html#figura`. O vocabulário de SVG do contrato está em `10-estrutura.md`, com a lista de elementos, de atributos e as cores aceitas; `vocabulario.cor-svg`, `vocabulario.azul-svg` e `vocabulario.amarelo-svg` cuidam para que a paleta valha ali dentro como vale no resto do slide.
+Do espécime: `especime/index.html#figura`. O vocabulário de SVG do contrato está em **A estrutura de uma aula**, com a lista de elementos, de atributos e as cores aceitas; `vocabulario.cor-svg`, `vocabulario.azul-svg` e `vocabulario.amarelo-svg` cuidam para que a paleta valha ali dentro como vale no resto do slide.
 
 Duas coisas que surpreendem quem desenha um gráfico à mão, as duas medidas:
 
@@ -1141,7 +1141,7 @@ O validador é o contrato lido como regras. Ele abre a sua aula, confere item po
 
 **Aviso não bloqueia** — a aula monta e o PDF sai. Um aviso é uma coisa que costuma ser engano e às vezes é escolha: um slide sem notas, uma imagem que mora em outro servidor, uma aula com um bloco só. Leia cada um e decida; o que não se faz é acumulá-los sem olhar, porque no meio deles um dia estará o que ia dar errado na sala.
 
-O painel dentro da aula abre sozinho quando há erro — fora do modo de tela cheia, para não interromper uma apresentação —, e traz um botão **Copiar para o chat**, que copia a lista inteira no mesmo formato da linha de comando. É esse botão que fecha o ciclo de quem escreve a aula num chat, sem terminal (`71-fluxo-chat.md`). Aviso não abre painel nenhum, mas vai para o console do navegador, onde quem quiser o encontra.
+O painel dentro da aula abre sozinho quando há erro — fora do modo de tela cheia, para não interromper uma apresentação —, e traz um botão **Copiar para o chat**, que copia a lista inteira no mesmo formato da linha de comando. É esse botão que fecha o ciclo de quem escreve a aula num chat, sem terminal (**O fluxo no chat, sem terminal**). Aviso não abre painel nenhum, mas vai para o console do navegador, onde quem quiser o encontra.
 
 ## Quando cada grupo roda
 
@@ -1175,7 +1175,7 @@ ERRO · slide 3 #texto-solto · estrutura.fora-do-layout · texto solto não é 
 - **`slide 3 #texto-solto`** — onde. O número é a posição da seção no arquivo, contada a partir da capa, e o `#id` é o seu. Achados sobre a aula inteira, como um metadado que falta, trazem `aula` no lugar do slide.
 - **`estrutura.fora-do-layout`** — qual regra. O prefixo já diz de que tipo é o problema: `estrutura` é a forma do slide, `vocabulario` é o que não existe no contrato, `limites` é o que não cabe, `composicao` é o que a página desenhada revelou, `matematica`, `recursos` e `saida` dizem-se sozinhos.
 - **o que ele encontrou** — a frase até o ponto. Em `limites.*` ela traz sempre a medida encontrada e, entre parênteses, o máximo do contrato: você sabe de quanto está passando.
-- **o que fazer** — a última frase. É literalmente a coluna "como corrigir" da tabela abaixo, a mesma para todas as ocorrências daquela regra. Quando ela manda cortar sem dizer até quanto, é porque o limite depende do layout: os números todos estão na tabela de limites de `10-estrutura.md`.
+- **o que fazer** — a última frase. É literalmente a coluna "como corrigir" da tabela abaixo, a mesma para todas as ocorrências daquela regra. Quando ela manda cortar sem dizer até quanto, é porque o limite depende do layout: os números todos estão na tabela de limites de **A estrutura de uma aula**.
 - **a linha indentada**, quando existe, é o trecho do seu arquivo a que o achado se refere.
 
 Um aviso tem a mesma forma:
@@ -1259,23 +1259,23 @@ A tabela sai de `contrato/contrato.json` por `npm run guia` — do mesmo arquivo
 
 A coluna "como corrigir" diz o que fazer; ela não tem espaço para dizer o que a experiência ensina sobre cada família. Isto aqui tem.
 
-**`estrutura.*` — o slide não tem a forma que o layout promete.** Abra `20-layouts.md`, ache a linha do layout e compare com o seu slide: os elementos são esses, nessa ordem? Duas mensagens costumam vir juntas, uma de falta e uma de sobra, e as duas são a mesma causa — um elemento que não devia estar ali ocupou o lugar do que devia.
+**`estrutura.*` — o slide não tem a forma que o layout promete.** Abra **Layouts**, ache a linha do layout e compare com o seu slide: os elementos são esses, nessa ordem? Duas mensagens costumam vir juntas, uma de falta e uma de sobra, e as duas são a mesma causa — um elemento que não devia estar ali ocupou o lugar do que devia.
 
-**`vocabulario.*` — você escreveu algo que não existe no sistema.** Quase sempre é marcação de outra ferramenta que entrou por hábito: uma classe de um framework, um `style` para ajeitar um espaço, um elemento que o contrato não tem. O conserto nunca é insistir: é achar em `30-componentes.md` o componente que faz aquilo. Se não houver nenhum, o slide está pedindo algo que o sistema decidiu não ter.
+**`vocabulario.*` — você escreveu algo que não existe no sistema.** Quase sempre é marcação de outra ferramenta que entrou por hábito: uma classe de um framework, um `style` para ajeitar um espaço, um elemento que o contrato não tem. O conserto nunca é insistir: é achar em **Componentes** o componente que faz aquilo. Se não houver nenhum, o slide está pedindo algo que o sistema decidiu não ter.
 
 **`limites.*` — não cabe.** A resposta é sempre uma das duas: **corte o conteúdo ou divida o slide em dois.** Reduzir a letra não é uma opção que exista — não há `style`, e nada no sistema encolhe texto para caber. Quando um limite acusa repetidamente no mesmo slide, o problema raramente é o limite: é um slide com duas ideias dentro.
 
 **`composicao.*` — o fonte parecia bem, a página desenhada não.** É o grupo que mede o que só o navegador sabe: quanto de fato ocupou, em quantas linhas o título quebrou, com que tamanho o texto chegou à tela. O conserto é o mesmo dos limites, e a diferença é que aqui você já viu a página e sabe o que sobra.
 
-**`matematica.*` — delimitador, comando ou símbolo.** Os três casos e os consertos estão em `40-matematica-e-codigo.md`.
+**`matematica.*` — delimitador, comando ou símbolo.** Os três casos e os consertos estão em **Matemática e código**.
 
-**`recursos.*` — a imagem, a linguagem ou a demo.** `recursos.imagem` é caminho errado ou arquivo que não veio junto; `recursos.linguagem` traz a lista das aceitas na **ação** da regra — a coluna "como corrigir" da tabela acima, e o campo `acao` do `--json` —, não na mensagem, que diz só qual valor você escreveu; as duas de demo estão em `50-graficos-diagramas-demos.md`.
+**`recursos.*` — a imagem, a linguagem ou a demo.** `recursos.imagem` é caminho errado ou arquivo que não veio junto; `recursos.linguagem` traz a lista das aceitas na **ação** da regra — a coluna "como corrigir" da tabela acima, e o campo `acao` do `--json` —, não na mensagem, que diz só qual valor você escreveu; as duas de demo estão em **Gráficos, diagramas e demos**.
 
 **`saida.*` — o produto final.** São raras, e uma delas não é culpa sua: `saida.pdf-paginas` pede que você **relate o defeito**, porque o número de páginas é conta do sistema, não escolha do autor.
 
 Dois hábitos que economizam tempo em qualquer família:
 
-- **conserte a causa, não a mensagem.** Uma causa só costuma render várias mensagens — um recurso de fase 2 escrito hoje rende quatro de uma vez (`50-graficos-diagramas-demos.md`). Corrija o que está errado e rode de novo; a lista encolhe sozinha.
+- **conserte a causa, não a mensagem.** Uma causa só costuma render várias mensagens — um recurso de fase 2 escrito hoje rende quatro de uma vez (**Gráficos, diagramas e demos**). Corrija o que está errado e rode de novo; a lista encolhe sozinha.
 - **rode depois de cada slide novo**, e não no fim da aula. As mensagens são baratas quando são duas e caras quando são quarenta.
 
 ## Quando ela não acusa
@@ -1294,7 +1294,7 @@ A validação completa, com os quatro grupos, é a do `aula-usp build` com Chrom
 
 Este é o fluxo de quem roda comandos — o autor na sua máquina, e o agente que trabalha num terminal, como o Claude Code ou o Codex CLI. É o mais completo dos quatro: só aqui existem a validação inteira, com os quatro grupos de regras, e o PDF gerado pelo sistema.
 
-Os outros três fluxos estão em `71-fluxo-chat.md`, `72-artifact-claude.md` e `73-chatgpt.md`, e todos eles dependem do runtime carregado por uma tag no `<head>`. Este não: o sistema está no disco.
+Os outros três fluxos estão em **O fluxo no chat, sem terminal**, **A aula como artifact do Claude** e **A aula pelo ChatGPT**, e todos eles dependem do runtime carregado por uma tag no `<head>`. Este não: o sistema está no disco.
 
 ## Instalar a CLI
 
@@ -1351,7 +1351,7 @@ minha-aula criada a partir de modelos/aula — unidade ime, data 2026-09-20
 
 O comando não sobrescreve pasta que já tenha conteúdo, e recusa uma unidade que não exista, com código 2 e sem criar nada. Uma pasta vazia que você já tenha criado é aceita.
 
-O que ele cria é o esqueleto de `10-estrutura.md`, com capa, duas aberturas, dois slides de conteúdo e encerramento. Troque o conteúdo, preencha as metas que faltam e acrescente seções.
+O que ele cria é o esqueleto de **A estrutura de uma aula**, com capa, duas aberturas, dois slides de conteúdo e encerramento. Troque o conteúdo, preencha as metas que faltam e acrescente seções.
 
 Uma observação sobre a tag do `<script>` que veio no esqueleto: ela aponta para a CDN, com a versão exata e a soma de integridade — é a forma que o `aula-usp pacotes` escreve. Esse endereço ainda não resolve, porque o pacote não está publicado (fase 3), e **não faz diferença neste fluxo**, porque `aula-usp servir` troca a tag pelo runtime local e `aula-usp build` a troca pelo motor embutido. Os dois a reconhecem pelo `src` terminado em `/aula-usp.js`, não pelo endereço. O que não funciona, até a publicação, é abrir o arquivo criado direto no navegador com dois cliques: para ver a aula, use `servir`.
 
@@ -1389,7 +1389,7 @@ AVISO · slide 3 #erros · matematica.cifrao-suspeito · "$\eta$" parece matemá
 Validador Aula USP: 4 erros, 3 avisos
 ```
 
-Repare que o `<div class="caixa-azul">` rendeu dois erros — um de forma e um de vocabulário —, e que os dois somem juntos quando o `div` sai. É a regra geral: **conserte a causa, não a mensagem** (`60-validador.md`).
+Repare que o `<div class="caixa-azul">` rendeu dois erros — um de forma e um de vocabulário —, e que os dois somem juntos quando o `div` sai. É a regra geral: **conserte a causa, não a mensagem** (**O validador**).
 
 Rode este comando a cada slide novo, e não no fim da aula. Ele é rápido, e quatro mensagens sobre um slide que você acabou de escrever custam menos que quarenta sobre uma aula inteira.
 
@@ -1403,7 +1403,7 @@ aula-usp servir minha-aula
 servindo minha-aula em http://127.0.0.1:8765/
 ```
 
-Abra o endereço e você tem a aula montada, com navegação, passos, notas e o painel do validador — o mesmo painel de `71-fluxo-chat.md`, na tecla **V**. Aqui ele serve para outra coisa: ver o slide desenhado. Uma lista que ficou longa demais, um título que quebrou feio, uma figura que sobrou da área — isso a lista do terminal não mostra.
+Abra o endereço e você tem a aula montada, com navegação, passos, notas e o painel do validador — o mesmo painel de **O fluxo no chat, sem terminal**, na tecla **V**. Aqui ele serve para outra coisa: ver o slide desenhado. Uma lista que ficou longa demais, um título que quebrou feio, uma figura que sobrou da área — isso a lista do terminal não mostra.
 
 Não há recarga automática: depois de editar o arquivo, recarregue a página. `--porta` muda a porta quando a 8765 estiver ocupada.
 
@@ -1444,7 +1444,7 @@ O build para onde o erro apareceu. Com erro estático ou de carga, ele grava só
 
 ## Ler o que ele diz
 
-A anatomia de uma mensagem — severidade, lugar, regra, problema, ação — está em `60-validador.md`, e vale igual nos quatro fluxos. Três coisas são do terminal:
+A anatomia de uma mensagem — severidade, lugar, regra, problema, ação — está em **O validador**, e vale igual nos quatro fluxos. Três coisas são do terminal:
 
 - **a lista vai para o stdout; o resto, para o stderr.** O progresso do build e o aviso de ambiente saem pelo stderr de propósito, para que a saída de `--json` possa ser canalizada sem nada solto no meio a quebrar o parse.
 - **o código de saída resume tudo num número:** 0 sem erros, e avisos são permitidos; 1 com erros de validação; 2 quando não deu para rodar — pasta não encontrada, dependência ausente, flag errada. Num script ou num agente, teste o código; não procure palavra na saída.
@@ -1478,7 +1478,7 @@ O build usa o Google Chrome de verdade para medir a composição e gerar o PDF �
 
 Sem Chrome, **nada falha**: as etapas 5 e 6 são puladas, o HTML sai, e o aviso aparece no stderr, na forma `Aula USP: aviso: composição pulada, sem Chrome: …`, com o motivo no fim. O comando termina com 0 se não houver outro erro.
 
-Isso é uma degradação, não uma aprovação. Sem Chrome ficam de fora o grupo inteiro de composição e a conferência do número de páginas do PDF, e **"zero erros" ali não é o mesmo "zero erros" de quem tem Chrome** (`60-validador.md`). Se você trabalha num ambiente sem navegador, aponte `CHROME_PATH` para um, ou trate o resultado como parcial e confira num Chrome antes da aula.
+Isso é uma degradação, não uma aprovação. Sem Chrome ficam de fora o grupo inteiro de composição e a conferência do número de páginas do PDF, e **"zero erros" ali não é o mesmo "zero erros" de quem tem Chrome** (**O validador**). Se você trabalha num ambiente sem navegador, aponte `CHROME_PATH` para um, ou trate o resultado como parcial e confira num Chrome antes da aula.
 
 ## O que entregar
 
@@ -1492,7 +1492,7 @@ O fonte é o que você edita na semana que vem; o `minha-aula.html` é o que voc
 
 Este é o fluxo de quem não roda nada: você pede a aula num chat — Claude ou ChatGPT, na web —, salva o HTML que veio, abre no navegador e trabalha dali. Não há instalação, não há comando, não há pasta de projeto. O que faz o sistema funcionar é uma linha no `<head>`.
 
-Ele custa duas coisas em relação ao fluxo do terminal (`70-fluxo-terminal.md`): o PDF sai do navegador, não do sistema, e as regras de saída não rodam. Tudo o mais — montagem, matemática, código, navegação, apresentador, e a validação com erro e aviso — acontece igual, porque é o mesmo código.
+Ele custa duas coisas em relação ao fluxo do terminal (**O fluxo com terminal**): o PDF sai do navegador, não do sistema, e as regras de saída não rodam. Tudo o mais — montagem, matemática, código, navegação, apresentador, e a validação com erro e aviso — acontece igual, porque é o mesmo código.
 
 ## A tag do runtime
 
@@ -1505,7 +1505,7 @@ A aula inteira depende de uma linha, no `<head>`, com esta forma:
 
 A versão é exata e vem acompanhada de um hash de integridade: se o arquivo na CDN mudar, o navegador se recusa a executá-lo. O efeito colateral é bom para quem dá aula — a sua aula fica presa à versão com que foi feita, e não muda de aparência sozinha na véspera. Atualizar é trocar a tag.
 
-**A tag já traz a versão e o hash reais; o endereço é que ainda não resolve.** Quem a escreve é o `aula-usp pacotes`, lendo a versão do `package.json` do sistema e o `integrity` do manifesto que o `aula-usp dist` escreve, e ela chega pronta no modelo, nos exemplos e nos quatro pacotes para agentes. O que falta é o outro lado: o pacote não está publicado no npm — a publicação é da fase 3 do projeto —, então buscar esse endereço hoje não traz nada. Até lá, este fluxo se experimenta com `aula-usp servir` (`70-fluxo-terminal.md`), que troca a tag pelo runtime local; o resto deste arquivo vale igual nos dois casos.
+**A tag já traz a versão e o hash reais; o endereço é que ainda não resolve.** Quem a escreve é o `aula-usp pacotes`, lendo a versão do `package.json` do sistema e o `integrity` do manifesto que o `aula-usp dist` escreve, e ela chega pronta no modelo, nos exemplos e nos quatro pacotes para agentes. O que falta é o outro lado: o pacote não está publicado no npm — a publicação é da fase 3 do projeto —, então buscar esse endereço hoje não traz nada. Até lá, este fluxo se experimenta com `aula-usp servir` (**O fluxo com terminal**), que troca a tag pelo runtime local; o resto deste arquivo vale igual nos dois casos.
 
 Uma propriedade da tag vale conhecer antes de precisar dela: **se o runtime não carregar, a aula não some.** Sem internet, ou com a CDN fora do ar, nada é escondido e o HTML aparece cru — feio, sem grade e sem cor, mas legível, com o texto de todos os slides na tela.
 
@@ -1524,7 +1524,7 @@ Isso quer dizer que **o painel do validador não é o primeiro a aparecer**: ele
 
 ## O painel do validador
 
-A tecla **V** abre e fecha o painel. Ele traz a mesma lista do terminal, com as mesmas mensagens, porque é o mesmo módulo — a anatomia de cada linha está em `60-validador.md`.
+A tecla **V** abre e fecha o painel. Ele traz a mesma lista do terminal, com as mesmas mensagens, porque é o mesmo módulo — a anatomia de cada linha está em **O validador**.
 
 **Ele abre sozinho quando há erro**, e só quando a página não está em tela cheia: numa aula em andamento, o painel nunca se intromete. Avisos não o abrem; vão para o console do navegador, onde você os procura quando quiser.
 
@@ -1550,15 +1550,15 @@ ERRO · slide 3 #erros · vocabulario.style · estilo em linha em <p>. Remova o 
 5. **Cole no chat** e peça a correção, citando o que você também viu na tela.
 6. **Salve por cima e recarregue.** Não há recarga automática.
 
-Repita por slide, ou por bloco. A lista encolhe sozinha quando você conserta a causa, porque um engano costuma render mais de uma mensagem (`60-validador.md`).
+Repita por slide, ou por bloco. A lista encolhe sozinha quando você conserta a causa, porque um engano costuma render mais de uma mensagem (**O validador**).
 
 Quando o modelo pedir referência, dê a ele o guia — é para isso que existem os pacotes: uma skill, um Projeto do Claude ou um GPT personalizado já vêm com estes arquivos dentro, e o modelo passa a escrever dentro do contrato desde o primeiro slide, em vez de aprender por erro.
 
 ## O que muda neste fluxo
 
-**Imagens.** Não há build para embutir arquivos, e um `img/` ao lado só existe se você criar a pasta e servir os dois juntos. Numa aula que é um arquivo só, a imagem entra como URI `data:` dentro do próprio `src` — é o que o espécime faz (`30-componentes.md`). Uma imagem em `https://` funciona, e custa um aviso (`recursos.imagem-externa`): ela depende de um servidor que não é seu no dia da aula.
+**Imagens.** Não há build para embutir arquivos, e um `img/` ao lado só existe se você criar a pasta e servir os dois juntos. Numa aula que é um arquivo só, a imagem entra como URI `data:` dentro do próprio `src` — é o que o espécime faz (**Componentes**). Uma imagem em `https://` funciona, e custa um aviso (`recursos.imagem-externa`): ela depende de um servidor que não é seu no dia da aula.
 
-**As regras.** Estáticas, de carga e de composição rodam todas aqui, e as de composição rodam **sempre** — você está num navegador de verdade, que é justamente o que falta ao terminal sem Chrome. As de saída não rodam, porque não há HTML final nem PDF para medir. A tabela dos quatro grupos está em `60-validador.md`.
+**As regras.** Estáticas, de carga e de composição rodam todas aqui, e as de composição rodam **sempre** — você está num navegador de verdade, que é justamente o que falta ao terminal sem Chrome. As de saída não rodam, porque não há HTML final nem PDF para medir. A tabela dos quatro grupos está em **O validador**.
 
 **O PDF.** Vem do seu navegador, e a próxima seção trata dele.
 
@@ -1578,7 +1578,7 @@ A tecla **P** abre, em outra janela, o mesmo documento em modo apresentador: o s
 
 Se o navegador bloquear a janela nova, o motor não fica calado: ele abre o painel de notas e escreve lá dentro "O navegador bloqueou a janela do apresentador. Libere as janelas pop-up para este endereço e tecle P de novo." Você dá a aula com as notas no painel, que é o mesmo conteúdo sem a segunda tela.
 
-Dentro de um artifact do Claude, este é um dos pontos que podem não funcionar; o que fazer está em `72-artifact-claude.md`.
+Dentro de um artifact do Claude, este é um dos pontos que podem não funcionar; o que fazer está em **A aula como artifact do Claude**.
 
 <!-- guia/72-artifact-claude.md -->
 
@@ -1590,7 +1590,7 @@ Um artifact do claude.ai é uma página que o Claude escreve e mostra ao lado da
 
 ## Antes de tudo: o que este arquivo é
 
-**Este fluxo ainda não pode ser exercitado.** Ele depende da tag do runtime apontando para o pacote publicado no npm, e a publicação é da fase 3 do projeto (`71-fluxo-chat.md`). O aceite em claude.ai está marcado para essa fase justamente por isso.
+**Este fluxo ainda não pode ser exercitado.** Ele depende da tag do runtime apontando para o pacote publicado no npm, e a publicação é da fase 3 do projeto (**O fluxo no chat, sem terminal**). O aceite em claude.ai está marcado para essa fase justamente por isso.
 
 E há uma segunda ressalva, que vale para o arquivo inteiro: **o que se afirma aqui sobre o que um artifact permite é o que o projeto assume**, escrito na tabela de riscos da especificação e usado como premissa de desenho. Não é um relato de teste. Onde a especificação diz "bloqueia", o sistema já está desenhado para não depender daquilo; onde ela diz "pode bloquear", há um plano B, e é ele que você vai usar se o bloqueio acontecer com você. Quando o aceite da fase 3 rodar, o que se aprender ali entra neste arquivo, e as ressalvas saem.
 
@@ -1609,9 +1609,9 @@ As duas primeiras linhas explicam decisões que, de fora, pareceriam exageradas.
 
 > Me dê a aula inteira num único bloco de código, para eu salvar como `.html`.
 
-Você copia o bloco, cola num editor de texto e salva com extensão `.html`. É o mesmo caminho do ChatGPT sem download (`73-chatgpt.md`), e o resultado é idêntico ao que o artifact mostra — é o mesmo arquivo.
+Você copia o bloco, cola num editor de texto e salva com extensão `.html`. É o mesmo caminho do ChatGPT sem download (**A aula pelo ChatGPT**), e o resultado é idêntico ao que o artifact mostra — é o mesmo arquivo.
 
-**A quarta linha é da fase 2.** O gerador de diagramas usa o Graphviz compilado em WASM, e se a política de segurança do artifact impedir compilá-lo, o plano é trocar, só no modo navegador, por um layout em JavaScript puro com o mesmo estilo visual, mantendo o Graphviz no build. Hoje isso não afeta ninguém: a fase 1 não tem WASM, e diagrama ainda não existe (`50-graficos-diagramas-demos.md`).
+**A quarta linha é da fase 2.** O gerador de diagramas usa o Graphviz compilado em WASM, e se a política de segurança do artifact impedir compilá-lo, o plano é trocar, só no modo navegador, por um layout em JavaScript puro com o mesmo estilo visual, mantendo o Graphviz no build. Hoje isso não afeta ninguém: a fase 1 não tem WASM, e diagrama ainda não existe (**Gráficos, diagramas e demos**).
 
 ## O que o projeto assume que um artifact *pode* bloquear
 
@@ -1621,9 +1621,9 @@ Estes três são incertos — a especificação os lista como "pode bloquear" �
 
 **A tela cheia (`F`).** Sem ela, a aula fica dentro do painel do artifact, com a interface do site em volta — serve para conferir, não para projetar. Para projetar, salve o HTML e abra no navegador.
 
-Há um efeito colateral que vale conhecer: **o painel do validador abre sozinho quando há erro e a página não está em tela cheia** (`60-validador.md`). Num ambiente onde a tela cheia não acontece, essa condição está sempre satisfeita, e o painel aparece toda vez que a aula carregar com erro. É mais um motivo para a última regra essencial: entregue em zero erros, e ele não aparece.
+Há um efeito colateral que vale conhecer: **o painel do validador abre sozinho quando há erro e a página não está em tela cheia** (**O validador**). Num ambiente onde a tela cheia não acontece, essa condição está sempre satisfeita, e o painel aparece toda vez que a aula carregar com erro. É mais um motivo para a última regra essencial: entregue em zero erros, e ele não aparece.
 
-**A impressão.** Se o atalho de imprimir não chegar à página, o PDF não sai dali. Salve o HTML e imprima no Chrome, com "Salvar como PDF" e margens "Nenhuma" (`71-fluxo-chat.md`) — ou, melhor, construa o PDF com `aula-usp build` numa máquina com a CLI (`70-fluxo-terminal.md`), que é o único PDF que o sistema confere.
+**A impressão.** Se o atalho de imprimir não chegar à página, o PDF não sai dali. Salve o HTML e imprima no Chrome, com "Salvar como PDF" e margens "Nenhuma" (**O fluxo no chat, sem terminal**) — ou, melhor, construa o PDF com `aula-usp build` numa máquina com a CLI (**O fluxo com terminal**), que é o único PDF que o sistema confere.
 
 ## O que funciona bem aqui
 
@@ -1631,7 +1631,7 @@ O que sobra depois das restrições é justamente a parte em que este fluxo é o
 
 **O ciclo de correção é o mais curto que existe.** A aula está na mesma janela da conversa: tecle **V**, leia a lista do validador, clique em **Copiar para o chat** e cole no mesmo fio. O modelo recebe o nome da regra, o slide, o trecho e a ação, e devolve o artifact corrigido. Não há arquivo para salvar no meio.
 
-O botão de copiar depende de contexto seguro, e um artifact é servido por `https` — ao contrário de um arquivo aberto em `file://`, onde ele vem desabilitado de propósito (`71-fluxo-chat.md`). Se mesmo assim ele aparecer apagado, selecione as linhas do painel e copie à mão; o texto é o mesmo.
+O botão de copiar depende de contexto seguro, e um artifact é servido por `https` — ao contrário de um arquivo aberto em `file://`, onde ele vem desabilitado de propósito (**O fluxo no chat, sem terminal**). Se mesmo assim ele aparecer apagado, selecione as linhas do painel e copie à mão; o texto é o mesmo.
 
 **A navegação, os passos, a matemática, o código e as demos** são o mesmo código dos outros fluxos, carregado pela mesma tag. Nada neles é adaptado para o artifact, e é por isso que o slide que você vê ali é o slide que vai sair no projetor.
 
@@ -1649,11 +1649,11 @@ O artifact é onde a aula se escreve. O arquivo salvo é onde ela se dá.
 
 # A aula pelo ChatGPT
 
-Aqui a aula chega como **arquivo**. Você conversa, o modelo escreve o HTML, você salva em disco e abre no navegador — e a partir daí tudo se passa como em `71-fluxo-chat.md`, que é o capítulo a ler junto com este.
+Aqui a aula chega como **arquivo**. Você conversa, o modelo escreve o HTML, você salva em disco e abre no navegador — e a partir daí tudo se passa como em **O fluxo no chat, sem terminal**, que é o capítulo a ler junto com este.
 
 O que este tem de próprio é o começo e o fim: como dar o guia ao modelo, e como tirar dele o arquivo inteiro sem perder um pedaço no caminho.
 
-Como os outros dois fluxos de navegador, ele depende da tag do runtime apontando para o pacote publicado, e a publicação é da fase 3 do projeto (`71-fluxo-chat.md`). O aceite em ChatGPT está marcado para essa fase.
+Como os outros dois fluxos de navegador, ele depende da tag do runtime apontando para o pacote publicado, e a publicação é da fase 3 do projeto (**O fluxo no chat, sem terminal**). O aceite em ChatGPT está marcado para essa fase.
 
 ## O GPT personalizado
 
@@ -1665,7 +1665,7 @@ O jeito bom de usar este fluxo é com o GPT personalizado do Aula USP, que vem p
 
 A consequência prática é uma só, e vale saber antes de estranhar: **quando o modelo começar a inventar marcação, mande-o consultar o guia.** Ele tem os arquivos; o que ele não tem é tudo na memória de trabalho.
 
-Sem o GPT personalizado, numa conversa comum, anexe você mesmo o guia — ou pelo menos `00-principios.md`, `10-estrutura.md` e `20-layouts.md` — antes de pedir o primeiro slide. Sem nenhuma referência, o que volta é HTML de página web: `div`s com classes inventadas, `style` em tudo, e uma hora de correção pela frente.
+Sem o GPT personalizado, numa conversa comum, anexe você mesmo o guia — ou pelo menos **O Aula USP**, **A estrutura de uma aula** e **Layouts** — antes de pedir o primeiro slide. Sem nenhuma referência, o que volta é HTML de página web: `div`s com classes inventadas, `style` em tudo, e uma hora de correção pela frente.
 
 ## Tirar o arquivo de lá
 
@@ -1694,7 +1694,7 @@ Dois cuidados que custam uma aula quando falham:
 - **não use um processador de texto.** Um editor que salva formatação estraga as aspas ao gravar, e o que sai não é HTML. Qualquer editor de código serve; o bloco de notas do sistema também, desde que salve em texto puro.
 - **confira a extensão de verdade.** Vários editores acrescentam `.txt` por conta própria, e o arquivo vira `aula.html.txt`, que o navegador abre como texto. Se ao abrir você vir o código em vez da aula, é isso.
 
-Salvo o arquivo, o resto é `71-fluxo-chat.md`: abrir no navegador, tecla **V** para o painel do validador, corrigir, recarregar.
+Salvo o arquivo, o resto é **O fluxo no chat, sem terminal**: abrir no navegador, tecla **V** para o painel do validador, corrigir, recarregar.
 
 ## O ciclo
 
@@ -1707,8 +1707,8 @@ Salvo o arquivo, o resto é `71-fluxo-chat.md`: abrir no navegador, tecla **V** 
 
 Um atalho que economiza rodadas: em vez de pedir a aula inteira e corrigir quarenta mensagens, peça bloco a bloco e feche cada um em zero erros. O modelo aprende a forma nas primeiras correções, e os blocos seguintes chegam limpos.
 
-Em `file://` o botão **Copiar para o chat** vem desabilitado, porque a área de transferência do navegador exige contexto seguro; selecione as linhas do painel e copie à mão (`71-fluxo-chat.md`).
+Em `file://` o botão **Copiar para o chat** vem desabilitado, porque a área de transferência do navegador exige contexto seguro; selecione as linhas do painel e copie à mão (**O fluxo no chat, sem terminal**).
 
 ## O que não vem por aqui
 
-O PDF sai do seu navegador — Chrome, "Salvar como PDF", margens "Nenhuma" —, e não é o PDF que o sistema confere. Quem quer o PDF conferido, com os metadados escritos e o número de páginas validado, constrói a aula com `aula-usp build` numa máquina com a CLI (`70-fluxo-terminal.md`). O fonte é o mesmo arquivo que você salvou: não há nada a converter.
+O PDF sai do seu navegador — Chrome, "Salvar como PDF", margens "Nenhuma" —, e não é o PDF que o sistema confere. Quem quer o PDF conferido, com os metadados escritos e o número de páginas validado, constrói a aula com `aula-usp build` numa máquina com a CLI (**O fluxo com terminal**). O fonte é o mesmo arquivo que você salvou: não há nada a converter.
