@@ -174,9 +174,9 @@ As metas do `<head>` são todas obrigatórias, e `estrutura.metadados` acusa a q
 | `data` | em `AAAA-MM-DD`; o sistema a escreve por extenso curto, no idioma da aula |
 | `professor` | entra na linha de metadados da capa |
 
-Esta é a única tabela do guia que não é gerada, porque o contrato tem os nomes das metas mas não tem a coluna da direita, que é justamente o que há para ler aqui. Em lugar do gerador, uma guarda: `tests/unit/guia.test.mjs` compara os nomes desta tabela com `contrato.metadados` e cobra que sejam os mesmos, na mesma ordem.
+Esta é a única tabela do guia que não é gerada, porque o contrato tem os nomes das metas mas não tem a coluna da direita, que é justamente o que há para ler aqui. Em lugar do gerador, uma guarda: os testes do sistema comparam os nomes desta tabela com `contrato.metadados` e cobram que sejam os mesmos, na mesma ordem.
 
-`unidade` é uma chave de `assets/marcas/unidades.json`; se a sua não estiver lá, o validador recusa o valor e diz, na mensagem, quais existem. Uma unidade nova entra com uma linha nesse arquivo e o arquivo do logo, sem tocar em código.
+`unidade` é uma chave do inventário de marcas do sistema; se a sua não estiver lá, o validador recusa o valor e diz, na mensagem, quais existem. Uma unidade nova entra com uma linha nesse inventário e o arquivo do logo, sem tocar em código.
 
 `disciplina`, `aula` e `professor` têm um tamanho máximo, porque cabem numa linha de rodapé ou de capa; quando um passa, `limites.metadado` diz de quanto era o limite e de quanto foi o seu texto. Não há por que adivinhar: escreva e deixe o validador medir.
 
@@ -914,7 +914,7 @@ Da aula-exemplo: `exemplo.html#derivacao`. Cada item diz em português o que a c
 
 Uma seta digitada como `→`, um `≤` copiado de outro documento, um `α` colado de uma página — tudo isso é texto, não matemática, e pode não ter glifo nas fontes embutidas na aula. Quando não tem, `matematica.simbolo-fora-do-tex` acusa o caractere com o ponto de código, e a correção é escrevê-lo em TeX: `\( \to \)`, `\( \leq \)`, `\( \alpha \)`.
 
-A regra mede só o que está fora de TeX, de código e de SVG — dentro de `\( … \)` quem desenha é o KaTeX, com as fontes dele. E ela depende de `validador/cobertura.json`, o inventário de glifos das fontes embutidas: num repositório onde esse arquivo ainda não foi gerado, a regra se cala em vez de acusar tudo.
+A regra mede só o que está fora de TeX, de código e de SVG — dentro de `\( … \)` quem desenha é o KaTeX, com as fontes dele. E ela depende do inventário de glifos das fontes embutidas, que o sistema gera junto com o runtime: onde esse inventário ainda não existe, a regra se cala em vez de acusar tudo.
 
 ## Um bloco de código
 
@@ -1283,7 +1283,7 @@ Dois hábitos que economizam tempo em qualquer família:
 Silêncio não é aprovação em todos os casos, e vale conhecer os três em que não é:
 
 - **sem Chrome, o grupo de composição não roda.** A CLI avisa por fora da lista, e o que ela lhe entregou foi uma validação parcial.
-- **sem `validador/cobertura.json`**, o inventário de glifos das fontes embutidas, `matematica.simbolo-fora-do-tex` se cala — acusar tudo seria pior do que não acusar nada.
+- **sem o inventário de glifos das fontes embutidas**, que o sistema gera junto com o runtime, `matematica.simbolo-fora-do-tex` se cala — acusar tudo seria pior do que não acusar nada.
 - **as regras de saída só existem no build.** Uma aula impecável no painel do navegador ainda pode ter uma referência externa que só o HTML final revela.
 
 A validação completa, com os quatro grupos, é a do `aula-usp build` com Chrome disponível. É ela que vale como "entregue em zero erros".
@@ -1503,7 +1503,7 @@ A aula inteira depende de uma linha, no `<head>`, com esta forma:
 
 A versão é exata e vem acompanhada de um hash de integridade: se o arquivo na CDN mudar, o navegador se recusa a executá-lo. O efeito colateral é bom para quem dá aula — a sua aula fica presa à versão com que foi feita, e não muda de aparência sozinha na véspera. Atualizar é trocar a tag.
 
-**A tag já traz a versão e o hash reais; o endereço é que ainda não resolve.** Quem a escreve é o `aula-usp pacotes`, lendo a versão de `package.json` e o `integrity` de `dist/manifesto.json`, e ela chega pronta no modelo, nos exemplos e nos quatro pacotes para agentes. O que falta é o outro lado: o pacote não está publicado no npm — a publicação é da fase 3 do projeto —, então buscar esse endereço hoje não traz nada. Até lá, este fluxo se experimenta com `aula-usp servir` (`70-fluxo-terminal.md`), que troca a tag pelo runtime local; o resto deste arquivo vale igual nos dois casos.
+**A tag já traz a versão e o hash reais; o endereço é que ainda não resolve.** Quem a escreve é o `aula-usp pacotes`, lendo a versão do `package.json` do sistema e o `integrity` do manifesto que o `aula-usp dist` escreve, e ela chega pronta no modelo, nos exemplos e nos quatro pacotes para agentes. O que falta é o outro lado: o pacote não está publicado no npm — a publicação é da fase 3 do projeto —, então buscar esse endereço hoje não traz nada. Até lá, este fluxo se experimenta com `aula-usp servir` (`70-fluxo-terminal.md`), que troca a tag pelo runtime local; o resto deste arquivo vale igual nos dois casos.
 
 Uma propriedade da tag vale conhecer antes de precisar dela: **se o runtime não carregar, a aula não some.** Sem internet, ou com a CDN fora do ar, nada é escondido e o HTML aparece cru — feio, sem grade e sem cor, mas legível, com o texto de todos os slides na tela.
 

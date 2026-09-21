@@ -96,7 +96,7 @@ Da aula-exemplo: `assets/exemplo.html#derivacao`. Cada item diz em português o 
 
 Uma seta digitada como `→`, um `≤` copiado de outro documento, um `α` colado de uma página — tudo isso é texto, não matemática, e pode não ter glifo nas fontes embutidas na aula. Quando não tem, `matematica.simbolo-fora-do-tex` acusa o caractere com o ponto de código, e a correção é escrevê-lo em TeX: `\( \to \)`, `\( \leq \)`, `\( \alpha \)`.
 
-A regra mede só o que está fora de TeX, de código e de SVG — dentro de `\( … \)` quem desenha é o KaTeX, com as fontes dele. E ela depende de `validador/cobertura.json`, o inventário de glifos das fontes embutidas: num repositório onde esse arquivo ainda não foi gerado, a regra se cala em vez de acusar tudo.
+A regra mede só o que está fora de TeX, de código e de SVG — dentro de `\( … \)` quem desenha é o KaTeX, com as fontes dele. E ela depende do inventário de glifos das fontes embutidas, que o sistema gera junto com o runtime: onde esse inventário ainda não existe, a regra se cala em vez de acusar tudo.
 
 ## Um bloco de código
 

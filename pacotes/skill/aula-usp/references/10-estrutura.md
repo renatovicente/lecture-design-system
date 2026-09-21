@@ -96,9 +96,9 @@ As metas do `<head>` são todas obrigatórias, e `estrutura.metadados` acusa a q
 | `data` | em `AAAA-MM-DD`; o sistema a escreve por extenso curto, no idioma da aula |
 | `professor` | entra na linha de metadados da capa |
 
-Esta é a única tabela do guia que não é gerada, porque o contrato tem os nomes das metas mas não tem a coluna da direita, que é justamente o que há para ler aqui. Em lugar do gerador, uma guarda: `tests/unit/guia.test.mjs` compara os nomes desta tabela com `contrato.metadados` e cobra que sejam os mesmos, na mesma ordem.
+Esta é a única tabela do guia que não é gerada, porque o contrato tem os nomes das metas mas não tem a coluna da direita, que é justamente o que há para ler aqui. Em lugar do gerador, uma guarda: os testes do sistema comparam os nomes desta tabela com `contrato.metadados` e cobram que sejam os mesmos, na mesma ordem.
 
-`unidade` é uma chave de `assets/marcas/unidades.json`; se a sua não estiver lá, o validador recusa o valor e diz, na mensagem, quais existem. Uma unidade nova entra com uma linha nesse arquivo e o arquivo do logo, sem tocar em código.
+`unidade` é uma chave do inventário de marcas do sistema; se a sua não estiver lá, o validador recusa o valor e diz, na mensagem, quais existem. Uma unidade nova entra com uma linha nesse inventário e o arquivo do logo, sem tocar em código.
 
 `disciplina`, `aula` e `professor` têm um tamanho máximo, porque cabem numa linha de rodapé ou de capa; quando um passa, `limites.metadado` diz de quanto era o limite e de quanto foi o seu texto. Não há por que adivinhar: escreva e deixe o validador medir.
 

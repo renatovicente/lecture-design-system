@@ -152,7 +152,7 @@ Dois hábitos que economizam tempo em qualquer família:
 Silêncio não é aprovação em todos os casos, e vale conhecer os três em que não é:
 
 - **sem Chrome, o grupo de composição não roda.** A CLI avisa por fora da lista, e o que ela lhe entregou foi uma validação parcial.
-- **sem `validador/cobertura.json`**, o inventário de glifos das fontes embutidas, `matematica.simbolo-fora-do-tex` se cala — acusar tudo seria pior do que não acusar nada.
+- **sem o inventário de glifos das fontes embutidas**, que o sistema gera junto com o runtime, `matematica.simbolo-fora-do-tex` se cala — acusar tudo seria pior do que não acusar nada.
 - **as regras de saída só existem no build.** Uma aula impecável no painel do navegador ainda pode ter uma referência externa que só o HTML final revela.
 
 A validação completa, com os quatro grupos, é a do `aula-usp build` com Chrome disponível. É ela que vale como "entregue em zero erros".
