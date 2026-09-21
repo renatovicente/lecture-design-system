@@ -16,7 +16,8 @@ import { linhaDe, cabecalhoDe, plural } from '../validador/validar.js';
 const USO = 'uso: aula-usp servir <pasta> [--porta 8765]\n'
   + '       aula-usp validar <pasta> [--json]\n'
   + '       aula-usp build <pasta> [--sem-pdf]\n'
-  + '       aula-usp dist';
+  + '       aula-usp dist\n'
+  + '       aula-usp pacotes';
 
 function sair(mensagem) {
   console.error(mensagem);
@@ -174,9 +175,38 @@ async function distComando(argumentos) {
   }
 }
 
+async function pacotesComando(argumentos) {
+  if (argumentos.length > 0) sair(USO); // como `dist`: não recebe alvo, gera sempre o do sistema
+  const raiz = new URL('../', import.meta.url);
+  let gerarPacotes;
+  try {
+    ({ gerarPacotes } = await import('../build/pacotes.mjs'));
+  } catch (erro) {
+    sair(`falha de ambiente: ${erro.message}\nrode npm install na pasta do sistema`);
+  }
+  // A ordem das três etapas — tag, guia, pacotes — está DENTRO de gerarPacotes, com a razão de cada
+  // uma escrita ao lado. Repeti-la aqui seria uma segunda verdade sobre a mesma ordem, e a ordem é
+  // justamente a coisa que erra em silêncio: montar antes de reescrever entrega pacotes com a tag
+  // relativa, que num chat sem terminal simplesmente não resolve.
+  let resultado;
+  try {
+    resultado = await gerarPacotes({ raiz });
+  } catch (erro) {
+    sair(`não foi possível montar os pacotes: ${erro.message}`);
+  }
+  const { tags, arquivos, violacoes } = resultado;
+  console.log(`${plural(tags.size, 'tag do runtime fixada', 'tags do runtime fixadas')}`);
+  for (const [caminho, texto] of arquivos) console.log(`${caminho} · ${texto.length} caracteres`);
+  for (const violacao of violacoes) console.error(`Aula USP: ${violacao}`);
+  // Saída 1, não 2 (spec 8.1): o ambiente rodou, os arquivos estão no disco, e o que falhou foi o
+  // conteúdo — o conserto é editar guia/ e rodar de novo, não instalar nada.
+  process.exitCode = violacoes.length > 0 ? 1 : 0;
+}
+
 const [comando, ...argumentos] = process.argv.slice(2);
 if (comando === 'servir') servir(argumentos);
 else if (comando === 'validar') validarComando(argumentos);
 else if (comando === 'build') buildComando(argumentos);
 else if (comando === 'dist') distComando(argumentos);
+else if (comando === 'pacotes') pacotesComando(argumentos);
 else sair(USO);
