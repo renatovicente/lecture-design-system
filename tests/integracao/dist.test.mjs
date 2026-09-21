@@ -239,11 +239,13 @@ test('todo satélite que o navegador pede tem integrity no import map, e o mapa 
 test('dois bytes a mais em um satélite e a aula não monta: o integrity do import map é conferido mesmo', async (t) => {
   const decks = await levantarSatelites();
   const alvos = decks.flatMap(({ deck, satelites }) => satelites.map((nome) => [nome, deck]));
-  // A cobertura desta prova, dita em asserção e não em comentário: os alvos são exatamente os
-  // satélites que o import map diz proteger. Se um dia sobrar um protegido sem alvo, este teste cai.
+  // A cobertura desta prova, dita em asserção e não em comentário: os alvos que ela corrompe são
+  // exatamente os satélites que o import map diz proteger. Cai dos dois lados — um protegido que
+  // ninguém corrompe, ou um alvo que o mapa não protege — e é o que impede a cobertura de encolher
+  // sem ninguém ver.
   assert.deepEqual(alvos.map(([nome]) => `${decks[0].base}${nome}`).sort(),
     Object.keys(decks[0].mapa.integrity).sort(),
-    'há satélite no import map que esta prova não corrompe — a cobertura encolheu');
+    'os alvos desta prova e os satélites que o import map protege divergem — a cobertura encolheu');
 
   for (const [satelite, deck] of alvos) {
     await t.test(`${satelite} (em ${deck})`, async (sub) => {
