@@ -481,3 +481,37 @@ test('todo caminho citado dentro do pacote existe dentro do pacote', () => {
       + ' caminho que o pacote tem (`apontar`), ou ela não cita caminho nenhum',
   );
 });
+
+// ---------------------------------------------------------------------------------------------
+// 11. O TEXTO DE EXEMPLO QUE O SKILL.MD MANDA DEIXAR É O QUE O ESQUELETO DO PACOTE TRAZ.
+
+// Desde a junta que o aceite do marco 7 expôs, o passo 3 do SKILL.md diz ao agente sem autor à mão
+// para deixar as metas que não sabe com o texto de exemplo do esqueleto — e CITA esse texto entre
+// crases. Citar o conteúdo de outro arquivo é criar uma segunda verdade sobre ele: trocado o
+// esqueleto, a instrução passa a mandar escrever o que o modelo não tem mais, e nada acusa. É a
+// guarda de cima um nível abaixo — lá o endereço citado, aqui o valor citado.
+//
+// Nada aqui é digitado: as metas que `aula-usp novo` PREENCHE saem do fonte do comando, os nomes
+// das metas saem do contrato, e o texto de exemplo sai do modelo que VIAJA no pacote — o arquivo
+// que o leitor do SKILL.md tem à mão, não o do repositório.
+test('o texto de exemplo citado no passo 3 do SKILL.md é o que o esqueleto do pacote traz', () => {
+  const { metadados } = JSON.parse(texto('contrato/contrato.json'));
+  const preenchidas = [...texto('bin/aula-usp.mjs').matchAll(/trocarMeta\(html, '([a-z]+)'/g)]
+    .map(([, nome]) => nome);
+  const deixadas = Object.keys(metadados).filter((nome) => !preenchidas.includes(nome));
+  // Sem isto a guarda fica vazia por um caminho silencioso: `novo` passando a preencher tudo, ou o
+  // reconhecimento acima deixando de achar as chamadas, dariam uma lista sem nada a conferir.
+  assert.ok(deixadas.length > 0, 'nenhuma meta sobra para o autor preencher — o passo 3 fala de um comando que mudou');
+
+  const modelo = texto('pacotes/skill/aula-usp/assets/modelo.html');
+  const skill = texto('pacotes/skill/aula-usp/SKILL.md');
+  for (const meta of deixadas) {
+    const achado = modelo.match(new RegExp(`<meta name="${meta}" content="([^"]+)">`));
+    assert.ok(achado, `o esqueleto que viaja no pacote não traz a meta "${meta}" no <head>`);
+    assert.ok(
+      skill.includes(`\`${achado[1]}\``),
+      `o passo 3 do SKILL.md não cita \`${achado[1]}\`, que é o texto de exemplo de "${meta}" no`
+        + ' esqueleto que viaja no pacote — ou a citação envelheceu, ou o esqueleto mudou',
+    );
+  }
+});
