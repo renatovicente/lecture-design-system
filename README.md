@@ -8,7 +8,7 @@ Feito para o IME-USP e o IFUSP, com a identidade visual da USP.
 
 ## Estado
 
-**Fase 1, marcos 1 a 6 prontos e integrados.** Falta o marco 7, o aceite — o roteiro está escrito e ainda não foi rodado.
+**Fase 1 completa: os sete marcos.** O aceite foi rodado em 2026-09-21 e os dois ambientes passaram.
 
 | | |
 |---|---|
@@ -30,7 +30,7 @@ Quatro coisas, e nenhuma delas é detalhe de acabamento.
 
 **A tag do runtime resolvendo.** O modelo, a aula-exemplo, os decks do espécime e os quatro pacotes já trazem a tag com a versão exata e o `integrity` reais — **o endereço é que ainda não resolve**, pela mesma razão acima. Nos fluxos com terminal isso não muda nada: `aula-usp servir` troca a tag pelo runtime local e `aula-usp build` a troca pelo motor embutido, e os dois a reconhecem pelo `src` terminado em `/aula-usp.js`. O que não funciona até a publicação é abrir o HTML do modelo direto no navegador, com dois cliques.
 
-**O aceite.** `tests/aceite/roteiro.md` fixa o pedido, os ambientes e o critério — zero erros em até três rodadas mais a revisão visual do autor — e suas tabelas de resultado **estão vazias**: ninguém o rodou. É o marco 7.
+**O aceite.** `tests/aceite/roteiro.md` fixa o pedido, os ambientes e o critério — zero erros em até três rodadas mais a revisão visual do autor — e traz os resultados da fase 1, rodada em 2026-09-21: **Claude Code e Codex CLI passaram os dois**, cada um com apenas o pacote da skill. As aulas que produziram estão em `tests/aceite/aulas/`. A tabela da fase 3 continua vazia, e depende da publicação.
 
 ## Os comandos
 

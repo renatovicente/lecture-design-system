@@ -179,7 +179,14 @@ blocos, derivação em passos, um bloco de Python, um exercício e notas em 8 sl
   pacote à risca **não entrega nada**. É uma junta entre dois artefatos deste repositório que ninguém
   tinha testado, porque até aqui não havia consumidor real. Ou o `SKILL.md` prevê o caso sem autor à
   mão, ou o roteiro prevê a resposta às metas como parte da preparação.
-- o que isto pede a `guia/`:
+
+> **Resolvido depois desta rodada**, e a anotação fica aqui para quem ler os achados: consertou-se o
+> lado do `SKILL.md`, não o do roteiro. O motivo é que o caso não é do aceite — quem instala a skill
+> e pede uma aula por script está na mesma posição do condutor não-interativo, e consertar o roteiro
+> fecharia o aceite deixando esse leitor com o mesmo impasse. A saída não precisou ser inventada:
+> `aula-usp novo` já deixa `disciplina`, `aula` e `professor` com o texto de exemplo do modelo, e o
+> passo 3 passou a mandar o agente fazer o mesmo e dizer na entrega o que o autor precisa trocar.
+> O roteiro ganhou, na seção "Como rodar", que responder as cinco metas não conta como ajuda.
 
 ## Fase 3
 
