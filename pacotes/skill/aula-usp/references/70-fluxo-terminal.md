@@ -115,6 +115,8 @@ Abra o endereço e você tem a aula montada, com navegação, passos, notas e o 
 
 Não há recarga automática: depois de editar o arquivo, recarregue a página. `--porta` muda a porta quando a 8765 estiver ocupada.
 
+**Quando não há olho humano nesta ponta** — um agente escrevendo a aula sozinho, um pedido que veio por script —, o comando que serve é o `build`, e não este. Com Chrome na máquina ele mede a composição num navegador de verdade, gera o PDF e confere que o número de páginas bate com o que a aula pede (`saida.pdf-paginas`); o PDF fica em `dist/` e é um arquivo, que não depende de servidor nem de navegador para ser lido depois. Daqui em diante é o que a sua máquina tem, não o que o sistema promete: ver as páginas como imagem pede um rasterizador de PDF — o `pdftoppm`, do Poppler, é um —, e alguns agentes leem PDF direto. Sem Chrome não há PDF nenhum (seção "Quando não há Chrome"), e o que sobra é a lista do validador. Nenhum desses caminhos substitui a revisão do autor, que é sobre o que o validador não mede: se a figura diz alguma coisa, se a derivação revela os passos na ordem certa.
+
 ### `aula-usp build` — a entrega
 
 ```bash
