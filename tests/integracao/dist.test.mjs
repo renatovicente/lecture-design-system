@@ -80,11 +80,14 @@ test('dois bytes a mais em aula-usp.js e o Chrome recusa o script: o integrity d
 // `codigo.html` é o deck que puxa a cadeia inteira: o runtime, o satélite do código e uma gramática
 // por linguagem usada.
 //
-// MEDIDO E NÃO ASSERIDO, para não prometer o que não há: os secundários entram por `import()`
-// dinâmico, que não carrega `integrity` — o bundle inteiro não tem a palavra (medido: 0 ocorrências
-// em dist/aula-usp.js). A spec 3.2, passo 5, promete "cada script secundário é carregado com o seu
-// `integrity`, que `aula-usp.js` traz embutido": essa metade da spec NÃO está implementada, e é a
-// rota que a torna visível. Quem a implementar mede aqui.
+// A outra metade da spec 3.2, passo 5 — "cada script secundário é carregado com o seu `integrity`,
+// que `aula-usp.js` traz embutido" —, que este comentário registrou como NÃO implementada enquanto
+// ela não existiu, JÁ ESTÁ implementada: `import()` dinâmico de fato não carrega `integrity`, e por
+// isso quem confere é o import map que `montar/dist.js` injeta no arranque, cuja chave `integrity` o
+// Chrome honra também no `import()` dinâmico. Medido sobre esta mesma rota: `codigo.html` monta com
+// 9 pedidos e um import map de 9 entradas; com dois bytes a mais em `aula-usp-codigo.js`, em
+// `aula-usp-tex.js` ou na gramática de Python, o Chrome bloqueia e a aula não monta.
+// Este arquivo ainda não ASSERE isso — a tarefa 3 do plano do SRI dos satélites é que mede aqui.
 test('a cadeia de scripts secundários é pedida pela base da CDN, não pelo host que serve a aula', async (t) => {
   const { pagina, erros, titulo, base, pedidos } = await montar('especime/codigo.html');
   t.after(() => pagina.close());
