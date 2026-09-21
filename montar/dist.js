@@ -61,12 +61,53 @@ window.AulaUSP = { filaDeDemos, demo(nome, definicao) { filaDeDemos.push({ nome,
 // currentScript só vale durante a execução síncrona; guarde agora, não depois do await.
 const base = document.currentScript?.src;
 
+// Um só lugar traduz nome de arquivo em endereço — o resolver abaixo e o import map usam este. Dois
+// lugares resolvendo o mesmo nome é como o integrity de um satélite passa a valer para um endereço e
+// o pedido sai para outro: o navegador não acha chave para a URL pedida e não confere nada, calado.
+const urlDoSatelite = (arquivo) => new URL(arquivo, base).href;
+
+// Qual satélite atende cada especificador que entrada.js pede. Só nomes de arquivo: o endereço é de
+// urlDoSatelite, e o hash de cada um vem de SATELITES_EMBUTIDOS, chaveado pelo mesmo nome de arquivo.
+const arquivoDoSatelite = (nome) => nome === 'katex' ? 'aula-usp-tex.js'
+  : nome.startsWith('@shikijs/langs/') ? `aula-usp-lang-${nome.split('/').pop()}.js`
+  : 'aula-usp-codigo.js';
+
+// Spec 3.2, passo 5: "cada script secundário é carregado com o seu integrity, que aula-usp.js traz
+// embutido para a mesma versão". O mecanismo é o import map, e não o atributo: os secundários entram
+// por import() dinâmico, que NÃO tem onde receber integrity — não existe argumento para isso, e é por
+// isso que a promessa ficou sem cumprir desde a spec. O import map tem a chave `integrity`, chaveada
+// pela URL do módulo, e o Chrome a honra também no import() dinâmico.
+//
+// Medido nas duas direções, com Chrome de verdade, exatamente nesta forma (mapa só com `integrity`,
+// sem `imports`, injetado por script CLÁSSICO, import() por URL absoluta): com o hash certo o módulo
+// carrega; com o hash corrompido o import() rejeita com "Failed to fetch dynamically imported module"
+// e o console traz "Failed to find a valid digest in the 'integrity' attribute … has been blocked".
+//
+// Sem `imports`: entrada.js pede pelo especificador e o resolver já devolve a URL final, então não há
+// nome nu para o mapa traduzir. Uma seção `imports` aqui seria a segunda tradução de nome em endereço
+// — a duplicação que urlDoSatelite existe para não haver.
+//
+// SATELITES_EMBUTIDOS é `define` do empacotador (build/bundle.mjs): nome de arquivo → sha384. Não é
+// declarado em lugar nenhum — de propósito, para que empacotar sem o define lance na carga em vez de
+// entregar uma aula que carrega tudo sem conferir nada.
+//
+// Aqui, e não dentro de iniciar(): o mapa precisa estar no documento ANTES do primeiro import(), e
+// iniciar() é assíncrona (o primeiro import() dela vem depois de dois await). E `base` é lido acima,
+// antes de qualquer await, pela mesma razão de sempre — currentScript já seria null.
+if (base) {
+  const mapa = document.createElement('script');
+  mapa.type = 'importmap';
+  mapa.textContent = JSON.stringify({
+    integrity: Object.fromEntries(Object.entries(SATELITES_EMBUTIDOS)
+      .map(([arquivo, hash]) => [urlDoSatelite(arquivo), hash])),
+  });
+  document.head.append(mapa);
+}
+
 iniciar({
   base,
   // vizinhos em dist/: o empacotador não adivinha, o chamador diz.
-  resolver: (nome) => new URL(nome === 'katex' ? 'aula-usp-tex.js'
-    : nome.startsWith('@shikijs/langs/') ? `aula-usp-lang-${nome.split('/').pop()}.js`
-    : 'aula-usp-codigo.js', base).href,
+  resolver: (nome) => urlDoSatelite(arquivoDoSatelite(nome)),
   dados: (caminho) => DADOS.get(caminho),
   marca: (arquivo) => MARCAS.get(arquivo),
   estilo: (caminho) => {

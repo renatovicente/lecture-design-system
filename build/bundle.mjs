@@ -75,21 +75,29 @@ export async function empacotar({ raiz, escrever = true } = {}) {
   const { version } = JSON.parse(await readFile(new URL('package.json', raiz), 'utf8'));
   const saidas = new Map();
 
-  const guardar = (nome, resultado) => {
+  // `satelite` marca quem `montar/entrada.js` carrega por import() dinâmico — os que entram no mapa
+  // embutido logo abaixo. É o empacotador que sabe disso, e por isso quem responde é ele: a guarda de
+  // tests/unit/bundle.test.mjs percorre esta marca em vez de uma lista escrita no teste, e os dois
+  // satélites da fase 2 (spec 3.5) entram nela sozinhos no dia em que forem acrescentados aqui.
+  const guardar = (nome, resultado, { satelite = false } = {}) => {
     const arquivo = resultado.outputFiles[0];
-    saidas.set(nome, { bytes: arquivo.contents.length, integrity: integridade(arquivo.contents), texto: arquivo.text, conteudo: arquivo.contents });
+    saidas.set(nome, { bytes: arquivo.contents.length, integrity: integridade(arquivo.contents), texto: arquivo.text, conteudo: arquivo.contents, satelite });
   };
 
-  // 1. o pacote do navegador: CLÁSSICO (iife), pelos motivos na tarefa 1. O plugin embute as fontes
-  //    do sistema (Geist/Open Sans) como data URI dentro de estilos/fontes.css — ver o comentário dele.
-  guardar('aula-usp.js', await esbuild.build({ ...COMUM, absWorkingDir: dir, entryPoints: ['montar/dist.js'], format: 'iife', plugins: [pluginFontesDoSistemaEmbutidas(raiz)] }));
+  // A ORDEM É DE PROPÓSITO, e ela é o contrário da que este arquivo teve até aqui: os satélites
+  // primeiro, `aula-usp.js` por último. O principal embute o hash de cada satélite (spec 3.2, passo
+  // 5), e um hash de arquivo que ainda não foi gerado não existe. É a segunda instância da mesma
+  // regra que `aula-usp dist` já segue ao gerar validador/cobertura.json ANTES de empacotar: na ordem
+  // inversa o artefato sairia sempre uma geração atrasado. Ver AGENTS.md.
 
-  // 2. o motor de interação, que o build do marco 5b põe no lugar da tag do runtime (spec 3.3 etapa
+  // 1. o motor de interação, que o build do marco 5b põe no lugar da tag do runtime (spec 3.3 etapa
   //    4). motor/dist.js, não motor/motor.js sozinho: motor.js só cobre navegação e passos, e a spec
   //    pede também notas, visão geral, apresentador e impressão (achado I1 da revisão final do 5a).
+  //    NÃO é satélite: entra por <script src> na aula construída, não por import() — quem confere o
+  //    integrity dele, quando houver, é a tag, como a de aula-usp.js.
   guardar('aula-usp-motor.js', await esbuild.build({ ...COMUM, absWorkingDir: dir, entryPoints: ['motor/dist.js'], format: 'iife', globalName: 'AulaUSPMotor' }));
 
-  // 3. matemática: KaTeX + a CSS dele + as fontes dele. Injeta a própria folha ao ser importado,
+  // 2. matemática: KaTeX + a CSS dele + as fontes dele. Injeta a própria folha ao ser importado,
   //    para que entrada.js não precise de um ramo só para este caso.
   const entradaTex = `
 import katex from 'katex';
@@ -98,17 +106,44 @@ folha.textContent = ${JSON.stringify(await cssDoTexComFontes(raiz))};
 document.head.append(folha);
 export default katex;
 `;
-  guardar('aula-usp-tex.js', await esbuild.build({ ...COMUM, absWorkingDir: dir, stdin: { contents: entradaTex, resolveDir: dir, loader: 'js' }, format: 'esm' }));
+  guardar('aula-usp-tex.js', await esbuild.build({ ...COMUM, absWorkingDir: dir, stdin: { contents: entradaTex, resolveDir: dir, loader: 'js' }, format: 'esm' }), { satelite: true });
 
-  // 4. código: o núcleo do Shiki. As gramáticas vão à parte, uma por linguagem — uma aula de
+  // 3. código: o núcleo do Shiki. As gramáticas vão à parte, uma por linguagem — uma aula de
   //    Python não deve baixar a de LaTeX. (E `splitting: true` não serve: colide nos nomes.)
   guardar('aula-usp-codigo.js', await esbuild.build({ ...COMUM, absWorkingDir: dir,
-    stdin: { contents: "export * from '@shikijs/primitive'; export * from '@shikijs/engine-javascript';", resolveDir: dir, loader: 'js' }, format: 'esm' }));
+    stdin: { contents: "export * from '@shikijs/primitive'; export * from '@shikijs/engine-javascript';", resolveDir: dir, loader: 'js' }, format: 'esm' }), { satelite: true });
 
   for (const linguagem of linguagens) {
     guardar(`aula-usp-lang-${linguagem}.js`, await esbuild.build({ ...COMUM, absWorkingDir: dir,
-      stdin: { contents: `export { default } from '@shikijs/langs/${linguagem}';`, resolveDir: dir, loader: 'js' }, format: 'esm' }));
+      stdin: { contents: `export { default } from '@shikijs/langs/${linguagem}';`, resolveDir: dir, loader: 'js' }, format: 'esm' }), { satelite: true });
   }
+
+  // 4. o pacote do navegador: CLÁSSICO (iife), pelos motivos na tarefa 1 do marco 5a. O plugin embute
+  //    as fontes do sistema (Geist/Open Sans) como data URI dentro de estilos/fontes.css — ver o
+  //    comentário dele. E por último, porque agora leva os hashes dos três blocos acima.
+  //
+  //    NOME DE ARQUIVO → hash, e não especificador de módulo → hash: `aula-usp-tex.js` é o único nome
+  //    que os dois lados já compartilham — o empacotador o produz, e a última coisa que o `resolver`
+  //    de montar/dist.js faz é `new URL(<nome de arquivo>, base)`. Chavear por 'katex' ou
+  //    '@shikijs/langs/python' obrigaria ESTE arquivo a saber a tradução que mora lá, e seriam duas
+  //    verdades sobre o mesmo endereço.
+  //
+  //    `define` e não plugin, apesar de pluginFontesDoSistemaEmbutidas ser o precedente ao lado: o
+  //    plugin existe para transformar os bytes de um arquivo que já existe e já é importado de
+  //    verdade (estilos/fontes.css). Aqui não há arquivo — os hashes só existem dentro desta função,
+  //    calculados segundos atrás. Um plugin precisaria de um módulo de fachada em montar/, commitado
+  //    com um mapa vazio, e um mapa vazio torna "o mecanismo foi desligado" indistinguível de "ele
+  //    rodou e não achou nada" — a classe de defeito que o AGENTS.md diz que este projeto mais paga.
+  //    Com `define`, sumir com a injeção não produz silêncio: SATELITES_EMBUTIDOS não é declarado em
+  //    lugar nenhum, então o pacote lança ReferenceError na carga e nenhuma aula monta.
+  guardar('aula-usp.js', await esbuild.build({ ...COMUM, absWorkingDir: dir, entryPoints: ['montar/dist.js'], format: 'iife',
+    plugins: [pluginFontesDoSistemaEmbutidas(raiz)],
+    // A contraparte deste nome está em montar/dist.js. Trocar um dos dois sem o outro é pego pela
+    // guarda "todo satélite … tem o seu integrity embutido": os hashes simplesmente não aparecem.
+    define: { SATELITES_EMBUTIDOS: JSON.stringify(Object.fromEntries([...saidas]
+      .filter(([, saida]) => saida.satelite)
+      .map(([nome, { integrity }]) => [nome, integrity]))) },
+  }));
 
   if (escrever) {
     await mkdir(new URL('dist/', raiz), { recursive: true });
