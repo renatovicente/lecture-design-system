@@ -246,7 +246,13 @@ test('todo satélite que o navegador pede tem integrity no import map, e o mapa 
 // monta. A frase entra como /integrity/, que é o que sobrevive a uma versão nova do navegador.
 test('dois bytes a mais em um satélite e a aula não monta: o integrity do import map é conferido mesmo', async (t) => {
   const decks = await levantarSatelites();
-  const alvos = decks.flatMap(({ deck, satelites }) => satelites.map((nome) => [nome, deck]));
+  // Um alvo por satélite, mesmo que dois decks peçam o mesmo. Hoje não há sobreposição —
+  // matematica.html pede 1, codigo.html pede 8, 1 + 8 = 9 — e por isso o `new Map` é inerte:
+  // continuam nove alvos, os mesmos nove subtestes. Ele existe pelo dia em que DECKS_DA_PROVA ganhar
+  // um deck que use matemática E código (o plano original pedia um desses; a fase 2 pode trazê-lo):
+  // aí `alvos` teria nomes repetidos e o deepEqual abaixo cairia sem que nada estivesse errado.
+  // Corromper o mesmo satélite duas vezes não prova nada a mais — o primeiro deck que o pede basta.
+  const alvos = [...new Map(decks.flatMap(({ deck, satelites }) => satelites.map((nome) => [nome, deck])))];
   // A cobertura desta prova, dita em asserção e não em comentário: os alvos que ela corrompe são
   // exatamente os satélites que o import map diz proteger. Cai dos dois lados — um protegido que
   // ninguém corrompe, ou um alvo que o mapa não protege — e é o que impede a cobertura de encolher
