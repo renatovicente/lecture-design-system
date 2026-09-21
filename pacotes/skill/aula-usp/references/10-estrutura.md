@@ -4,7 +4,7 @@ Uma aula é um arquivo HTML: um `<head>` com os metadados e a tag do runtime, e 
 
 ## O esqueleto
 
-É este o arquivo de onde toda aula começa. Ele está em `modelos/aula/index.html`, e nos pacotes para agentes vem como `assets/modelo.html`. O bloco abaixo **é** esse arquivo: `npm run guia` o copia para cá, então o que você lê aqui é o esqueleto que o repositório tem hoje, e não uma cópia que envelheceu.
+É este o arquivo de onde toda aula começa. Ele está em `assets/modelo.html`. O bloco abaixo **é** esse arquivo: `npm run guia` o copia para cá, então o que você lê aqui é o esqueleto de hoje, e não uma cópia que envelheceu.
 
 <!-- gerado:modelo -->
 ```html
@@ -144,7 +144,7 @@ Do espécime: `especime/matematica.html#o-papel-de-eta`. Sem `data-curto`, o nom
 <aside class="notas">Dar um minuto de silêncio antes de revelar a resposta. Errar o sinal é o engano mais comum, e é melhor que ele apareça aqui do que na lista.</aside>
 ```
 
-Da aula-exemplo: `exemplos/descida-do-gradiente/index.html#exercicio`. As notas não aparecem no slide — só na janela do apresentador — e não contam no orçamento de palavras do slide. Escreva nelas o que você vai dizer e não está escrito na tela; `estrutura.notas-ausentes` avisa quando um slide de conteúdo, afirmação, figura ou demo não tem nenhuma.
+Da aula-exemplo: `assets/exemplo.html#exercicio`. As notas não aparecem no slide — só na janela do apresentador — e não contam no orçamento de palavras do slide. Escreva nelas o que você vai dizer e não está escrito na tela; `estrutura.notas-ausentes` avisa quando um slide de conteúdo, afirmação, figura ou demo não tem nenhuma.
 
 ## Revelar por passos
 

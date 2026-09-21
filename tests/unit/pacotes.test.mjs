@@ -229,6 +229,15 @@ test('a reescrita cobre as três pastas da spec 8.1, e acha tag em cada uma dela
 // `guia/pacotes/` é o FONTE dos pacotes: pô-lo em references/ faria a skill carregar o próprio texto
 // dela e as instruções do GPT como referência do autor. Quem o deixa de fora é o filtro por `.md` de
 // `arquivosDoGuia`, sozinho — a subpasta não termina em `.md` —, e é um filtro que some sem alarde.
+// Os dois ponteiros do guia que não resolvem sozinhos dentro do pacote, e o caminho que a skill dá
+// a cada um. A ordem é do mais LONGO para o mais curto: `exemplos/descida-do-gradiente/` é prefixo
+// do outro, e na ordem inversa a segunda troca emendaria um `index.html` no fim do destino.
+const TROCA_DA_SKILL = [
+  ['modelos/aula/index.html', 'assets/modelo.html'],
+  ['exemplos/descida-do-gradiente/index.html', 'assets/exemplo.html'],
+  ['exemplos/descida-do-gradiente/', 'assets/exemplo.html'],
+];
+
 test('references/ traz exatamente os arquivos de guia/, e nenhum de guia/pacotes/', () => {
   const emReferences = readdirSync(new URL('pacotes/skill/aula-usp/references/', RAIZ)).sort();
   const noGuia = arquivosDoGuia(RAIZ);
@@ -239,13 +248,46 @@ test('references/ traz exatamente os arquivos de guia/, e nenhum de guia/pacotes
   for (const nome of dosPacotes) {
     assert.equal(emReferences.includes(nome), false, `references/${nome} é fonte de pacote, e não referência do autor`);
   }
-  // E o conteúdo é cópia do guia, não uma segunda versão dele.
+  // E o conteúdo é o guia, não uma segunda versão dele: cópia byte a byte, salvo os dois ponteiros
+  // que a montagem troca pelo caminho que ESTE pacote dá ao mesmo arquivo. A troca está escrita
+  // aqui, e não importada de `apontar`, pela mesma razão do teto de 8.000: uma guarda que pergunta
+  // ao gerador como ele reescreve aprova qualquer reescrita que ele venha a inventar.
+  let trocados = 0;
   for (const nome of emReferences) {
+    let esperado = texto(`guia/${nome}`);
+    for (const [de, para] of TROCA_DA_SKILL) {
+      trocados += esperado.split(de).length - 1;
+      esperado = esperado.split(de).join(para);
+    }
     assert.equal(
       texto(`pacotes/skill/aula-usp/references/${nome}`),
-      texto(`guia/${nome}`),
+      esperado,
       `references/${nome} divergiu de guia/${nome} — rode \`aula-usp pacotes\``,
     );
+  }
+  // Sem este piso a comparação acima segue verde com a reescrita DESLIGADA, porque aí ela compara
+  // o guia com ele mesmo. Medido nesta árvore: 8 trocas nos onze arquivos.
+  assert.ok(trocados > 0, 'a montagem não trocou um único ponteiro de modelo ou exemplo');
+});
+
+// E a outra metade, que não depende de como esta guarda reconhece uma citação: os caminhos do
+// modelo e do exemplo NO REPOSITÓRIO não aparecem em pacote nenhum, em arquivo nenhum. Um ponteiro
+// que escapasse da troca — num bloco de código, numa tabela, num arquivo novo — cairia aqui.
+//
+// `modelos/aula` sem o `/index.html` fica de fora de propósito: é o que `aula-usp novo` imprime na
+// tela, e guia/70-fluxo-terminal.md mostra essa saída como ela é.
+test('nenhum arquivo de pacote cita o modelo ou o exemplo pelo caminho do repositório', () => {
+  const arquivos = PACOTES.flatMap((pacote) => arquivosDe(pacote));
+  assert.ok(arquivos.length > 0, 'pacotes/ está vazio — esta guarda não mede nada');
+  for (const caminho of arquivos) {
+    const conteudo = texto(caminho);
+    for (const [doRepositorio] of TROCA_DA_SKILL) {
+      assert.equal(
+        conteudo.includes(doRepositorio),
+        false,
+        `${caminho} cita \`${doRepositorio}\`, que é caminho do repositório do sistema e não existe no pacote`,
+      );
+    }
   }
 });
 

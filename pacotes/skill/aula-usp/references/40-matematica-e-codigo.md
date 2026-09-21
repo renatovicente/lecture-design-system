@@ -80,7 +80,7 @@ Do espécime: `especime/matematica.html#passo-a-passo`. Três coisas a reparar:
   </ol>
 ```
 
-Da aula-exemplo: `exemplos/descida-do-gradiente/index.html#derivacao`. Cada item diz em português o que a conta faz, e a conta vem junto; quem perdeu o fio segue pelo texto.
+Da aula-exemplo: `assets/exemplo.html#derivacao`. Cada item diz em português o que a conta faz, e a conta vem junto; quem perdeu o fio segue pelo texto.
 
 **As duas formas não se misturam no mesmo slide.** `\passo{n}{…}` é passo numerado, e o validador o vê no fonte antes de o KaTeX rodar: um slide com `\passo{1}{…}` no TeX e um `<li data-passo>` sem número é `estrutura.passos-mistos` (medido). Ou tudo numerado, ou nada.
 

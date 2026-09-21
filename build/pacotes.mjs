@@ -48,6 +48,32 @@ export function acervo(raiz = RAIZ) {
   return ['contrato/contrato.json', ...decksDoEspecime(raiz).map((nome) => `especime/${nome}`)];
 }
 
+// Os dois ponteiros que o guia reescreve ao entrar num pacote, e os únicos.
+//
+// O guia é lido DENTRO do repositório também, e lá `modelos/aula/index.html` é o caminho certo:
+// apagá-lo da prosa tiraria o ponteiro de quem lê `guia/`. O que resolve sem criar duas verdades é
+// escrever o caminho do repositório uma vez e trocá-lo na MONTAGEM pelo caminho que aquele pacote
+// dá ao mesmo arquivo. A tabela da troca é PACOTES_COM_GUIA — a mesma linha que decide onde os
+// bytes são gravados —, de modo que o ponteiro não tem como divergir do arquivo.
+//
+// Duas cautelas, as duas pagas antes:
+// - a troca é por split/join, nunca por `replace` com string de substituição: ali um `$` é padrão
+//   especial, e este arquivo já pagou uma vez por isso (ver `trocar`);
+// - do mais LONGO para o mais curto. `exemplos/descida-do-gradiente/` é prefixo de
+//   `exemplos/descida-do-gradiente/index.html`, e na ordem inversa a segunda troca emendaria um
+//   `index.html` no fim do destino.
+//
+// E o que ela NÃO toca, de propósito: `modelos/aula` sem o `/index.html`, que aparece uma vez em
+// guia/70-fluxo-terminal.md dentro da SAÍDA que `aula-usp novo` imprime. Reescrevê-la faria o guia
+// mentir sobre o que o comando escreve na tela — é um literal de outro mundo, não um ponteiro.
+export function apontar(texto, { modelo, exemplo }) {
+  const pastaDoExemplo = EXEMPLO.slice(0, EXEMPLO.lastIndexOf('/') + 1);
+  return texto
+    .split(MODELO).join(modelo)
+    .split(EXEMPLO).join(exemplo)
+    .split(pastaDoExemplo).join(exemplo);
+}
+
 // As TRÊS pastas que a spec 8.1 nomeia, `especime/` inclusive.
 //
 // O espécime esteve fora desta lista por uma rodada, e a razão era real: ele é a base dos testes de
@@ -198,11 +224,15 @@ export function montarPacotes({ raiz = RAIZ, escrever: gravar = false } = {}) {
   for (const [fonte, opcoes] of Object.entries(FONTES_DE_PACOTE)) {
     arquivos.set(opcoes.destino, montado(raiz, fonte, opcoes, bloco));
   }
+  // O guia, em cada pacote, com os dois ponteiros apontando para o caminho que AQUELE pacote tem.
   for (const nome of arquivosDoGuia(raiz)) {
-    arquivos.set(`pacotes/skill/aula-usp/references/${nome}`, readFileSync(new URL(`guia/${nome}`, raiz), 'utf8'));
+    arquivos.set(
+      `pacotes/skill/aula-usp/references/${nome}`,
+      apontar(readFileSync(new URL(`guia/${nome}`, raiz), 'utf8'), PACOTES_COM_GUIA['pacotes/skill/aula-usp']),
+    );
   }
   for (const pasta of ['pacotes/claude/projeto', 'pacotes/gpt/gpt-personalizado']) {
-    arquivos.set(`${pasta}/conhecimento/guia-do-autor.md`, guia);
+    arquivos.set(`${pasta}/conhecimento/guia-do-autor.md`, apontar(guia, PACOTES_COM_GUIA[pasta]));
   }
   // O modelo, o exemplo e o acervo, nos três pacotes que levam o guia, cada um no caminho que a
   // tabela lhe dá. Os bytes são os mesmos do repositório: o acervo é cópia, não uma segunda versão.

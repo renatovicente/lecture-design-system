@@ -4,7 +4,7 @@ Uma aula é um arquivo HTML: um `<head>` com os metadados e a tag do runtime, e 
 
 ## O esqueleto
 
-É este o arquivo de onde toda aula começa. Ele está em `modelos/aula/index.html`, e nos pacotes para agentes vem como `assets/modelo.html`. O bloco abaixo **é** esse arquivo: `npm run guia` o copia para cá, então o que você lê aqui é o esqueleto que o repositório tem hoje, e não uma cópia que envelheceu.
+É este o arquivo de onde toda aula começa. Ele está em `modelos/aula/index.html`. O bloco abaixo **é** esse arquivo: `npm run guia` o copia para cá, então o que você lê aqui é o esqueleto de hoje, e não uma cópia que envelheceu.
 
 <!-- gerado:modelo -->
 ```html

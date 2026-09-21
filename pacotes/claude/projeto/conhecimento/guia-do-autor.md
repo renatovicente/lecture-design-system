@@ -72,7 +72,7 @@ O bloco abaixo é o sistema inteiro em um punhado de linhas. Ele entra **literal
 | `72-artifact-claude.md` | a aula como artifact do Claude, e o que não funciona lá dentro |
 | `73-chatgpt.md` | entregar a aula pelo ChatGPT |
 
-Um caminho curto para a primeira aula: leia este arquivo e `10-estrutura.md`, crie a pasta com `aula-usp novo minha-aula --unidade ime` — que copia o esqueleto já com `unidade` e `data` preenchidas —, escreva, e use `60-validador.md` quando o validador falar. Sem terminal, o esqueleto é o que `10-estrutura.md` mostra inteiro, e `71-fluxo-chat.md` conta o resto. A aula-exemplo — `assets/exemplo.html` nos pacotes para agentes, `exemplos/descida-do-gradiente/` no repositório — é uma aula inteira, escrita dentro do sistema, para ver como fica.
+Um caminho curto para a primeira aula: leia este arquivo e `10-estrutura.md`, crie a pasta com `aula-usp novo minha-aula --unidade ime` — que copia o esqueleto já com `unidade` e `data` preenchidas —, escreva, e use `60-validador.md` quando o validador falar. Sem terminal, o esqueleto é o que `10-estrutura.md` mostra inteiro, e `71-fluxo-chat.md` conta o resto. A aula-exemplo — `exemplo.html` — é uma aula inteira, escrita dentro do sistema, para ver como fica.
 
 <!-- guia/10-estrutura.md -->
 
@@ -82,7 +82,7 @@ Uma aula é um arquivo HTML: um `<head>` com os metadados e a tag do runtime, e 
 
 ## O esqueleto
 
-É este o arquivo de onde toda aula começa. Ele está em `modelos/aula/index.html`, e nos pacotes para agentes vem como `assets/modelo.html`. O bloco abaixo **é** esse arquivo: `npm run guia` o copia para cá, então o que você lê aqui é o esqueleto que o repositório tem hoje, e não uma cópia que envelheceu.
+É este o arquivo de onde toda aula começa. Ele está em `modelo.html`. O bloco abaixo **é** esse arquivo: `npm run guia` o copia para cá, então o que você lê aqui é o esqueleto de hoje, e não uma cópia que envelheceu.
 
 <!-- gerado:modelo -->
 ```html
@@ -222,7 +222,7 @@ Do espécime: `especime/matematica.html#o-papel-de-eta`. Sem `data-curto`, o nom
 <aside class="notas">Dar um minuto de silêncio antes de revelar a resposta. Errar o sinal é o engano mais comum, e é melhor que ele apareça aqui do que na lista.</aside>
 ```
 
-Da aula-exemplo: `exemplos/descida-do-gradiente/index.html#exercicio`. As notas não aparecem no slide — só na janela do apresentador — e não contam no orçamento de palavras do slide. Escreva nelas o que você vai dizer e não está escrito na tela; `estrutura.notas-ausentes` avisa quando um slide de conteúdo, afirmação, figura ou demo não tem nenhuma.
+Da aula-exemplo: `exemplo.html#exercicio`. As notas não aparecem no slide — só na janela do apresentador — e não contam no orçamento de palavras do slide. Escreva nelas o que você vai dizer e não está escrito na tela; `estrutura.notas-ausentes` avisa quando um slide de conteúdo, afirmação, figura ou demo não tem nenhuma.
 
 ## Revelar por passos
 
@@ -611,7 +611,7 @@ O bloco padrão, e o mais fácil de usar mal. O parágrafo de um slide é curto 
 <p>Treinar é procurar o fundo dessa superfície sem poder enxergá-la inteira. Do ponto onde está, o modelo conhece a altura e a inclinação sob os pés, e nada além disso.</p>
 ```
 
-Da aula-exemplo: `exemplos/descida-do-gradiente/index.html#superficie`. O `p.lide` não é um bloco de corpo: ele pertence à sequência do layout `conteudo`, vem logo depois do título e entrega a ideia inteira na primeira frase — o corpo só a desenvolve.
+Da aula-exemplo: `exemplo.html#superficie`. O `p.lide` não é um bloco de corpo: ele pertence à sequência do layout `conteudo`, vem logo depois do título e entrega a ideia inteira na primeira frase — o corpo só a desenvolve.
 
 Dentro do parágrafo cabem `strong`, `em`, `code`, `sub`, `sup` e `a`:
 
@@ -662,7 +662,7 @@ Campo amarelo com texto preto, e um rótulo opcional em maiúsculas. É o único
 <aside class="destaque" data-rotulo="Definição">Superfície de erro: a altura \( E(w) \) sobre cada escolha de pesos \( w \).</aside>
 ```
 
-Da aula-exemplo: `exemplos/descida-do-gradiente/index.html#superficie`. Há um limite por slide (`limites.destaques`), e a razão é aritmética: destacar tudo é não destacar nada. O `data-rotulo` é curto — ele também tem limite (`limites.rotulo`) — e diz que tipo de coisa vem ali: Definição, Resultado, Exemplo.
+Da aula-exemplo: `exemplo.html#superficie`. Há um limite por slide (`limites.destaques`), e a razão é aritmética: destacar tudo é não destacar nada. O `data-rotulo` é curto — ele também tem limite (`limites.rotulo`) — e diz que tipo de coisa vem ali: Definição, Resultado, Exemplo.
 
 ## Quadro
 
@@ -682,7 +682,7 @@ Campo preto com texto branco: o cuidado, o engano comum, o que não fazer. Um po
 <aside class="alerta" data-rotulo="Cuidado">Passo longo demais atravessa o vale, e o erro sobe em vez de cair.</aside>
 ```
 
-Da aula-exemplo: `exemplos/descida-do-gradiente/index.html#taxa`.
+Da aula-exemplo: `exemplo.html#taxa`.
 
 ## Exercício
 
@@ -699,7 +699,7 @@ Enunciado e resposta, com a resposta escondida até você revelá-la.
 </div>
 ```
 
-Da aula-exemplo: `exemplos/descida-do-gradiente/index.html#exercicio`. O `div.enunciado` é obrigatório e vem primeiro; o `div.resposta` é opcional e vem depois. O `data-passo` na resposta é o que dá à turma o minuto de silêncio — sem ele, a resposta já está na tela junto com a pergunta.
+Da aula-exemplo: `exemplo.html#exercicio`. O `div.enunciado` é obrigatório e vem primeiro; o `div.resposta` é opcional e vem depois. O `data-passo` na resposta é o que dá à turma o minuto de silêncio — sem ele, a resposta já está na tela junto com a pergunta.
 
 ## Tabela
 
@@ -898,7 +898,7 @@ Do espécime: `especime/matematica.html#passo-a-passo`. Três coisas a reparar:
   </ol>
 ```
 
-Da aula-exemplo: `exemplos/descida-do-gradiente/index.html#derivacao`. Cada item diz em português o que a conta faz, e a conta vem junto; quem perdeu o fio segue pelo texto.
+Da aula-exemplo: `exemplo.html#derivacao`. Cada item diz em português o que a conta faz, e a conta vem junto; quem perdeu o fio segue pelo texto.
 
 **As duas formas não se misturam no mesmo slide.** `\passo{n}{…}` é passo numerado, e o validador o vê no fonte antes de o KaTeX rodar: um slide com `\passo{1}{…}` no TeX e um `<li data-passo>` sem número é `estrutura.passos-mistos` (medido). Ou tudo numerado, ou nada.
 

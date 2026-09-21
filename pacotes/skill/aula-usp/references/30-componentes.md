@@ -17,7 +17,7 @@ O bloco padrão, e o mais fácil de usar mal. O parágrafo de um slide é curto 
 <p>Treinar é procurar o fundo dessa superfície sem poder enxergá-la inteira. Do ponto onde está, o modelo conhece a altura e a inclinação sob os pés, e nada além disso.</p>
 ```
 
-Da aula-exemplo: `exemplos/descida-do-gradiente/index.html#superficie`. O `p.lide` não é um bloco de corpo: ele pertence à sequência do layout `conteudo`, vem logo depois do título e entrega a ideia inteira na primeira frase — o corpo só a desenvolve.
+Da aula-exemplo: `assets/exemplo.html#superficie`. O `p.lide` não é um bloco de corpo: ele pertence à sequência do layout `conteudo`, vem logo depois do título e entrega a ideia inteira na primeira frase — o corpo só a desenvolve.
 
 Dentro do parágrafo cabem `strong`, `em`, `code`, `sub`, `sup` e `a`:
 
@@ -68,7 +68,7 @@ Campo amarelo com texto preto, e um rótulo opcional em maiúsculas. É o único
 <aside class="destaque" data-rotulo="Definição">Superfície de erro: a altura \( E(w) \) sobre cada escolha de pesos \( w \).</aside>
 ```
 
-Da aula-exemplo: `exemplos/descida-do-gradiente/index.html#superficie`. Há um limite por slide (`limites.destaques`), e a razão é aritmética: destacar tudo é não destacar nada. O `data-rotulo` é curto — ele também tem limite (`limites.rotulo`) — e diz que tipo de coisa vem ali: Definição, Resultado, Exemplo.
+Da aula-exemplo: `assets/exemplo.html#superficie`. Há um limite por slide (`limites.destaques`), e a razão é aritmética: destacar tudo é não destacar nada. O `data-rotulo` é curto — ele também tem limite (`limites.rotulo`) — e diz que tipo de coisa vem ali: Definição, Resultado, Exemplo.
 
 ## Quadro
 
@@ -88,7 +88,7 @@ Campo preto com texto branco: o cuidado, o engano comum, o que não fazer. Um po
 <aside class="alerta" data-rotulo="Cuidado">Passo longo demais atravessa o vale, e o erro sobe em vez de cair.</aside>
 ```
 
-Da aula-exemplo: `exemplos/descida-do-gradiente/index.html#taxa`.
+Da aula-exemplo: `assets/exemplo.html#taxa`.
 
 ## Exercício
 
@@ -105,7 +105,7 @@ Enunciado e resposta, com a resposta escondida até você revelá-la.
 </div>
 ```
 
-Da aula-exemplo: `exemplos/descida-do-gradiente/index.html#exercicio`. O `div.enunciado` é obrigatório e vem primeiro; o `div.resposta` é opcional e vem depois. O `data-passo` na resposta é o que dá à turma o minuto de silêncio — sem ele, a resposta já está na tela junto com a pergunta.
+Da aula-exemplo: `assets/exemplo.html#exercicio`. O `div.enunciado` é obrigatório e vem primeiro; o `div.resposta` é opcional e vem depois. O `data-passo` na resposta é o que dá à turma o minuto de silêncio — sem ele, a resposta já está na tela junto com a pergunta.
 
 ## Tabela
 
