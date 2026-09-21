@@ -15,11 +15,31 @@ const RAIZ = new URL('../', import.meta.url);
 const MODELO = 'modelos/aula/index.html';
 const EXEMPLO = 'exemplos/descida-do-gradiente/index.html';
 
-// O escopo LITERAL da spec 8.1: `pacotes` "reescreve a tag do runtime (versão e `integrity`) em
-// `modelos/`, `especime/` e `exemplos/`". São três pastas, e é preciso que sejam: medido no
-// repositório, 53 arquivos rastreados carregam a tag e 33 deles são fixture de teste — uma busca
-// repo-wide reescreveria as fixtures e quebraria a suíte.
-export const PASTAS_COM_TAG = ['modelos', 'especime', 'exemplos'];
+// DUAS pastas, e a spec 8.1 nomeia três. Isto é desvio consciente da letra dela, decidido pelo
+// autor, e está escrito aqui para não ser "consertado" de volta por quem reler a spec.
+//
+// A spec 8.1 diz que `pacotes` "reescreve a tag do runtime (versão e `integrity`) em `modelos/`,
+// `especime/` e `exemplos/`" — e a spec 10.3 diz que `especime/` "é a referência visual e a base
+// dos **testes de integração**". As duas não podem valer juntas enquanto a URL da CDN não resolve:
+// tests/integracao/dist.test.mjs e visual.test.mjs servem o espécime por `servirPastaCrua`
+// (tests/integracao/utilitarios.mjs:63-69), um segundo servidor deliberadamente burro que NÃO
+// reescreve a tag, e é ele que prova o caminho de produção — que o `<script src="../dist/aula-usp.js">`
+// escrito pelo autor chega ao navegador do jeito que ele o escreveu. Com a tag fixada, o pacote
+// ainda não está publicado (fase 3), o runtime nunca carrega e a montagem estoura: medido, **12
+// testes de integração caem** (4 de 5 em dist.test.mjs, 8 de 73 em visual.test.mjs), e voltam com a
+// tag relativa. Apontar esses dois testes para uma fixture relativa apagaria justamente a
+// propriedade que eles medem.
+//
+// O que torna o desvio barato é que **o espécime não é enviado em nenhum pacote**: a spec 10.2
+// lista `assets/modelo.html` e `assets/exemplo.html`, que vêm de `modelos/` e de `exemplos/`. Nada
+// do que sai deste repositório carrega a tag relativa dele. A 3.2 e a 12 repetem a lista das três
+// pastas e ficam, como a 8.1, cumpridas em dois terços — quando a publicação da fase 3 fizer a URL
+// resolver, `especime` volta para esta lista e as três valem inteiras.
+//
+// E o escopo continua sendo por pasta, nunca uma busca repo-wide: medido no repositório, 54
+// arquivos rastreados carregam a tag, 33 deles são fixture de teste, e reescrevê-las quebraria a
+// suíte por outro caminho.
+export const PASTAS_COM_TAG = ['modelos', 'exemplos'];
 
 // A mesma forma que `reescreverRuntime` (build/servir.mjs) e `embutir` reconhecem: a tag é achada
 // pelo `src` terminado em `/aula-usp.js` (spec 8.1). Casa a relativa de hoje e a fixada de amanhã,
