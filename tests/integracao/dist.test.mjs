@@ -10,7 +10,8 @@
 // existe para medir continua inteira, e agora vale sobre a tag que o autor de fato publica.
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { iniciarChrome, servirPastaCrua, esperarMontagem, abrirAula, rotearCdn } from './utilitarios.mjs';
+import { readFile } from 'node:fs/promises';
+import { RAIZ, iniciarChrome, servirPastaCrua, esperarMontagem, abrirAula, rotearCdn } from './utilitarios.mjs';
 
 let navegador;
 let sitio;
@@ -81,13 +82,8 @@ test('dois bytes a mais em aula-usp.js e o Chrome recusa o script: o integrity d
 // por linguagem usada.
 //
 // A outra metade da spec 3.2, passo 5 — "cada script secundário é carregado com o seu `integrity`,
-// que `aula-usp.js` traz embutido" —, que este comentário registrou como NÃO implementada enquanto
-// ela não existiu, JÁ ESTÁ implementada: `import()` dinâmico de fato não carrega `integrity`, e por
-// isso quem confere é o import map que `montar/dist.js` injeta no arranque, cuja chave `integrity` o
-// Chrome honra também no `import()` dinâmico. Medido sobre esta mesma rota: `codigo.html` monta com
-// 9 pedidos e um import map de 9 entradas; com dois bytes a mais em `aula-usp-codigo.js`, em
-// `aula-usp-tex.js` ou na gramática de Python, o Chrome bloqueia e a aula não monta.
-// Este arquivo ainda não ASSERE isso — a tarefa 3 do plano do SRI dos satélites é que mede aqui.
+// que `aula-usp.js` traz embutido" — é medida pelos dois testes do fim deste arquivo. Aqui só o
+// ENDEREÇO está sob teste; lá, a conferência.
 test('a cadeia de scripts secundários é pedida pela base da CDN, não pelo host que serve a aula', async (t) => {
   const { pagina, erros, titulo, base, pedidos } = await montar('especime/codigo.html');
   t.after(() => pagina.close());
@@ -142,4 +138,132 @@ test('a demo registrada durante o parsing sobrevive ao pacote do dist', async (t
   t.after(() => pagina.close());
   assert.equal(titulo, 'Validador Aula USP: 0 erros, 0 avisos');
   assert.deepEqual(erros, [], erros.join('\n'));
+});
+
+// ── A prova do `integrity` dos SATÉLITES (spec 3.2, passo 5) ─────────────────────────────────────
+//
+// Uma suíte verde não prova nada aqui por si: antes do trabalho do SRI dos satélites ela também
+// estava verde, com os nove secundários vindo da CDN sem conferência NENHUMA. O que separa um estado
+// do outro são as duas asserções abaixo, e nada mais.
+//
+// O mecanismo é o import map, não o atributo: `import()` dinâmico não tem onde receber `integrity`
+// (não existe argumento para isso), e por isso quem confere é o mapa que `montar/dist.js` injeta no
+// arranque, antes do primeiro `import()`. O Chrome honra a chave `integrity` do mapa também no
+// `import()` dinâmico.
+//
+// NENHUM deck do espécime usa matemática E código. Medido: `matematica.html` pede um satélite,
+// `codigo.html` pede oito, e os outros quatro (index, componentes, muitos-blocos, ifusp) não pedem
+// nenhum. O plano da tarefa 3 pedia "uma aula que usa matemática e código" — ela não existe, e a
+// UNIÃO dos dois decks reais cobre os mesmos nove sem inventar uma fixture que teria de ser mantida
+// e validada à parte, e que ninguém mais olharia.
+const DECKS_DA_PROVA = ['matematica.html', 'codigo.html'];
+
+// O universo dos dois testes abaixo NÃO vem de uma lista escrita aqui, nem do empacotador, nem do
+// manifesto: vem do que o NAVEGADOR pediu ao montar os decks. Isso importa, e foi medido de outro
+// jeito no despacho anterior: uma guarda cujo "todo" sai da mesma fonte que produz o que ela guarda
+// perde o satélite e a asserção ao mesmo tempo, e fica verde. Aqui os pedidos (o que o Chrome
+// buscou) e o import map (o que o Chrome tem no documento) são duas observações do navegador
+// rodando, e a igualdade entre elas é o que fecha o "e os outros oito?".
+//
+// Uma execução só, compartilhada pelos dois testes: node:test roda os testes de um arquivo em
+// sequência, então o primeiro a chamar paga os ~500 ms e o segundo reaproveita.
+let levantamento;
+function levantarSatelites() {
+  levantamento ??= (async () => {
+    const decks = [];
+    for (const deck of DECKS_DA_PROVA) {
+      const { pagina, erros, base, pedidos } = await abrirPeloDist(`especime/${deck}`);
+      // Monta de verdade, com os hashes certos: o caminho feliz é pré-condição de tudo o que vem
+      // depois — provar que bytes trocados são recusados não vale nada se os bytes certos também
+      // fossem. esperarMontagem lança se data-montado não terminar em "sim".
+      await esperarMontagem(pagina);
+      const mapa = await pagina.evaluate(() => {
+        const etiquetas = [...document.querySelectorAll('script[type="importmap"]')];
+        return { quantos: etiquetas.length, integrity: JSON.parse(etiquetas[0]?.textContent ?? '{}').integrity ?? {} };
+      });
+      await pagina.close();
+      // `aula-usp.js` sai da lista: ele é o principal, carregado pela tag com o `integrity` que o
+      // teste lá em cima já mede. Satélite é o que ele carrega depois, por import().
+      decks.push({ deck, base, erros, mapa, satelites: pedidos.filter((nome) => nome !== 'aula-usp.js') });
+    }
+    return decks;
+  })();
+  return levantamento;
+}
+
+// Passo 1 do plano: o caminho feliz. A aula monta, os pedidos saem pela base da CDN — e cada um
+// deles tem, no mapa que o navegador de fato carregou, o hash que `dist/manifesto.json` registra.
+test('todo satélite que o navegador pede tem integrity no import map, e o mapa não guarda nada além', async () => {
+  const decks = await levantarSatelites();
+  const manifesto = JSON.parse(await readFile(new URL('dist/manifesto.json', RAIZ), 'utf8'));
+  const pedidos = new Set();
+  for (const { deck, base, erros, mapa, satelites } of decks) {
+    assert.deepEqual(erros, [], `${deck}: ${erros.join('\n')}`);
+    assert.equal(mapa.quantos, 1, `${deck}: ${mapa.quantos} import maps no documento, esperava 1`);
+    assert.ok(satelites.length > 0, `${deck} não pediu satélite nenhum — o deck deixou de exercitar a cadeia`);
+    for (const nome of satelites) {
+      const url = `${base}${nome}`;
+      const hash = mapa.integrity[url];
+      assert.ok(hash, `${deck}: o navegador pediu ${nome} e o import map não tem chave para ${url}`
+        + ' — esse satélite entrou sem conferência nenhuma, e sem esta asserção entraria calado');
+      // Os dois lugares que guardam o mesmo número, agora com o navegador como terceira ponta: o
+      // mapa que o Chrome carregou e o manifesto commitado.
+      assert.equal(hash, manifesto.arquivos[nome]?.integrity,
+        `${deck}: o integrity de ${nome} no import map não é o de dist/manifesto.json`);
+      pedidos.add(url);
+    }
+  }
+  // E nada sobrando, em nenhum dos decks: uma chave no mapa para um endereço que nenhum deck pede é
+  // um `integrity` que o navegador nunca vai conferir — e é assim que a cobertura desta prova
+  // encolheria sem ninguém ver. Quando a fase 2 acrescentar `aula-usp-graficos.js` e
+  // `aula-usp-diagramas.js` (spec 3.5), esta asserção cai até que um deck de DECKS_DA_PROVA os use:
+  // é de propósito, é o que obriga os dois novos a entrar na prova junto com o mecanismo.
+  for (const { deck, mapa } of decks) {
+    assert.deepEqual(Object.keys(mapa.integrity).sort(), [...pedidos].sort(),
+      `${deck}: o import map e os satélites que os decks da prova pedem divergem`);
+  }
+});
+
+// Passo 2 do plano, e é este que fecha a spec 3.2, passo 5: com `aula-usp.js` ÍNTEGRO e dois bytes a
+// mais num satélite, o navegador recusa e a aula não monta. É a primeira vez que este repositório
+// afirma isso sobre os secundários; sobre o principal, a tag já era medida assim desde o marco 6c.
+//
+// COBERTURA: os nove, um por vez — e não três, nem um. Medido: as nove recusas custam 1,96 s numa
+// suíte de integração de 34 s (+6 %), e por esse preço a pergunta "e os outros oito?" deixa de
+// existir. Cobrir só o representante de cada ramo de `arquivoDoSatelite` (tex, código, uma gramática)
+// deixaria de fora justamente o defeito que tem forma de "um satélite ficou sem entrada no mapa" —
+// que é por satélite, não por ramo.
+//
+// A asserção é sobre a RECUSA, não sobre a frase do Chrome: o que não pode mudar é que a aula não
+// monta. A frase entra como /integrity/, que é o que sobrevive a uma versão nova do navegador.
+test('dois bytes a mais em um satélite e a aula não monta: o integrity do import map é conferido mesmo', async (t) => {
+  const decks = await levantarSatelites();
+  const alvos = decks.flatMap(({ deck, satelites }) => satelites.map((nome) => [nome, deck]));
+  // A cobertura desta prova, dita em asserção e não em comentário: os alvos são exatamente os
+  // satélites que o import map diz proteger. Se um dia sobrar um protegido sem alvo, este teste cai.
+  assert.deepEqual(alvos.map(([nome]) => `${decks[0].base}${nome}`).sort(),
+    Object.keys(decks[0].mapa.integrity).sort(),
+    'há satélite no import map que esta prova não corrompe — a cobertura encolheu');
+
+  for (const [satelite, deck] of alvos) {
+    await t.test(`${satelite} (em ${deck})`, async (sub) => {
+      const { pagina, erros, pedidos } = await abrirPeloDist(`especime/${deck}`, { corromper: satelite });
+      sub.after(() => pagina.close());
+      await pagina.waitForFunction(() => document.body?.dataset.montado !== undefined);
+      const [montado, painel] = await pagina.evaluate(() => [
+        document.body.dataset.montado,
+        document.querySelector('pre.painel')?.textContent,
+      ]);
+      // Primeiro: o arquivo estragado foi mesmo pedido. Sem isto, um nome de satélite errado daria
+      // uma aula que monta e uma mensagem dizendo que o integrity não é conferido — culpando o
+      // mecanismo por um defeito do teste.
+      assert.ok(pedidos.includes(satelite), `${deck} não pediu ${satelite}: a corrupção não chegou a ser servida`);
+      assert.equal(montado, 'erro',
+        `a aula montou com ${satelite} corrompido — o integrity do satélite não está sendo conferido`);
+      assert.ok(erros.some((mensagem) => /integrity/i.test(mensagem) && mensagem.includes(satelite)),
+        `nenhum erro de integrity sobre ${satelite}; o que veio foi: ${erros.join(' | ') || '(nada)'}`);
+      // E o autor fica sabendo: a aula não monta em silêncio, o painel de erro nomeia o arquivo.
+      assert.ok(painel?.includes(satelite), `o painel de erro não menciona ${satelite}: ${painel ?? '(sem painel)'}`);
+    });
+  }
 });
