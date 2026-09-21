@@ -228,11 +228,13 @@ test('todo satélite que o navegador pede tem integrity no import map, e o mapa 
 // mais num satélite, o navegador recusa e a aula não monta. É a primeira vez que este repositório
 // afirma isso sobre os secundários; sobre o principal, a tag já era medida assim desde o marco 6c.
 //
-// COBERTURA: os nove, um por vez — e não três, nem um. Medido: as nove recusas custam 1,96 s numa
-// suíte de integração de 34 s (+6 %), e por esse preço a pergunta "e os outros oito?" deixa de
-// existir. Cobrir só o representante de cada ramo de `arquivoDoSatelite` (tex, código, uma gramática)
-// deixaria de fora justamente o defeito que tem forma de "um satélite ficou sem entrada no mapa" —
-// que é por satélite, não por ramo.
+// COBERTURA: os nove, um por vez — e não três, nem um. Medido: as nove recusas custam 1,96 s; este
+// arquivo foi de 2,45 s para 5,14 s, e a suíte de integração inteira de 33,8 s para 35,4 s (mediana
+// de três amostras cada) — menos que o arquivo cresceu, porque node:test roda os arquivos em
+// paralelo e quem manda no relógio é visual.test.mjs. Por esse preço a pergunta "e os outros oito?"
+// deixa de existir. Cobrir só o representante de cada ramo de `arquivoDoSatelite` (tex, código, uma
+// gramática) deixaria de fora justamente o defeito que tem forma de "um satélite ficou sem entrada
+// no mapa" — que é por satélite, não por ramo.
 //
 // A asserção é sobre a RECUSA, não sobre a frase do Chrome: o que não pode mudar é que a aula não
 // monta. A frase entra como /integrity/, que é o que sobrevive a uma versão nova do navegador.
