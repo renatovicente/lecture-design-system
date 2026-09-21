@@ -51,6 +51,8 @@
     "div.colunas > div": { "grupo": "blocosDeCorpo" },
     "div.exercicio": { "sequencia": [{ "seletor": "div.enunciado", "min": 1, "max": 1 }, { "seletor": "div.resposta", "min": 0, "max": 1 }] },
     "figure": { "exatamenteUmDe": ["img", "svg"], "opcionais": ["figcaption"] },
+    "figure.grafico":  { "exatamenteUmDe": ["script"], "opcionais": ["figcaption"], "fase": 2 },
+    "figure.diagrama": { "exatamenteUmDe": ["script"], "opcionais": ["figcaption"], "fase": 2 },
     "div.demo": { "opcionais": ["img.estatico"] },
     "ul": { "elemento": "li" },
     "ol": { "elemento": "li" },
