@@ -401,3 +401,83 @@ test('o contrato e os seis decks do espécime chegam inteiros aos três pacotes 
     }
   }
 });
+
+// ---------------------------------------------------------------------------------------------
+// 10. TODO CAMINHO CITADO DENTRO DO PACOTE EXISTE DENTRO DO PACOTE.
+
+// A guarda que faltava. O aceite do marco 7 a descobriu do jeito caro: um agente com só o pacote
+// relatou que os endereços do guia não existiam para ele. Medido depois, nos quatro pacotes: 164
+// citações mortas, 55 em cada um dos três que levam o guia e nenhuma no da disciplina. Nenhuma
+// revisão do marco 6b podia tê-las pego — elas liam o guia DE DENTRO do repositório, onde tudo
+// resolve.
+//
+// Ela não é da forma "regerar e comparar", e é por isso que vale: é uma PROPRIEDADE do resultado
+// (leia o parágrafo de AGENTS.md). Uma guarda de igualdade fica verde quando o gerador piora —
+// inversão medida aqui: com `acervo()` devolvendo lista vazia e `aula-usp pacotes` rodado em
+// seguida, a guarda de igualdade ficou VERDE e o comando saiu com 0, enquanto esta ficou vermelha
+// com 122 citações mortas.
+//
+// O que conta como CITAÇÃO, e por quê:
+// - dentro de crase, e fora de bloco cercado. A crase é a convenção do guia para nomear arquivo; o
+//   bloco cercado é transcrição ou fonte, e ali um caminho pode ser literal de outro mundo — a
+//   saída de `aula-usp novo` diz "a partir de modelos/aula", e reescrevê-la faria o guia mentir
+//   sobre o que o comando imprime na tela.
+// - dois segmentos ou mais. Um nome só com barra (`dist/`, `img/`, `references/`) é uma PASTA
+//   mencionada, e no guia essas são pastas da aula do autor, não do pacote.
+// - primeiro segmento nomeando algo na raiz do repositório ou na raiz do pacote. É o que separa um
+//   endereço de verdade de um caminho inventado como exemplo (`minha-aula/dist/`) — e é também a
+//   forma do defeito: o guia foi escrito por quem está dentro do repositório.
+//
+// O que ela NÃO pega, dito para que ninguém a leia como mais do que é: um caminho citado fora de
+// crase, um dentro de bloco cercado, e um `foo/bar.md` cujo primeiro segmento não existe nem aqui
+// nem no pacote. Para os dois caminhos que MAIS importam — o modelo e o exemplo — a guarda de cima
+// ("nenhum arquivo de pacote cita o modelo ou o exemplo pelo caminho do repositório") cobre todos
+// esses casos por busca literal, sem depender deste reconhecimento.
+const CITACAO = /^[A-Za-z0-9._-]+(?:\/[A-Za-z0-9._-]+)+\/?(?:#[A-Za-z0-9._-]+)?$/;
+
+// O texto sem os blocos cercados. A linha da cerca também sai: ela é delimitador, não conteúdo.
+function foraDeBlocoCercado(conteudo) {
+  let dentro = false;
+  return conteudo.split('\n').filter((linha) => {
+    if (/^\s*```/.test(linha)) { dentro = !dentro; return false; }
+    return !dentro;
+  }).join('\n');
+}
+
+test('todo caminho citado dentro do pacote existe dentro do pacote', () => {
+  const naRaizDoRepositorio = new Set(readdirSync(RAIZ));
+  const mortas = [];
+  let conferidas = 0;
+
+  for (const pacote of PACOTES) {
+    const naRaizDoPacote = new Set(readdirSync(new URL(`${pacote}/`, RAIZ)));
+    for (const arquivo of arquivosDe(pacote)) {
+      const pasta = arquivo.slice(0, arquivo.lastIndexOf('/') + 1);
+      for (const [, citacao] of foraDeBlocoCercado(texto(arquivo)).matchAll(/`([^`\n]+)`/g)) {
+        if (!CITACAO.test(citacao)) continue;
+        const [primeiro] = citacao.split('/');
+        if (!naRaizDoRepositorio.has(primeiro) && !naRaizDoPacote.has(primeiro)) continue;
+        conferidas += 1;
+        // Duas chances, e são as duas que um leitor tem: ao lado do arquivo que cita — é assim que
+        // `conhecimento/guia-do-autor.md` alcança `especime/index.html` — ou a partir da raiz do
+        // pacote, que é de onde o SKILL.md já cita `references/` e `assets/`.
+        const alvo = citacao.split('#')[0];
+        const existe = existsSync(new URL(`${pasta}${alvo}`, RAIZ))
+          || existsSync(new URL(`${pacote}/${alvo}`, RAIZ));
+        if (!existe) mortas.push(`${arquivo}: \`${citacao}\``);
+      }
+    }
+  }
+
+  // Medido nesta árvore: 149 citações conferidas. O piso é contra a varredura vazia — um
+  // reconhecimento que deixe de achar citação passa neste teste sem asseverar coisa nenhuma, que é
+  // como três guardas deste repositório já nasceram.
+  assert.ok(conferidas >= 100, `só ${conferidas} citações conferidas — o reconhecimento virou decoração`);
+  assert.deepEqual(
+    mortas,
+    [],
+    `${mortas.length} caminho(s) citado(s) no pacote que não existem nele — quem instala o pacote não`
+      + ' os tem. Ou o arquivo viaja junto (`acervo`, em build/pacotes.mjs), ou a prosa cita o'
+      + ' caminho que o pacote tem (`apontar`), ou ela não cita caminho nenhum',
+  );
+});
