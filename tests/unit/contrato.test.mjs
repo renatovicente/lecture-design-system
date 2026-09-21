@@ -5,6 +5,7 @@ import { parseHTML } from 'linkedom';
 import { lerTokens, simplificar } from '../../build/tokens.mjs';
 import { validar } from '../../validador/validar.js';
 import { regras as regrasDeLimite } from '../../validador/regras/limites.js';
+import { REGRAS_ESTATICAS } from '../../validador/regras/index.js';
 
 const contrato = JSON.parse(await readFile(new URL('../../contrato/contrato.json', import.meta.url), 'utf8'));
 const tokens = simplificar(await lerTokens());
@@ -153,11 +154,37 @@ const numerosDe = (texto) => new Set((texto.match(/[0-9]+/g) ?? []).map(Number))
 //
 // Um número no `acao` que não seja limite nenhum também cai aqui, e é correto que caia: numa frase
 // que já traz medidas, um número solto se lê como medida.
-test('o acao de cada regra limites.* cita os números que a regra usa, ou nenhum', () => {
+// E o escopo é toda regra que LÊ contrato.limites, não as de `limites.js`. A diferença é medida,
+// não teórica: `estrutura.blocos` cita `blocos.min` e `blocos.maxFileira` no `acao`, e
+// `estrutura.nome-curto` cita `abertura.h2.caracteresSemDataCurto` — as duas corretas hoje, as duas
+// fora de `limites.js` e, até aqui, fora de qualquer guarda, expostas exatamente ao defeito que o
+// aceite do marco 7 pagou. Quem decide o escopo é o próprio espião: uma regra entra na conferência
+// porque foi vista lendo um limite, e não porque está num arquivo com o nome certo. O filtro por
+// arquivo era a única coisa no caminho.
+//
+// Ficam fora, e é registro, não proposta: `vocabulario.amarelo-svg` (4 px) e
+// `vocabulario.azul-svg`/`composicao.azul-pequeno` (32 px) citam números que são CONSTANTES no
+// fonte da regra e não estão no contrato — o espião não tem o que anotar ali —, e
+// `recursos.diagrama-grande` (15) é de fase 2 e não tem implementação.
+test('o acao de cada regra que lê um limite cita os números que ela usa, ou nenhum', () => {
   const { document } = parseHTML(AULA_DE_TODOS_OS_LAYOUTS);
-  const daRegra = regrasDeLimite.filter((regra) => contrato.regras[regra.nome]);
-  assert.equal(daRegra.length, regrasDeLimite.length, 'há regra de limites.js fora do contrato');
-  assert.ok(daRegra.length > 0, 'nenhuma regra de limite para conferir');
+  const noContrato = REGRAS_ESTATICAS.filter((regra) => contrato.regras[regra.nome]);
+  assert.equal(noContrato.length, REGRAS_ESTATICAS.length, 'há regra estática fora do contrato');
+  const daRegra = noContrato.filter((regra) => limitesLidosPor(regra, document).size > 0);
+  assert.ok(daRegra.length > 0, 'nenhuma regra foi vista lendo um limite — o espião parou de anotar');
+  // Piso de cobertura, medido nesta árvore: **21** regras leem `contrato.limites` — 19 das 20 de
+  // `limites.js` mais `estrutura.blocos` e `estrutura.nome-curto`. (A vigésima, `limites.metadado`,
+  // lê `contrato.metadados`, e está em `limites.js` pelo nome, não pela fonte do número.) Sem este
+  // piso, um espião que parasse de anotar numa regra só a tiraria da conferência em silêncio, e o
+  // laço abaixo nunca a visitaria.
+  assert.ok(daRegra.length >= 18, `só ${daRegra.length} regras foram vistas lendo limite — o espião perdeu leitura`);
+  // E o escopo é maior que `limites.js`, que é o achado que trouxe esta linha para cá. Sem esta
+  // asserção, um filtro que voltasse a ser por arquivo passaria daqui sem ninguém notar.
+  assert.ok(
+    daRegra.some((regra) => !regra.nome.startsWith('limites.')),
+    'só regras limites.* leem contrato.limites — as de estrutura.* que citam números do contrato no'
+      + ' acao pararam de lê-lo, e o número que elas imprimem voltou a ser digitado em algum lugar',
+  );
 
   let comNumero = 0;
   let comMaisDeUmLimite = 0;
@@ -177,7 +204,7 @@ test('o acao de cada regra limites.* cita os números que a regra usa, ou nenhum
   }
   // Sem as duas linhas abaixo a guarda passaria com um espião que não anota nada e com `acao` nenhum
   // trazendo número: o laço inteiro cairia no `continue` e não asseveraria uma vez sequer.
-  assert.ok(comNumero > 0, 'nenhum acao de limites.* cita número — a leitura dos números virou decoração');
+  assert.ok(comNumero > 0, 'nenhum acao cita número — a leitura dos números virou decoração');
   assert.ok(comMaisDeUmLimite > 0, 'nenhuma regra mediu mais de um limite — o espião parou de anotar');
 });
 
