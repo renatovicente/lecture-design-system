@@ -1,7 +1,10 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
+import { parseHTML } from 'linkedom';
 import { lerTokens, simplificar } from '../../build/tokens.mjs';
+import { validar } from '../../validador/validar.js';
+import { regras as regrasDeLimite } from '../../validador/regras/limites.js';
 
 const contrato = JSON.parse(await readFile(new URL('../../contrato/contrato.json', import.meta.url), 'utf8'));
 const tokens = simplificar(await lerTokens());
@@ -102,6 +105,80 @@ test('regras da seção 9.2: ids, severidade, grupo e fase', () => {
     assert.deepEqual([r.severidade, r.grupo, r.fase], [severidade, grupo, fase], id);
     assert.match(r.acao, /^\S.*\.$/, `ação de ${id} deve ser uma frase terminada em ponto`);
   }
+});
+
+// Uma aula com um slide de cada layout do contrato, para que as regras que escolhem a chave do
+// limite PELO LAYOUT leiam as três variantes: `limites.titulo` mede 23 na capa, 20 na abertura e 50
+// nos demais, e num documento só de `conteudo` ele leria uma chave só. A lista de layouts vem do
+// contrato — um layout novo entra aqui sozinho. `h1` e `h2` juntos em toda seção porque quem escolhe
+// entre os dois é a regra, pelo layout, e o que sobrar é ignorado por ela.
+const AULA_DE_TODOS_OS_LAYOUTS = `<!DOCTYPE html><html lang="pt-BR"><head>
+<meta name="unidade" content="ime"><meta name="disciplina" content="Teste"><meta name="aula" content="1">
+<meta name="data" content="2026-09-21"><meta name="professor" content="Prof.">
+</head><body>${Object.keys(contrato.layouts)
+  .map((layout) => `<section data-layout="${layout}" id="s-${layout}"><h1>t</h1><h2>t</h2></section>`)
+  .join('')}</body></html>`;
+
+// Que limites uma regra usa, MEDIDO e não escrito: um espião no lugar de contrato.limites anota toda
+// chave lida enquanto a regra roda. É por isso que uma regra que passe a ler outra chave cai nesta
+// guarda sem ninguém acrescentar nada — ao contrário de um mapa regra→limite escrito aqui, que
+// envelheceria calado, que é a doença que este plano inteiro trata.
+function limitesLidosPor(regra, doc) {
+  const lidas = new Set();
+  const espiao = {
+    ...contrato,
+    limites: new Proxy(contrato.limites, {
+      get(alvo, chave) {
+        if (typeof chave === 'string' && chave in alvo) lidas.add(chave);
+        return alvo[chave];
+      },
+    }),
+  };
+  const { grupo, fase } = contrato.regras[regra.nome];
+  validar(doc, { contrato: espiao, regras: [regra], grupo, fase });
+  return lidas;
+}
+
+const numerosDe = (texto) => new Set((texto.match(/[0-9]+/g) ?? []).map(Number));
+
+// O defeito que o aceite do marco 7 pagou. O `acao` é a frase que o validador imprime depois da
+// mensagem, e é ela que diz ao autor o que fazer — um número errado ali manda para o lugar errado
+// com a autoridade do sistema.
+//
+// A propriedade: o `acao` de uma regra `limites.*` cita TODOS os números que a regra usa, ou NENHUM.
+// "Todos ou nenhum", e não "algum número do contrato", porque citar um só é justamente o defeito:
+// `limites.titulo` mede três limites diferentes, e um `acao` que dissesse "encurte para até 50
+// caracteres" seria verdadeiro num terço dos slides e falso nos outros dois — 50 é o número do `h2`,
+// e é ele que o guia mostrava quando o agente foi procurar o da capa, que é 23.
+//
+// Um número no `acao` que não seja limite nenhum também cai aqui, e é correto que caia: numa frase
+// que já traz medidas, um número solto se lê como medida.
+test('o acao de cada regra limites.* cita os números que a regra usa, ou nenhum', () => {
+  const { document } = parseHTML(AULA_DE_TODOS_OS_LAYOUTS);
+  const daRegra = regrasDeLimite.filter((regra) => contrato.regras[regra.nome]);
+  assert.equal(daRegra.length, regrasDeLimite.length, 'há regra de limites.js fora do contrato');
+  assert.ok(daRegra.length > 0, 'nenhuma regra de limite para conferir');
+
+  let comNumero = 0;
+  let comMaisDeUmLimite = 0;
+  for (const regra of daRegra) {
+    const lidas = limitesLidosPor(regra, document);
+    const usados = new Set([...lidas].map((chave) => contrato.limites[chave]));
+    const citados = numerosDe(contrato.regras[regra.nome].acao);
+    if (citados.size > 0) comNumero += 1;
+    if (usados.size > 1) comMaisDeUmLimite += 1;
+    if (citados.size === 0) continue;
+    assert.deepEqual(
+      [...citados].sort((a, b) => a - b),
+      [...usados].sort((a, b) => a - b),
+      `${regra.nome}: o acao cita ${[...citados].join(', ')} e a regra mede ${[...lidas].join(', ')}`
+        + ` = ${[...usados].join(', ')} — cite todos os números que ela mede, ou nenhum`,
+    );
+  }
+  // Sem as duas linhas abaixo a guarda passaria com um espião que não anota nada e com `acao` nenhum
+  // trazendo número: o laço inteiro cairia no `continue` e não asseveraria uma vez sequer.
+  assert.ok(comNumero > 0, 'nenhum acao de limites.* cita número — a leitura dos números virou decoração');
+  assert.ok(comMaisDeUmLimite > 0, 'nenhuma regra mediu mais de um limite — o espião parou de anotar');
 });
 
 test('cores de SVG são as dos tokens, mais none', () => {

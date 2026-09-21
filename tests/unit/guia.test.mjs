@@ -17,6 +17,7 @@ import {
   montarPacote,
   regrasEssenciais,
   tabelaDeLayouts,
+  tabelaDeLimites,
   tabelaDePapeis,
   tabelaDeVocabulario,
 } from '../../build/guia.mjs';
@@ -124,6 +125,37 @@ test('a tabela de vocabulário enumera todos os valores de data-grade, com o nú
   for (const [grade, divs] of Object.entries(contrato.grades)) {
     assert.ok(tabela.includes(`| \`${grade}\` | ${divs} |`), `a grade ${grade} não aparece com ${divs} div(s)`);
   }
+});
+
+// A propriedade que a guarda de regerar-e-comparar não tem como ver. Ela compara saída com saída:
+// pôr um `.filter()` em tabelaDeLimites, rodar `npm run guia` e commitar deixa as duas iguais, com a
+// mensagem "commite o resultado" abençoando o limite que sumiu do guia. E foi exatamente um limite
+// que não estava no guia — `capa.h1.caracteresPorSegmento` — que fez o agente do aceite do marco 7
+// errar o título da capa na primeira tentativa e descobrir o número por tentativa e erro.
+//
+// Deriva do contrato, não de uma lista escrita aqui: um limite novo entra nesta guarda sozinho. E
+// cobra o NÚMERO, não só a chave — uma tabela que trouxesse a chave com o valor de outra linha
+// mandaria o leitor para o mesmo lugar errado, que é o defeito inteiro.
+test('todo limite do contrato aparece na tabela, com o seu número', () => {
+  const linhas = tabelaDeLimites(contrato).split('\n');
+  assert.ok(Object.keys(contrato.limites).length > 0, 'o contrato não declarou nenhum limite');
+  for (const [chave, valor] of Object.entries(contrato.limites)) {
+    const linha = linhas.find((atual) => atual.startsWith(`| \`${chave}\` |`));
+    assert.ok(linha, `o limite ${chave} não tem linha na tabela gerada`);
+    // A célula do meio é "quanto cabe"; o número tem de estar NELA, e não em qualquer lugar da
+    // linha, senão um 2 vindo de `data-grade="6-6"` na coluna "onde" satisfaria a busca.
+    const quanto = linha.split('|')[2];
+    assert.match(quanto, new RegExp(`(?<![0-9])${valor}(?![0-9])`), `a linha de ${chave} não diz ${valor}`);
+  }
+});
+
+// A outra metade do mesmo mecanismo: o gerador PARA quando um limite novo não tem palavra, em vez de
+// publicar "no máximo 8 undefined". É o mesmo idioma de blocoDeExemplos com um layout sem exemplo e
+// de aplicarMarcadores com marcador ausente — documentação que mente custa mais do que build que cai.
+test('tabelaDeLimites ergue erro quando falta palavra para um limite', () => {
+  assert.throws(() => tabelaDeLimites({ limites: { 'coisa.nova': 3 } }), /não tem palavra para o prefixo "coisa"/);
+  assert.throws(() => tabelaDeLimites({ limites: { 'codigo.pixels': 3 } }), /não tem unidade para "pixels"/);
+  assert.throws(() => tabelaDeLimites({ limites: { semponto: 3 } }), /não tem prefixo/);
 });
 
 test('a tabela de papéis traz os quatro papéis com o mínimo do contrato, e as exceções', () => {
