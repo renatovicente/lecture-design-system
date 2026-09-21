@@ -72,6 +72,26 @@ function modulosResolvidos() {
   return modulos;
 }
 
+// SEM `integrity`, e isto é decisão, não esquecimento — a pergunta foi feita no SRI dos satélites,
+// quando `montar/dist.js` ganhou um import map com `integrity` (spec 3.2, passo 5). Dois motivos, e o
+// segundo é o que decide:
+//
+// 1. não são os mesmos arquivos. Este mapa aponta para `node_modules/` — `katex/dist/katex.mjs`,
+//    `@shikijs/langs/dist/python.mjs`, e mais 16 —, e não para os nove satélites de `dist/`. O
+//    `aula-usp-tex.js` do pacote é o KaTeX mais a CSS dele mais 20 fontes embutidas; o
+//    `katex.mjs` daqui não é nada disso. Os `integrity` de `dist/manifesto.json` não valem para
+//    nenhuma destas URLs, então não há hash pronto para reaproveitar: seria um segundo cálculo de
+//    hash, sobre um segundo conjunto de arquivos — a segunda verdade que o resto desta mudança
+//    existe para não criar;
+// 2. e o hash que sobra seria VÁCUO. O único que este servidor poderia pôr aqui é um que ele mesmo
+//    calculasse dos bytes que está prestes a servir, do mesmo disco, no mesmo pedido. Conferir bytes
+//    contra um hash tirado deles não pode falhar: a conferência seria verde por construção, e o
+//    código diria, para quem lesse, que o desenvolvimento está protegido. Uma guarda que não pode
+//    ficar vermelha é pior que guarda nenhuma.
+//
+// O que o SRI defende é "a CDN entregou bytes diferentes dos que o autor fixou". Aqui não há CDN nem
+// terceiro: é `127.0.0.1` lendo `node_modules/` da mesma máquina, e quem puder trocar esses bytes já
+// roda como o desenvolvedor. O modo que enfrenta a CDN é o do pacote, e é lá que o `integrity` está.
 export function mapaDeImportacao() {
   return modulosResolvidos().mapa;
 }

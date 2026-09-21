@@ -68,7 +68,7 @@ Consequência prática: **mexeu no empacotador (`build/bundle.mjs`), nos pontos 
 | `estilos/tokens.css`, `tokens/tokens.js` | `npm run tokens` | `tests/unit/tokens.test.mjs:93` |
 | `estilos/fontes.css` | `npm run fontes:css` | `tests/unit/fontes-css.test.mjs:24` |
 | `validador/cobertura.json` | `aula-usp dist` | `tests/unit/cobertura.test.mjs:74` |
-| `dist/` (11 scripts + manifesto) | `aula-usp dist` | `tests/unit/bundle.test.mjs:115` e `:135` |
+| `dist/` (11 scripts + manifesto) | `aula-usp dist` | `tests/unit/bundle.test.mjs:115` e `:135`, e as duas de propriedade em `:172` e `:195` |
 | `guia/10-estrutura.md`, `20-layouts.md`, `30-componentes.md` e `60-validador.md`, só entre `<!-- gerado:… -->` e `<!-- /gerado -->` | `npm run guia` | `tests/unit/guia.test.mjs:28` |
 | `pacotes/` (os quatro da spec 10.2, 46 arquivos) e a tag do runtime em `modelos/` e `exemplos/` | `aula-usp pacotes` | `tests/unit/pacotes.test.mjs:58` |
 
@@ -82,7 +82,15 @@ E o segundo aprendizado, que custou uma revisão: **o título de uma guarda é u
 
 E uma armadilha a mais, medida no 6c: **quando a guarda procura um texto, confira que a fonte da busca não contém o próprio gabarito.** A conferência do bloco de regras essenciais procurava o bloco em "algum arquivo do pacote" — e três dos quatro pacotes levam uma cópia do guia (`references/00-principios.md` ou `conhecimento/guia-do-autor.md`), que contém o bloco. Medido: esvaziando o bloco dos quatro arquivos de instrução, a busca larga acusou **1 dos 4**. A busca agora é no arquivo de instrução declarado de cada pacote.
 
+E a sétima, medida no SRI dos satélites, que é a mesma janela um andar acima: **uma guarda de propriedade que tira o UNIVERSO dela da mesma fonte que alimenta o gerador volta a ser uma guarda de igualdade.** "Todo satélite tem o seu `integrity` embutido" percorria os satélites que `build/bundle.mjs` marca com `{ satelite: true }` — a mesma marca que decide quem entra no mapa embutido. Medido: tirando a marca de `aula-usp-tex.js`, o satélite de 622 kB saiu do pacote sem hash e a guarda ficou **verde**, porque ele também tinha saído do universo dela. Hoje ela compara duas listas de origens independentes — a do empacotador e a que o `resolver` de `montar/dist.js` sabe pedir, lida do fonte dele — e a igualdade das duas é o que fecha a janela. **Ao escrever uma guarda de propriedade, pergunte de onde vem o "todo".**
+
+## Quem embute o conteúdo de outro vem primeiro
+
 `aula-usp dist` gera a cobertura **antes** de empacotar, de propósito: `montar/dist.js` importa `validador/cobertura.json` para embuti-lo em `aula-usp.js`, e na ordem inversa o artefato sairia sempre uma geração atrasado.
+
+**Segunda instância, agora dentro de `build/bundle.mjs`:** os nove satélites são empacotados **antes** de `aula-usp.js`, e não depois, como era até o SRI dos satélites. O principal embute o `integrity` de cada satélite (spec 3.2, passo 5), e um hash de um arquivo que ainda não foi gerado não existe. Até o marco 5a o principal saía primeiro, na linha 85 — o que não dava erro nenhum, porque naquele desenho ele não precisava de nada dos satélites.
+
+As duas têm a mesma forma e o mesmo perigo: **a ordem errada não falha, entrega uma geração atrasada** — ou, neste caso, um hash de ontem que o navegador vai recusar hoje. Toda vez que um gerado passar a embutir o conteúdo (ou o hash) de outro, a pergunta é da ordem, e a resposta é sempre a mesma: o embutido primeiro.
 
 ## A fronteira: quem pode importar Node
 
