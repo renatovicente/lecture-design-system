@@ -22,7 +22,7 @@ test('validar sem argumento explica o uso e sai com 2', () => {
     assert.fail('deveria ter saído com 2');
   } catch (erro) {
     assert.equal(erro.status, 2);
-    assert.match(erro.stderr, /uso: aula-usp servir/);
+    assert.match(erro.stderr, /uso: aula-usp novo/);
   }
 });
 

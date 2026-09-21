@@ -186,7 +186,7 @@ test('servidor responde 400 a alvo de pedido inválido e continua no ar', async 
 test('CLI sem comando válido mostra o uso e sai com código 2', () => {
   const semArgumentos = spawnSync(process.execPath, [BIN], { encoding: 'utf8' });
   assert.equal(semArgumentos.status, 2);
-  assert.match(semArgumentos.stderr, /uso: aula-usp servir <pasta>/);
+  assert.match(semArgumentos.stderr, /uso: aula-usp novo <pasta>/);
   const semPasta = spawnSync(process.execPath, [BIN, 'servir'], { encoding: 'utf8' });
   assert.equal(semPasta.status, 2);
   const pastaInexistente = spawnSync(process.execPath, [BIN, 'servir', '/nao/existe/aqui'], { encoding: 'utf8' });

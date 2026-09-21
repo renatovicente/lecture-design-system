@@ -1,8 +1,8 @@
 #!/usr/bin/env node
-// CLI do Aula USP (spec 8.1). Neste marco, `servir`, `validar`, `build` e `dist`.
-import { statSync } from 'node:fs';
-import { resolve, join, dirname } from 'node:path';
-import { pathToFileURL } from 'node:url';
+// CLI do Aula USP (spec 8.1). Com `novo`, os seis comandos da spec estão implementados.
+import { cpSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
+import { basename, resolve, join, dirname } from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 // build/servir.mjs, build/validar.mjs, build/bundle.mjs e build/cobertura.mjs só são importados
 // dentro do comando que precisa de cada um (import dinâmico): todos leem disco ou uma dependência
 // externa no escopo do próprio módulo (contrato/contrato.json; build/validar.mjs ainda importa
@@ -13,7 +13,8 @@ import { pathToFileURL } from 'node:url';
 // entra na CLI por import estático.
 import { linhaDe, cabecalhoDe, plural } from '../validador/validar.js';
 
-const USO = 'uso: aula-usp servir <pasta> [--porta 8765]\n'
+const USO = 'uso: aula-usp novo <pasta> --unidade ime\n'
+  + '       aula-usp servir <pasta> [--porta 8765]\n'
   + '       aula-usp validar <pasta> [--json]\n'
   + '       aula-usp build <pasta> [--sem-pdf]\n'
   + '       aula-usp dist\n'
@@ -36,6 +37,7 @@ function lerArgumentos(argumentos, flagsPermitidas) {
     if (argumentos[i] === '--porta' && flagsPermitidas.has('--porta')) opcoes.porta = Number(argumentos[++i]);
     else if (argumentos[i] === '--json' && flagsPermitidas.has('--json')) opcoes.json = true;
     else if (argumentos[i] === '--sem-pdf' && flagsPermitidas.has('--sem-pdf')) opcoes.semPdf = true;
+    else if (argumentos[i] === '--unidade' && flagsPermitidas.has('--unidade')) opcoes.unidade = argumentos[++i];
     else if (argumentos[i].startsWith('--')) sair(USO); // desconhecida OU de outro comando: mesmo tratamento
     else posicionais.push(argumentos[i]);
   }
@@ -46,6 +48,91 @@ function lerArgumentos(argumentos, flagsPermitidas) {
 const FLAGS_SERVIR = new Set(['--porta']);
 const FLAGS_VALIDAR = new Set(['--json']);
 const FLAGS_BUILD = new Set(['--sem-pdf']);
+const FLAGS_NOVO = new Set(['--unidade']);
+
+// O modelo da spec 10.3 — a mesma pasta que `guia/10-estrutura.md` mostra como esqueleto, e que
+// `build/guia.mjs` lê para gerar aquele bloco. `novo` copia esta pasta; não guarda uma segunda
+// cópia do esqueleto, que divergiria da primeira na primeira vez que alguém editasse uma das duas.
+const MODELO = '../modelos/aula/';
+
+// Data local, não UTC: `toISOString()` devolve a data em UTC, e para quem escreve à noite no Brasil
+// (UTC-3) isso já é o dia seguinte. A data da aula é do relógio de quem a escreve.
+function dataDeHoje(agora = new Date()) {
+  const doisDigitos = (numero) => String(numero).padStart(2, '0');
+  return `${agora.getFullYear()}-${doisDigitos(agora.getMonth() + 1)}-${doisDigitos(agora.getDate())}`;
+}
+
+// Troca o `content` de uma meta do <head>, e estoura se ela não estiver lá: um modelo sem a meta
+// faria `novo` entregar uma aula sem o valor preenchido, e a falta só apareceria no validador, do
+// outro lado do comando. A substituição é por FUNÇÃO, como toda injeção de conteúdo deste
+// repositório — numa string de substituição `$` é padrão especial.
+function trocarMeta(html, nome, valor) {
+  const padrao = new RegExp(`(<meta\\s+name="${nome}"\\s+content=")[^"]*(">)`);
+  if (!padrao.test(html)) throw new Error(`o modelo não traz a meta "${nome}" no <head>`);
+  return html.replace(padrao, (_, antes, depois) => `${antes}${valor}${depois}`);
+}
+
+// `aula-usp novo <pasta> --unidade ime` (spec 8.1): copia `modelos/aula/` "com os metadados
+// preenchidos".
+//
+// Das cinco metas do contrato, o comando preenche DUAS — `unidade`, da opção, e `data`, de hoje. As
+// outras três (`disciplina`, `aula`, `professor`) ficam com o texto de exemplo do modelo, de
+// propósito: um valor inventado para `professor` seria pior que um lugar visivelmente vazio, porque
+// "Prof. Nome Sobrenome" numa capa projetada é um engano que o autor vê, e um nome plausível que o
+// comando escolheu não é.
+function novoComando(argumentos) {
+  const { opcoes, posicionais } = lerArgumentos(argumentos, FLAGS_NOVO);
+  const [pasta] = posicionais;
+  if (!pasta) sair(USO);
+
+  let unidades;
+  try {
+    unidades = JSON.parse(readFileSync(new URL('../assets/marcas/unidades.json', import.meta.url), 'utf8'));
+  } catch (erro) {
+    sair(`falha de ambiente: ${erro.message}`);
+  }
+  // Unidade fora do arquivo de marcas é falha de USO (código 2), e não um erro de validação da aula
+  // criada: o comando não chega a escrever nada. A lista sai do mesmo arquivo que
+  // `estrutura.metadados` consulta — não há uma segunda lista de unidades neste repositório.
+  if (!Object.hasOwn(unidades, opcoes.unidade ?? '')) {
+    sair(`unidade desconhecida: ${opcoes.unidade ?? '(nenhuma)'}. Use ${Object.keys(unidades).join(' ou ')}.`);
+  }
+
+  // Pasta que já existe e tem alguma coisa dentro não é sobrescrita. Uma pasta vazia segue adiante:
+  // é o caso de quem criou o diretório antes de chamar o comando.
+  let existentes = [];
+  try {
+    existentes = readdirSync(pasta);
+  } catch (erro) {
+    if (erro.code !== 'ENOENT') sair(`não foi possível ler ${pasta}: ${erro.message}`);
+  }
+  if (existentes.length > 0) {
+    sair(`${pasta} já existe e não está vazia (${plural(existentes.length, 'item', 'itens')}) — escolha outro nome`);
+  }
+
+  // O texto novo sai inteiro ANTES de qualquer escrita: um modelo quebrado (sem uma das metas) para
+  // aqui, sem deixar meia pasta no disco de quem chamou.
+  const data = dataDeHoje();
+  const origem = fileURLToPath(new URL(MODELO, import.meta.url));
+  let html;
+  try {
+    html = readFileSync(join(origem, 'index.html'), 'utf8');
+    html = trocarMeta(html, 'unidade', opcoes.unidade);
+    html = trocarMeta(html, 'data', data);
+  } catch (erro) {
+    sair(`falha de ambiente: ${erro.message}`);
+  }
+  try {
+    // `dist/` fora da cópia: `aula-usp build modelos/aula` escreve `modelos/aula/dist/` (spec 3.3, e
+    // é o que o .gitignore registra), e copiar a saída de uma construção anterior para dentro de uma
+    // aula nova entrega ao autor um `dist/` que não é dela.
+    cpSync(origem, pasta, { recursive: true, filter: (caminho) => basename(caminho) !== 'dist' });
+    writeFileSync(join(pasta, 'index.html'), html);
+  } catch (erro) {
+    sair(`não foi possível criar ${pasta}: ${erro.message}`);
+  }
+  console.log(`${pasta} criada a partir de modelos/aula — unidade ${opcoes.unidade}, data ${data}`);
+}
 
 async function servir(argumentos) {
   const { opcoes, posicionais } = lerArgumentos(argumentos, FLAGS_SERVIR);
@@ -204,7 +291,8 @@ async function pacotesComando(argumentos) {
 }
 
 const [comando, ...argumentos] = process.argv.slice(2);
-if (comando === 'servir') servir(argumentos);
+if (comando === 'novo') novoComando(argumentos);
+else if (comando === 'servir') servir(argumentos);
 else if (comando === 'validar') validarComando(argumentos);
 else if (comando === 'build') buildComando(argumentos);
 else if (comando === 'dist') distComando(argumentos);

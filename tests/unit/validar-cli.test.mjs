@@ -178,7 +178,7 @@ test('uma flag desconhecida sai com 2 e imprime o uso', () => {
     assert.fail('deveria ter saído com 2');
   } catch (erro) {
     assert.equal(erro.status, 2);
-    assert.match(erro.stderr, /uso: aula-usp servir/);
+    assert.match(erro.stderr, /uso: aula-usp novo/);
   }
 });
 
@@ -192,7 +192,7 @@ test('validar recusa --sem-pdf (é de build, não dele)', () => {
     assert.fail('deveria ter saído com 2');
   } catch (erro) {
     assert.equal(erro.status, 2);
-    assert.match(erro.stderr, /uso: aula-usp servir/);
+    assert.match(erro.stderr, /uso: aula-usp novo/);
   }
 });
 
@@ -202,7 +202,7 @@ test('build recusa --porta (é de servir, não dele)', () => {
     assert.fail('deveria ter saído com 2');
   } catch (erro) {
     assert.equal(erro.status, 2);
-    assert.match(erro.stderr, /uso: aula-usp servir/);
+    assert.match(erro.stderr, /uso: aula-usp novo/);
   }
 });
 
@@ -212,7 +212,7 @@ test('servir recusa --json (é de validar, não dele)', () => {
     assert.fail('deveria ter saído com 2');
   } catch (erro) {
     assert.equal(erro.status, 2);
-    assert.match(erro.stderr, /uso: aula-usp servir/);
+    assert.match(erro.stderr, /uso: aula-usp novo/);
   }
 });
 
@@ -222,7 +222,7 @@ test('um segundo posicional sai com 2', () => {
     assert.fail('deveria ter saído com 2');
   } catch (erro) {
     assert.equal(erro.status, 2);
-    assert.match(erro.stderr, /uso: aula-usp servir/);
+    assert.match(erro.stderr, /uso: aula-usp novo/);
   }
 });
 
@@ -232,7 +232,7 @@ test('dist não aceita alvo: um segundo argumento sai com 2 e imprime o uso', ()
     assert.fail('deveria ter saído com 2');
   } catch (erro) {
     assert.equal(erro.status, 2);
-    assert.match(erro.stderr, /uso: aula-usp servir/);
+    assert.match(erro.stderr, /uso: aula-usp novo/);
   }
 });
 
@@ -278,7 +278,7 @@ test('build: sem pasta sai com 2 e imprime o uso', () => {
     assert.fail('deveria ter saído com 2');
   } catch (erro) {
     assert.equal(erro.status, 2);
-    assert.match(erro.stderr, /uso: aula-usp servir/);
+    assert.match(erro.stderr, /uso: aula-usp novo/);
   }
 });
 
