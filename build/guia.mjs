@@ -223,7 +223,7 @@ const ONDE = {
 // `h2`. O número é sempre do contrato; o que se escreve aqui são as PALAVRAS em volta dele.
 //
 // Plana, e na ordem do contrato. As chaves agrupam por prefixo, e a tentação é virar subtítulos —
-// mas 33 limites cabem em 22 prefixos, e dezessete desses prefixos têm um limite só: seriam 22
+// mas 33 limites cabem em 22 prefixos, e quinze desses prefixos têm um limite só (medido): seriam 22
 // subtítulos para 33 linhas, e a chave inteira deixaria de existir numa linha só, que é justamente o
 // que um modelo procura. O agrupamento que as chaves carregam vira a coluna "onde", não subtítulo. A
 // ordem é a do contrato porque ela é a de quem escreve a aula — capa, abertura, título, corpo,
