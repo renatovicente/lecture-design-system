@@ -15,7 +15,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { FONTES_DE_PACOTE, regrasEssenciais } from '../../build/guia.mjs';
-import { PASTAS_COM_TAG, arquivosDoGuia, montarPacotes } from '../../build/pacotes.mjs';
+import { PASTAS_COM_TAG, arquivosComTag, arquivosDoGuia, montarPacotes } from '../../build/pacotes.mjs';
 
 const RAIZ = new URL('../../', import.meta.url);
 
@@ -144,12 +144,12 @@ test('o bloco de regras essenciais está, byte a byte, no arquivo de instrução
 // 4. Spec 11.1, terceira: "versão e `integrity` das tags iguais à versão do `package.json` e ao
 // hash de `dist/aula-usp.js`".
 
-// Onde a tag fixada tem de estar: nas duas pastas que o `aula-usp pacotes` reescreve (spec 8.1, com
-// o desvio do espécime registrado em PASTAS_COM_TAG) e em tudo que os pacotes levam. Os `.md` entram
-// junto porque `references/10-estrutura.md` e `conhecimento/guia-do-autor.md` mostram o modelo
-// inteiro num bloco ```html: montar antes de reescrever põe a tag relativa neles, e o pacote sai
-// contradizendo a si mesmo — o defeito de ordem que `gerarPacotes` existe para não cometer.
-const COM_TAG_FIXADA = ['modelos', 'exemplos', 'pacotes'];
+// Onde a tag fixada tem de estar: nas TRÊS pastas que o `aula-usp pacotes` reescreve (spec 8.1) e em
+// tudo que os pacotes levam. Os `.md` entram junto porque `references/10-estrutura.md` e
+// `conhecimento/guia-do-autor.md` mostram o modelo inteiro num bloco ```html: montar antes de
+// reescrever põe a tag relativa neles, e o pacote sai contradizendo a si mesmo — o defeito de ordem
+// que `gerarPacotes` existe para não cometer.
+const COM_TAG_FIXADA = ['modelos', 'especime', 'exemplos', 'pacotes'];
 
 test('toda tag fixada traz a versão do package.json e o integrity de dist/aula-usp.js', () => {
   const { version } = JSON.parse(texto('package.json'));
@@ -185,38 +185,38 @@ test('toda tag fixada traz a versão do package.json e o integrity de dist/aula-
       }
     }
   }
-  // Se a varredura deixar de achar tag, ela vira decoração e nada acima roda. Medido hoje: 14 tags
-  // nas três pastas, 3 delas o marcador `aula-usp@<versão>` de 71-fluxo-chat.md (uma em references/
-  // e uma em cada guia-do-autor.md), 11 conferidas — os 2 fontes reescritos, os 6 `.html` dos
-  // pacotes e os 3 blocos ```html que mostram o modelo (references/10-estrutura.md e os dois
-  // guia-do-autor.md). O piso é folgado de propósito: é contra a varredura vazia, não contra o
-  // pacote ganhar ou perder um arquivo.
+  // Se a varredura deixar de achar tag, ela vira decoração e nada acima roda. Medido nesta árvore:
+  // 20 tags nas quatro pastas, 3 delas o marcador `aula-usp@<versão>` de 71-fluxo-chat.md (uma em
+  // references/ e uma em cada guia-do-autor.md), 17 conferidas — os 8 `.html` de fonte reescritos
+  // (o modelo, o exemplo e os 6 decks do espécime), os 6 `.html` dos pacotes e os 3 blocos ```html
+  // que mostram o modelo (references/10-estrutura.md e os dois guia-do-autor.md). O piso é folgado
+  // de propósito: é contra a varredura vazia, não contra o pacote ganhar ou perder um arquivo.
   assert.ok(conferidas >= 8, `só ${conferidas} tags conferidas — a varredura de ${COM_TAG_FIXADA.join(', ')} virou decoração`);
 });
 
 // ---------------------------------------------------------------------------------------------
-// 5. O outro lado da decisão de escopo do 6c.
+// 5. O escopo da reescrita: as três pastas da spec 8.1, e nenhuma delas vazia.
 
-// `especime/` fica FORA da reescrita, e a razão está inteira ao lado de PASTAS_COM_TAG. Esta guarda
-// é o custo de errá-la, cobrado onde é barato: pôr `especime` de volta no escopo antes de a
-// publicação da fase 3 fazer a URL resolver derruba 12 testes de integração, cada um depois de 30 s
-// esperando uma montagem que nunca vem — e só depois de `npm test` ter passado inteiro.
-test('os decks de especime/ continuam carregando o runtime local, por caminho relativo', () => {
-  assert.equal(
-    PASTAS_COM_TAG.includes('especime'),
-    false,
-    'especime/ voltou ao escopo da reescrita: enquanto o pacote não estiver publicado (fase 3), a tag '
-      + 'fixada não resolve e os testes que servem o espécime sem reescrever nada não têm o que carregar',
+// A spec 8.1: `pacotes` "reescreve a tag do runtime (versão e `integrity`) em `modelos/`,
+// `especime/` e `exemplos/`". A lista está escrita aqui, e não importada como gabarito, pela mesma
+// razão do teto de 8.000: ela é da SPEC, e uma guarda que pergunta ao gerador qual é o escopo aprova
+// um escopo encolhido.
+//
+// Encolher a lista não quebra nada de imediato — os arquivos já reescritos continuam no disco —, e é
+// justamente por isso que a guarda existe: o efeito só apareceria na primeira tag nova escrita
+// dentro da pasta que saiu do escopo, meses depois, num pacote entregue. A segunda metade mede que o
+// escopo não é decoração: cada pasta tem de ter pelo menos um arquivo com tag hoje.
+test('a reescrita cobre as três pastas da spec 8.1, e acha tag em cada uma delas', () => {
+  assert.deepEqual(
+    [...PASTAS_COM_TAG].sort(),
+    ['especime', 'exemplos', 'modelos'],
+    'PASTAS_COM_TAG divergiu das três pastas que a spec 8.1 nomeia para `aula-usp pacotes`',
   );
-  const decks = readdirSync(new URL('especime/', RAIZ)).filter((nome) => nome.endsWith('.html')).sort();
-  assert.ok(decks.length > 0, 'especime/ não tem deck nenhum');
-  for (const nome of decks) {
-    const achados = [...texto(`especime/${nome}`).matchAll(TAG)];
-    assert.equal(achados.length, 1, `especime/${nome}: tem ${achados.length} tags de runtime, e devia ter 1`);
-    assert.equal(
-      achados[0][1].startsWith('http'),
-      false,
-      `especime/${nome} aponta para ${achados[0][1]} — o espécime carrega o runtime local, por caminho relativo`,
+  const achados = arquivosComTag(RAIZ);
+  for (const pasta of PASTAS_COM_TAG) {
+    assert.ok(
+      achados.some((caminho) => caminho.startsWith(`${pasta}/`)),
+      `${pasta}/ está no escopo da reescrita e não tem um único arquivo com tag de runtime`,
     );
   }
 });

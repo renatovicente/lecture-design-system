@@ -74,7 +74,7 @@ import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import pixelmatch from 'pixelmatch';
 import { PNG } from 'pngjs';
-import { iniciarChrome, servirPastaCrua, esperarMontagem } from './utilitarios.mjs';
+import { iniciarChrome, servirPastaCrua, esperarMontagem, rotearCdn } from './utilitarios.mjs';
 import { construir } from '../../build/construir.mjs';
 import { LARGURA_DO_PALCO, ALTURA_DO_PALCO } from '../../motor/motor.js';
 
@@ -163,6 +163,12 @@ async function gravarDiff(rotulo, buffer) {
 
 async function abrirPagina(url) {
   const pagina = await navegador.newPage({ viewport: { width: LARGURA, height: ALTURA }, deviceScaleFactor: 1 });
+  // O lado navegador abre o espécime servido cru, e a tag dele é a FIXADA desde a correção final do
+  // 6c: quem responde pela base da CDN é esta rota, com os bytes de dist/ (utilitarios.mjs). No lado
+  // build a chamada é inócua — o HTML construído traz o motor embutido e não pede nada. Os bytes do
+  // runtime são os MESMOS nos dois caminhos, que é a razão de a comparação de pixels continuar
+  // válida; e é medição, não raciocínio: este arquivo roda inteiro a cada rodada.
+  await rotearCdn(pagina);
   await pagina.goto(url);
   await esperarMontagem(pagina); // espera dataset.montado === 'sim' e depois document.fonts.ready (utilitarios.mjs).
   return pagina;

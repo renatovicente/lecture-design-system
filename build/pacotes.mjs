@@ -15,31 +15,31 @@ const RAIZ = new URL('../', import.meta.url);
 const MODELO = 'modelos/aula/index.html';
 const EXEMPLO = 'exemplos/descida-do-gradiente/index.html';
 
-// DUAS pastas, e a spec 8.1 nomeia três. Isto é desvio consciente da letra dela, decidido pelo
-// autor, e está escrito aqui para não ser "consertado" de volta por quem reler a spec.
+// As TRÊS pastas que a spec 8.1 nomeia, `especime/` inclusive.
 //
-// A spec 8.1 diz que `pacotes` "reescreve a tag do runtime (versão e `integrity`) em `modelos/`,
-// `especime/` e `exemplos/`" — e a spec 10.3 diz que `especime/` "é a referência visual e a base
-// dos **testes de integração**". As duas não podem valer juntas enquanto a URL da CDN não resolve:
-// tests/integracao/dist.test.mjs e visual.test.mjs servem o espécime por `servirPastaCrua`
-// (tests/integracao/utilitarios.mjs:63-69), um segundo servidor deliberadamente burro que NÃO
-// reescreve a tag, e é ele que prova o caminho de produção — que o `<script src="../dist/aula-usp.js">`
-// escrito pelo autor chega ao navegador do jeito que ele o escreveu. Com a tag fixada, o pacote
-// ainda não está publicado (fase 3), o runtime nunca carrega e a montagem estoura: medido, **12
-// testes de integração caem** (4 de 5 em dist.test.mjs, 8 de 73 em visual.test.mjs), e voltam com a
-// tag relativa. Apontar esses dois testes para uma fixture relativa apagaria justamente a
-// propriedade que eles medem.
+// O espécime esteve fora desta lista por uma rodada, e a razão era real: ele é a base dos testes de
+// integração, e dois deles (tests/integracao/dist.test.mjs e visual.test.mjs) o servem por
+// `servirPastaCrua`, um segundo servidor deliberadamente burro que NÃO reescreve a tag — é ele que
+// prova o caminho de produção, em que a tag escrita pelo autor chega ao navegador do jeito que ele a
+// escreveu. Com a tag fixada e nada respondendo pela CDN (publicar é da fase 3), o runtime nunca
+// carregava e a montagem estourava: 12 testes caíam.
 //
-// O que torna o desvio barato é que **o espécime não é enviado em nenhum pacote**: a spec 10.2
-// lista `assets/modelo.html` e `assets/exemplo.html`, que vêm de `modelos/` e de `exemplos/`. Nada
-// do que sai deste repositório carrega a tag relativa dele. A 3.2 e a 12 repetem a lista das três
-// pastas e ficam, como a 8.1, cumpridas em dois terços — quando a publicação da fase 3 fizer a URL
-// resolver, `especime` volta para esta lista e as três valem inteiras.
+// O que desfez o impasse não foi reescrever a tag no servidor — isso apagaria a propriedade que os
+// dois testes medem — e sim interceptar a rota no NAVEGADOR: `rotearCdn`
+// (tests/integracao/utilitarios.mjs) fulfila `https://cdn.jsdelivr.net/npm/aula-usp@<versão>/dist/*`
+// com os bytes locais de `dist/` e o CORS que `crossorigin="anonymous"` exige. O servidor continua
+// burro, a tag continua sendo a que o autor escreveu, e o Chrome a pede exatamente como está.
+//
+// A troca não é neutra: ela GANHA duas propriedades que ninguém media enquanto a tag era relativa —
+// o `integrity` conferido por um navegador de verdade (inversão medida: dois bytes a mais em
+// `aula-usp.js` e o Chrome recusa o script) e a cadeia de scripts secundários resolvida pela base da
+// CDN, e não pelo host de teste (9 pedidos em `codigo.html`). As duas têm asserção própria em
+// dist.test.mjs.
 //
 // E o escopo continua sendo por pasta, nunca uma busca repo-wide: medido no repositório, 54
 // arquivos rastreados carregam a tag, 33 deles são fixture de teste, e reescrevê-las quebraria a
 // suíte por outro caminho.
-export const PASTAS_COM_TAG = ['modelos', 'exemplos'];
+export const PASTAS_COM_TAG = ['modelos', 'especime', 'exemplos'];
 
 // A mesma forma que `reescreverRuntime` (build/servir.mjs) e `embutir` reconhecem: a tag é achada
 // pelo `src` terminado em `/aula-usp.js` (spec 8.1). Casa a relativa de hoje e a fixada de amanhã,

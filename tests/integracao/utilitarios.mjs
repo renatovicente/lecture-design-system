@@ -99,6 +99,51 @@ export async function servirPastaCrua(pastaRelativaARaiz) {
   };
 }
 
+// A CDN ainda não existe — publicar é da fase 3 —, mas a tag que o autor escreveu É pedida pelo
+// navegador, e quem responde são os bytes locais de dist/. Isto é o que deixa `especime/` carregar a
+// tag FIXADA (spec 3.2, 8.1 e 12) sem abrir mão do que dist.test.mjs e visual.test.mjs medem:
+// `servirPastaCrua` continua burro e não reescreve nada; quem intercepta é o Chrome, depois de a tag
+// ter chegado a ele exatamente como está no arquivo.
+//
+// Duas propriedades vêm de graça por este caminho, e nenhuma delas existia enquanto a tag era
+// relativa — carga mesma-origem, sem `integrity`:
+//
+//   1. o `integrity` passa a ser conferido por um NAVEGADOR. A guarda de tests/unit/pacotes.test.mjs
+//      compara a string do atributo com a string do manifesto: prova que os dois textos batem, não
+//      que o hash valida os bytes. Aqui o Chrome decide. `bytesExtras` existe para essa inversão ser
+//      um teste, e não um experimento que alguém fez uma vez (ver dist.test.mjs).
+//   2. a cadeia de scripts secundários roda pela BASE DA CDN: `aula-usp.js` resolve
+//      `aula-usp-tex.js`, `aula-usp-codigo.js` e as gramáticas a partir de `currentScript.src`
+//      (spec 3.2, passo 5), cada um com o `integrity` que ele traz embutido. Com a tag relativa esse
+//      ramo nunca era exercitado.
+//
+// `access-control-allow-origin` não é enfeite: `crossorigin="anonymous"` + `integrity` exigem CORS, e
+// sem o cabeçalho o Chrome recusa o script ANTES de conferir o hash — a falha pareceria de SRI sem
+// ser. Devolve a base e a lista (viva) dos nomes pedidos, para o teste medir a cadeia.
+export async function rotearCdn(pagina, { raiz = RAIZ, bytesExtras = '' } = {}) {
+  const { version } = JSON.parse(await readFile(new URL('package.json', raiz), 'utf8'));
+  const base = `https://cdn.jsdelivr.net/npm/aula-usp@${version}/dist/`;
+  const pedidos = [];
+  await pagina.route(`${base}*`, async (rota) => {
+    const nome = new URL(rota.request().url()).pathname.split('/').pop();
+    pedidos.push(nome);
+    let corpo;
+    try {
+      corpo = await readFile(new URL(`dist/${nome}`, raiz));
+    } catch {
+      // 404 com o motivo, em vez de deixar o pedido pendurado até o timeout de 30 s do Playwright.
+      await rota.fulfill({ status: 404, headers: { 'content-type': 'text/plain; charset=utf-8' }, body: `dist/${nome} não existe` });
+      return;
+    }
+    await rota.fulfill({
+      status: 200,
+      headers: { 'content-type': 'text/javascript; charset=utf-8', 'access-control-allow-origin': '*' },
+      body: bytesExtras ? Buffer.concat([corpo, Buffer.from(bytesExtras)]) : corpo,
+    });
+  });
+  return { base, pedidos };
+}
+
 export async function esperarMontagem(pagina) {
   await pagina.waitForFunction(() => document.body?.dataset.montado !== undefined);
   const [estado, painel] = await pagina.evaluate(() => [document.body.dataset.montado, document.querySelector('pre.painel')?.textContent]);
@@ -129,7 +174,11 @@ export async function fontesDoNo(pagina, seletor) {
   return fonts;
 }
 
-export async function abrirAula(navegador, url, { largura = 1400, altura = 900 } = {}) {
+// `cdn` é opt-in, e não o padrão: as páginas servidas por `servirPasta` passam por `criarServidor`,
+// que troca a tag pelo runtime local — nenhuma delas pede a CDN, e se um dia uma pedir, o certo é
+// falhar, não ser atendida em silêncio por uma rota que ninguém pediu. Quem liga é quem serve o
+// arquivo cru (tests/integracao/dist.test.mjs).
+export async function abrirAula(navegador, url, { largura = 1400, altura = 900, cdn = false } = {}) {
   const pagina = await navegador.newPage({ viewport: { width: largura, height: altura } });
   const erros = [];
   const pedidos = [];
@@ -138,6 +187,7 @@ export async function abrirAula(navegador, url, { largura = 1400, altura = 900 }
   pagina.on('console', (mensagem) => {
     if (mensagem.type() === 'error' && !mensagem.location().url.endsWith('/favicon.ico')) erros.push(mensagem.text());
   });
+  if (cdn) await rotearCdn(pagina);
   await pagina.goto(url);
   await esperarMontagem(pagina);
   return { pagina, erros, pedidos };
