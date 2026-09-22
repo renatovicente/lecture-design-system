@@ -1,0 +1,11 @@
+# Gerado por build/mplstyle.mjs a partir de tokens/aula-usp.tokens.json. Não editar à mão.
+# Cores hexadecimais aqui NÃO levam "#" — em .mplstyle, "#" abre comentário até o fim da linha.
+
+axes.prop_cycle: cycler('color', ['0A0A0A', '1094AB', '666666'])
+axes.linewidth: 2
+axes.spines.top: False
+axes.spines.right: False
+axes.grid: True
+axes.grid.axis: y
+grid.color: D9D9D9
+font.family: Geist
