@@ -21,12 +21,15 @@ const AREA = { x0: MARGEM.esquerda, x1: LARGURA - MARGEM.direita, y0: MARGEM.top
 
 // Cores das séries (spec 7.2): uma série sai em tinta. Duas ou três: a de foco (campo `foco`; na
 // falta dele, a ÚLTIMA de `y`) sai em azul, e as demais em tinta e em cinza tracejada, NESSA ORDEM.
-// O validador (recursos.grafico, Tarefa 4) é quem recusa um `foco` que não está em `y`; aqui a
-// entrada de `foco` já vem conferida, e o ?? só cobre a ausência, que é legítima. O limite de 3
-// séries, porém, esta função defende sozinha: recursos.grafico ainda não existe, e sem a defesa
-// abaixo a 3ª série em diante saía sem cor (sobra.shift() num array já esvaziado devolve undefined,
-// e { serie, ...undefined } não erra — só não tem cor nenhuma) — um path sem stroke, invisível e sem
-// aviso nenhum (Important 4 da revisão).
+// O validador (recursos.grafico, Tarefa 4) recusa ANTES de desenhar um `foco` que não está em `y` e
+// mais de `contrato.limites['grafico.series']` séries, com mensagem legível ao autor (spec 9.1) —
+// aqui a entrada já vem conferida quando passa por ele primeiro, e o `??` só cobre a ausência de
+// `foco`, que é legítima. As duas checagens abaixo continuam existindo mesmo assim, como rede de
+// segurança para quem chama coresDasSeries fora do validador (os testes deste módulo inclusive):
+// sem a de baixo, a 3ª série em diante saía sem cor (sobra.shift() num array já esvaziado devolve
+// undefined, e { serie, ...undefined } não erra — só não tem cor nenhuma) — um path sem stroke,
+// invisível e sem aviso nenhum (Important 4 da revisão). O número aqui é redundante com o do
+// contrato por desenho (rede de segurança, não fonte); mudar o limite é editar o contrato.
 export function coresDasSeries(y, foco) {
   if (y.length > 3) throw new Error(`no máximo 3 séries em y; recebidas ${y.length}`);
   if (y.length === 1) return [{ serie: y[0], cor: 'tinta', tracejada: false }];
@@ -118,6 +121,10 @@ function preenchimentoDaSerie(cor, tracejada) {
 // Log de zero (ou de negativo) é -Infinity: a escala "funciona" sem lançar sozinha, e cada posição
 // sai NaN, calada — o path de uma série vira "MNaN,16L…" e nada desenha (Important 2 da revisão).
 // vocabulario.atributo não confere valor de atributo de SVG, então nada mais acusaria isto depois.
+// recursos.grafico (Tarefa 4), estática, também NÃO confere isto: o domínio é dos VALORES
+// carregados, não do JSON da especificação, e uma regra estática — por definição, sem carregar nada
+// — não os tem quando `dados` é um caminho de CSV (só quando `dados` já vem inline ela poderia, e
+// mesmo assim o brief da Tarefa 4 não pediu essa cobertura). Este throw continua sendo a única defesa.
 function criarEscala({ escalaLinear, escalaLog }, tipoDeEscala, dominio, alcance) {
   if (tipoDeEscala === 'log' && dominio.some((valor) => valor <= 0)) {
     throw new Error(`escala log exige valores maiores que zero no domínio; recebido [${dominio.join(', ')}]`);
@@ -224,11 +231,11 @@ function desenharRotuloDaSerie(ponta, cor, tracejada, texto) {
 
 // tipo "linha" (o exemplo literal da spec 7.2): uma série por coluna de `y`, x comum entre todas.
 function montarLinha(biblioteca, especificacao, colunas) {
-  const { x: nomeX, y: series, foco, eixos = {}, escala = {}, faixas } = especificacao;
+  const { x: nomeX, y: series, foco, eixos = {}, escalas = {}, faixas } = especificacao;
   const valoresX = colunas[nomeX];
   const todosOsY = series.flatMap((nome) => colunas[nome]);
-  const escalaX = criarEscala(biblioteca, escala.x, biblioteca.extensao(valoresX), [AREA.x0, AREA.x1]);
-  const escalaY = criarEscala(biblioteca, escala.y, biblioteca.extensao(todosOsY), [AREA.y1, AREA.y0]);
+  const escalaX = criarEscala(biblioteca, escalas.x, biblioteca.extensao(valoresX), [AREA.x0, AREA.x1]);
+  const escalaY = criarEscala(biblioteca, escalas.y, biblioteca.extensao(todosOsY), [AREA.y1, AREA.y0]);
   const gerador = biblioteca.linha()
     .x((ponto) => arredondar(escalaX(ponto.x)))
     .y((ponto) => arredondar(escalaY(ponto.y)));
@@ -254,12 +261,12 @@ function montarLinha(biblioteca, especificacao, colunas) {
 
 // tipo "dispersao": os mesmos dados de "linha", em pontos soltos; a série tracejada vira marcador vazado.
 function montarDispersao(biblioteca, especificacao, colunas) {
-  const { x: nomeX, y: series, foco, eixos = {}, escala = {}, faixas } = especificacao;
+  const { x: nomeX, y: series, foco, eixos = {}, escalas = {}, faixas } = especificacao;
   const RAIO = 4;
   const valoresX = colunas[nomeX];
   const todosOsY = series.flatMap((nome) => colunas[nome]);
-  const escalaX = criarEscala(biblioteca, escala.x, biblioteca.extensao(valoresX), [AREA.x0, AREA.x1]);
-  const escalaY = criarEscala(biblioteca, escala.y, biblioteca.extensao(todosOsY), [AREA.y1, AREA.y0]);
+  const escalaX = criarEscala(biblioteca, escalas.x, biblioteca.extensao(valoresX), [AREA.x0, AREA.x1]);
+  const escalaY = criarEscala(biblioteca, escalas.y, biblioteca.extensao(todosOsY), [AREA.y1, AREA.y0]);
 
   const grade = desenharGrade(escalaY);
   const faixasSvg = desenharFaixas(faixas, escalaX);
@@ -283,13 +290,13 @@ function montarDispersao(biblioteca, especificacao, colunas) {
 // tipo "barras": x categórico (as próprias categorias de `x`, sem escala numérica), até 3 séries
 // agrupadas por categoria. Posição por índice numa escala linear — não precisa de escala de banda.
 function montarBarras(biblioteca, especificacao, colunas) {
-  // escala.x não se aplica aqui: o eixo de categoria não tem escolha linear/log, só o de valor (y) tem.
-  const { x: nomeX, y: series, foco, eixos = {}, escala = {} } = especificacao;
+  // escalas.x não se aplica aqui: o eixo de categoria não tem escolha linear/log, só o de valor (y) tem.
+  const { x: nomeX, y: series, foco, eixos = {}, escalas = {} } = especificacao;
   const categorias = colunas[nomeX];
   const n = categorias.length;
   const todosOsY = series.flatMap((nome) => colunas[nome]);
   const [minimoY, maximoY] = biblioteca.extensao(todosOsY);
-  const escalaY = criarEscala(biblioteca, escala.y, [Math.min(0, minimoY), maximoY], [AREA.y1, AREA.y0]);
+  const escalaY = criarEscala(biblioteca, escalas.y, [Math.min(0, minimoY), maximoY], [AREA.y1, AREA.y0]);
   const escalaIndice = biblioteca.escalaLinear().domain([0, n]).range([AREA.x0, AREA.x1]);
   const zero = arredondar(escalaY(0));
   const cores = coresDasSeries(series, foco);
@@ -334,7 +341,7 @@ function desenharBarra(escalaY, valor, zero, x, largura, atributosDePreenchiment
 // função além de desambiguar cor — nomear a grandeza plotada, que vale mesmo com uma série só.
 // Decisão do coordenador na revisão da Tarefa 2: implementar, revertendo a exceção.
 function montarHistograma(biblioteca, especificacao, colunas) {
-  const { x: nomeX, classes, eixos = {}, escala = {}, faixas } = especificacao;
+  const { x: nomeX, classes, eixos = {}, escalas = {}, faixas } = especificacao;
   const valores = colunas[nomeX];
   const [minimo, maximo] = biblioteca.extensao(valores);
   const larguraClasse = (maximo - minimo) / classes;
@@ -343,9 +350,9 @@ function montarHistograma(biblioteca, especificacao, colunas) {
     const indice = Math.min(Math.max(Math.floor((valor - minimo) / larguraClasse), 0), classes - 1);
     contagens[indice] += 1;
   }
-  const escalaX = criarEscala(biblioteca, escala.x, [minimo, maximo], [AREA.x0, AREA.x1]);
+  const escalaX = criarEscala(biblioteca, escalas.x, [minimo, maximo], [AREA.x0, AREA.x1]);
   const [, maximoContagem] = biblioteca.extensao(contagens);
-  const escalaY = criarEscala(biblioteca, escala.y, [0, maximoContagem], [AREA.y1, AREA.y0]);
+  const escalaY = criarEscala(biblioteca, escalas.y, [0, maximoContagem], [AREA.y1, AREA.y0]);
   const zero = arredondar(escalaY(0));
   const [{ cor, tracejada }] = coresDasSeries([nomeX], undefined);
 
@@ -373,6 +380,12 @@ function montarHistograma(biblioteca, especificacao, colunas) {
 
 const MONTADORES = { linha: montarLinha, barras: montarBarras, dispersao: montarDispersao, histograma: montarHistograma };
 
+// Os tipos conhecidos, para quem precisa da lista sem montar um desenhista (o `tipo` não é dado do
+// contrato — a spec 7.2 o fixa em prosa — então MONTADORES, aqui, é a única fonte dele). recursos.grafico
+// (validador/regras/recursos.js, Tarefa 4) importa esta constante para recusar um `tipo` desconhecido
+// ANTES de desenhar, em vez de reescrever a mesma lista de quatro nomes por conta própria.
+export const TIPOS_DE_GRAFICO = new Set(Object.keys(MONTADORES));
+
 // O desenhista com as funções do d3 da aula: escalaLinear/escalaLog (d3-scale), linha (d3-shape),
 // extensao (d3-array). Puro: nenhuma chamada toca o DOM, e desenharSvg devolve uma string — quem
 // insere no documento é desenharGraficos, abaixo, do mesmo jeito que componentes/tex.js gera HTML do
@@ -380,7 +393,10 @@ const MONTADORES = { linha: montarLinha, barras: montarBarras, dispersao: montar
 export function criarDesenhista({ escalaLinear, escalaLog, linha, extensao }) {
   const biblioteca = { escalaLinear, escalaLog, linha, extensao };
   return {
-    tipos: new Set(Object.keys(MONTADORES)),
+    tipos: TIPOS_DE_GRAFICO,
+    // recursos.grafico (Tarefa 4) já recusa, antes de chegar aqui, um `tipo` fora de TIPOS_DE_GRAFICO
+    // — mas só quando passa pelo validador primeiro; este throw é quem defende desenharSvg chamado
+    // direto (os testes deste módulo inclusive), com a MESMA fonte (MONTADORES), não uma lista solta.
     desenharSvg(especificacao, colunas) {
       const montador = MONTADORES[especificacao.tipo];
       if (!montador) throw new Error(`tipo de gráfico desconhecido: "${especificacao.tipo}"`);
@@ -390,10 +406,18 @@ export function criarDesenhista({ escalaLinear, escalaLog, linha, extensao }) {
   };
 }
 
-// Troca, dentro de raiz, o script de cada figure.grafico por um SVG; devolve os erros, cada um com o
-// trecho do JSON e a mensagem. `dados` resolve o caminho de um CSV (modo build) para colunas — quem
-// resolve o caminho é quem chama (spec 7.2); uma especificação com colunas inline (objeto em vez de
-// string) não consulta `dados` e roda igual no navegador sem arquivos.
+// Acrescenta, dentro de raiz, um SVG ao lado do script de cada figure.grafico (script.after — NÃO
+// troca, apesar do nome antigo deste comentário); devolve os erros, cada um com o trecho do JSON e a
+// mensagem. `dados` resolve o caminho de um CSV (modo build) para colunas — quem resolve o caminho é
+// quem chama (spec 7.2); uma especificação com colunas inline (objeto em vez de string) não consulta
+// `dados` e roda igual no navegador sem arquivos.
+// Por que "acrescenta" e não "troca" fica assim, sem virar `exatamenteUmDe` no contrato: depois de
+// renderizada, a figure tem script + svg (+ figcaption opcional), enquanto o contrato descreve a
+// forma de FONTE. Inofensivo hoje porque recursos.grafico (Tarefa 4) e todo o grupo estático leem o
+// fonte clonado, antes de qualquer render (spec 9.3: "recursos.grafico | o fonte, sem cromo e sem
+// HTML renderizado" — montar/entrada.js:101, `fonte = document.cloneNode(true)`, clonado ANTES desta
+// função rodar); as regras de composição, as únicas que leem o documento montado, não consultam
+// `filhos`. Decisão da Tarefa 4: o contrato continua descrevendo só a forma de fonte.
 export function desenharGraficos(raiz, { desenhista, dados = {} }) {
   const doc = raiz.ownerDocument ?? raiz;
   const erros = [];

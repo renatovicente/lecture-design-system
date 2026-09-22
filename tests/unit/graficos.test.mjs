@@ -168,7 +168,7 @@ test('linha: escala log usa escalaLog de verdade — o mesmo domínio [1,100] es
   const base = { tipo: 'dispersao', x: 'x', y: ['y'], eixos: {}, dados: { x: [1, 10, 100], y: [1, 10, 100] } };
   const cxDe = (svg) => [...svg.matchAll(/<circle cx="([\d.]+)"/g)].map((m) => Number(m[1]));
   const [linX0, linX1] = cxDe(desenhista.desenharSvg(base, base.dados));
-  const [logX0, logX1] = cxDe(desenhista.desenharSvg({ ...base, escala: { x: 'log' } }, base.dados));
+  const [logX0, logX1] = cxDe(desenhista.desenharSvg({ ...base, escalas: { x: 'log' } }, base.dados));
   assert.ok(logX1 - logX0 > linX1 - linX0, 'em log, 1→10 (uma década) ocupa mais espaço que em linear, onde 10 fica perto do início');
 });
 
@@ -296,7 +296,7 @@ test('histograma em pt-BR: bordas de classe usam o mesmo separador que os ticks 
 
 test('escala log com 0 (ou negativo) no domínio lança, em vez de desenhar NaN calado — Important 2 da revisão, medido com o exemplo literal da spec 7.2 (epoca começa em 0)', () => {
   const especificacao = {
-    tipo: 'linha', x: 'epoca', y: ['treino', 'teste'], foco: 'teste', eixos: { x: 'época', y: 'erro' }, escala: { x: 'log' },
+    tipo: 'linha', x: 'epoca', y: ['treino', 'teste'], foco: 'teste', eixos: { x: 'época', y: 'erro' }, escalas: { x: 'log' },
     dados: { epoca: [0, 1, 2, 3, 4], treino: [1.0, 0.6, 0.4, 0.3, 0.25], teste: [1.1, 0.7, 0.55, 0.5, 0.48] },
   };
   assert.throws(
@@ -306,7 +306,7 @@ test('escala log com 0 (ou negativo) no domínio lança, em vez de desenhar NaN 
 });
 
 test('escala log com domínio inteiramente positivo continua funcionando normalmente', () => {
-  const especificacao = { tipo: 'dispersao', x: 'x', y: ['y'], eixos: {}, escala: { x: 'log' }, dados: { x: [1, 10, 100], y: [1, 10, 100] } };
+  const especificacao = { tipo: 'dispersao', x: 'x', y: ['y'], eixos: {}, escalas: { x: 'log' }, dados: { x: [1, 10, 100], y: [1, 10, 100] } };
   assert.doesNotThrow(() => desenhista.desenharSvg(especificacao, especificacao.dados));
 });
 
@@ -424,7 +424,10 @@ test('nome de série com caracteres especiais não quebra a marcação: o atribu
 });
 
 // A partir daqui, desenharGraficos: o efeito sobre o DOM (raiz), não mais o SVG isolado.
-test('desenharGraficos troca o script de figure.grafico por um SVG e preserva a figcaption', () => {
+// Tarefa 4: o título dizia "troca" — script.after() nunca trocou nada, só acrescentou um irmão, e a
+// própria asserção da linha 438 (abaixo) já provava isso. Corrigido junto com o comentário de
+// desenharGraficos (componentes/graficos.js) que fazia a mesma afirmação.
+test('desenharGraficos acrescenta um SVG ao lado do script de figure.grafico (não troca) e preserva a figcaption', () => {
   const especificacao = {
     tipo: 'linha', dados: 'data/erro.csv', x: 'epoca', y: ['treino', 'teste'], foco: 'teste',
     eixos: { x: 'época', y: 'erro' }, faixas: [{ x: [120, 245], rotulo: 'platô' }],
