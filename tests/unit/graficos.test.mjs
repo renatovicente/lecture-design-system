@@ -90,6 +90,17 @@ test('linha (exemplo literal da spec 7.2): duas séries na cor certa, faixa atr�
   assert.deepEqual(series.map((g) => g.getAttribute('data-serie')), ['treino', 'teste']);
   assert.deepEqual(series.map((g) => g.getAttribute('data-cor')), ['tinta', 'azul'], 'treino não é o foco (tinta); teste é o foco (azul)');
 
+  // Important 1 da revisão: o data-cor acima é um rótulo que o PRÓPRIO CÓDIGO escreveu — confere a
+  // intenção, não a tinta de verdade. Aqui a cor esperada vem de uma chamada independente a
+  // coresDasSeries (não lida do SVG), e o que se testa é o STROKE pintado no <path> contra
+  // tokens.cor — a pintura de fato, não o rótulo que anuncia a pintura.
+  const coresEsperadas = coresDasSeries(['treino', 'teste'], 'teste');
+  for (const { serie, cor } of coresEsperadas) {
+    const grupo = series.find((g) => g.getAttribute('data-serie') === serie);
+    assert.equal(grupo.querySelector('path').getAttribute('stroke'), tokens.cor[cor],
+      `o stroke pintado de ${serie} bate com tokens.cor.${cor}`);
+  }
+
   // "atrás" é ordem de nó no SVG: quem pinta depois cobre quem pintou antes. A faixa tem de vir
   // antes das séries entre os filhos diretos do <svg>.
   const nomesDosFilhos = [...svg.children].map((no) => no.getAttribute('class'));
@@ -189,9 +200,12 @@ test('barras: três séries na cor certa; as marcas do eixo x são as categorias
   assert.deepEqual(series.map((g) => g.getAttribute('data-cor')), ['tinta', 'azul', 'cinza']);
   assert.equal(series.every((g) => g.querySelectorAll('rect').length === 3), true, 'uma barra por categoria em cada série');
 
-  // a série cinza (tracejada) é a única sem fill sólido — dasharray não é visível num fill
-  const [tinta, , cinzaSerie] = series;
-  assert.ok([...tinta.querySelectorAll('rect')].every((r) => r.getAttribute('fill') === tokens.cor.tinta));
+  // a série cinza (tracejada) é a única sem fill sólido — dasharray não é visível num fill.
+  // Important 1 da revisão: as três séries têm o fill conferido contra tokens.cor — não só o
+  // data-cor acima, que é um rótulo que o próprio código escreveu e não prova a tinta de fato.
+  const [tintaSerie, azulSerie, cinzaSerie] = series;
+  assert.ok([...tintaSerie.querySelectorAll('rect')].every((r) => r.getAttribute('fill') === tokens.cor.tinta));
+  assert.ok([...azulSerie.querySelectorAll('rect')].every((r) => r.getAttribute('fill') === tokens.cor.azul), 'a série em foco pinta o fill azul de fato');
   assert.ok([...cinzaSerie.querySelectorAll('rect')].every((r) => r.getAttribute('fill') === 'none' && r.getAttribute('stroke-dasharray')));
 
   const marcasDoEixoX = [...svg.querySelectorAll('.marca')].filter((t) => t.getAttribute('text-anchor') === 'middle');
@@ -225,7 +239,7 @@ test('dispersao: série única sai em tinta, um círculo por ponto', () => {
   assert.ok(circulos.every((c) => c.getAttribute('fill') === tokens.cor.tinta));
 });
 
-test('dispersao: a série cinza tracejada vira marcador vazado (contorno, sem preenchimento)', () => {
+test('dispersao: a série cinza tracejada vira marcador vazado (contorno), e a azul pinta o círculo de fato — Important 1 da revisão', () => {
   // sem foco, com 3 séries: a última (c) é o foco (azul); a e b ficam tinta e cinza tracejada, nessa ordem
   const especificacao = { tipo: 'dispersao', x: 'x', y: ['a', 'b', 'c'], eixos: {} };
   const colunas = { x: [0, 1], a: [0, 1], b: [0, 1], c: [0, 1] };
@@ -235,6 +249,12 @@ test('dispersao: a série cinza tracejada vira marcador vazado (contorno, sem pr
   const circulos = [...serieCinza.querySelectorAll('circle')];
   assert.ok(circulos.length > 0);
   assert.ok(circulos.every((c) => c.getAttribute('fill') === 'none' && c.getAttribute('stroke') === tokens.cor.cinza));
+
+  // antes desta rodada, nenhum teste de dispersão conferia o fill da série azul contra tokens.cor —
+  // só o data-cor, que o próprio código escreve e não prova a tinta de fato.
+  const serieAzul = [...svg.querySelectorAll('.serie')].find((g) => g.getAttribute('data-cor') === 'azul');
+  assert.equal(serieAzul.getAttribute('data-serie'), 'c');
+  assert.ok([...serieAzul.querySelectorAll('circle')].every((c) => c.getAttribute('fill') === tokens.cor.azul), 'a série em foco pinta o fill azul de fato');
 });
 
 test('histograma: 4 classes de largura igual, contagem certa (4, 2, 0, 2 — conferido à mão), com rótulo na ponta (decisão do coordenador, reverte a exceção da Tarefa 2)', () => {
