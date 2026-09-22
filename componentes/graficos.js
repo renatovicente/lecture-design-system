@@ -286,11 +286,11 @@ function desenharBarra(escalaY, valor, zero, x, largura, atributosDePreenchiment
 
 // tipo "histograma": uma só distribuição (a coluna de `x`), em `classes` classes de largura igual
 // entre o mínimo e o máximo — sem `d3.bin`, que não está entre os quatro parâmetros do Passo 2; a
-// conta é a mesma soma por faixa que ele faz. Sempre 1 série (tinta, por coresDasSeries): sem outra
-// série para diferenciar, um rótulo na ponta seria ruído sobre o título do eixo — decisão registrada
-// no relatório da Tarefa 2, não um esquecimento.
+// conta é a mesma soma por faixa que ele faz. `x` é contínuo, como em "linha"/"dispersao" — por isso
+// `faixas` também se aplica aqui (só "barras", de eixo categórico, fica de fora — Important 3 da
+// revisão: a omissão de faixas tinha justificativa só para barras, e o código não distinguia os dois).
 function montarHistograma(biblioteca, especificacao, colunas) {
-  const { x: nomeX, classes, eixos = {}, escala = {} } = especificacao;
+  const { x: nomeX, classes, eixos = {}, escala = {}, faixas } = especificacao;
   const valores = colunas[nomeX];
   const [minimo, maximo] = biblioteca.extensao(valores);
   const larguraClasse = (maximo - minimo) / classes;
@@ -306,6 +306,7 @@ function montarHistograma(biblioteca, especificacao, colunas) {
   const [{ cor, tracejada }] = coresDasSeries([nomeX], undefined);
 
   const grade = desenharGrade(escalaY);
+  const faixasSvg = desenharFaixas(faixas, escalaX);
   const GAP = 1; // separa visualmente as classes; o histograma NÃO tem o vão de "barras" (é uma distribuição contígua)
   const barras = contagens.map((contagem, i) => {
     const x0 = escalaX(minimo + i * larguraClasse);
@@ -316,7 +317,7 @@ function montarHistograma(biblioteca, especificacao, colunas) {
   const marcasX = Array.from({ length: classes + 1 }, (_, i) => minimo + i * larguraClasse).map((valor) => [valor, formatarNumero(valor)]);
   const eixosSvg = desenharEixos({ tituloX: eixos.x, tituloY: eixos.y }) + desenharMarcasEixoX(marcasX, escalaX) + desenharMarcasEixoY(escalaY);
 
-  return grade + seriesSvg + eixosSvg;
+  return grade + faixasSvg + seriesSvg + eixosSvg;
 }
 
 const MONTADORES = { linha: montarLinha, barras: montarBarras, dispersao: montarDispersao, histograma: montarHistograma };

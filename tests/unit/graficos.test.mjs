@@ -250,6 +250,18 @@ test('histograma: 4 classes de largura igual, contagem certa (4, 2, 0, 2 — con
   assert.deepEqual(alturas, [300, 150, 0, 150], 'proporcional às contagens 4, 2, 0, 2 (a maior, 4, vira a altura útil inteira)');
 });
 
+test('histograma: faixas também são desenhadas (x é contínuo, como em linha/dispersão) — Important 3 da revisão', () => {
+  const especificacao = { tipo: 'histograma', x: 'erro', classes: 4, eixos: {}, faixas: [{ x: [0.3, 0.6], rotulo: 'zona' }] };
+  const colunas = { erro: [0.1, 0.2, 0.2, 0.5, 0.9, 0.95, 0.3, 0.4] };
+  const svg = svgDe(desenhista.desenharSvg(especificacao, colunas));
+  const nomesDosFilhos = [...svg.children].map((no) => no.getAttribute('class'));
+  const indiceFaixa = nomesDosFilhos.indexOf('faixa');
+  const indiceSerie = nomesDosFilhos.indexOf('serie');
+  assert.ok(indiceFaixa >= 0, 'a faixa existe (antes só "barras" ficava sem, por ser categórico — histograma é contínuo)');
+  assert.ok(indiceFaixa < indiceSerie, 'a faixa fica atrás da série, como nos outros tipos contínuos');
+  assert.equal(svg.querySelector('.faixa rect').getAttribute('fill'), tokens.cor.amarelo);
+});
+
 test('tipo desconhecido lança, em vez de desenhar algo errado calado', () => {
   assert.throws(() => desenhista.desenharSvg({ tipo: 'pizza', x: 'a', y: ['b'] }, { a: [1], b: [1] }), /tipo de gráfico desconhecido/);
 });
