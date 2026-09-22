@@ -153,6 +153,22 @@ test('formatarNumero (via marcas de eixo): um domínio pequeno (0.0001 a 0.0016)
   assert.deepEqual(textos, ['0.0002', '0.0004', '0.0006', '0.0008', '0.001', '0.0012', '0.0014', '0.0016']);
 });
 
+test('escala log com 0 (ou negativo) no domínio lança, em vez de desenhar NaN calado — Important 2 da revisão, medido com o exemplo literal da spec 7.2 (epoca começa em 0)', () => {
+  const especificacao = {
+    tipo: 'linha', x: 'epoca', y: ['treino', 'teste'], foco: 'teste', eixos: { x: 'época', y: 'erro' }, escala: { x: 'log' },
+    dados: { epoca: [0, 1, 2, 3, 4], treino: [1.0, 0.6, 0.4, 0.3, 0.25], teste: [1.1, 0.7, 0.55, 0.5, 0.48] },
+  };
+  assert.throws(
+    () => desenhista.desenharSvg(especificacao, especificacao.dados),
+    /escala log exige valores maiores que zero no domínio; recebido \[0, 4\]/,
+  );
+});
+
+test('escala log com domínio inteiramente positivo continua funcionando normalmente', () => {
+  const especificacao = { tipo: 'dispersao', x: 'x', y: ['y'], eixos: {}, escala: { x: 'log' }, dados: { x: [1, 10, 100], y: [1, 10, 100] } };
+  assert.doesNotThrow(() => desenhista.desenharSvg(especificacao, especificacao.dados));
+});
+
 test('barras: três séries na cor certa; as marcas do eixo x são as categorias, não números', () => {
   const especificacao = { tipo: 'barras', x: 'grupo', y: ['a', 'b', 'c'], foco: 'b', eixos: { x: 'grupo', y: 'valor' } };
   const colunas = { grupo: ['x', 'y', 'z'], a: [3, 5, 2], b: [4, 2, 6], c: [1, 3, 4] };

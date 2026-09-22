@@ -79,7 +79,13 @@ function preenchimentoDaSerie(cor, tracejada) {
     : { fill: HEX_DA_COR[cor] };
 }
 
+// Log de zero (ou de negativo) é -Infinity: a escala "funciona" sem lançar sozinha, e cada posição
+// sai NaN, calada — o path de uma série vira "MNaN,16L…" e nada desenha (Important 2 da revisão).
+// vocabulario.atributo não confere valor de atributo de SVG, então nada mais acusaria isto depois.
 function criarEscala({ escalaLinear, escalaLog }, tipoDeEscala, dominio, alcance) {
+  if (tipoDeEscala === 'log' && dominio.some((valor) => valor <= 0)) {
+    throw new Error(`escala log exige valores maiores que zero no domínio; recebido [${dominio.join(', ')}]`);
+  }
   const fabrica = tipoDeEscala === 'log' ? escalaLog : escalaLinear;
   return fabrica().domain(dominio).range(alcance);
 }
