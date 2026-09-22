@@ -32,10 +32,13 @@ export function coresDasSeries(y, foco) {
     : { serie, ...sobra.shift() }));
 }
 
-// Arredonda para casas decimais fixas: o "d" de um path e as coordenadas de forma/texto saem sempre
-// com a mesma precisão, nos dois modos (navegador e build) — é o que a Tarefa 6 precisa para o
-// gráfico sair byte a byte igual na comparação visual (ruído de ponto flutuante é a suspeita nº1
-// citada no plano para uma diferença entre os dois modos).
+// Arredonda COORDENADAS (pixel) para casas decimais fixas: o "d" de um path e as posições de forma
+// saem sempre com a mesma precisão, nos dois modos (navegador e build) — é o que a Tarefa 6 precisa
+// para o gráfico sair byte a byte igual na comparação visual (ruído de ponto flutuante é a suspeita
+// nº1 citada no plano para uma diferença entre os dois modos). NÃO serve ao texto de uma marca de
+// eixo — ver formatarNumero: o dado plotado pode ter qualquer escala (uma curva de erro em
+// [0.0001, 0.0016], por exemplo), e 2 casas fixas apagam toda a resolução dele (Critical 1 da
+// revisão da Tarefa 2: oito marcas de eixo saíam "0").
 function arredondar(valor, casas = 2) {
   const fator = 10 ** casas;
   return Math.round(valor * fator) / fator;
@@ -45,9 +48,12 @@ function escaparXml(texto) {
   return String(texto).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 }
 
-// Só o suficiente para uma marca de eixo: inteiro sem casas, fracionário com até 2, sem zero à direita.
+// Texto de uma marca de eixo: dígitos SIGNIFICATIVOS, não casas decimais fixas — é o dado que precisa
+// ficar legível, não o pixel (arredondar, acima, é para pixel). Number(...) depois do toPrecision tira
+// os zeros à direita que toPrecision sempre deixa (p.ex. "0.4000").
 function formatarNumero(valor) {
-  return String(arredondar(valor, 2));
+  if (valor === 0) return '0';
+  return String(Number(valor.toPrecision(4)));
 }
 
 // Serializa um elemento SVG como string (nunca autofechado: quem insere no DOM lê isto pelo parser de
