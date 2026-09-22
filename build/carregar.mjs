@@ -148,6 +148,33 @@ export function texInvalido(doc, katex) {
   return erros;
 }
 
+// Análogo a imagensDoDisco, para o caminho de CSV de figure.grafico (spec 7.2: "dados": "data/….csv").
+// Lê o JSON do script por conta própria — a mesma duplicação que recursos.imagem/imagensDoDisco já
+// tem com `src` (cada lado varre o DOM e concorda pela mesma chave) — porque quem monta o mapa não
+// tem acesso à especificação já interpretada de ninguém. JSON inválido ou `dados` que não é string
+// (inline, ou ausente): nada para checar no disco, e nada aqui acusa — recursos.grafico (estática)
+// é quem confere a FORMA do campo; este mapa só sabe se o arquivo aponta para algo que existe.
+export function csvsDoDisco(doc, pastaDaAula) {
+  const csvs = new Map();
+  for (const script of doc.querySelectorAll('figure.grafico > script[type="application/json"]')) {
+    let especificacao;
+    try {
+      especificacao = JSON.parse(script.textContent);
+    } catch {
+      continue;
+    }
+    if (typeof especificacao.dados !== 'string') continue;
+    const caminho = join(pastaDaAula, especificacao.dados.split('?')[0]);
+    csvs.set(especificacao.dados, existsSync(caminho) && statSync(caminho).isFile());
+  }
+  return csvs;
+}
+
 export function carregarNoNode(doc, { pastaDaAula, katex }) {
-  return { tex: texInvalido(doc, katex), imagens: imagensDoDisco(doc, pastaDaAula), demos: demosDosScripts(doc) };
+  return {
+    tex: texInvalido(doc, katex),
+    imagens: imagensDoDisco(doc, pastaDaAula),
+    demos: demosDosScripts(doc),
+    csvs: csvsDoDisco(doc, pastaDaAula),
+  };
 }

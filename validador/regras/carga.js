@@ -1,7 +1,12 @@
 // Regras de carga (spec 9.2 e 9.3): o que só se sabe depois de carregar bibliotecas, imagens e scripts.
 // As regras não carregam nada — quem carrega é o chamador, e entrega o resultado no contexto:
-//   recursos = { tex: [{ trecho, mensagem }], imagens: Map(src → carregou), demos: Map(nome → { capturar }) }
-// No navegador isso vem do DOM vivo; no build, do KaTeX rodando no Node e do disco.
+//   recursos = { tex: [{ trecho, mensagem }], imagens: Map(src → carregou), demos: Map(nome → { capturar }),
+//                csvs: Map(caminho → carregou) }
+// No navegador isso vem do DOM vivo; no build, do KaTeX rodando no Node e do disco. csvs: hoje só o
+// build preenche (build/carregar.mjs:csvsDoDisco) — montar/entrada.js, o lado navegador, documenta
+// que resolver caminho de CSV não é desta tarefa (a Tarefa 3 da fase 2a já deixou isso escrito, para
+// a renderização); esta regra fica muda no navegador enquanto isso não mudar, do mesmo jeito que
+// recursos.demo-sem-registro fica muda sem `recursos.demos`.
 import { onde, trechoDe, encurtar } from '../validar.js';
 
 export const regras = [
@@ -62,6 +67,33 @@ export const regras = [
           if (!registro) continue; // sem registro já é recursos.demo-sem-registro
           if (demo.querySelector('img.estatico') || registro.capturar) continue;
           yield { ...onde(slides, secao), mensagem: `demo "${nome}" sem img.estatico e sem capturar(): o PDF sai vazio.`, trecho: trechoDe(demo) };
+        }
+      }
+    },
+  },
+  {
+    // Fronteira com recursos.grafico (validador/regras/recursos.js, estática): esta regra só confere
+    // o CAMINHO — existe no disco (build) ou carregou (navegador) —, nunca a FORMA do JSON. Por isso
+    // reanalisa o JSON com try/catch mudo: se ele não é válido, ou se `dados` não é uma string (é
+    // inline, ou está ausente), não há caminho nenhum para checar, e é recursos.grafico quem já
+    // acusa isso — não duas mensagens para a mesma causa.
+    nome: 'recursos.csv',
+    *aplicar({ slides, recursos }) {
+      if (!recursos?.csvs) return;
+      for (const secao of slides) {
+        for (const figura of secao.querySelectorAll('figure.grafico')) {
+          const script = figura.querySelector('script[type="application/json"]');
+          if (!script) continue;
+          let especificacao;
+          try {
+            especificacao = JSON.parse(script.textContent);
+          } catch {
+            continue;
+          }
+          if (typeof especificacao.dados !== 'string') continue;
+          if (recursos.csvs.get(especificacao.dados) === false) {
+            yield { ...onde(slides, secao), mensagem: `CSV que não carregou: "${especificacao.dados}".`, trecho: trechoDe(figura) };
+          }
         }
       }
     },

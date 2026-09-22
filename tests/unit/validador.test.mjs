@@ -377,7 +377,10 @@ test('o type do script casa com a classe do pai: json em grafico, graphviz em di
   }
 
   // Os dois pareamentos certos continuam limpos na fase 2: não é um afrouxamento geral do script.
-  const grafico = slide('  <h2>Título</h2>\n  <figure class="grafico"><script type="application/json">{}</script></figure>\n');
+  // `{}` bastava antes de recursos.grafico (Tarefa 4) existir; hoje é um JSON de gráfico incompleto
+  // por design (sem "tipo"), e recursos.grafico acusaria isso — não é o que este teste mede, então a
+  // especificação aqui é mínima, mas válida.
+  const grafico = slide('  <h2>Título</h2>\n  <figure class="grafico"><script type="application/json">{"tipo":"linha","x":"a","y":["b"]}</script></figure>\n');
   assert.deepEqual(rodar(grafico, todas, { fase: 2 }).filter((a) => a.severidade === 'erro'), []);
   const diagrama = slide('  <h2>Título</h2>\n  <figure class="diagrama"><script type="text/vnd.graphviz">digraph{}</script></figure>\n');
   assert.deepEqual(rodar(diagrama, todas, { fase: 2 }).filter((a) => a.severidade === 'erro'), []);
@@ -416,7 +419,11 @@ function rodarComCarga(nome, arquivo) {
   document.body.normalize();
   const pastaDaAula = fileURLToPath(new URL(`${nome}/`, FIXTURES));
   const recursos = carregarNoNode(document, { pastaDaAula, katex });
-  return validar(document, { contrato, regras: carga, grupo: 'carga', recursos })
+  // A mesma fase que contrato.regras[nome] declara — nunca 1 fixo: uma regra de carga de fase 2
+  // (recursos.csv) rodando sob fase 1 (o default de validar()) seria descartada antes de aplicar()
+  // rodar, e ruim.html nunca acusaria nada, por um motivo que não tem a ver com a regra em si.
+  const fase = contrato.regras[nome].fase;
+  return validar(document, { contrato, regras: carga, grupo: 'carga', recursos, fase })
     .filter((achado) => achado.regra === nome);
 }
 
@@ -447,10 +454,15 @@ for (const nome of readdirSync(FIXTURES).sort()) {
     }
     const regra = IMPLEMENTADAS.get(nome);
     assert.ok(regra, `a pasta ${nome} não tem regra implementada`);
-    const bom = rodar(readFileSync(new URL(`${nome}/bom.html`, FIXTURES), 'utf8'), todas)
+    // A mesma fase que contrato.regras[nome] declara (ver rodarComCarga, acima, sobre por que 1 fixo
+    // é o defeito): uma regra estática de fase 2 (recursos.grafico) sob a fase 1 default não só
+    // ficaria muda ela mesma — a vocabulário/estrutura que abrem figure.grafico também ficaria fase
+    // 1, e ruim.html acusaria vocabulario.classe/estrutura.fora-do-layout em vez da regra da pasta.
+    const fase = contrato.regras[nome].fase;
+    const bom = rodar(readFileSync(new URL(`${nome}/bom.html`, FIXTURES), 'utf8'), todas, { fase })
       .filter((achado) => achado.regra === nome);
     assert.deepEqual(bom, [], `bom.html de ${nome} acusou da própria regra: ${bom.map((a) => a.mensagem).join(' / ')}`);
-    const ruim = rodar(readFileSync(new URL(`${nome}/ruim.html`, FIXTURES), 'utf8'), todas)
+    const ruim = rodar(readFileSync(new URL(`${nome}/ruim.html`, FIXTURES), 'utf8'), todas, { fase })
       .filter((achado) => achado.regra === nome);
     assert.ok(ruim.length > 0, `ruim.html de ${nome} não acusou nada da própria regra`);
   });
@@ -472,10 +484,10 @@ test('toda regra estática implementada tem fixture', () => {
 // implementação, este arquivo passava inteiro.
 //
 // Um registro por grupo. Os nomes dos grupos NÃO estão escritos neste teste: vêm do próprio
-// contrato (todo `grupo` distinto entre as regras de fase 1), e a primeira asserção é que cada um
-// deles tem registro nesta tabela. É isso que faz "apareceu um quinto grupo no contrato e ninguém
-// escreveu o código dele" cair aqui — sem que o teste precise apostar num número de grupos ou de
-// regras, que seria o contrato repetido em código.
+// contrato (todo `grupo` distinto entre as regras conhecidas — ver FASE_MAXIMA, abaixo), e a
+// primeira asserção é que cada um deles tem registro nesta tabela. É isso que faz "apareceu um
+// quinto grupo no contrato e ninguém escreveu o código dele" cair aqui — sem que o teste precise
+// apostar num número de grupos ou de regras, que seria o contrato repetido em código.
 const REGISTROS_POR_GRUPO = new Map([
   ['estatica', IMPLEMENTADAS],
   ['carga', DE_CARGA],
@@ -484,24 +496,40 @@ const REGISTROS_POR_GRUPO = new Map([
 ]);
 
 // Exceção nomeada, no molde do que valeu para matematica.simbolo-fora-do-tex enquanto essa regra
-// esperou pelo marco 5: uma regra de fase 1 que está no contrato e ainda não tem código só passa
-// por aqui se alguém a escrever nesta lista. Vazia hoje — não sobra nada adiado na fase 1.
-const ADIADAS_DE_PROPOSITO = [];
+// esperou pelo marco 5: uma regra que está no contrato e ainda não tem código só passa por aqui se
+// alguém a escrever nesta lista. As duas de hoje são as regras de carga do DIAGRAMA (fase 2, spec
+// 7.2) — `recursos.dot` e `recursos.diagrama-grande` — que a Tarefa 4 da fase 2a NÃO implementa (o
+// brief dela é só `recursos.grafico`/`recursos.csv`); ficam para a tarefa do diagrama. Continua
+// vazia para fase 1: não sobra nada adiado ali.
+const ADIADAS_DE_PROPOSITO = ['recursos.dot', 'recursos.diagrama-grande'];
 
-const gruposDeFase1 = [...new Set(Object.values(contrato.regras)
-  .filter((regra) => regra.fase === 1)
+// A maior fase que o próprio contrato declara — nunca um "2" digitado: se uma fase 3 aparecer um
+// dia, esta conta já a inclui sozinha, e "ensine a guarda a fase" (Tarefa 4, Passo 3) continua
+// valendo sem editar este arquivo. validar() decide por regra com definicao.fase > fase (spot-check
+// em validador/validar.js); FASE_MAXIMA é o teto que faz esta suíte rodar TODA regra que existe.
+const FASE_MAXIMA = Math.max(...Object.values(contrato.regras).map((regra) => regra.fase));
+
+const gruposConhecidos = [...new Set(Object.values(contrato.regras)
+  .filter((regra) => regra.fase <= FASE_MAXIMA)
   .map((regra) => regra.grupo))].sort();
 
-test('todo grupo de regras de fase 1 do contrato tem registro em validador/regras/index.js', () => {
-  assert.deepEqual(gruposDeFase1.filter((grupo) => !REGISTROS_POR_GRUPO.has(grupo)), []);
+test('todo grupo de regras do contrato (até a fase mais alta que ele declara) tem registro em validador/regras/index.js', () => {
+  assert.deepEqual(gruposConhecidos.filter((grupo) => !REGISTROS_POR_GRUPO.has(grupo)), []);
 });
 
-test('contrato e código concordam nos dois sentidos, em todos os grupos de fase 1', () => {
-  for (const grupo of gruposDeFase1) {
+// "guarda de mão dupla" (Tarefa 4, Passo 3): antes desta tarefa, as duas linhas abaixo filtravam
+// `regra.fase === 1`, e o lado que assere "implementadas mas fora do contrato" (a segunda,
+// logo adiante) não olha fase nenhuma — cita `contrato.regras[nome]` sozinho. Isso deixava fase 2
+// invisível dos dois lados: nem recursos.grafico/recursos.csv (implementadas aqui) entravam na
+// primeira comparação, nem um recursos.dot/recursos.diagrama-grande órfão (no contrato, sem código)
+// seria acusado. Ensinar `doContrato` a FASE_MAXIMA (em vez de relaxar a segunda linha) faz os dois
+// lados voltarem a se conferir — e é por isso que ADIADAS_DE_PROPOSITO, acima, deixou de estar vazia.
+test('contrato e código concordam nos dois sentidos, em todos os grupos até a fase mais alta', () => {
+  for (const grupo of gruposConhecidos) {
     const registro = REGISTROS_POR_GRUPO.get(grupo);
     assert.ok(registro, `o grupo ${grupo} não tem registro — veja o teste acima`);
     const doContrato = Object.entries(contrato.regras)
-      .filter(([, regra]) => regra.grupo === grupo && regra.fase === 1)
+      .filter(([, regra]) => regra.grupo === grupo && regra.fase <= FASE_MAXIMA)
       .map(([nome]) => nome);
     assert.deepEqual(
       doContrato.filter((nome) => !registro.has(nome) && !ADIADAS_DE_PROPOSITO.includes(nome)),

@@ -16,9 +16,11 @@ const CABECA = `<!DOCTYPE html><html lang="pt-BR"><head>
 
 const slide = (dentro) => `${CABECA}\n<section data-layout="conteudo" id="a">\n${dentro}\n</section>\n</body></html>`;
 
+// fase: 2 sempre — recursos.grafico (abaixo) é fase 2, e uma regra de fase 1 continua rodando sob
+// fase 2 (validar() só pula regra.fase > fase); não há motivo para as duas fases neste arquivo.
 function mensagens(html) {
   const { document } = parseHTML(html);
-  return validar(document, { contrato, regras: recursos, grupo: 'estatica' }).map((achado) => achado.mensagem);
+  return validar(document, { contrato, regras: recursos, grupo: 'estatica', fase: 2 }).map((achado) => achado.mensagem);
 }
 
 test('TeX limpo não acusa nada', () => {

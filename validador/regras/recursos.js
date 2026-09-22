@@ -2,6 +2,7 @@
 // carregar KaTeX, imagem nem script. O que precisa de carga fica para o marco 4c.
 import { onde, trechoDe, encurtar } from '../validar.js';
 import { segmentosDeTex, textosComTex, textosDe } from '../../componentes/tex.js';
+import { TIPOS_DE_GRAFICO } from '../../componentes/graficos.js';
 
 // $…$ com barra, expoente ou índice quase sempre é matemática escrita com o delimitador errado.
 // Global para matchAll: cada ocorrência do segmento é reportada, não só a primeira.
@@ -141,6 +142,91 @@ export const regras = [
           const linguagem = pre.getAttribute('data-lang');
           if (!contrato.linguagens.includes(linguagem)) {
             yield { ...onde(slides, secao), mensagem: `linguagem fora da lista em data-lang: "${linguagem}".`, trecho: trechoDe(pre) };
+          }
+        }
+      }
+    },
+  },
+  {
+    // Gráficos (spec 7.2): confere a especificação JSON de figure.grafico ANTES de desenharGraficos
+    // (componentes/graficos.js) tentar desenhar — spec 9.1 pede problema e ação legíveis ao autor, e
+    // o catch de desenharGraficos devolve erro.message de uma função interna, não de um validador.
+    //
+    // Estática: roda sobre o FONTE, nunca o documento renderizado (spec 9.3: "recursos.grafico | o
+    // fonte, sem cromo e sem HTML renderizado"). Isso importa porque desenharGraficos ACRESCENTA o
+    // svg ao lado do script (script.after), não o substitui — mas como toda regra estática já lê o
+    // fonte clonado antes de qualquer render (montar/entrada.js:101), esta regra nunca vê essa forma
+    // renderizada; o contrato (filhos['figure.grafico']) continua descrevendo só a forma de fonte.
+    //
+    // Fronteira com componentes/graficos.js (comentário de coresDasSeries, Tarefa 2): esta regra
+    // garante, ANTES de desenhar, (1) tipo entre os quatro de TIPOS_DE_GRAFICO, (2) no máximo
+    // contrato.limites['grafico.series'] séries — o mesmo número que coresDasSeries também defende
+    // sozinha, como rede de segurança para quem a chama fora do validador —, (3) foco ∈ y, (4)
+    // escalas.x/escalas.y ∈ {linear, log}, e (5) os campos que cada tipo precisa para desenhar (x
+    // sempre; y não vazio fora de histograma; classes em histograma). NÃO confere domínio ≤ 0 em
+    // escala log (o throw de criarEscala): isso depende dos VALORES carregados, que uma regra
+    // estática — por definição, sem carregar nada — não tem quando `dados` é um caminho de CSV.
+    nome: 'recursos.grafico',
+    *aplicar({ slides, contrato }) {
+      for (const secao of slides) {
+        for (const figura of secao.querySelectorAll('figure.grafico')) {
+          const script = figura.querySelector('script[type="application/json"]');
+          if (!script) continue; // sem script: estrutura.obrigatorio já acusa isto
+          const trecho = encurtar(script.textContent.trim());
+          let especificacao;
+          try {
+            especificacao = JSON.parse(script.textContent);
+          } catch (erro) {
+            yield { ...onde(slides, secao), mensagem: `JSON do gráfico inválido: ${erro.message}.`, trecho };
+            continue; // nada mais dá para conferir sem JSON válido
+          }
+          if (especificacao.tipo === undefined) {
+            yield { ...onde(slides, secao), mensagem: 'gráfico sem o campo "tipo".', trecho };
+            continue;
+          }
+          if (!TIPOS_DE_GRAFICO.has(especificacao.tipo)) {
+            yield {
+              ...onde(slides, secao),
+              mensagem: `tipo de gráfico desconhecido: "${especificacao.tipo}" (use linha, barras, dispersao ou histograma).`,
+              trecho,
+            };
+            continue; // sem tipo válido, não dá para saber quais campos são obrigatórios
+          }
+          if (typeof especificacao.x !== 'string' || especificacao.x.trim() === '') {
+            yield { ...onde(slides, secao), mensagem: 'gráfico sem o campo "x".', trecho };
+          }
+          if (especificacao.tipo === 'histograma') {
+            if (!Number.isInteger(especificacao.classes) || especificacao.classes <= 0) {
+              yield {
+                ...onde(slides, secao),
+                mensagem: `gráfico "histograma" com "classes" ausente ou inválido: ${JSON.stringify(especificacao.classes)}.`,
+                trecho,
+              };
+            }
+          } else if (!Array.isArray(especificacao.y) || especificacao.y.length === 0) {
+            yield { ...onde(slides, secao), mensagem: 'gráfico sem nenhuma série em "y".', trecho };
+          } else {
+            const maximo = contrato.limites['grafico.series'];
+            if (especificacao.y.length > maximo) {
+              yield {
+                ...onde(slides, secao),
+                mensagem: `gráfico com ${especificacao.y.length} séries em "y" (máx. ${maximo}).`,
+                trecho,
+              };
+            }
+            if (especificacao.foco !== undefined && !especificacao.y.includes(especificacao.foco)) {
+              yield {
+                ...onde(slides, secao),
+                mensagem: `"foco" (${JSON.stringify(especificacao.foco)}) não está em "y".`,
+                trecho,
+              };
+            }
+          }
+          for (const eixo of ['x', 'y']) {
+            const valor = especificacao.escalas?.[eixo];
+            if (valor !== undefined && valor !== 'linear' && valor !== 'log') {
+              yield { ...onde(slides, secao), mensagem: `escalas.${eixo} fora de "linear"/"log": ${JSON.stringify(valor)}.`, trecho };
+            }
           }
         }
       }
