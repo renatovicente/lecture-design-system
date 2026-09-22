@@ -67,6 +67,25 @@ function achadosDeCodigo(contrato, errosDeCodigo) {
   }));
 }
 
+// Mesmo padrão de achadosDeCodigo, para o que desenharGraficos (componentes/graficos.js) só sabe no
+// RENDER — recursos.grafico (estática) não confere domínio ≤ 0 em escala log de propósito, porque
+// depende de valores carregados; sem isto, esse erro (e qualquer outro que só apareça ao desenhar de
+// verdade) ficava fora de achados/validacao.json, e a figura saía do build sem SVG e sem ninguém
+// dizer por quê. slide/id ficam null pela mesma razão de achadosDeCodigo: desenharGraficos varre o
+// documento inteiro, não os `slides` que onde() sabe indexar.
+function achadosDeGrafico(contrato, errosDeGrafico) {
+  const definicao = contrato.regras['recursos.grafico'];
+  return errosDeGrafico.map((erro) => ({
+    severidade: definicao.severidade,
+    slide: null,
+    id: null,
+    regra: 'recursos.grafico',
+    mensagem: `${erro.mensagem}.`,
+    acao: definicao.acao,
+    trecho: erro.trecho ?? null,
+  }));
+}
+
 // Atualizado na tarefa 6 da fase 2a: a fase agora existe nos dois lados, mas não os dois AQUI. A
 // etapa 1 (build/validar.mjs, lerERodarEstatica/validarCarga) já detecta fase 2 pela mesma regra de
 // presença que montar/entrada.js usa — é o que faz `aula-usp build` parar de recusar um deck com
@@ -80,7 +99,7 @@ export async function construir({ raiz, caminhoDaAula, destino }) {
   // O mesmo contrato que construirHtml já leu por conta própria (ele não o devolve): a leitura dobrada
   // é dois usos do mesmo arquivo-fonte, não duas implementações de um cálculo — sem risco de divergir.
   const contrato = JSON.parse(await readFile(new URL('contrato/contrato.json', raiz), 'utf8'));
-  const { html, doc, fontes, errosDeTex, errosDeCodigo } = await construirHtml({ raiz, caminhoDaAula, embutirFontes });
+  const { html, doc, fontes, errosDeTex, errosDeCodigo, errosDeGrafico } = await construirHtml({ raiz, caminhoDaAula, embutirFontes });
 
   // As regras de saída (spec 9.2) rodam sobre o próprio HTML final: `bytes` é o tamanho do arquivo que
   // de fato será gravado. Cobertura é dependente de contexto (revisão final do 5b, I1): as famílias do
@@ -89,6 +108,7 @@ export async function construir({ raiz, caminhoDaAula, destino }) {
   const achados = [
     ...achadosDeTex(contrato, doc, errosDeTex),
     ...achadosDeCodigo(contrato, errosDeCodigo),
+    ...achadosDeGrafico(contrato, errosDeGrafico),
     ...validar(doc, {
       contrato,
       regras: REGRAS_DE_SAIDA,
