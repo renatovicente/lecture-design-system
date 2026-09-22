@@ -175,7 +175,8 @@ const DECKS_DA_PROVA = ['especime/matematica.html', 'especime/codigo.html', 'tes
 // jeito no despacho anterior: uma guarda cujo "todo" sai da mesma fonte que produz o que ela guarda
 // perde o satélite e a asserção ao mesmo tempo, e fica verde. Aqui os pedidos (o que o Chrome
 // buscou) e o import map (o que o Chrome tem no documento) são duas observações do navegador
-// rodando, e a igualdade entre elas é o que fecha o "e os outros oito?".
+// rodando, e a igualdade entre elas é o que fecha o "e os outros nove?" (eram oito até a Tarefa 3
+// da fase 2a acrescentar aula-usp-graficos.js — ver DECKS_DA_PROVA acima).
 //
 // Uma execução só, compartilhada pelos dois testes: node:test roda os testes de um arquivo em
 // sequência, então o primeiro a chamar paga os ~500 ms e o segundo reaproveita.
@@ -246,22 +247,25 @@ test('todo satélite que o navegador pede tem integrity no import map, e o mapa 
 // mais num satélite, o navegador recusa e a aula não monta. É a primeira vez que este repositório
 // afirma isso sobre os secundários; sobre o principal, a tag já era medida assim desde o marco 6c.
 //
-// COBERTURA: os nove, um por vez — e não três, nem um. Medido: as nove recusas custam 1,96 s; este
-// arquivo foi de 2,45 s para 5,14 s, e a suíte de integração inteira de 33,8 s para 35,4 s (mediana
-// de três amostras cada) — menos que o arquivo cresceu, porque node:test roda os arquivos em
-// paralelo e quem manda no relógio é visual.test.mjs. Por esse preço a pergunta "e os outros oito?"
-// deixa de existir. Cobrir só o representante de cada ramo de `arquivoDoSatelite` (tex, código, uma
-// gramática) deixaria de fora justamente o defeito que tem forma de "um satélite ficou sem entrada
-// no mapa" — que é por satélite, não por ramo.
+// COBERTURA: todos, um por vez — e não três, nem um. Medido no marco anterior (SRI dos satélites,
+// com nove): as nove recusas custavam 1,96 s; este arquivo foi de 2,45 s para 5,14 s, e a suíte de
+// integração inteira de 33,8 s para 35,4 s (mediana de três amostras cada) — menos que o arquivo
+// cresceu, porque node:test roda os arquivos em paralelo e quem manda no relógio é visual.test.mjs.
+// A Tarefa 3 da fase 2a acrescenta o décimo (aula-usp-graficos.js) ao mesmo mecanismo, sem remedir a
+// escala — a suíte inteira segue dominada por visual.test.mjs, e um satélite a mais não muda isso.
+// Por esse preço a pergunta "e os outros nove?" deixa de existir. Cobrir só o representante de cada
+// ramo de `arquivoDoSatelite` (tex, código, uma gramática, gráficos) deixaria de fora justamente o
+// defeito que tem forma de "um satélite ficou sem entrada no mapa" — que é por satélite, não por ramo.
 //
 // A asserção é sobre a RECUSA, não sobre a frase do Chrome: o que não pode mudar é que a aula não
 // monta. A frase entra como /integrity/, que é o que sobrevive a uma versão nova do navegador.
 test('dois bytes a mais em um satélite e a aula não monta: o integrity do import map é conferido mesmo', async (t) => {
   const decks = await levantarSatelites();
   // Um alvo por satélite, mesmo que dois decks peçam o mesmo. Hoje não há sobreposição —
-  // matematica.html pede 1, codigo.html pede 8, 1 + 8 = 9 — e por isso o `new Map` é inerte:
-  // continuam nove alvos, os mesmos nove subtestes. Ele existe pelo dia em que DECKS_DA_PROVA ganhar
-  // um deck que use matemática E código (o plano original pedia um desses; a fase 2 pode trazê-lo):
+  // matematica.html pede 1, codigo.html pede 8, tests/fixtures/graficos/deck.html pede 1,
+  // 1 + 8 + 1 = 10 — e por isso o `new Map` é inerte: continuam dez alvos, os mesmos dez subtestes.
+  // Ele existe pelo dia em que DECKS_DA_PROVA ganhar um deck que use matemática E código (o plano
+  // original pedia um desses; a fase 2 pode trazê-lo) — ou matemática/código E gráficos juntos:
   // aí `alvos` teria nomes repetidos e o deepEqual abaixo cairia sem que nada estivesse errado.
   // Corromper o mesmo satélite duas vezes não prova nada a mais — o primeiro deck que o pede basta.
   const alvos = [...new Map(decks.flatMap(({ deck, satelites }) => satelites.map((nome) => [nome, deck])))];

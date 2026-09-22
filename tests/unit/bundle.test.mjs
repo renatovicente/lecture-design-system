@@ -170,10 +170,12 @@ async function satelitesQueDistSabePedir() {
 // vem do resolver de montar/dist.js, que é quem de fato decide o que o import() vai buscar.
 //
 // E o alcance disso é DESIGUAL, medido, porque o título de uma guarda não pode prometer mais do que
-// ela cobre (I1 da revisão final): das nove entradas da segunda lista, só duas são de origem
-// independente da primeira — `aula-usp-tex.js` e `aula-usp-codigo.js`, literais lidos do fonte de
-// montar/dist.js. As outras sete são as gramáticas, e aí as duas pontas bebem do MESMO
-// contrato/contrato.json: aqui por `contrato.linguagens`, e no empacotador pelo
+// ela cobre (I1 da revisão final): das dez entradas da segunda lista, só três são de origem
+// independente da primeira — `aula-usp-tex.js`, `aula-usp-codigo.js` e, desde a Tarefa 3 da fase 2a,
+// `aula-usp-graficos.js` — literais lidos do fonte de montar/dist.js (D3_DO_GRAFICO ali é uma lista
+// de ESPECIFICADORES que entrada.js pede, não de nomes de satélite; o nome em si só aparece, uma vez,
+// como literal na última posição do ternário). As outras sete são as gramáticas, e aí as duas pontas
+// bebem do MESMO contrato/contrato.json: aqui por `contrato.linguagens`, e no empacotador pelo
 // `for (const linguagem of linguagens)` de build/bundle.mjs:122, que lê o mesmo arquivo.
 //
 // Medido: tirando `r` de contrato.linguagens, esta guarda e a de baixo ficam VERDES. Quem vê a
@@ -183,10 +185,13 @@ async function satelitesQueDistSabePedir() {
 // empacotador gera. A janela das gramáticas está fechada — só não é esta guarda que a fecha, e é aí
 // que procurar a cobertura.
 //
-// Para os dois satélites da fase 2 (spec 3.5) a diferença decide: entrando como literais no resolver,
-// ganham o caminho independente e esta guarda cumpre o título; entrando por uma lista do contrato,
-// como as sete gramáticas entraram, herdam a âncora de contrato.test.mjs — e é lá que a omissão de um
-// deles tem de doer.
+// Para os dois satélites da fase 2 (spec 3.5) a diferença decidia: entrando como literais no
+// resolver, ganham o caminho independente e esta guarda cumpre o título; entrando por uma lista do
+// contrato, como as sete gramáticas entraram, herdam a âncora de contrato.test.mjs — e é lá que a
+// omissão de um deles tem de doer. `aula-usp-graficos.js` (Tarefa 3) confirma a previsão: literal em
+// D3_DO_GRAFICO ? 'aula-usp-graficos.js' de montar/dist.js, caminho independente, sem precisar de
+// nenhuma âncora emprestada. `aula-usp-diagramas.js` (fase 2b, ainda não implementado) decide sozinho
+// quando chegar.
 test('todo satélite tem o seu integrity embutido em aula-usp.js, e nada além deles', async () => {
   const saidas = await empacotar({ raiz: RAIZ, escrever: false });
   const doEmpacotador = new Set([...saidas].filter(([, saida]) => saida.satelite).map(([nome]) => nome));

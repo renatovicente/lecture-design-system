@@ -130,7 +130,8 @@ const DOIS_BYTES = Buffer.from(';\n');
 // `corromper` recebe o NOME de arquivo (ou vários) a estragar, e não um "estraga tudo": a prova dos
 // satélites precisa entregar `aula-usp.js` íntegro e trocar os bytes de UM secundário — é esse
 // recorte que separa "o navegador confere o script principal" (já provado no marco 6c) de "confere
-// também os nove que o principal carrega", que é o que a tarefa 3 fecha.
+// também os secundários que o principal carrega" (nove desde o SRI dos satélites, dez desde
+// aula-usp-graficos.js — Tarefa 3 da fase 2a), que é o que a tarefa 3 do marco anterior fechou.
 export async function rotearCdn(pagina, { raiz = RAIZ, corromper = [] } = {}) {
   const { version } = JSON.parse(await readFile(new URL('package.json', raiz), 'utf8'));
   const base = `https://cdn.jsdelivr.net/npm/aula-usp@${version}/dist/`;
