@@ -12,6 +12,19 @@ const METAS = {
   'aula-usp.js': 700 * KB,
   'aula-usp-tex.js': 800 * KB,
   'aula-usp-codigo.js': 600 * KB,
+  // aula-usp-graficos.js NÃO tem meta na spec 11.2 (ela só nomeia os três acima — Fato 5 do plano da
+  // Tarefa 3): satélite novo da fase 2a, medido aqui, não copiado de lá. Isto é achado a relatar
+  // para o autor decidir se a spec ganha uma linha — esta tarefa não edita a spec.
+  //
+  // Medido (dist/manifesto.json, aula-usp dist desta tarefa): 94203 bytes = 92,0 KB — as três libs
+  // do d3 que componentes/graficos.js consome (d3-scale, d3-shape, d3-array), minificadas juntas num
+  // satélite só (build/bundle.mjs).
+  //
+  // Meta: 120 KB, 28,0 KB de folga (30,4 %) sobre o medido. A conta segue a folga dos dois satélites
+  // cuja meta já tem uma razão medida nesta mesma tabela — aula-usp.js (700 KB sobre 554,5 KB
+  // medidos = 26,2 %) e aula-usp-tex.js (800 KB sobre 622,8 KB = 28,5 %) — não a de aula-usp-codigo.js
+  // (600 KB sobre 112,4 KB = 433,8 %), que é um outlier e não uma proporção a repetir.
+  'aula-usp-graficos.js': 120 * KB,
 };
 
 test('os pacotes de dist/ cabem nas metas da spec 11.2, e todos os tamanhos ficam registrados', () => {

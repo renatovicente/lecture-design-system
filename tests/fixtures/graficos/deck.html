@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Fixture de gráficos: satélite pelo pacote de dist/</title>
+<meta name="unidade" content="ime">
+<meta name="disciplina" content="Fixture de gráficos">
+<meta name="aula" content="1">
+<meta name="data" content="2026-09-22">
+<meta name="professor" content="Prof. Renato Vicente">
+<script src="https://cdn.jsdelivr.net/npm/aula-usp@0.1.0/dist/aula-usp.js"
+        integrity="sha384-+zzfKF8nqYvCbMoFp8RMAXJwQtlELTRlpfef42gB1QU3ObG6I7fs/Ooz5J2VL/ta" crossorigin="anonymous"></script>
+</head>
+<body>
+
+<!-- Tarefa 3 da fase 2a (tests/integracao/dist.test.mjs): a única razão desta fixture existir é
+     provar, com Chrome de verdade e o pacote real de dist/, que aula-usp-graficos.js é pedido pela
+     base da CDN e chega com o integrity certo no import map — a mesma prova que matematica.html e
+     codigo.html já fazem para aula-usp-tex.js e aula-usp-codigo.js.
+
+     Não fica em especime/ de propósito: especime/, junto com modelos/ e exemplos/, é varrido por
+     vários outros testes (a validação da CLI em tests/integracao/validador.test.mjs, a comparação
+     visual navegador×build em tests/integracao/visual.test.mjs, o extrator de exemplos do guia em
+     tests/unit/guia.test.mjs) que ainda rodam com `fase` presa em 1 — build/construir.mjs documenta
+     isso: "quando a fase 2 existir, o parâmetro entra pelos DOIS lados na mesma leva", e essa leva
+     ainda não aconteceu. Só o caminho do NAVEGADOR (montar/entrada.js, usado tanto em dev quanto no
+     pacote de dist/) já sabe escolher fase 2 quando o documento tem figure.grafico/figure.diagrama.
+     Por isso este deck valida limpo por aqui (é o que este arquivo prova), mas `aula-usp validar`
+     ainda acusaria — a mesma lacuna que motivou manter a fixture fora de especime/. -->
+
+<section data-layout="capa">
+  <h1>Fixture de gráficos<br><span class="sinal">o satélite pelo pacote real</span></h1>
+</section>
+
+<section data-layout="abertura" id="pergunta">
+  <h2>Um gráfico mínimo</h2>
+  <p class="pergunta">O satélite carrega e o SVG aparece?</p>
+</section>
+
+<section data-layout="conteudo" id="erro-por-epoca">
+  <h2>Erro por época</h2>
+  <figure class="grafico">
+    <script type="application/json">
+    {"tipo":"linha","dados":{"epoca":[0,1,2,3],"erro":[1,0.6,0.35,0.2]},"x":"epoca","y":["erro"],"eixos":{"x":"época","y":"erro"}}
+    </script>
+    <figcaption>Fixture: uma série, dados embutidos no próprio JSON — sem CSV.</figcaption>
+  </figure>
+  <aside class="notas">Fixture da Tarefa 3, não exemplo do guia: fica fora de especime/ de propósito (ver comentário no topo do arquivo).</aside>
+</section>
+
+<section data-layout="encerramento">
+  <h2>Fim</h2>
+  <ol class="sintese">
+    <li>aula-usp-graficos.js foi pedido pela base da CDN, com o integrity do import map conferido.</li>
+  </ol>
+</section>
+
+</body>
+</html>

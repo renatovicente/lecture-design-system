@@ -156,7 +156,19 @@ test('a demo registrada durante o parsing sobrevive ao pacote do dist', async (t
 // nenhum. O plano da tarefa 3 pedia "uma aula que usa matemática e código" — ela não existe, e a
 // UNIÃO dos dois decks reais cobre os mesmos nove sem inventar uma fixture que teria de ser mantida
 // e validada à parte, e que ninguém mais olharia.
-const DECKS_DA_PROVA = ['matematica.html', 'codigo.html'];
+//
+// O gráfico (spec 3.5, fase 2) quebra essa escolha: nenhum deck do espécime tem figure.grafico — se
+// tivesse, entraria varrido por outros testes que ainda rodam sem fase 2 (tests/integracao/
+// validador.test.mjs valida especime/ pela CLI, que segue em fase 1 — build/construir.mjs documenta
+// que os dois lados, CLI e navegador, precisam mudar juntos, "na mesma leva", e essa leva ainda não
+// aconteceu; tests/integracao/visual.test.mjs varre especime/ inteiro por readdirSync e compara
+// navegador×build; tests/unit/guia.test.mjs extrai exemplos de lá). Um gráfico em matematica.html ou
+// codigo.html quebraria essas três provas por um motivo alheio a elas. Por isso, aqui SIM vale a
+// fixture que o comentário acima evitava para tex/código: tests/fixtures/graficos/deck.html, servida
+// pela MESMA `servirPastaCrua('.')` (raiz do sistema) que os decks do espécime, com a MESMA tag
+// fixada — a única diferença é o caminho, por isso os itens de DECKS_DA_PROVA passam a ser o caminho
+// INTEIRO a partir da raiz, não só o nome do arquivo (abrirPeloDist já esperava exatamente isso).
+const DECKS_DA_PROVA = ['especime/matematica.html', 'especime/codigo.html', 'tests/fixtures/graficos/deck.html'];
 
 // O universo dos dois testes abaixo NÃO vem de uma lista escrita aqui, nem do empacotador, nem do
 // manifesto: vem do que o NAVEGADOR pediu ao montar os decks. Isso importa, e foi medido de outro
@@ -172,7 +184,7 @@ function levantarSatelites() {
   levantamento ??= (async () => {
     const decks = [];
     for (const deck of DECKS_DA_PROVA) {
-      const { pagina, erros, base, pedidos } = await abrirPeloDist(`especime/${deck}`);
+      const { pagina, erros, base, pedidos } = await abrirPeloDist(deck);
       // Monta de verdade, com os hashes certos: o caminho feliz é pré-condição de tudo o que vem
       // depois — provar que bytes trocados são recusados não vale nada se os bytes certos também
       // fossem. esperarMontagem lança se data-montado não terminar em "sim".
@@ -263,7 +275,7 @@ test('dois bytes a mais em um satélite e a aula não monta: o integrity do impo
 
   for (const [satelite, deck] of alvos) {
     await t.test(`${satelite} (em ${deck})`, async (sub) => {
-      const { pagina, erros, pedidos } = await abrirPeloDist(`especime/${deck}`, { corromper: satelite });
+      const { pagina, erros, pedidos } = await abrirPeloDist(deck, { corromper: satelite });
       sub.after(() => pagina.close());
       await pagina.waitForFunction(() => document.body?.dataset.montado !== undefined);
       const [montado, painel] = await pagina.evaluate(() => [
