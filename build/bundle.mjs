@@ -124,9 +124,19 @@ export default katex;
       stdin: { contents: `export { default } from '@shikijs/langs/${linguagem}';`, resolveDir: dir, loader: 'js' }, format: 'esm' }), { satelite: true });
   }
 
-  // 4. o pacote do navegador: CLÁSSICO (iife), pelos motivos na tarefa 1 do marco 5a. O plugin embute
+  // 4. gráficos (spec 3.5, fase 2): d3-scale, d3-shape e d3-array combinados num satélite só — a
+  //    mesma forma que o de código já usa para @shikijs/primitive + @shikijs/engine-javascript, dois
+  //    pacotes que juntos atendem componentes/graficos.js (criarDesenhista pede as quatro funções:
+  //    scaleLinear/scaleLog de d3-scale, line de d3-shape, extent de d3-array). Um só satélite, não
+  //    três: as três libs são pequenas e sempre usadas juntas por quem desenha qualquer um dos quatro
+  //    tipos de gráfico — não há o caso "só barras, sem escala" que justificasse separá-las como as
+  //    gramáticas de código, que uma aula de fato usa uma de cada vez.
+  guardar('aula-usp-graficos.js', await esbuild.build({ ...COMUM, absWorkingDir: dir,
+    stdin: { contents: "export * from 'd3-scale'; export * from 'd3-shape'; export * from 'd3-array';", resolveDir: dir, loader: 'js' }, format: 'esm' }), { satelite: true });
+
+  // 5. o pacote do navegador: CLÁSSICO (iife), pelos motivos na tarefa 1 do marco 5a. O plugin embute
   //    as fontes do sistema (Geist/Open Sans) como data URI dentro de estilos/fontes.css — ver o
-  //    comentário dele. E por último, porque agora leva os hashes dos três blocos acima.
+  //    comentário dele. E por último, porque agora leva os hashes de todos os satélites acima.
   //
   //    NOME DE ARQUIVO → hash, e não especificador de módulo → hash: `aula-usp-tex.js` é o único nome
   //    que os dois lados já compartilham — o empacotador o produz, e a última coisa que o `resolver`

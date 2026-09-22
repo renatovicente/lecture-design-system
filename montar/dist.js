@@ -66,10 +66,15 @@ const base = document.currentScript?.src;
 // o pedido sai para outro: o navegador não acha chave para a URL pedida e não confere nada, calado.
 const urlDoSatelite = (arquivo) => new URL(arquivo, base).href;
 
+// As três libs de gráficos (spec 3.5) resolvem para o MESMO satélite — a mesma ideia de
+// '@shikijs/primitive'/'@shikijs/engine-javascript' caindo em aula-usp-codigo.js, duas linhas abaixo.
+const D3_DO_GRAFICO = new Set(['d3-scale', 'd3-shape', 'd3-array']);
+
 // Qual satélite atende cada especificador que entrada.js pede. Só nomes de arquivo: o endereço é de
 // urlDoSatelite, e o hash de cada um vem de SATELITES_EMBUTIDOS, chaveado pelo mesmo nome de arquivo.
 const arquivoDoSatelite = (nome) => nome === 'katex' ? 'aula-usp-tex.js'
   : nome.startsWith('@shikijs/langs/') ? `aula-usp-lang-${nome.split('/').pop()}.js`
+  : D3_DO_GRAFICO.has(nome) ? 'aula-usp-graficos.js'
   : 'aula-usp-codigo.js';
 
 // Spec 3.2, passo 5: "cada script secundário é carregado com o seu integrity, que aula-usp.js traz

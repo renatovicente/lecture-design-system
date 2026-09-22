@@ -8,6 +8,7 @@ import { instalarApresentador, instalarAberturaDoApresentador, modoApresentador 
 import { instalarImpressao } from '../motor/impressao.js';
 import { renderizarTex } from '../componentes/tex.js';
 import { criarDestacador, renderizarCodigo } from '../componentes/codigo.js';
+import { criarDesenhista, desenharGraficos } from '../componentes/graficos.js';
 import { validar, linhaDe, slidesDoFonte } from '../validador/validar.js';
 import { REGRAS_ESTATICAS, REGRAS_DE_CARGA, REGRAS_DE_COMPOSICAO } from '../validador/regras/index.js';
 // Puro (spec 3.5): o mesmo módulo que build/validar.mjs carrega para a CLI. matematica.simbolo-fora-do-tex
@@ -20,6 +21,15 @@ import { lerCobertura } from '../validador/cobertura.js';
 // ficam um nível abaixo da raiz (montar/navegador.js e dist/aula-usp.js), por isso o mesmo '../'.
 let BASE;
 const TEX = /\\\(|\\\[/;
+const SELETOR_GRAFICO = 'figure.grafico';
+// Fase 2 (spec 5.5): a Tarefa 1 abriu estrutura.obrigatorio, estrutura.fora-do-layout e
+// vocabulario.script para aceitar figure.grafico/figure.diagrama quando `fase >= 2` — mas nada
+// decidia ATÉ AQUI qual fase rodar (validar() usa fase = 1 por padrão). A fase de validação segue a
+// mesma regra de presença que decide quando carregar um satélite (TEX e blocosDeCodigo, abaixo): sem
+// nenhum dos dois seletores no fonte, fase 2 e fase 1 acusam exatamente os mesmos erros — só o
+// vocabulário que a Tarefa 1 abriu passa a validar quando presente, então nenhum deck de fase 1
+// (a imensa maioria hoje) muda de comportamento por causa disto.
+const SELETOR_FASE_2 = 'figure.grafico, figure.diagrama';
 const ESTILOS = ['estilos/tokens.css', 'estilos/fontes.css', 'estilos/base.css', 'estilos/layouts.css', 'estilos/componentes.css', 'estilos/motor.css', 'estilos/impressao.css'];
 
 function carregarEstilo(caminho) {
@@ -89,7 +99,10 @@ export async function iniciar({ base, resolver = (nome) => nome, estilo, dados =
     // Minor 1). O documento inteiro, porque o validador lê as metas do <head> — passar só o corpo dá
     // cinco erros falsos de metadados (revisão do marco 4b).
     const fonte = document.cloneNode(true);
-    const estaticos = validar(fonte, { contrato, regras: REGRAS_ESTATICAS, grupo: 'estatica', unidades, cobertura });
+    // Ver o comentário de SELETOR_FASE_2 acima: a presença de figure.grafico/figure.diagrama no
+    // fonte é o único sinal que existe hoje de que esta aula quer as regras estáticas de fase 2.
+    const fase = fonte.querySelector(SELETOR_FASE_2) ? 2 : 1;
+    const estaticos = validar(fonte, { contrato, regras: REGRAS_ESTATICAS, grupo: 'estatica', unidades, cobertura, fase });
     await Promise.all(ESTILOS.map(injetarEstilo));
     const resumo = montar(document, {
       unidades,
@@ -137,6 +150,22 @@ export async function iniciar({ base, resolver = (nome) => nome, estilo, dados =
       const destacador = criarDestacador({ createShikiPrimitive, codeToTokensBase, createJavaScriptRegexEngine, gramaticas });
       for (const erro of renderizarCodigo(document.body, { destacador })) {
         console.error(`Aula USP: código com ${erro.mensagem}`);
+      }
+    }
+    // Os gráficos entram pela mesma regra de presença (spec 3.5, fase 2): d3-scale, d3-shape e
+    // d3-array chegam por import() dinâmico, resolvidos ao satélite aula-usp-graficos.js — o
+    // terceiro `resolver(...)` desta função, ao lado de 'katex' e '@shikijs/*' acima. Sem `dados`
+    // (fica no default {} de desenharGraficos): resolver caminho de CSV para colunas não é desta
+    // tarefa — uma especificação com `dados` inline (objeto, não string) roda igual sem ele.
+    if (document.querySelector(SELETOR_GRAFICO)) {
+      const [{ scaleLinear, scaleLog }, { line }, { extent }] = await Promise.all([
+        import(resolver('d3-scale')),
+        import(resolver('d3-shape')),
+        import(resolver('d3-array')),
+      ]);
+      const desenhista = criarDesenhista({ escalaLinear: scaleLinear, escalaLog: scaleLog, linha: line, extensao: extent });
+      for (const erro of desenharGraficos(document.body, { desenhista })) {
+        console.error(`Aula USP: gráfico com ${erro.mensagem}`);
       }
     }
     // Passo 6 da spec 3.2/9.3: carga e composição rodam aqui — depois de scripts, imagens e fontes,
@@ -188,12 +217,12 @@ export async function iniciar({ base, resolver = (nome) => nome, estilo, dados =
     const semFolha = !new URLSearchParams(location.search).has('folha');
     const achados = [
       ...estaticos,
-      ...validar(fonte, { contrato, regras: REGRAS_DE_CARGA, grupo: 'carga', recursos }),
+      ...validar(fonte, { contrato, regras: REGRAS_DE_CARGA, grupo: 'carga', recursos, fase }),
       // Só mede composição aqui quando o motor vai rodar de verdade: com ?folha, quem mede é o próprio
       // chamador (build/composicao.mjs ou tests/integracao/composicao.test.mjs), sobre a página já
       // carregada — medir aqui de novo seria a mesma conta cara duas vezes por execução (revisão final
       // do 4c, Minor: "a CLI mede composição duas vezes por execução").
-      ...(semFolha ? validar(document, { contrato, regras: REGRAS_DE_COMPOSICAO, grupo: 'composicao', janela: window }) : []),
+      ...(semFolha ? validar(document, { contrato, regras: REGRAS_DE_COMPOSICAO, grupo: 'composicao', janela: window, fase }) : []),
     ];
     // Spec 3.2: aviso não abre o painel sozinho, mas também fica no console — quem abre o devtools vê.
     for (const achado of achados) {
