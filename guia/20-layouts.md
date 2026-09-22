@@ -127,13 +127,15 @@ Extraído de `especime/index.html`.
 #### `figura`
 
 ```html
-<section data-layout="figura" id="imagem-pequena">
-  <h2>Uma imagem pequena não é ampliada</h2>
-  <figure>
-    <img alt="Retângulo cinza de 320 por 180 com um canto preto" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='180' viewBox='0 0 320 180'%3E%3Crect width='320' height='180' fill='%23D9D9D9'/%3E%3Crect width='80' height='45' fill='%230A0A0A'/%3E%3C/svg%3E">
-    <figcaption>A imagem mantém os 320 por 180 px originais, alinhada à esquerda, e a legenda vem logo abaixo.</figcaption>
+<section data-layout="figura" id="grafico-notas">
+  <h2>Nota média por prova</h2>
+  <figure class="grafico">
+    <script type="application/json">
+    {"tipo":"linha","dados":{"prova":[1,2,3],"turmaA":[6.2,7.0,7.8],"turmaB":[5.5,6.1,6.4]},"x":"prova","y":["turmaA","turmaB"],"foco":"turmaA","eixos":{"x":"prova","y":"nota"}}
+    </script>
+    <figcaption>Duas turmas ao longo de três provas; a turma em foco sai em azul, a outra em cinza tracejado.</figcaption>
   </figure>
-  <aside class="notas">Ampliar uma imagem pequena a deixaria borrada no projetor.</aside>
+  <aside class="notas">O JSON descreve a série; o SVG é desenhado pelo mesmo módulo no navegador e no build (Tarefa 6 da fase 2a).</aside>
 </section>
 ```
 

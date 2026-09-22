@@ -174,6 +174,22 @@
   <aside class="notas">O SVG escala para a coluna, sem distorcer.</aside>
 </section>
 
+<section data-layout="abertura" id="graficos">
+  <h2>Gráficos</h2>
+  <p class="pergunta">Como uma série de dados vira um SVG, sem o autor desenhar nada?</p>
+</section>
+
+<section data-layout="figura" id="grafico-notas">
+  <h2>Nota média por prova</h2>
+  <figure class="grafico">
+    <script type="application/json">
+    {"tipo":"linha","dados":{"prova":[1,2,3],"turmaA":[6.2,7.0,7.8],"turmaB":[5.5,6.1,6.4]},"x":"prova","y":["turmaA","turmaB"],"foco":"turmaA","eixos":{"x":"prova","y":"nota"}}
+    </script>
+    <figcaption>Duas turmas ao longo de três provas; a turma em foco sai em azul, a outra em cinza tracejado.</figcaption>
+  </figure>
+  <aside class="notas">O JSON descreve a série; o SVG é desenhado pelo mesmo módulo no navegador e no build (Tarefa 6 da fase 2a).</aside>
+</section>
+
 <section data-layout="encerramento">
   <h2>O que fica</h2>
   <ol class="sintese">
