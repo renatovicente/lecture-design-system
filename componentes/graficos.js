@@ -41,9 +41,12 @@ export function coresDasSeries(y, foco) {
 // saem sempre com a mesma precisão, nos dois modos (navegador e build) — é o que a Tarefa 6 precisa
 // para o gráfico sair byte a byte igual na comparação visual (ruído de ponto flutuante é a suspeita
 // nº1 citada no plano para uma diferença entre os dois modos). NÃO serve ao texto de uma marca de
-// eixo — ver formatarNumero: o dado plotado pode ter qualquer escala (uma curva de erro em
-// [0.0001, 0.0016], por exemplo), e 2 casas fixas apagam toda a resolução dele (Critical 1 da
-// revisão da Tarefa 2: oito marcas de eixo saíam "0").
+// eixo — ver desenharMarcasEixoY/formatarPasso, abaixo: uma precisão FIXA (seja casas decimais, seja
+// dígitos significativos) sempre tem um regime onde apaga a diferença entre marcas vizinhas — 2 casas
+// apagava um domínio pequeno ([0.0001, 0.0016], Critical 1 da revisão da Tarefa 2, oito marcas "0");
+// o primeiro conserto (4 dígitos significativos fixos) resolveu aquele regime e quebrou o simétrico —
+// um domínio grande com variação fina ([99997, 100003] virava sete vezes "100000", achado da
+// re-revisão). A precisão certa deriva do PASSO entre marcas, não de uma constante.
 function arredondar(valor, casas = 2) {
   const fator = 10 ** casas;
   return Math.round(valor * fator) / fator;
@@ -53,12 +56,17 @@ function escaparXml(texto) {
   return String(texto).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 }
 
-// Texto de uma marca de eixo: dígitos SIGNIFICATIVOS, não casas decimais fixas — é o dado que precisa
-// ficar legível, não o pixel (arredondar, acima, é para pixel). Number(...) depois do toPrecision tira
-// os zeros à direita que toPrecision sempre deixa (p.ex. "0.4000").
-function formatarNumero(valor) {
-  if (valor === 0) return '0';
-  return String(Number(valor.toPrecision(4)));
+// Formata as bordas de classe do histograma pelo PASSO DE VERDADE entre elas (larguraClasse) — a
+// mesma ideia do tickFormat do d3 (usado em desenharMarcasEixoY/X, abaixo, para tudo que vem de
+// escala.ticks()), aplicada aqui à mão porque bordas de classe NÃO são ticks: são espaçadas por
+// `passo`, um valor exato que já temos, não pela "escolha bonita" que tickFormat faria a partir de
+// `classes` sozinho — as duas contas podem discordar quando `passo` não é um número "redondo".
+// Dígitos necessários para o passo aparecer: 10^-casas <= passo, ou seja casas = -log10(passo),
+// arredondado para cima (o 1e-12 evita que erro de ponto flutuante empurre log10 para o inteiro errado).
+function formatarPasso(valor, passo) {
+  if (!Number.isFinite(passo) || passo === 0) return String(valor);
+  const casas = Math.max(0, -Math.floor(Math.log10(Math.abs(passo)) + 1e-12));
+  return valor.toFixed(casas);
 }
 
 // Serializa um elemento SVG como string (nunca autofechado: quem insere no DOM lê isto pelo parser de
@@ -128,11 +136,18 @@ function desenharEixos({ tituloX, tituloY }) {
   return eixoX + eixoY + rotuloX + rotuloY;
 }
 
+// tickFormat(contagem) — o mesmo d3-scale que gera os ticks — deriva a precisão do PASSO que .ticks
+// escolheu para essa contagem e esse domínio: é a mesma fonte, não uma constante nossa que pode
+// discordar dela (o que a re-revisão pede depois do Critical 1). Vale para linear e log; em log, o
+// próprio d3 deixa "" nas marcas menores (1,2,3…9 entre as décadas) — decisão dele, não nossa,
+// coerente com como ele numera escala log em qualquer biblioteca.
 function desenharMarcasEixoY(escalaY) {
-  return escalaY.ticks(5).map((valor) => elemento('text', {
+  const marcas = escalaY.ticks(5);
+  const formatar = escalaY.tickFormat(5);
+  return marcas.map((valor) => elemento('text', {
     class: 'marca', x: arredondar(AREA.x0 - 8), y: arredondar(escalaY(valor)),
     fill: cinza, 'font-family': FAMILIA, 'font-size': TAMANHO_TEXTO, 'text-anchor': 'end', 'dominant-baseline': 'middle',
-  }, formatarNumero(valor))).join('');
+  }, formatar(valor))).join('');
 }
 
 // marcas: pares [posicaoNoDominio, texto] — números formatados num eixo contínuo, ou as categorias
@@ -206,7 +221,8 @@ function montarLinha(biblioteca, especificacao, colunas) {
     const rotulo = desenharRotuloDaSerie({ x: escalaX(ponta.x), y: escalaY(ponta.y) }, cor, tracejada, serie);
     return elemento('g', { class: 'serie', 'data-serie': serie, 'data-cor': cor }, caminho + rotulo);
   }).join('');
-  const marcasX = escalaX.ticks(5).map((valor) => [valor, formatarNumero(valor)]);
+  const formatarX = escalaX.tickFormat(5);
+  const marcasX = escalaX.ticks(5).map((valor) => [valor, formatarX(valor)]);
   const eixosSvg = desenharEixos({ tituloX: eixos.x, tituloY: eixos.y }) + desenharMarcasEixoX(marcasX, escalaX) + desenharMarcasEixoY(escalaY);
 
   return grade + faixasSvg + seriesSvg + eixosSvg;
@@ -233,7 +249,8 @@ function montarDispersao(biblioteca, especificacao, colunas) {
     const rotulo = desenharRotuloDaSerie({ x: escalaX(ponta.x), y: escalaY(ponta.y) }, cor, tracejada, serie);
     return elemento('g', { class: 'serie', 'data-serie': serie, 'data-cor': cor }, marcadores + rotulo);
   }).join('');
-  const marcasX = escalaX.ticks(5).map((valor) => [valor, formatarNumero(valor)]);
+  const formatarX = escalaX.tickFormat(5);
+  const marcasX = escalaX.ticks(5).map((valor) => [valor, formatarX(valor)]);
   const eixosSvg = desenharEixos({ tituloX: eixos.x, tituloY: eixos.y }) + desenharMarcasEixoX(marcasX, escalaX) + desenharMarcasEixoY(escalaY);
 
   return grade + faixasSvg + seriesSvg + eixosSvg;
@@ -321,7 +338,10 @@ function montarHistograma(biblioteca, especificacao, colunas) {
   const ponta = { x: escalaX(maximo), y: Math.min(escalaY(contagens.at(-1)), zero) };
   const rotulo = desenharRotuloDaSerie(ponta, cor, tracejada, nomeX);
   const seriesSvg = elemento('g', { class: 'serie', 'data-serie': nomeX, 'data-cor': cor }, barras + rotulo);
-  const marcasX = Array.from({ length: classes + 1 }, (_, i) => minimo + i * larguraClasse).map((valor) => [valor, formatarNumero(valor)]);
+  // Bordas de classe: não são .ticks() (não vêm de escalaX), então tickFormat — pensado para o passo
+  // que .ticks() escolhe — não se aplica direto; formatarPasso deriva a mesma ideia do passo de
+  // verdade entre as bordas (larguraClasse), que já temos exato.
+  const marcasX = Array.from({ length: classes + 1 }, (_, i) => minimo + i * larguraClasse).map((valor) => [valor, formatarPasso(valor, larguraClasse)]);
   const eixosSvg = desenharEixos({ tituloX: eixos.x, tituloY: eixos.y }) + desenharMarcasEixoX(marcasX, escalaX) + desenharMarcasEixoY(escalaY);
 
   return grade + faixasSvg + seriesSvg + eixosSvg;
