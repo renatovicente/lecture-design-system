@@ -19,7 +19,7 @@ Uma aula é um arquivo HTML: um `<head>` com os metadados e a tag do runtime, e 
 <meta name="data" content="2026-03-02">
 <meta name="professor" content="Prof. Nome Sobrenome">
 <script src="https://cdn.jsdelivr.net/npm/aula-usp@0.1.0/dist/aula-usp.js"
-        integrity="sha384-vX2TDvZjrvTTGIHym92c6RA7IlgsvY/Rm68HUJmYwJacefyZyl7T55rKDWmKgiLD" crossorigin="anonymous"></script>
+        integrity="sha384-mYduxvjjNIKeCn61claNUbr/iKBr2hlX41xK9NQB28n7pYJnpR1r3BXxUty2Fkfa" crossorigin="anonymous"></script>
 </head>
 <body>
 
@@ -234,6 +234,7 @@ Três avisos de leitura:
 | `tabela.linhasDeDados` | no máximo 8 linhas de dados | cada `table` |
 | `tabela.colunas` | no máximo 6 colunas | cada `table` |
 | `diagrama.nos` | no máximo 15 nós | cada `figure.diagrama` (fase 2: erro hoje) |
+| `grafico.series` | no máximo 3 séries | cada `figure.grafico` (fase 2: erro hoje) |
 | `saida.megabytes` | no máximo 10 megabytes | o arquivo que `aula-usp build` escreve |
 <!-- /gerado -->
 
