@@ -56,6 +56,27 @@ function escaparXml(texto) {
   return String(texto).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 }
 
+// Número de eixo em pt-BR: separador de milhar é ponto, decimal é vírgula — o oposto do padrão dos
+// EUA que tickFormat do d3 (e toFixed) escrevem por padrão (achado da rodada 3 da revisão: "99,997"
+// lido em português é noventa e nove vírgula novecentos e noventa e sete, não um milhar). A troca é
+// SIMULTÂNEA — cada caractere decide sozinho dentro do replace —, não duas substituições em
+// sequência: "," -> "." e depois "." -> "," desfaria a primeira troca antes de terminar.
+function paraPtBr(texto) {
+  return texto.replace(/[,.]/g, (caractere) => (caractere === ',' ? '.' : ','));
+}
+
+// Separador de milhar (vírgula, padrão dos EUA — o texto ainda passa por paraPtBr depois) numa
+// string de toFixed(): toFixed nunca agrupa, ao contrário do tickFormat do d3, que agrupa sozinho.
+// Sem isto, formatarPasso (abaixo) e desenharMarcasEixoY/X concordam no separador decimal mas
+// divergem no milhar — "99997" de um lado, "99.997" do outro, o mesmo defeito de fonte dupla que
+// levou à troca simultânea acima, só que na grade de dígitos em vez do caractere.
+function agruparMilhar(textoFixo) {
+  const [sinal, resto] = textoFixo.startsWith('-') ? ['-', textoFixo.slice(1)] : ['', textoFixo];
+  const [parteInteira, parteDecimal] = resto.split('.');
+  const comSeparador = parteInteira.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  return sinal + comSeparador + (parteDecimal !== undefined ? `.${parteDecimal}` : '');
+}
+
 // Formata as bordas de classe do histograma pelo PASSO DE VERDADE entre elas (larguraClasse) — a
 // mesma ideia do tickFormat do d3 (usado em desenharMarcasEixoY/X, abaixo, para tudo que vem de
 // escala.ticks()), aplicada aqui à mão porque bordas de classe NÃO são ticks: são espaçadas por
@@ -63,10 +84,12 @@ function escaparXml(texto) {
 // `classes` sozinho — as duas contas podem discordar quando `passo` não é um número "redondo".
 // Dígitos necessários para o passo aparecer: 10^-casas <= passo, ou seja casas = -log10(passo),
 // arredondado para cima (o 1e-12 evita que erro de ponto flutuante empurre log10 para o inteiro errado).
+// agruparMilhar + paraPtBr no fim: a mesma fonte de separador (milhar e decimal) que os ticks usam
+// (desenharMarcasEixoY/X), para as duas famílias de marca nunca discordarem dentro do mesmo eixo.
 function formatarPasso(valor, passo) {
-  if (!Number.isFinite(passo) || passo === 0) return String(valor);
+  if (!Number.isFinite(passo) || passo === 0) return paraPtBr(agruparMilhar(String(valor)));
   const casas = Math.max(0, -Math.floor(Math.log10(Math.abs(passo)) + 1e-12));
-  return valor.toFixed(casas);
+  return paraPtBr(agruparMilhar(valor.toFixed(casas)));
 }
 
 // Serializa um elemento SVG como string (nunca autofechado: quem insere no DOM lê isto pelo parser de
@@ -140,14 +163,15 @@ function desenharEixos({ tituloX, tituloY }) {
 // escolheu para essa contagem e esse domínio: é a mesma fonte, não uma constante nossa que pode
 // discordar dela (o que a re-revisão pede depois do Critical 1). Vale para linear e log; em log, o
 // próprio d3 deixa "" nas marcas menores (1,2,3…9 entre as décadas) — decisão dele, não nossa,
-// coerente com como ele numera escala log em qualquer biblioteca.
+// coerente com como ele numera escala log em qualquer biblioteca. O texto sai no padrão dos EUA
+// (vírgula de milhar); paraPtBr troca para o nosso, sem tocar na precisão que tickFormat calculou.
 function desenharMarcasEixoY(escalaY) {
   const marcas = escalaY.ticks(5);
   const formatar = escalaY.tickFormat(5);
   return marcas.map((valor) => elemento('text', {
     class: 'marca', x: arredondar(AREA.x0 - 8), y: arredondar(escalaY(valor)),
     fill: cinza, 'font-family': FAMILIA, 'font-size': TAMANHO_TEXTO, 'text-anchor': 'end', 'dominant-baseline': 'middle',
-  }, formatar(valor))).join('');
+  }, paraPtBr(formatar(valor)))).join('');
 }
 
 // marcas: pares [posicaoNoDominio, texto] — números formatados num eixo contínuo, ou as categorias
@@ -222,7 +246,7 @@ function montarLinha(biblioteca, especificacao, colunas) {
     return elemento('g', { class: 'serie', 'data-serie': serie, 'data-cor': cor }, caminho + rotulo);
   }).join('');
   const formatarX = escalaX.tickFormat(5);
-  const marcasX = escalaX.ticks(5).map((valor) => [valor, formatarX(valor)]);
+  const marcasX = escalaX.ticks(5).map((valor) => [valor, paraPtBr(formatarX(valor))]);
   const eixosSvg = desenharEixos({ tituloX: eixos.x, tituloY: eixos.y }) + desenharMarcasEixoX(marcasX, escalaX) + desenharMarcasEixoY(escalaY);
 
   return grade + faixasSvg + seriesSvg + eixosSvg;
@@ -250,7 +274,7 @@ function montarDispersao(biblioteca, especificacao, colunas) {
     return elemento('g', { class: 'serie', 'data-serie': serie, 'data-cor': cor }, marcadores + rotulo);
   }).join('');
   const formatarX = escalaX.tickFormat(5);
-  const marcasX = escalaX.ticks(5).map((valor) => [valor, formatarX(valor)]);
+  const marcasX = escalaX.ticks(5).map((valor) => [valor, paraPtBr(formatarX(valor))]);
   const eixosSvg = desenharEixos({ tituloX: eixos.x, tituloY: eixos.y }) + desenharMarcasEixoX(marcasX, escalaX) + desenharMarcasEixoY(escalaY);
 
   return grade + faixasSvg + seriesSvg + eixosSvg;
