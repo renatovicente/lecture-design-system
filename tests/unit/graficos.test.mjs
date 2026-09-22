@@ -62,6 +62,16 @@ test('coresDasSeries: três séries sem foco — a última (c) é o foco; a e b 
   ]);
 });
 
+test('coresDasSeries: mais de 3 séries lança — o módulo se defende sozinho, porque recursos.grafico (Tarefa 4) ainda não existe para recusar isto antes (Important 4 da revisão)', () => {
+  assert.throws(() => coresDasSeries(['a', 'b', 'c', 'd']), /no máximo 3 séries em y; recebidas 4/);
+  assert.throws(() => coresDasSeries(['a', 'b', 'c', 'd', 'e']), /no máximo 3 séries em y; recebidas 5/);
+});
+
+test('mais de 3 séries lança já na composição do SVG — sem a defesa, a 3ª/4ª série ficava sem cor e sem stroke, invisível e calada', () => {
+  const especificacao = { tipo: 'linha', x: 'x', y: ['a', 'b', 'c', 'd'], eixos: {}, dados: { x: [0, 1], a: [0, 1], b: [0, 1], c: [0, 1], d: [0, 1] } };
+  assert.throws(() => desenhista.desenharSvg(especificacao, especificacao.dados), /no máximo 3 séries/);
+});
+
 // Passo 4: "teste o que o SVG afirma". As asserções abaixo leem o SVG como DOM (svgDe) e checam
 // exatamente as propriedades que o brief pede: quantas séries, qual cor cada uma recebeu, se a faixa
 // está atrás das séries na ordem dos nós, se o eixo tem 2px, se o rótulo está na ponta.
