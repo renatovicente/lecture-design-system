@@ -163,7 +163,7 @@ export function tabelaDePapeis(contrato) {
 // O que a ÚLTIMA parte da chave mede, em palavras. A chave traz o número e quase sempre a unidade,
 // mas nem sempre: `blocos.maxFileira` são oito o quê? Sem isto a tabela publicaria número sem
 // unidade, que é o que um professor não consegue usar. O mapa é pela última parte, e não pela chave
-// inteira, porque o vocabulário é fechado e reusado — oito dos 33 limites terminam em `caracteres` —,
+// inteira, porque o vocabulário é fechado e reusado — oito dos 34 limites terminam em `caracteres` —,
 // então um limite novo com terminação conhecida não precisa de palavra nova nenhuma.
 const UNIDADE = {
   min: '',
@@ -180,16 +180,17 @@ const UNIDADE = {
   palavras: 'palavras',
   itens: 'itens',
   nos: 'nós',
+  series: 'séries',
   megabytes: 'megabytes',
 };
 
-// Um só dos 33 é piso, e não teto. Uma tabela com "máximo" no cabeçalho mentiria sobre ele — a aula
+// Um só dos 34 é piso, e não teto. Uma tabela com "máximo" no cabeçalho mentiria sobre ele — a aula
 // precisa de PELO MENOS dois blocos —, então o sentido entra na célula, e a linha se lê inteira fora
 // de contexto, que é como um modelo a cita.
 const PISOS = new Set(['min']);
 
 // O que o PREFIXO da chave nomeia. É o "onde" que a chave abrevia: `sintese` é a `ol.sintese` do
-// encerramento, `saida` é o arquivo que o build escreve. Vinte e dois prefixos para 33 limites, e
+// encerramento, `saida` é o arquivo que o build escreve. Vinte e três prefixos para 34 limites, e
 // aqui também um limite novo de prefixo conhecido entra sem palavra nova.
 const ONDE = {
   blocos: 'os blocos da aula',
@@ -212,6 +213,7 @@ const ONDE = {
   proxima: 'o `p.proxima` do encerramento',
   codigo: 'cada `pre`',
   tabela: 'cada `table`',
+  grafico: 'cada `figure.grafico` (fase 2: erro hoje)',
   diagrama: 'cada `figure.diagrama` (fase 2: erro hoje)',
   saida: 'o arquivo que `aula-usp build` escreve',
 };
@@ -223,8 +225,8 @@ const ONDE = {
 // `h2`. O número é sempre do contrato; o que se escreve aqui são as PALAVRAS em volta dele.
 //
 // Plana, e na ordem do contrato. As chaves agrupam por prefixo, e a tentação é virar subtítulos —
-// mas 33 limites cabem em 22 prefixos, e quinze desses prefixos têm um limite só (medido): seriam 22
-// subtítulos para 33 linhas, e a chave inteira deixaria de existir numa linha só, que é justamente o
+// mas 34 limites cabem em 23 prefixos, e dezesseis desses prefixos têm um limite só (medido): seriam
+// 23 subtítulos para 34 linhas, e a chave inteira deixaria de existir numa linha só, que é justamente o
 // que um modelo procura. O agrupamento que as chaves carregam vira a coluna "onde", não subtítulo. A
 // ordem é a do contrato porque ela é a de quem escreve a aula — capa, abertura, título, corpo,
 // componentes, encerramento, saída —, e nela as chaves de mesmo prefixo já saem vizinhas.

@@ -106,7 +106,7 @@ Em `bin/` vale uma regra própria, escrita no topo do arquivo: nada que leia dis
 
 ## O contrato é dado, não código
 
-`contrato/contrato.json` (versão 1) carrega os 7 layouts, os blocos de corpo, as grades, os papéis tipográficos, o vocabulário de HTML e SVG, o TeX permitido, as 7 linguagens de código, 33 chaves de limite e 64 regras — **60 da fase 1, todas implementadas hoje**, e 4 da fase 2.
+`contrato/contrato.json` (versão 1) carrega os 7 layouts, os blocos de corpo, as grades, os papéis tipográficos, o vocabulário de HTML e SVG, o TeX permitido, as 7 linguagens de código, 34 chaves de limite e 64 regras — **60 da fase 1, todas implementadas hoje**, e 4 da fase 2.
 
 O código **executa** o contrato; não o repete. Isso vale **inclusive para limiares**: `saida.megabytes: 10` mora no contrato, não em `validador/regras/saida.js`; as regras de limite leem `contrato.limites[chave]` e só sabem contar. Um número mágico no código que já existe no contrato é defeito — mudar um limite tem que ser editar um número em JSON.
 

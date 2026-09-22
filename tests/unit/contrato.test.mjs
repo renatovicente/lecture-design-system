@@ -70,7 +70,7 @@ test('limites da seção 5.3', () => {
     'afirmacao.caracteres': 120, 'fonte.caracteres': 80, 'legenda.caracteres': 140,
     'sintese.itens': 3, 'sintese.caracteresPorItem': 80, 'proxima.caracteres': 90,
     'codigo.linhas': 16, 'codigo.colunas': 64, 'tabela.linhasDeDados': 8, 'tabela.colunas': 6,
-    'diagrama.nos': 15, 'saida.megabytes': 10,
+    'diagrama.nos': 15, 'grafico.series': 3, 'saida.megabytes': 10,
   });
 });
 
