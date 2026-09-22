@@ -27,6 +27,26 @@ export const MODULOS_DO_NAVEGADOR = [
   'regex/internals',
   'regex-recursion',
   'regex-utilities',
+  // Gráficos (spec 3.5, fase 2): d3-scale, d3-shape e d3-array são os três que componentes/
+  // graficos.js pede (criarDesenhista), mas o navegador não resolve nada que ELAS importam por
+  // dentro sozinho — sem entrada própria aqui, um import map sem a chave fica idêntico a um import
+  // map sem entrada nenhuma (mesma classe de "abre e cala" do SRI de import map). A lista é a
+  // closure transitiva medida (grep pelas três e por quem elas importam, em cascata): d3-scale
+  // importa d3-array/d3-format/d3-interpolate/d3-time/d3-time-format; d3-shape importa d3-path;
+  // d3-interpolate importa d3-color; d3-time importa d3-array; d3-time-format importa d3-time; e
+  // d3-array importa internmap. Só d3-scale, d3-shape e d3-array são dependência direta do
+  // package.json — as outras seis chegam pela árvore de node_modules delas, como já acontece com
+  // oniguruma-to-es e as quatro de regex acima, dependências de @shikijs/engine-javascript.
+  'd3-scale',
+  'd3-shape',
+  'd3-array',
+  'd3-format',
+  'd3-interpolate',
+  'd3-time',
+  'd3-time-format',
+  'd3-path',
+  'd3-color',
+  'internmap',
 ];
 
 const TIPOS = {
