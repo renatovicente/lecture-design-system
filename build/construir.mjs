@@ -67,12 +67,15 @@ function achadosDeCodigo(contrato, errosDeCodigo) {
   }));
 }
 
-// Outra pendência herdada do 5b ("construir() não parametriza `fase` — a tarefa 3 decide se
-// precisa"), resolvida por não: o pipeline inteiro do 5c roda fase 1 (validar() usa fase = 1 por
-// padrão — validador/validar.js — e nem `aula-usp validar` nem `aula-usp build` têm por onde pedir
-// outra; a spec 8.1 não lista flag para isso). Quando a fase 2 existir, o parâmetro entra pelos DOIS
-// lados na mesma leva — a etapa 1, em build/validar.mjs, e esta função —, porque um validacao.json
-// com metades de fases diferentes é pior que nenhum.
+// Atualizado na tarefa 6 da fase 2a: a fase agora existe nos dois lados, mas não os dois AQUI. A
+// etapa 1 (build/validar.mjs, lerERodarEstatica/validarCarga) já detecta fase 2 pela mesma regra de
+// presença que montar/entrada.js usa — é o que faz `aula-usp build` parar de recusar um deck com
+// gráfico antes de montar. Esta função continua sem o parâmetro porque nenhuma das duas chamadas a
+// validar() abaixo (achadosDeTex, grupo carga com recursos = { tex }; e o grupo saida) tem regra
+// fase 2 hoje — recursos.csv e recursos.dot (as duas regras de carga da fase 2) não leem recursos.tex,
+// e nenhuma regra de saida é fase 2 (medido no contrato). O dia em que uma regra fase-2 desses dois
+// grupos existir, o parâmetro entra aqui também, pela mesma razão de sempre: um validacao.json com
+// metades de fases diferentes é pior que nenhum.
 export async function construir({ raiz, caminhoDaAula, destino }) {
   // O mesmo contrato que construirHtml já leu por conta própria (ele não o devolve): a leitura dobrada
   // é dois usos do mesmo arquivo-fonte, não duas implementações de um cálculo — sem risco de divergir.

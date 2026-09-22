@@ -70,8 +70,8 @@ export async function build({ raiz, caminhoDaAula, destino, semPdf = false, nave
   // lá embaixo sobre por que ela também roda sobre o fonte, não o HTML construído), e chamar
   // validarArquivo abriria (e descartaria) um Chrome à toa antes mesmo de saber se a estática passa.
   progresso('etapa 1/7 — validando estática e carga (sem navegador)');
-  const { contrato, doc: docDaFonte, recursos, achadosEstatica } = await lerERodarEstatica(caminhoDaFonte, { raizDoSistema });
-  const achadosDeCarga = validarCarga(docDaFonte, { contrato, recursos });
+  const { contrato, doc: docDaFonte, recursos, achadosEstatica, fase } = await lerERodarEstatica(caminhoDaFonte, { raizDoSistema });
+  const achadosDeCarga = validarCarga(docDaFonte, { contrato, recursos, fase });
   const achadosIniciais = [...achadosEstatica, ...achadosDeCarga];
   if (contar(achadosIniciais).erros > 0) {
     // Primeiro final: "com erros, grava só validacao.json e termina com código 1" — nunca chega a

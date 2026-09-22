@@ -272,8 +272,8 @@ export async function decksLimpos(raiz) {
   const limpos = new Set();
   for (const nome of decksDoEspecime(raiz)) {
     const alvo = fileURLToPath(new URL(`especime/${nome}`, raiz));
-    const { doc, contrato, recursos, achadosEstatica } = await lerERodarEstatica(alvo, { raizDoSistema });
-    const achados = [...achadosEstatica, ...validarCarga(doc, { contrato, recursos })];
+    const { doc, contrato, recursos, achadosEstatica, fase } = await lerERodarEstatica(alvo, { raizDoSistema });
+    const achados = [...achadosEstatica, ...validarCarga(doc, { contrato, recursos, fase })];
     if (achados.length === 0) limpos.add(nome);
   }
   return limpos;

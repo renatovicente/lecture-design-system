@@ -18,6 +18,13 @@ export const RAIZ_SISTEMA = fileURLToPath(new URL('..', import.meta.url));
 
 export { REGRAS_ESTATICAS };
 
+// A mesma regra de presença que montar/entrada.js usa (SELETOR_FASE_2, com o mesmo comentário lá):
+// sem figure.grafico nem figure.diagrama no fonte, fase 2 e fase 1 acusam exatamente os mesmos
+// erros, então nenhum deck de fase 1 muda de comportamento por causa disto. Duplicada aqui, e não
+// importada de lá, porque montar/entrada.js é do lado navegador (a fronteira do AGENTS.md: nada de
+// Node em montar/) — as duas cópias são o mesmo texto de seletor, não duas decisões independentes.
+const SELETOR_FASE_2 = 'figure.grafico, figure.diagrama';
+
 export function caminhoDaAula(alvo) {
   const absoluto = resolve(alvo);
   const info = statSync(absoluto); // ENOENT sobe: quem chama traduz em saída 2
@@ -84,18 +91,26 @@ export async function lerERodarEstatica(alvo, { regras = REGRAS_ESTATICAS, raizD
   const unidades = JSON.parse(readFileSync(join(raizDoSistema, 'assets/marcas/unidades.json'), 'utf8'));
   const cobertura = lerCoberturaDoSistema(raizDoSistema);
   const doc = lerAula(caminho, contrato);
+  // A presença de figure.grafico/figure.diagrama no fonte é o único sinal que existe hoje de que
+  // esta aula quer as regras estáticas de fase 2 (mesma regra que montar/entrada.js já usa do lado
+  // navegador) — sem isto, `aula-usp build`/`aula-usp validar` recusavam QUALQUER deck com gráfico
+  // antes mesmo de montar (achado do coordenador, tarefa 6): estrutura.obrigatorio e
+  // estrutura.fora-do-layout, fase 1 por padrão, não reconhecem figure.grafico como bloco de corpo.
+  const fase = doc.querySelector(SELETOR_FASE_2) ? 2 : 1;
   // Nesta ordem: validar() normaliza doc.body como efeito colateral (validador/validar.js:28), e
   // carregarNoNode (build/carregar.mjs:texInvalido) depende disso já ter acontecido.
-  const achadosEstatica = validar(doc, { contrato, regras, grupo: 'estatica', unidades, cobertura });
+  const achadosEstatica = validar(doc, { contrato, regras, grupo: 'estatica', unidades, cobertura, fase });
   const { default: katex } = await import('katex');
   const recursos = carregarNoNode(doc, { pastaDaAula: dirname(caminho), katex });
-  return { caminho, contrato, doc, recursos, achadosEstatica };
+  return { caminho, contrato, doc, recursos, achadosEstatica, fase };
 }
 
 // O grupo de carga (spec 9.3), dado o doc e os recursos que lerERodarEstatica já preparou — função à
 // parte só por causa do enriquecimento de recursos.demos entre uma chamada e outra (comentário acima).
-export function validarCarga(doc, { contrato, recursos }) {
-  return validar(doc, { contrato, regras: REGRAS_DE_CARGA, grupo: 'carga', recursos });
+// `fase` tem o mesmo padrão de default de validar() (validador/validar.js): 1 quando quem chama não
+// tiver o valor que lerERodarEstatica calculou (compatibilidade com chamadas antigas).
+export function validarCarga(doc, { contrato, recursos, fase = 1 }) {
+  return validar(doc, { contrato, regras: REGRAS_DE_CARGA, grupo: 'carga', recursos, fase });
 }
 
 // async porque o grupo de carga precisa do await import('katex') (dentro de lerERodarEstatica), e a
@@ -115,12 +130,12 @@ export async function validarArquivo(alvo, { regras = REGRAS_ESTATICAS, raizDoSi
   // navegador sobe um servidor e renderiza a aula inteira enquanto o KaTeX e o disco rodam aqui no
   // Node, sem nada em comum entre os dois lados até recursos.demos, logo abaixo.
   const composicao = medirComposicao(caminho, { contrato });
-  const { doc, recursos, achadosEstatica } = await lerERodarEstatica(alvo, { regras, raizDoSistema });
+  const { doc, recursos, achadosEstatica, fase } = await lerERodarEstatica(alvo, { regras, raizDoSistema });
   const { achados: daComposicao, demos: demosDoChrome, motivo: semChrome } = await composicao;
   // Com Chrome, o registro de demos vem do que a página realmente executou, não do scanner de texto
   // de build/carregar.mjs — instrução do controlador para o marco 4c (ver build/composicao.mjs).
   if (demosDoChrome) recursos.demos = demosDoChrome;
-  const deCarga = validarCarga(doc, { contrato, recursos });
+  const deCarga = validarCarga(doc, { contrato, recursos, fase });
   const achados = [...achadosEstatica, ...deCarga, ...(daComposicao ?? [])];
   // Falta de Chrome não é falha (spec 8.1): achados fica sem o grupo de composição, e erros/avisos
   // conta só o que os outros dois grupos acharam; o motivo vai num campo à parte para a CLI avisar
