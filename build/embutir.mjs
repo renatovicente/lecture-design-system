@@ -3,9 +3,13 @@
 import { readFile } from 'node:fs/promises';
 import { parseHTML } from 'linkedom';
 import katex from 'katex';
+import { scaleLinear, scaleLog } from 'd3-scale';
+import { line } from 'd3-shape';
+import { extent } from 'd3-array';
 import { montar } from '../montar/montar.js';
 import { renderizarTex } from '../componentes/tex.js';
 import { criarDestacador, renderizarCodigo } from '../componentes/codigo.js';
+import { criarDesenhista, desenharGraficos } from '../componentes/graficos.js';
 
 // Sem 'fontes': estilos/fontes.css é o @font-face de DESENVOLVIMENTO (URL relativa a assets/fontes/,
 // servida por build/servir.mjs). embutirFontes (tarefa 2 do marco 5b) já devolve o @font-face de
@@ -16,6 +20,7 @@ import { criarDestacador, renderizarCodigo } from '../componentes/codigo.js';
 // 6), e Geist/Geist Mono caem para a fonte de reserva — dois net::ERR_FILE_NOT_FOUND, dois erros no
 // console, e o título deixa de sair em Geist, contra o fato 7.
 const ESTILOS = ['tokens', 'base', 'layouts', 'componentes', 'motor', 'impressao'];
+const SELETOR_GRAFICO = 'figure.grafico';
 
 const TIPOS = { '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.webp': 'image/webp', '.gif': 'image/gif' };
 
@@ -61,6 +66,19 @@ async function prerenderizarCodigo(document, contrato) {
   const gramaticas = Object.fromEntries(usadas.map((linguagem, k) => [linguagem, modulosDasGramaticas[k].default]));
   const destacador = criarDestacador({ createShikiPrimitive, codeToTokensBase, createJavaScriptRegexEngine, gramaticas });
   return renderizarCodigo(document.body, { destacador });
+}
+
+// Gráficos (spec 3.5, fase 2), no mesmo padrão de prerenderizarCodigo: a mesma regra de presença que
+// montar/entrada.js usa (SELETOR_GRAFICO) decide se este passo roda. d3-scale/d3-shape/d3-array
+// entram por import estático no topo do arquivo — Node resolve o pacote sozinho, como katex já faz —
+// e criarDesenhista recebe as quatro funções pelo MESMO parâmetro que o navegador usa (componentes/
+// graficos.js não sabe se está em Node ou no cliente). Sem `dados`: nenhum fixture ou deck do
+// espécime usa caminho de CSV hoje — toda especificação de gráfico traz colunas inline (objeto),
+// que desenharGraficos já resolve sem consultar `dados` (ver o comentário dela).
+function prerenderizarGraficos(document) {
+  if (!document.querySelector(SELETOR_GRAFICO)) return [];
+  const desenhista = criarDesenhista({ escalaLinear: scaleLinear, escalaLog: scaleLog, linha: line, extensao: extent });
+  return desenharGraficos(document.body, { desenhista });
 }
 
 // O arranque do HTML construído. Duas partes, e a ordem entre elas é o motivo de o marco 5a existir:
@@ -121,6 +139,7 @@ export async function construirHtml({ raiz, caminhoDaAula, embutirFontes }) {
   // Etapa 3. A matemática entra antes do motor: cada \passo vira data-passo, que o motor conta.
   const errosDeTex = renderizarTex(document.body, { katex });
   const errosDeCodigo = await prerenderizarCodigo(document, contrato);
+  const errosDeGrafico = prerenderizarGraficos(document);
 
   // Etapa 4. As fontes só agora: embutirFontes precisa do documento COM o TeX já renderizado, para
   // saber quais famílias do KaTeX a aula usa (spec 3.3: "só as que a aula usa").
@@ -142,5 +161,5 @@ export async function construirHtml({ raiz, caminhoDaAula, embutirFontes }) {
   motor.after(arranque);
 
   const html = `<!DOCTYPE html>\n${document.documentElement.outerHTML}\n`;
-  return { html, resumo, doc: document, fontes, errosDeTex, errosDeCodigo };
+  return { html, resumo, doc: document, fontes, errosDeTex, errosDeCodigo, errosDeGrafico };
 }
