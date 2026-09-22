@@ -170,6 +170,22 @@ test('barras: três séries na cor certa; as marcas do eixo x são as categorias
   assert.deepEqual(marcasDoEixoX.map((t) => t.textContent), ['x', 'y', 'z'], 'categorias literais, não índices 0/1/2');
 });
 
+test('barras: o rótulo de cada série fica na margem direita — não em cima do grupo de barras seguinte (Critical 2 da revisão)', () => {
+  const especificacao = { tipo: 'barras', x: 'grupo', y: ['a', 'b', 'c'], foco: 'b', eixos: {} };
+  const colunas = { grupo: ['x', 'y', 'z'], a: [3, 5, 2], b: [4, 2, 6], c: [1, 3, 4] };
+  const svg = svgDe(desenhista.desenharSvg(especificacao, colunas));
+  const todasAsBarras = [...svg.querySelectorAll('.serie rect')];
+  const direitaMaxima = Math.max(...todasAsBarras.map((r) => Number(r.getAttribute('x')) + Number(r.getAttribute('width'))));
+  const series = [...svg.querySelectorAll('.serie')];
+  const xsDosRotulos = series.map((g) => Number(g.querySelector('.serie-rotulo').getAttribute('x')));
+  for (const [i, grupo] of series.entries()) {
+    assert.ok(xsDosRotulos[i] > direitaMaxima, `rótulo de ${grupo.getAttribute('data-serie')} (x=${xsDosRotulos[i]}) fica à direita de toda barra (max=${direitaMaxima}), não só da própria`);
+  }
+  // as três séries compartilham a mesma margem — nenhuma fica "mais perto" da borda que a outra,
+  // o que era exatamente o defeito: só a última série (a mais à direita dentro do grupo) alcançava a margem.
+  assert.equal(new Set(xsDosRotulos).size, 1, 'as três séries alinham no mesmo x — a margem direita do gráfico');
+});
+
 test('dispersao: série única sai em tinta, um círculo por ponto', () => {
   const especificacao = { tipo: 'dispersao', x: 'idade', y: ['altura'], eixos: { x: 'idade', y: 'altura' } };
   const colunas = { idade: [1, 2, 3], altura: [50, 60, 70] };

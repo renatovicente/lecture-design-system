@@ -252,8 +252,9 @@ function montarBarras(biblioteca, especificacao, colunas) {
       return desenharBarra(escalaY, valor, zero, x, larguraBarra, preenchimentoDaSerie(cor, tracejada));
     }).join('');
     const ultimo = n - 1;
-    const x = escalaIndice(ultimo) + larguraGrupo * 0.15 + j * larguraBarra + larguraBarra;
-    const ponta = { x, y: Math.min(escalaY(colunas[serie][ultimo]), zero) };
+    // a ponta fica na margem direita do gráfico (AREA.x1), igual para as 3 séries — não no fim da
+    // própria barra: aquilo cai por cima do grupo de barras da série seguinte (Critical 2 da revisão).
+    const ponta = { x: AREA.x1, y: Math.min(escalaY(colunas[serie][ultimo]), zero) };
     const rotulo = desenharRotuloDaSerie(ponta, cor, tracejada, serie);
     return elemento('g', { class: 'serie', 'data-serie': serie, 'data-cor': cor }, barras + rotulo);
   }).join('');
