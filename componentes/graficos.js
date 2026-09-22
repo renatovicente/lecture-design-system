@@ -287,8 +287,11 @@ function desenharBarra(escalaY, valor, zero, x, largura, atributosDePreenchiment
 // tipo "histograma": uma só distribuição (a coluna de `x`), em `classes` classes de largura igual
 // entre o mínimo e o máximo — sem `d3.bin`, que não está entre os quatro parâmetros do Passo 2; a
 // conta é a mesma soma por faixa que ele faz. `x` é contínuo, como em "linha"/"dispersao" — por isso
-// `faixas` também se aplica aqui (só "barras", de eixo categórico, fica de fora — Important 3 da
-// revisão: a omissão de faixas tinha justificativa só para barras, e o código não distinguia os dois).
+// `faixas` também se aplica aqui (só "barras", de eixo categórico, fica de fora).
+// Rótulo na ponta: a Tarefa 2 tinha isentado o histograma ("uma série só, nada para desambiguar"),
+// mas a spec 7.2 diz "cada série é rotulada na ponta" sem isenção nenhuma, e o rótulo tem uma segunda
+// função além de desambiguar cor — nomear a grandeza plotada, que vale mesmo com uma série só.
+// Decisão do coordenador na revisão da Tarefa 2: implementar, revertendo a exceção.
 function montarHistograma(biblioteca, especificacao, colunas) {
   const { x: nomeX, classes, eixos = {}, escala = {}, faixas } = especificacao;
   const valores = colunas[nomeX];
@@ -313,7 +316,11 @@ function montarHistograma(biblioteca, especificacao, colunas) {
     const x1 = escalaX(minimo + (i + 1) * larguraClasse);
     return desenharBarra(escalaY, contagem, zero, Math.min(x0, x1) + GAP, Math.max(Math.abs(x1 - x0) - 2 * GAP, 0), preenchimentoDaSerie(cor, tracejada));
   }).join('');
-  const seriesSvg = elemento('g', { class: 'serie', 'data-serie': nomeX, 'data-cor': cor }, barras);
+  // a ponta é o topo da última classe (a mesma margem direita que "barras" usa, AREA.x1) — a última
+  // classe termina exatamente em `maximo`, então escalaX(maximo) === AREA.x1.
+  const ponta = { x: escalaX(maximo), y: Math.min(escalaY(contagens.at(-1)), zero) };
+  const rotulo = desenharRotuloDaSerie(ponta, cor, tracejada, nomeX);
+  const seriesSvg = elemento('g', { class: 'serie', 'data-serie': nomeX, 'data-cor': cor }, barras + rotulo);
   const marcasX = Array.from({ length: classes + 1 }, (_, i) => minimo + i * larguraClasse).map((valor) => [valor, formatarNumero(valor)]);
   const eixosSvg = desenharEixos({ tituloX: eixos.x, tituloY: eixos.y }) + desenharMarcasEixoX(marcasX, escalaX) + desenharMarcasEixoY(escalaY);
 
