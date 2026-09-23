@@ -190,7 +190,13 @@ test('carga sob demanda: só as gramáticas das linguagens usadas; sem pre[data-
   assert.ok(modulosPedidos(matematica.pedidos).includes('katex/dist/katex.mjs'));
   assert.ok(!modulosPedidos(matematica.pedidos).some((modulo) => modulo.startsWith('@shikijs/')), 'aula sem código pediu o Shiki');
 
+  // componentes.html tem um gráfico desde a Tarefa 6 da fase 2a e nenhum código nem TeX: pede o d3
+  // (e só o d3 e a árvore dele), nada do Shiki, nada do KaTeX. Cada módulo pedido tem de ser da
+  // árvore do d3 — se um dia ele pedir o Shiki ou o KaTeX, esta asserção cai com o nome do intruso.
   const componentes = await abrirAula(navegador, `${servidor.endereco}/componentes.html?folha`);
   t.after(() => componentes.pagina.close());
-  assert.deepEqual(modulosPedidos(componentes.pedidos), []);
+  const pedidosComponentes = modulosPedidos(componentes.pedidos);
+  assert.ok(pedidosComponentes.some((modulo) => modulo.startsWith('d3-scale/')), 'aula com gráfico não pediu o d3-scale');
+  assert.deepEqual(pedidosComponentes.filter((modulo) => !/^(d3-[a-z-]+|internmap)\//.test(modulo)), [],
+    'aula com gráfico e sem código nem TeX pediu módulo fora da árvore do d3');
 });

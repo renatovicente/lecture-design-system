@@ -20,10 +20,10 @@ after(async () => {
 // Uma página em modo folha serve aos testes de geometria: nela os passos aparecem revelados.
 const folha = () => (folhaAberta ??= abrirAula(navegador, `${servidor.endereco}/componentes.html?folha`));
 
-test('espécime de componentes: 15 slides montados sem erros, e toda classe do documento está no contrato', async () => {
+test('espécime de componentes: 17 slides montados sem erros, e toda classe do documento está no contrato', async () => {
   const { pagina, erros } = await folha();
   const slides = await pagina.evaluate(() => document.querySelectorAll('section.slide').length);
-  assert.equal(slides, 15);
+  assert.equal(slides, 17);
   assert.deepEqual(erros, []);
   assert.deepEqual(await classesForaDoContrato(pagina), []);
 });
