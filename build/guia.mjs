@@ -213,7 +213,7 @@ const ONDE = {
   proxima: 'o `p.proxima` do encerramento',
   codigo: 'cada `pre`',
   tabela: 'cada `table`',
-  grafico: 'cada `figure.grafico` (fase 2: erro hoje)',
+  grafico: 'cada `figure.grafico`',
   diagrama: 'cada `figure.diagrama` (fase 2: erro hoje)',
   saida: 'o arquivo que `aula-usp build` escreve',
 };

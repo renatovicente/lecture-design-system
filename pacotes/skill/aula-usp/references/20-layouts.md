@@ -135,7 +135,7 @@ Extraído de `especime/index.html`.
     </script>
     <figcaption>Duas turmas ao longo de três provas; a turma em foco sai em azul, a outra em tinta.</figcaption>
   </figure>
-  <aside class="notas">O JSON descreve a série; o SVG é desenhado pelo mesmo módulo no navegador e no build (Tarefa 6 da fase 2a).</aside>
+  <aside class="notas">O JSON descreve a série; o SVG é desenhado pelo mesmo módulo no navegador e no build.</aside>
 </section>
 ```
 

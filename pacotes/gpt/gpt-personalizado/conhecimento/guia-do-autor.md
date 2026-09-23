@@ -312,7 +312,7 @@ Três avisos de leitura:
 | `tabela.linhasDeDados` | no máximo 8 linhas de dados | cada `table` |
 | `tabela.colunas` | no máximo 6 colunas | cada `table` |
 | `diagrama.nos` | no máximo 15 nós | cada `figure.diagrama` (fase 2: erro hoje) |
-| `grafico.series` | no máximo 3 séries | cada `figure.grafico` (fase 2: erro hoje) |
+| `grafico.series` | no máximo 3 séries | cada `figure.grafico` |
 | `saida.megabytes` | no máximo 10 megabytes | o arquivo que `aula-usp build` escreve |
 <!-- /gerado -->
 
@@ -553,7 +553,7 @@ Extraído de `especime/index.html`.
     </script>
     <figcaption>Duas turmas ao longo de três provas; a turma em foco sai em azul, a outra em tinta.</figcaption>
   </figure>
-  <aside class="notas">O JSON descreve a série; o SVG é desenhado pelo mesmo módulo no navegador e no build (Tarefa 6 da fase 2a).</aside>
+  <aside class="notas">O JSON descreve a série; o SVG é desenhado pelo mesmo módulo no navegador e no build.</aside>
 </section>
 ```
 
@@ -994,7 +994,7 @@ Um trecho que precise de mais de uma linha não é `code` no meio da frase: é u
 
 # Gráficos, diagramas e demos
 
-Três nomes num arquivo só, com estados diferentes: **a demo interativa existe e funciona hoje; o gráfico, o diagrama e os controles do sistema são da fase 2 e ainda não existem.** Os três estão desenhados na especificação, e parte deles já tem lugar reservado no contrato, marcado como fase 2 — mas o validador de hoje recusa os três, com erro.
+Três nomes num arquivo só, com estados diferentes: **a demo interativa e o gráfico (`figure.grafico`) funcionam hoje; o diagrama e os controles do sistema ainda não existem, e o validador os recusa com erro.** O gráfico tem exemplo no layout `figura`, em **Layouts**; o capítulo completo sobre ele ainda vai ser escrito.
 
 Este arquivo diz o que você pode usar agora, mostra a forma da demo, e depois diz o que a fase 2 vai trazer, sem mostrar marcação de coisa que não roda. Documentar como pronto o que não existe é pior do que não documentar.
 
@@ -1005,7 +1005,7 @@ Este arquivo diz o que você pode usar agora, mostra a forma da demo, e depois d
 | demo interativa (`div.demo`, `AulaUSP.demo`) | funciona |
 | figura em SVG escrito à mão, dentro de `figure` | funciona (**Componentes**) |
 | imagem de arquivo em `img/`, ou URI `data:` | funciona (**Componentes**) |
-| `figure.grafico` com a especificação do gráfico em JSON | fase 2: erro hoje |
+| `figure.grafico` com a especificação do gráfico em JSON | funciona (**Layouts**, layout `figura`) |
 | `figure.diagrama` com o grafo em DOT | fase 2: erro hoje |
 | controles do sistema, como `button.controle` | fase 2: erro hoje |
 | captura automática da demo no build (`data-captura-ms`) | fase 2: erro hoje |
@@ -1123,12 +1123,11 @@ Duas coisas que surpreendem quem desenha um gráfico à mão, as duas medidas:
 
 Nada nesta seção funciona hoje. Ela está aqui para você saber o que não vale a pena improvisar e o que virá pronto.
 
-- **`figure.grafico`**, com a especificação do gráfico em JSON — tipo, dados, eixos, séries, faixas — desenhado pelo mesmo módulo no navegador e no build, já dentro da paleta e da tipografia do sistema.
 - **`figure.diagrama`**, com o grafo em DOT, com o layout do Graphviz e o estilo imposto depois pelo sistema.
 - **Os controles**, para as demos não terem de criar botão e cursor na mão, e saírem iguais em todas as aulas.
 - **A captura automática**, que fotografa a demo no build e dispensa a `img.estatico` escrita à mão.
 
-Escrever qualquer um deles hoje não é ficar um passo à frente: é ganhar erro. Um `figure.grafico` com o JSON dentro produz quatro erros de uma vez (medido) — `vocabulario.classe`, porque a classe `grafico` é de fase 2 e não existe na fase 1; `vocabulario.script`, cuja mensagem é justamente "gráficos e diagramas são da fase 2"; `estrutura.fora-do-layout`, porque `figure` não aceita `script`; e `estrutura.obrigatorio`, porque a `figure` ficou sem `img` nem `svg`. Quatro mensagens para uma mesma causa: ainda não.
+Escrever qualquer um deles hoje não é ficar um passo à frente: é ganhar erro. Um `figure.diagrama` é recusado por `recursos.dot`, com a mensagem "diagrama ainda não está disponível": nada desenha o DOT ainda, e a figura sairia vazia.
 
 <!-- guia/60-validador.md -->
 
