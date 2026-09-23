@@ -28,8 +28,11 @@ const AREA = { x0: MARGEM.esquerda, x1: LARGURA - MARGEM.direita, y0: MARGEM.top
 // segurança para quem chama coresDasSeries fora do validador (os testes deste módulo inclusive):
 // sem a de baixo, a 3ª série em diante saía sem cor (sobra.shift() num array já esvaziado devolve
 // undefined, e { serie, ...undefined } não erra — só não tem cor nenhuma) — um path sem stroke,
-// invisível e sem aviso nenhum (Important 4 da revisão). O número aqui é redundante com o do
-// contrato por desenho (rede de segurança, não fonte); mudar o limite é editar o contrato.
+// invisível e sem aviso nenhum (Important 4 da revisão). O 3 aqui não é cópia do contrato: é o
+// tamanho da paleta de séries da spec 7.2 (três papéis de cor — tinta, azul e cinza tracejada — e
+// `sobra`, logo abaixo, tem só dois além do foco). contrato.limites['grafico.series'] pode BAIXAR o
+// número de séries aceitas; subir acima de 3 faria o validador aceitar o que este desenho recusa, e
+// exigiria antes uma quarta cor na spec.
 export function coresDasSeries(y, foco) {
   if (y.length > 3) throw new Error(`no máximo 3 séries em y; recebidas ${y.length}`);
   if (y.length === 1) return [{ serie: y[0], cor: 'tinta', tracejada: false }];
@@ -121,10 +124,11 @@ function preenchimentoDaSerie(cor, tracejada) {
 // Log de zero (ou de negativo) é -Infinity: a escala "funciona" sem lançar sozinha, e cada posição
 // sai NaN, calada — o path de uma série vira "MNaN,16L…" e nada desenha (Important 2 da revisão).
 // vocabulario.atributo não confere valor de atributo de SVG, então nada mais acusaria isto depois.
-// recursos.grafico (Tarefa 4), estática, também NÃO confere isto: o domínio é dos VALORES
-// carregados, não do JSON da especificação, e uma regra estática — por definição, sem carregar nada
-// — não os tem quando `dados` é um caminho de CSV (só quando `dados` já vem inline ela poderia, e
-// mesmo assim o brief da Tarefa 4 não pediu essa cobertura). Este throw continua sendo a única defesa.
+// Em "barras" e "histograma" o domínio de y inclui o zero por construção, então log em y falha
+// sempre — recursos.grafico recusa essa combinação antes de desenhar (TIPOS_COM_ZERO_EM_Y). Nos
+// outros casos (linha e dispersão, e o x de qualquer tipo contínuo) o domínio sai dos VALORES, que uma
+// regra estática não tem quando `dados` é um caminho de CSV; aí este throw é a defesa, e o erro dele
+// chega ao autor pelo build (build/construir.mjs:achadosDeGrafico).
 function criarEscala({ escalaLinear, escalaLog }, tipoDeEscala, dominio, alcance) {
   if (tipoDeEscala === 'log' && dominio.some((valor) => valor <= 0)) {
     throw new Error(`escala log exige valores maiores que zero no domínio; recebido [${dominio.join(', ')}]`);
@@ -386,6 +390,38 @@ const MONTADORES = { linha: montarLinha, barras: montarBarras, dispersao: montar
 // ANTES de desenhar, em vez de reescrever a mesma lista de quatro nomes por conta própria.
 export const TIPOS_DE_GRAFICO = new Set(Object.keys(MONTADORES));
 
+// Os tipos cujo eixo y sempre inclui o zero: "barras" cresce a partir de 0 (montarBarras, domínio
+// [min(0, …), max]) e o y do "histograma" é contagem, domínio [0, max] (montarHistograma). Em escala
+// log, criarEscala recusa esses domínios SEMPRE, qualquer que seja o dado — por isso recursos.grafico
+// recusa `escalas.y: "log"` nesses dois tipos antes de desenhar, sem precisar carregar nada.
+export const TIPOS_COM_ZERO_EM_Y = new Set(['barras', 'histograma']);
+
+// O campo `dados` (spec 7.2): o caminho de um CSV (texto) ou um objeto de colunas. Devolve a frase do
+// problema, ou null. Uma fonte só para as duas pontas: recursos.grafico (estática, antes de desenhar)
+// e desenharGraficos (quem desenha fora do validador).
+export function problemaDosDados(dados) {
+  if (dados === undefined) return 'gráfico sem o campo "dados"';
+  if (typeof dados === 'string') return dados.trim() === '' ? 'gráfico com "dados" vazio' : null;
+  if (dados === null || typeof dados !== 'object' || Array.isArray(dados)) {
+    return '"dados" tem de ser o caminho de um CSV ou um objeto de colunas, como {"epoca": [...]}';
+  }
+  return null;
+}
+
+// As colunas que a especificação lê e que `colunas` não tem (ou não tem como lista): `x` sempre, e
+// cada série de `y` fora do histograma (que só lê `x`). recursos.grafico usa isto com `dados` inline,
+// antes de desenhar; desenharGraficos, com qualquer origem — inclusive o CSV, que só o build lê.
+export function colunasAusentes(especificacao, colunas) {
+  const series = especificacao.tipo === 'histograma' || !Array.isArray(especificacao.y) ? [] : especificacao.y;
+  const usadas = [...new Set([especificacao.x, ...series].filter((nome) => typeof nome === 'string'))];
+  return usadas.filter((nome) => !Array.isArray(colunas?.[nome]));
+}
+
+export function mensagemDeColunasAusentes(ausentes) {
+  const lista = ausentes.map((nome) => `"${nome}"`).join(', ');
+  return ausentes.length === 1 ? `os dados do gráfico não têm a coluna ${lista}` : `os dados do gráfico não têm as colunas ${lista}`;
+}
+
 // O desenhista com as funções do d3 da aula: escalaLinear/escalaLog (d3-scale), linha (d3-shape),
 // extensao (d3-array). Puro: nenhuma chamada toca o DOM, e desenharSvg devolve uma string — quem
 // insere no documento é desenharGraficos, abaixo, do mesmo jeito que componentes/tex.js gera HTML do
@@ -406,11 +442,11 @@ export function criarDesenhista({ escalaLinear, escalaLog, linha, extensao }) {
   };
 }
 
-// Acrescenta, dentro de raiz, um SVG ao lado do script de cada figure.grafico (script.after — NÃO
-// troca, apesar do nome antigo deste comentário); devolve os erros, cada um com o trecho do JSON e a
-// mensagem. `dados` resolve o caminho de um CSV (modo build) para colunas — quem resolve o caminho é
-// quem chama (spec 7.2); uma especificação com colunas inline (objeto em vez de string) não consulta
-// `dados` e roda igual no navegador sem arquivos.
+// Acrescenta, dentro de raiz, um SVG ao lado do script de cada figure.grafico (script.after: o script
+// fica); devolve os erros, cada um com o trecho do JSON e a mensagem. `dados` resolve o caminho de um
+// CSV (modo build) para colunas — quem lê o arquivo é quem chama (build/embutir.mjs:dadosDosCsvs,
+// spec 7.2); uma especificação com colunas inline (objeto em vez de string) não consulta `dados` e
+// roda igual no navegador sem arquivos.
 // Por que "acrescenta" e não "troca" fica assim, sem virar `exatamenteUmDe` no contrato: depois de
 // renderizada, a figure tem script + svg (+ figcaption opcional), enquanto o contrato descreve a
 // forma de FONTE. Inofensivo hoje porque recursos.grafico (Tarefa 4) e todo o grupo estático leem o
@@ -428,8 +464,17 @@ export function desenharGraficos(raiz, { desenhista, dados = {} }) {
     const trecho = script.textContent.trim();
     try {
       const especificacao = JSON.parse(trecho);
+      const problema = problemaDosDados(especificacao.dados);
+      if (problema) throw new Error(problema);
+      // Um caminho que quem chama não leu: no navegador, sempre (ninguém lê CSV lá, spec 7.2); no
+      // build, só quando o arquivo não existe — e aí a etapa 1 já recusou a aula por recursos.csv.
+      if (typeof especificacao.dados === 'string' && !Object.hasOwn(dados, especificacao.dados)) {
+        throw new Error(`o CSV "${especificacao.dados}" não foi lido: caminho de CSV só é lido por \`aula-usp build\`; `
+          + 'no navegador, ponha as colunas inline em "dados"');
+      }
       const colunas = typeof especificacao.dados === 'string' ? dados[especificacao.dados] : especificacao.dados;
-      if (!colunas) throw new Error(`dados não encontrados para "${especificacao.dados}"`);
+      const ausentes = colunasAusentes(especificacao, colunas);
+      if (ausentes.length > 0) throw new Error(mensagemDeColunasAusentes(ausentes));
       const molde = doc.createElement('template');
       molde.innerHTML = desenhista.desenharSvg(especificacao, colunas);
       script.after(molde.content.firstChild);

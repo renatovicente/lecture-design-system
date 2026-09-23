@@ -468,10 +468,29 @@ test('desenharGraficos reporta dados ausentes sem impedir as demais figuras da m
   );
   const erros = desenharGraficos(raiz, { desenhista, dados: {} });
   assert.equal(erros.length, 1);
-  assert.match(erros[0].mensagem, /dados não encontrados/);
+  // C2 da revisão final da 2a: no navegador ninguém lê CSV, e a mensagem diz isso ao autor, com o
+  // que fazer — não "dados não encontrados", que parecia um caminho errado.
+  assert.match(erros[0].mensagem, /o CSV "data\/nao-existe\.csv" não foi lido: caminho de CSV só é lido por `aula-usp build`; no navegador, ponha as colunas inline em "dados"/);
   const figuras = [...raiz.querySelectorAll('figure.grafico')];
   assert.equal(figuras[0].querySelector('svg'), null, 'a figura sem dados fica sem SVG — não some, não quebra');
   assert.notEqual(figuras[1].querySelector('svg'), null, 'a figura seguinte, com dados inline, desenha normalmente');
+});
+
+// I4 da revisão final da 2a: coluna ausente saía como a mensagem crua de uma função interna
+// ("Cannot read properties of undefined (reading '0')", "values is not iterable"), e `dados` ausente
+// como 'dados não encontrados para "undefined"'. Vale também para o CSV, que só o build lê e que por
+// isso recursos.grafico (estática) não confere.
+test('desenharGraficos diz qual coluna falta, e que falta o campo "dados", em português', () => {
+  const casos = [
+    [{ tipo: 'linha', dados: { x: [0, 1], a: [0, 1] }, x: 'x', y: ['nada'] }, {}, 'os dados do gráfico não têm a coluna "nada"'],
+    [{ tipo: 'linha', dados: { x: [0, 1], a: [0, 1] }, x: 'nada', y: ['a', 'outra'] }, {}, 'os dados do gráfico não têm as colunas "nada", "outra"'],
+    [{ tipo: 'linha', dados: 'd.csv', x: 'x', y: ['nada'] }, { 'd.csv': { x: [0, 1], a: [0, 1] } }, 'os dados do gráfico não têm a coluna "nada"'],
+    [{ tipo: 'linha', x: 'x', y: ['a'] }, {}, 'gráfico sem o campo "dados"'],
+  ];
+  for (const [especificacao, dados, mensagem] of casos) {
+    const raiz = corpo(`<figure class="grafico"><script type="application/json">${JSON.stringify(especificacao)}</script></figure>`);
+    assert.deepEqual(desenharGraficos(raiz, { desenhista, dados }).map((erro) => erro.mensagem), [mensagem]);
+  }
 });
 
 test('desenharGraficos reporta JSON inválido sem lançar, com o trecho original do script na mensagem', () => {

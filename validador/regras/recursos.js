@@ -2,7 +2,9 @@
 // carregar KaTeX, imagem nem script. O que precisa de carga fica para o marco 4c.
 import { onde, trechoDe, encurtar } from '../validar.js';
 import { segmentosDeTex, textosComTex, textosDe } from '../../componentes/tex.js';
-import { TIPOS_DE_GRAFICO } from '../../componentes/graficos.js';
+import {
+  TIPOS_DE_GRAFICO, TIPOS_COM_ZERO_EM_Y, problemaDosDados, colunasAusentes, mensagemDeColunasAusentes,
+} from '../../componentes/graficos.js';
 
 // $…$ com barra, expoente ou índice quase sempre é matemática escrita com o delimitador errado.
 // Global para matchAll: cada ocorrência do segmento é reportada, não só a primeira.
@@ -162,10 +164,14 @@ export const regras = [
     // garante, ANTES de desenhar, (1) tipo entre os quatro de TIPOS_DE_GRAFICO, (2) no máximo
     // contrato.limites['grafico.series'] séries — o mesmo número que coresDasSeries também defende
     // sozinha, como rede de segurança para quem a chama fora do validador —, (3) foco ∈ y, (4)
-    // escalas.x/escalas.y ∈ {linear, log}, e (5) os campos que cada tipo precisa para desenhar (x
-    // sempre; y não vazio fora de histograma; classes em histograma). NÃO confere domínio ≤ 0 em
-    // escala log (o throw de criarEscala): isso depende dos VALORES carregados, que uma regra
-    // estática — por definição, sem carregar nada — não tem quando `dados` é um caminho de CSV.
+    // escalas.x/escalas.y ∈ {linear, log}, (5) os campos que cada tipo precisa para desenhar (x
+    // sempre; y não vazio fora de histograma; classes em histograma), (6) `dados` presente, como
+    // caminho ou objeto de colunas (problemaDosDados); (7) com `dados` inline, que as colunas de x e
+    // de cada y existem (colunasAusentes); e (8) nada de escalas.y "log" em barras e histograma, cujo
+    // y inclui o zero por construção e falharia com qualquer dado (TIPOS_COM_ZERO_EM_Y). As três
+    // funções vêm de componentes/graficos.js, a mesma fonte que o desenho usa. O que sobra para o
+    // desenho: domínio ≤ 0 em log nos outros casos (depende dos VALORES) e as colunas de um CSV, que
+    // uma regra estática — sem carregar nada — não tem; esses erros chegam ao autor pelo build.
     nome: 'recursos.grafico',
     *aplicar({ slides, contrato }) {
       for (const secao of slides) {
@@ -227,6 +233,20 @@ export const regras = [
             if (valor !== undefined && valor !== 'linear' && valor !== 'log') {
               yield { ...onde(slides, secao), mensagem: `escalas.${eixo} fora de "linear"/"log": ${JSON.stringify(valor)}.`, trecho };
             }
+          }
+          if (especificacao.escalas?.y === 'log' && TIPOS_COM_ZERO_EM_Y.has(especificacao.tipo)) {
+            yield {
+              ...onde(slides, secao),
+              mensagem: `gráfico "${especificacao.tipo}" com escalas.y "log": o eixo y dele começa em zero, e zero não existe em escala log.`,
+              trecho,
+            };
+          }
+          const problema = problemaDosDados(especificacao.dados);
+          if (problema) {
+            yield { ...onde(slides, secao), mensagem: `${problema}.`, trecho };
+          } else if (typeof especificacao.dados === 'object') {
+            const ausentes = colunasAusentes(especificacao, especificacao.dados);
+            if (ausentes.length > 0) yield { ...onde(slides, secao), mensagem: `${mensagemDeColunasAusentes(ausentes)}.`, trecho };
           }
         }
       }

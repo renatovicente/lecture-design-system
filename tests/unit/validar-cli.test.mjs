@@ -400,6 +400,29 @@ test('figure.diagrama não sai de validar nem de build com 0 erros, sozinho ou a
   }
 });
 
+// Critical 2 da revisão final da 2a: o exemplo literal da spec 7.2 aponta para "data/erro.csv".
+// Medido antes do conserto, com o CSV no disco: validar 0 erros, build saída 1 com "dados não
+// encontrados para "data/erro.csv"" — não havia leitor de CSV. O critério: validar E build com 0
+// erros, e <svg> de verdade no HTML construído.
+test('o exemplo literal da spec 7.2, com data/erro.csv no disco, sai de validar e de build com 0 erros e com <svg>', () => {
+  const pasta = aulaTemporaria(comFiguras(GRAFICO_7_2));
+  mkdirSync(join(pasta, 'data'));
+  let csv = 'epoca,treino,teste\n';
+  for (let epoca = 0; epoca <= 300; epoca += 20) csv += `${epoca},${(1 / (1 + epoca / 50)).toFixed(4)},${(1 / (1 + epoca / 80) + 0.1).toFixed(4)}\n`;
+  writeFileSync(join(pasta, 'data/erro.csv'), csv);
+  const validacao = spawnSync('node', [CLI, 'validar', pasta, '--json'], { encoding: 'utf8', env: SEM_CHROME });
+  assert.equal(validacao.status, 0, validacao.stdout + validacao.stderr);
+  assert.deepEqual(JSON.parse(validacao.stdout).filter((achado) => achado.severidade === 'erro'), []);
+  const construcao = spawnSync('node', [CLI, 'build', pasta, '--sem-pdf'], { encoding: 'utf8', env: SEM_CHROME });
+  assert.equal(construcao.status, 0, construcao.stdout + construcao.stderr);
+  const html = readFileSync(join(pasta, 'dist', `${basename(pasta)}.html`), 'utf8');
+  const svg = html.match(/<figure class="grafico">[\s\S]*?<\/figure>/)[0];
+  assert.match(svg, /<svg viewBox="0 0 640 360"/);
+  // As duas séries do CSV desenhadas, com o foco em azul: é o CSV que chegou ao desenho, não um SVG vazio.
+  assert.match(svg, /data-serie="treino" data-cor="tinta"/);
+  assert.match(svg, /data-serie="teste" data-cor="azul"/);
+});
+
 test('--json não trunca em 64 KiB quando a saída é lida por um cano', async () => {
   // process.exit() descarta escrita pendente em stdout; num cano, isso corta o JSON no meio.
   // Um teste pequeno passaria com o bug presente — por isso a aula tem que gerar achados de

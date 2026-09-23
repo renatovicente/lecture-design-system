@@ -379,8 +379,9 @@ test('o type do script casa com a classe do pai: json em grafico, graphviz em di
   // Os dois pareamentos certos continuam limpos na fase 2: não é um afrouxamento geral do script.
   // `{}` bastava antes de recursos.grafico (Tarefa 4) existir; hoje é um JSON de gráfico incompleto
   // por design (sem "tipo"), e recursos.grafico acusaria isso — não é o que este teste mede, então a
-  // especificação aqui é mínima, mas válida.
-  const grafico = slide('  <h2>Título</h2>\n  <figure class="grafico"><script type="application/json">{"tipo":"linha","x":"a","y":["b"]}</script></figure>\n');
+  // especificação aqui é mínima, mas válida (com "dados" desde o I4 da revisão final da 2a, que
+  // passou a recusar gráfico sem ele).
+  const grafico = slide('  <h2>Título</h2>\n  <figure class="grafico"><script type="application/json">{"tipo":"linha","dados":"data/a.csv","x":"a","y":["b"]}</script></figure>\n');
   assert.deepEqual(rodar(grafico, todas, { fase: 2 }).filter((a) => a.severidade === 'erro'), []);
   const diagrama = slide('  <h2>Título</h2>\n  <figure class="diagrama"><script type="text/vnd.graphviz">digraph{}</script></figure>\n');
   assert.deepEqual(rodar(diagrama, todas, { fase: 2 }).filter((a) => a.severidade === 'erro'), []);

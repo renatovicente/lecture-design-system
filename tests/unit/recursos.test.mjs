@@ -109,3 +109,40 @@ test('imagem de fora com esquema em maiúsculas (HTTPS://) também é aviso, nã
   assert.deepEqual(mensagens(slide('<h2>T</h2>\n<figure><img src="HTTPS://exemplo.org/a.png" alt="a"></figure>')),
     ['imagem de fora: "HTTPS://exemplo.org/a.png".']);
 });
+
+// I4 da revisão final da 2a: três erros decidíveis sem carregar nada, que passavam por `validar` com
+// 0 erros e só apareciam no build, em mensagens cruas — medido: coluna de y ausente → "Cannot read
+// properties of undefined (reading '0')"; coluna de x ausente → "values is not iterable"; `dados`
+// ausente → 'dados não encontrados para "undefined"'. E log em y de barras/histograma, que falha
+// com QUALQUER dado, porque o y desses dois tipos inclui o zero.
+const grafico = (especificacao) => slide(`<h2>T</h2>\n<figure class="grafico"><script type="application/json">${JSON.stringify(especificacao)}</script></figure>`);
+const INLINE = { epoca: [0, 1, 2], erro: [1, 0.5, 0.2] };
+
+test('recursos.grafico: com "dados" inline, as colunas de x e de cada y têm de existir', () => {
+  assert.deepEqual(mensagens(grafico({ tipo: 'linha', dados: INLINE, x: 'epoca', y: ['erro'] })), []);
+  assert.deepEqual(mensagens(grafico({ tipo: 'linha', dados: INLINE, x: 'epoca', y: ['nada'] })),
+    ['os dados do gráfico não têm a coluna "nada".']);
+  assert.deepEqual(mensagens(grafico({ tipo: 'dispersao', dados: INLINE, x: 'nada', y: ['erro', 'outra'] })),
+    ['os dados do gráfico não têm as colunas "nada", "outra".']);
+  assert.deepEqual(mensagens(grafico({ tipo: 'histograma', dados: INLINE, x: 'nada', classes: 3 })),
+    ['os dados do gráfico não têm a coluna "nada".']);
+  // Com caminho de CSV, a regra estática não tem as colunas: quem confere é o desenho, no build.
+  assert.deepEqual(mensagens(grafico({ tipo: 'linha', dados: 'data/erro.csv', x: 'epoca', y: ['nada'] })), []);
+});
+
+test('recursos.grafico: "dados" tem de existir, como caminho de CSV ou objeto de colunas', () => {
+  assert.deepEqual(mensagens(grafico({ tipo: 'linha', x: 'epoca', y: ['erro'] })), ['gráfico sem o campo "dados".']);
+  assert.deepEqual(mensagens(grafico({ tipo: 'linha', dados: [1, 2], x: 'epoca', y: ['erro'] })),
+    ['"dados" tem de ser o caminho de um CSV ou um objeto de colunas, como {"epoca": [...]}.']);
+  assert.deepEqual(mensagens(grafico({ tipo: 'linha', dados: ' ', x: 'epoca', y: ['erro'] })), ['gráfico com "dados" vazio.']);
+});
+
+test('recursos.grafico: escalas.y "log" é recusada em barras e histograma, e só neles', () => {
+  const barras = { tipo: 'barras', dados: { c: ['a', 'b'], v: [1, 2] }, x: 'c', y: ['v'], escalas: { y: 'log' } };
+  assert.deepEqual(mensagens(grafico(barras)),
+    ['gráfico "barras" com escalas.y "log": o eixo y dele começa em zero, e zero não existe em escala log.']);
+  assert.deepEqual(mensagens(grafico({ tipo: 'histograma', dados: INLINE, x: 'erro', classes: 2, escalas: { y: 'log' } })),
+    ['gráfico "histograma" com escalas.y "log": o eixo y dele começa em zero, e zero não existe em escala log.']);
+  assert.deepEqual(mensagens(grafico({ tipo: 'linha', dados: INLINE, x: 'epoca', y: ['erro'], escalas: { y: 'log' } })), []);
+  assert.deepEqual(mensagens(grafico({ ...barras, escalas: { y: 'linear' } })), []);
+});

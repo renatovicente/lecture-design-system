@@ -147,8 +147,9 @@ export async function iniciar({ base, resolver = (nome) => nome, estilo, dados =
     // Os gráficos entram pela mesma regra de presença (spec 3.5, fase 2): d3-scale, d3-shape e
     // d3-array chegam por import() dinâmico, resolvidos ao satélite aula-usp-graficos.js — o
     // terceiro `resolver(...)` desta função, ao lado de 'katex' e '@shikijs/*' acima. Sem `dados`
-    // (fica no default {} de desenharGraficos): resolver caminho de CSV para colunas não é desta
-    // tarefa — uma especificação com `dados` inline (objeto, não string) roda igual sem ele.
+    // (fica no default {} de desenharGraficos): no navegador, caminho de CSV não é lido (spec 7.2: as
+    // colunas inline são "necessário no modo navegador sem arquivos"), e desenharGraficos diz isso
+    // ao autor na mensagem; uma especificação com `dados` inline roda igual sem ele.
     if (document.querySelector(SELETOR_GRAFICO)) {
       const [{ scaleLinear, scaleLog }, { line }, { extent }] = await Promise.all([
         import(resolver('d3-scale')),
