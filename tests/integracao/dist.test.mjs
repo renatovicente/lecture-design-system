@@ -152,23 +152,12 @@ test('a demo registrada durante o parsing sobrevive ao pacote do dist', async (t
 // `import()` dinâmico.
 //
 // NENHUM deck do espécime usa matemática E código. Medido: `matematica.html` pede um satélite,
-// `codigo.html` pede oito, e os outros quatro (index, componentes, muitos-blocos, ifusp) não pedem
-// nenhum. O plano da tarefa 3 pedia "uma aula que usa matemática e código" — ela não existe, e a
-// UNIÃO dos dois decks reais cobre os mesmos nove sem inventar uma fixture que teria de ser mantida
-// e validada à parte, e que ninguém mais olharia.
-//
-// O gráfico (spec 3.5, fase 2) quebra essa escolha: nenhum deck do espécime tem figure.grafico — se
-// tivesse, entraria varrido por outros testes que ainda rodam sem fase 2 (tests/integracao/
-// validador.test.mjs valida especime/ pela CLI, que segue em fase 1 — build/construir.mjs documenta
-// que os dois lados, CLI e navegador, precisam mudar juntos, "na mesma leva", e essa leva ainda não
-// aconteceu; tests/integracao/visual.test.mjs varre especime/ inteiro por readdirSync e compara
-// navegador×build; tests/unit/guia.test.mjs extrai exemplos de lá). Um gráfico em matematica.html ou
-// codigo.html quebraria essas três provas por um motivo alheio a elas. Por isso, aqui SIM vale a
-// fixture que o comentário acima evitava para tex/código: tests/fixtures/graficos/deck.html, servida
-// pela MESMA `servirPastaCrua('.')` (raiz do sistema) que os decks do espécime, com a MESMA tag
-// fixada — a única diferença é o caminho, por isso os itens de DECKS_DA_PROVA passam a ser o caminho
-// INTEIRO a partir da raiz, não só o nome do arquivo (abrirPeloDist já esperava exatamente isso).
-const DECKS_DA_PROVA = ['especime/matematica.html', 'especime/codigo.html', 'tests/fixtures/graficos/deck.html'];
+// `codigo.html` pede oito, `componentes.html` pede um (aula-usp-graficos.js, pelo gráfico do slide
+// #grafico-notas), e os outros três (index, muitos-blocos, ifusp) não pedem nenhum. O plano da
+// tarefa 3 pedia "uma aula que usa matemática e código" — ela não existe, e a UNIÃO dos três decks
+// reais cobre os mesmos dez sem inventar uma fixture que teria de ser mantida e validada à parte, e
+// que ninguém mais olharia.
+const DECKS_DA_PROVA = ['especime/matematica.html', 'especime/codigo.html', 'especime/componentes.html'];
 
 // O universo dos dois testes abaixo NÃO vem de uma lista escrita aqui, nem do empacotador, nem do
 // manifesto: vem do que o NAVEGADOR pediu ao montar os decks. Isso importa, e foi medido de outro
@@ -262,7 +251,7 @@ test('todo satélite que o navegador pede tem integrity no import map, e o mapa 
 test('dois bytes a mais em um satélite e a aula não monta: o integrity do import map é conferido mesmo', async (t) => {
   const decks = await levantarSatelites();
   // Um alvo por satélite, mesmo que dois decks peçam o mesmo. Hoje não há sobreposição —
-  // matematica.html pede 1, codigo.html pede 8, tests/fixtures/graficos/deck.html pede 1,
+  // matematica.html pede 1, codigo.html pede 8, componentes.html pede 1,
   // 1 + 8 + 1 = 10 — e por isso o `new Map` é inerte: continuam dez alvos, os mesmos dez subtestes.
   // Ele existe pelo dia em que DECKS_DA_PROVA ganhar um deck que use matemática E código (o plano
   // original pedia um desses; a fase 2 pode trazê-lo) — ou matemática/código E gráficos juntos:
