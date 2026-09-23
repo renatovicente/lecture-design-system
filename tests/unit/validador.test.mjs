@@ -5,7 +5,7 @@ import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { parseHTML } from 'linkedom';
 import katex from 'katex';
-import { validar, linhaDe, contar, cabecalhoDe, slidesDoFonte } from '../../validador/validar.js';
+import { validar, linhaDe, contar, cabecalhoDe, slidesDoFonte, faseDaAula } from '../../validador/validar.js';
 import { regras as estrutura } from '../../validador/regras/estrutura.js';
 import { lerCobertura } from '../../validador/cobertura.js';
 import { carregarNoNode } from '../../build/carregar.mjs';
@@ -386,6 +386,22 @@ test('o type do script casa com a classe do pai: json em grafico, graphviz em di
   assert.deepEqual(rodar(diagrama, todas, { fase: 2 }).filter((a) => a.severidade === 'erro'), []);
 });
 
+// I2 da revisão final da 2a: a fase de uma aula saía de duas cópias do mesmo seletor, uma em
+// build/validar.mjs e outra em montar/entrada.js, as duas repetindo contrato.blocosDeCorpoFase2 em
+// código. Hoje as duas chamam faseDaAula. A prova de que a lista vem do CONTRATO, e não de um literal
+// que por acaso coincide com ele, é mudar o contrato em memória e ver a resposta mudar junto.
+test('faseDaAula decide pela presença dos blocos de contrato.blocosDeCorpoFase2, lidos do contrato', () => {
+  const documento = (corpo) => parseHTML(aula(corpo)).document;
+  const comGrafico = documento('<section data-layout="figura"><figure class="grafico"><script type="application/json">{}</script></figure></section>');
+  const comDiagrama = documento('<section data-layout="figura"><figure class="diagrama"><script type="text/vnd.graphviz">digraph{}</script></figure></section>');
+  assert.equal(faseDaAula(parseHTML(BASE).document, contrato), 1);
+  assert.equal(faseDaAula(comGrafico, contrato), 2);
+  assert.equal(faseDaAula(comDiagrama, contrato), 2);
+  const soGrafico = { ...contrato, blocosDeCorpoFase2: ['figure.grafico'] };
+  assert.equal(faseDaAula(comDiagrama, soGrafico), 1, 'a lista de seletores tem de vir do contrato');
+  assert.equal(faseDaAula(comGrafico, { ...contrato, blocosDeCorpoFase2: [] }), 1);
+});
+
 // Achado da revisão final (Minor, item 8): um data-curto comprido fora da abertura era acusado duas
 // vezes — por vocabulario.atributo (layout errado) e por limites.nome-curto (comprimento), que varria
 // toda section, não só abertura. Um dono só: vocabulario.atributo, que já sabe de layout.
@@ -497,11 +513,11 @@ const REGISTROS_POR_GRUPO = new Map([
 
 // Exceção nomeada, no molde do que valeu para matematica.simbolo-fora-do-tex enquanto essa regra
 // esperou pelo marco 5: uma regra que está no contrato e ainda não tem código só passa por aqui se
-// alguém a escrever nesta lista. As duas de hoje são as regras de carga do DIAGRAMA (fase 2, spec
-// 7.2) — `recursos.dot` e `recursos.diagrama-grande` — que a Tarefa 4 da fase 2a NÃO implementa (o
-// brief dela é só `recursos.grafico`/`recursos.csv`); ficam para a tarefa do diagrama. Continua
-// vazia para fase 1: não sobra nada adiado ali.
-const ADIADAS_DE_PROPOSITO = ['recursos.dot', 'recursos.diagrama-grande'];
+// alguém a escrever nesta lista. A única de hoje é `recursos.diagrama-grande` (fase 2, spec 7.2):
+// contar nós exige o DOT compilado, e isso é da fase 2b. `recursos.dot` saiu desta lista na correção
+// final da 2a: ela existe, e recusa todo diagrama enquanto nada desenha DOT (validador/regras/carga.js).
+// Continua vazia para fase 1: não sobra nada adiado ali.
+const ADIADAS_DE_PROPOSITO = ['recursos.diagrama-grande'];
 
 // A maior fase que o próprio contrato declara — nunca um "2" digitado: se uma fase 3 aparecer um
 // dia, esta conta já a inclui sozinha, e "ensine a guarda a fase" (Tarefa 4, Passo 3) continua

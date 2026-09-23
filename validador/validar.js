@@ -24,6 +24,18 @@ export function trechoDe(elemento, limite = 80) {
   return encurtar(elemento.outerHTML ?? '', limite);
 }
 
+// A fase de validação de uma aula, decidida por presença: fase 2 quando o fonte tem algum dos blocos
+// de corpo da fase 2 que o contrato lista (contrato.blocosDeCorpoFase2), fase 1 quando não tem
+// nenhum. É o único lugar com essa regra — build/validar.mjs (a CLI) e montar/entrada.js (o
+// navegador) chamam esta função, e a lista de seletores é a do contrato, não uma cópia no código.
+// Sem nenhum desses blocos, fase 2 e fase 1 acusam exatamente os mesmos erros, então nenhum deck de
+// fase 1 muda de comportamento por causa disto. Fase 2 aqui quer dizer "o vocabulário da fase 2 vale
+// como forma", não "tudo o que ele descreve já é desenhado": figure.diagrama entra na fase 2 por esta
+// função, e quem o recusa enquanto nada desenha DOT é recursos.dot (validador/regras/carga.js).
+export function faseDaAula(doc, contrato) {
+  return contrato.blocosDeCorpoFase2.some((seletor) => doc.querySelector(seletor)) ? 2 : 1;
+}
+
 export function validar(doc, { contrato, regras, grupo, fase = 1, ...dados }) {
   doc.body.normalize(); // o linkedom parte o texto em cada entidade; sem juntar, o TeX do fonte não é achado
   const slides = slidesDoFonte(doc.body);

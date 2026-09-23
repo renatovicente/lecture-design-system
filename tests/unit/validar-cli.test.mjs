@@ -2,7 +2,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync, spawn, spawnSync } from 'node:child_process';
-import { mkdtempSync, writeFileSync, readFileSync, readdirSync, chmodSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, readdirSync, chmodSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -357,6 +357,46 @@ test('build: --sem-pdf é reconhecida, não "flag desconhecida"', () => {
     assert.fail('deveria ter saído com 1');
   } catch (erro) {
     assert.equal(erro.status, 1, erro.stderr);
+  }
+});
+
+// Os dois exemplos literais da spec 7.2, byte a byte, para os testes de C1 e C2 da revisão final da 2a.
+const DIAGRAMA_7_2 = `<figure class="diagrama">
+  <script type="text/vnd.graphviz">
+  digraph { rankdir=LR; entrada -> oculta -> saida; oculta [class="foco"]; }
+  </script>
+  <figcaption>Rede com uma camada oculta.</figcaption>
+</figure>`;
+const GRAFICO_7_2 = `<figure class="grafico">
+  <script type="application/json">
+  { "tipo": "linha", "dados": "data/erro.csv", "x": "epoca", "y": ["treino", "teste"], "foco": "teste",
+    "eixos": { "x": "época", "y": "erro" }, "faixas": [{ "x": [120, 245], "rotulo": "platô" }] }
+  </script>
+  <figcaption>Erro de treino e de teste ao longo das épocas.</figcaption>
+</figure>`;
+const GRAFICO_INLINE = `<figure class="grafico"><script type="application/json">
+{"tipo":"linha","dados":{"epoca":[0,1,2,3],"erro":[1,0.6,0.35,0.2]},"x":"epoca","y":["erro"]}
+</script></figure>`;
+const comFiguras = (...figuras) => BOA.replace('<section data-layout="encerramento">', figuras.map((figura, i) =>
+  `<section data-layout="figura" id="f${i}"><h2>Figura</h2>${figura}<aside class="notas">N.</aside></section>\n`).join('')
+  + '<section data-layout="encerramento">');
+const SEM_CHROME = { ...process.env, CHROME_PATH: '/caminho/que/nao/existe/de-verdade' };
+
+// Critical 1 da revisão final da 2a. Medido antes do conserto: nas duas aulas abaixo, `validar` e
+// `build --sem-pdf` saíam com 0 e 0 erros, e o HTML construído levava só o <script> do DOT. O
+// critério do coordenador: nenhum figure.diagrama sai de validar nem de build com 0 erros enquanto
+// nada o desenha, em nenhuma combinação com gráfico. Sem Chrome de propósito: o erro é da etapa 1.
+test('figure.diagrama não sai de validar nem de build com 0 erros, sozinho ou ao lado de um gráfico', () => {
+  for (const [nome, html] of [['só diagrama', comFiguras(DIAGRAMA_7_2)], ['gráfico e diagrama', comFiguras(GRAFICO_INLINE, DIAGRAMA_7_2)]]) {
+    const pasta = aulaTemporaria(html);
+    const validacao = spawnSync('node', [CLI, 'validar', pasta, '--json'], { encoding: 'utf8', env: SEM_CHROME });
+    assert.equal(validacao.status, 1, `${nome}: validar deveria sair com 1\n${validacao.stdout}${validacao.stderr}`);
+    const achados = JSON.parse(validacao.stdout).filter((achado) => achado.severidade === 'erro');
+    assert.deepEqual(achados.map((achado) => achado.regra), ['recursos.dot'], nome);
+    assert.match(achados[0].mensagem, /diagrama ainda não está disponível/, nome);
+    const construcao = spawnSync('node', [CLI, 'build', pasta, '--sem-pdf'], { encoding: 'utf8', env: SEM_CHROME });
+    assert.equal(construcao.status, 1, `${nome}: build deveria sair com 1\n${construcao.stdout}${construcao.stderr}`);
+    assert.match(construcao.stdout, /recursos\.dot · diagrama ainda não está disponível/, nome);
   }
 });
 

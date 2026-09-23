@@ -7,7 +7,7 @@ import { readFileSync, statSync, existsSync } from 'node:fs';
 import { resolve, join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseHTML } from 'linkedom';
-import { validar, contar } from '../validador/validar.js';
+import { validar, contar, faseDaAula } from '../validador/validar.js';
 import { REGRAS_ESTATICAS, REGRAS_DE_CARGA } from '../validador/regras/index.js';
 // Puro, não build/cobertura.mjs: é o mesmo módulo que o navegador carrega (spec 3.5). Este arquivo
 // só faz a leitura de disco de validador/cobertura.json; expandi-la em Set é trabalho de lerCobertura.
@@ -17,13 +17,6 @@ import { carregarNoNode } from './carregar.mjs';
 export const RAIZ_SISTEMA = fileURLToPath(new URL('..', import.meta.url));
 
 export { REGRAS_ESTATICAS };
-
-// A mesma regra de presença que montar/entrada.js usa (SELETOR_FASE_2, com o mesmo comentário lá):
-// sem figure.grafico nem figure.diagrama no fonte, fase 2 e fase 1 acusam exatamente os mesmos
-// erros, então nenhum deck de fase 1 muda de comportamento por causa disto. Duplicada aqui, e não
-// importada de lá, porque montar/entrada.js é do lado navegador (a fronteira do AGENTS.md: nada de
-// Node em montar/) — as duas cópias são o mesmo texto de seletor, não duas decisões independentes.
-const SELETOR_FASE_2 = 'figure.grafico, figure.diagrama';
 
 export function caminhoDaAula(alvo) {
   const absoluto = resolve(alvo);
@@ -91,12 +84,10 @@ export async function lerERodarEstatica(alvo, { regras = REGRAS_ESTATICAS, raizD
   const unidades = JSON.parse(readFileSync(join(raizDoSistema, 'assets/marcas/unidades.json'), 'utf8'));
   const cobertura = lerCoberturaDoSistema(raizDoSistema);
   const doc = lerAula(caminho, contrato);
-  // A presença de figure.grafico/figure.diagrama no fonte é o único sinal que existe hoje de que
-  // esta aula quer as regras estáticas de fase 2 (mesma regra que montar/entrada.js já usa do lado
-  // navegador) — sem isto, `aula-usp build`/`aula-usp validar` recusavam QUALQUER deck com gráfico
-  // antes mesmo de montar (achado do coordenador, tarefa 6): estrutura.obrigatorio e
-  // estrutura.fora-do-layout, fase 1 por padrão, não reconhecem figure.grafico como bloco de corpo.
-  const fase = doc.querySelector(SELETOR_FASE_2) ? 2 : 1;
+  // A mesma função que montar/entrada.js chama do lado navegador (validador/validar.js): sem ela,
+  // estrutura.obrigatorio e estrutura.fora-do-layout, fase 1 por padrão, recusariam qualquer deck
+  // com gráfico antes mesmo de montar.
+  const fase = faseDaAula(doc, contrato);
   // Nesta ordem: validar() normaliza doc.body como efeito colateral (validador/validar.js:28), e
   // carregarNoNode (build/carregar.mjs:texInvalido) depende disso já ter acontecido.
   const achadosEstatica = validar(doc, { contrato, regras, grupo: 'estatica', unidades, cobertura, fase });
@@ -107,9 +98,10 @@ export async function lerERodarEstatica(alvo, { regras = REGRAS_ESTATICAS, raizD
 
 // O grupo de carga (spec 9.3), dado o doc e os recursos que lerERodarEstatica já preparou — função à
 // parte só por causa do enriquecimento de recursos.demos entre uma chamada e outra (comentário acima).
-// `fase` tem o mesmo padrão de default de validar() (validador/validar.js): 1 quando quem chama não
-// tiver o valor que lerERodarEstatica calculou (compatibilidade com chamadas antigas).
-export function validarCarga(doc, { contrato, recursos, fase = 1 }) {
+// `fase` é obrigatória, e sem default: é a que lerERodarEstatica calculou para esta aula, e um
+// default silencioso faria o grupo de carga rodar numa fase diferente da do grupo estático.
+export function validarCarga(doc, { contrato, recursos, fase }) {
+  if (fase === undefined) throw new Error('validarCarga: falta a fase (use a que lerERodarEstatica devolve)');
   return validar(doc, { contrato, regras: REGRAS_DE_CARGA, grupo: 'carga', recursos, fase });
 }
 

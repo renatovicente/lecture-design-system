@@ -98,4 +98,25 @@ export const regras = [
       }
     },
   },
+  {
+    // "DOT que não compila" (spec 9.2) — e hoje nenhum compila, porque nada no Aula USP desenha DOT
+    // ainda: o Graphviz é da fase 2b. faseDaAula (validador/validar.js) põe a aula na fase 2 quando
+    // ela tem figure.diagrama, e isso abre a FORMA do diagrama para estrutura.* e vocabulario.*; sem
+    // esta regra, um diagrama passava por `validar` e por `build` com 0 erros e a figura saía vazia
+    // (Critical 1 da revisão final da 2a). Não depende de `recursos`: não há o que carregar, então
+    // acusa nos dois lados (CLI e navegador), com ou sem gráfico na mesma aula. A fase 2b troca o
+    // corpo desta regra pela compilação de verdade, com a mensagem do Graphviz.
+    nome: 'recursos.dot',
+    *aplicar({ slides }) {
+      for (const secao of slides) {
+        for (const figura of secao.querySelectorAll('figure.diagrama')) {
+          yield {
+            ...onde(slides, secao),
+            mensagem: 'diagrama ainda não está disponível nesta versão do Aula USP: nada desenha o DOT, e a figura sairia vazia.',
+            trecho: trechoDe(figura),
+          };
+        }
+      }
+    },
+  },
 ];

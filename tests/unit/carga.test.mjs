@@ -78,3 +78,23 @@ test('a demo sem registro não acusa também falta de estático: um erro, um don
     .filter((achado) => achado.slide === 6);
   assert.deepEqual(achados.map((achado) => achado.regra), ['recursos.demo-sem-registro']);
 });
+
+// Critical 1 da revisão final da 2a: faseDaAula põe na fase 2 uma aula com figure.diagrama, e isso
+// abre a forma do diagrama para estrutura.* e vocabulario.* — mas nada desenha DOT ainda. Sem
+// recursos.dot, o diagrama passava por validar e build com 0 erros e a figura saía vazia. A regra
+// acusa todo diagrama, sem depender de recursos carregados (não há o que carregar), com gráfico na
+// mesma aula ou sem.
+test('recursos.dot recusa todo figure.diagrama na fase 2 e diz que diagrama ainda não está disponível', () => {
+  const html = `${CABECA}
+<section data-layout="capa"><h1>Capa</h1></section>
+<section data-layout="figura" id="rede"><h2>Rede</h2><figure class="diagrama"><script type="text/vnd.graphviz">digraph { a -> b; }</script></figure><aside class="notas">N.</aside></section>
+<section data-layout="figura" id="erro"><h2>Erro</h2><figure class="grafico"><script type="application/json">{"tipo":"linha","dados":{"a":[1,2],"b":[1,2]},"x":"a","y":["b"]}</script></figure><aside class="notas">N.</aside></section>
+<section data-layout="encerramento"><h2>Fim</h2><ol class="sintese"><li>Um.</li></ol></section>
+</body></html>`;
+  for (const recursos of [undefined, {}]) {
+    const { document } = parseHTML(html);
+    const achados = validar(document, { contrato, regras, grupo: 'carga', recursos, fase: 2 });
+    assert.deepEqual(achados.map((achado) => [achado.regra, achado.slide, achado.severidade]), [['recursos.dot', 2, 'erro']]);
+    assert.match(achados[0].mensagem, /diagrama ainda não está disponível/);
+  }
+});

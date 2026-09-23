@@ -91,8 +91,10 @@ function achadosDeGrafico(contrato, errosDeGrafico) {
 // presença que montar/entrada.js usa — é o que faz `aula-usp build` parar de recusar um deck com
 // gráfico antes de montar. Esta função continua sem o parâmetro porque nenhuma das duas chamadas a
 // validar() abaixo (achadosDeTex, grupo carga com recursos = { tex }; e o grupo saida) tem regra
-// fase 2 hoje — recursos.csv e recursos.dot (as duas regras de carga da fase 2) não leem recursos.tex,
-// e nenhuma regra de saida é fase 2 (medido no contrato). O dia em que uma regra fase-2 desses dois
+// fase 2 hoje — as três regras de carga da fase 2 (recursos.csv, recursos.dot e
+// recursos.diagrama-grande) não leem recursos.tex, e a fase 1 que achadosDeTex usa por padrão nem as
+// roda (quem as roda, na fase certa, é a etapa 1); nenhuma regra de saida é fase 2 (medido no
+// contrato). O dia em que uma regra fase-2 desses dois
 // grupos existir, o parâmetro entra aqui também, pela mesma razão de sempre: um validacao.json com
 // metades de fases diferentes é pior que nenhum.
 export async function construir({ raiz, caminhoDaAula, destino }) {

@@ -9,7 +9,7 @@ import { instalarImpressao } from '../motor/impressao.js';
 import { renderizarTex } from '../componentes/tex.js';
 import { criarDestacador, renderizarCodigo } from '../componentes/codigo.js';
 import { criarDesenhista, desenharGraficos } from '../componentes/graficos.js';
-import { validar, linhaDe, slidesDoFonte } from '../validador/validar.js';
+import { validar, linhaDe, slidesDoFonte, faseDaAula } from '../validador/validar.js';
 import { REGRAS_ESTATICAS, REGRAS_DE_CARGA, REGRAS_DE_COMPOSICAO } from '../validador/regras/index.js';
 // Puro (spec 3.5): o mesmo módulo que build/validar.mjs carrega para a CLI. matematica.simbolo-fora-do-tex
 // precisa disto no contexto para não ficar muda — ver lerCoberturaOpcional, abaixo.
@@ -22,14 +22,6 @@ import { lerCobertura } from '../validador/cobertura.js';
 let BASE;
 const TEX = /\\\(|\\\[/;
 const SELETOR_GRAFICO = 'figure.grafico';
-// Fase 2 (spec 5.5): a Tarefa 1 abriu estrutura.obrigatorio, estrutura.fora-do-layout e
-// vocabulario.script para aceitar figure.grafico/figure.diagrama quando `fase >= 2` — mas nada
-// decidia ATÉ AQUI qual fase rodar (validar() usa fase = 1 por padrão). A fase de validação segue a
-// mesma regra de presença que decide quando carregar um satélite (TEX e blocosDeCodigo, abaixo): sem
-// nenhum dos dois seletores no fonte, fase 2 e fase 1 acusam exatamente os mesmos erros — só o
-// vocabulário que a Tarefa 1 abriu passa a validar quando presente, então nenhum deck de fase 1
-// (a imensa maioria hoje) muda de comportamento por causa disto.
-const SELETOR_FASE_2 = 'figure.grafico, figure.diagrama';
 const ESTILOS = ['estilos/tokens.css', 'estilos/fontes.css', 'estilos/base.css', 'estilos/layouts.css', 'estilos/componentes.css', 'estilos/motor.css', 'estilos/impressao.css'];
 
 function carregarEstilo(caminho) {
@@ -99,9 +91,9 @@ export async function iniciar({ base, resolver = (nome) => nome, estilo, dados =
     // Minor 1). O documento inteiro, porque o validador lê as metas do <head> — passar só o corpo dá
     // cinco erros falsos de metadados (revisão do marco 4b).
     const fonte = document.cloneNode(true);
-    // Ver o comentário de SELETOR_FASE_2 acima: a presença de figure.grafico/figure.diagrama no
-    // fonte é o único sinal que existe hoje de que esta aula quer as regras estáticas de fase 2.
-    const fase = fonte.querySelector(SELETOR_FASE_2) ? 2 : 1;
+    // A fase por presença dos blocos de fase 2 do contrato — a mesma função que a CLI chama
+    // (build/validar.mjs), com o comentário dela em validador/validar.js.
+    const fase = faseDaAula(fonte, contrato);
     const estaticos = validar(fonte, { contrato, regras: REGRAS_ESTATICAS, grupo: 'estatica', unidades, cobertura, fase });
     await Promise.all(ESTILOS.map(injetarEstilo));
     const resumo = montar(document, {
