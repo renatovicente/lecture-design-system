@@ -44,9 +44,17 @@ function seletoresNomeados(entradas) {
   });
 }
 
+// O autor lê tag, não seletor CSS: `script[type="application/json"]` (o seletor que o contrato usa
+// para parear o tipo do script ao pai) sai como `<script type="application/json">`, que é o que ele
+// escreve no fonte. Qualquer outro seletor (img, svg, div.colunas…) sai como está, como já saía.
+export function nomeLegivel(seletor) {
+  const comAtributo = /^([a-z][a-z0-9]*)\[([a-z-]+)="([^"]*)"\]$/.exec(seletor);
+  return comAtributo ? `<${comAtributo[1]} ${comAtributo[2]}="${comAtributo[3]}">` : seletor;
+}
+
 export function nomeDaEntrada(entrada) {
-  if (entrada.nomes) return entrada.nomes.join(' nem ');
-  return entrada.grupo ? 'bloco de corpo' : entrada.seletor;
+  if (entrada.nomes) return entrada.nomes.map(nomeLegivel).join(' nem ');
+  return entrada.grupo ? 'bloco de corpo' : nomeLegivel(entrada.seletor);
 }
 
 // Alternativa de umDe que mais casa itens; empate fica com a escrita primeiro no contrato.

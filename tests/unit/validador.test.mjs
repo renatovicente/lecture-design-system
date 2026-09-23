@@ -387,6 +387,20 @@ test('o type do script casa com a classe do pai: json em grafico, graphviz em di
   assert.deepEqual(rodar(diagrama, todas, { fase: 2 }).filter((a) => a.severidade === 'erro'), []);
 });
 
+// Adiado da Tarefa 1, fechado na correção final da 2a: a mensagem expunha o seletor do contrato —
+// "<figure> sem script[type="application/json"]." —, e o autor não lê seletor. Sai a tag como ele a
+// escreve no fonte, derivada do mesmo seletor.
+test('estrutura.obrigatorio e fora-do-layout nomeiam o script como tag, não como seletor', () => {
+  const vazio = (classe) => slide(`  <h2>Título</h2>\n  <figure class="${classe}"><figcaption>L.</figcaption></figure>\n`);
+  const doObrigatorio = (html) => rodar(html, todas, { fase: 2 }).filter((a) => a.regra === 'estrutura.obrigatorio').map((a) => a.mensagem);
+  assert.deepEqual(doObrigatorio(vazio('grafico')), ['<figure> sem <script type="application/json">.']);
+  assert.deepEqual(doObrigatorio(vazio('diagrama')), ['<figure> sem <script type="text/vnd.graphviz">.']);
+  const dois = slide('  <h2>Título</h2>\n  <figure class="diagrama"><script type="text/vnd.graphviz">digraph{}</script>'
+    + '<script type="text/vnd.graphviz">digraph{}</script></figure>\n');
+  const aMais = rodar(dois, todas, { fase: 2 }).filter((a) => a.regra === 'estrutura.fora-do-layout').map((a) => a.mensagem);
+  assert.deepEqual(aMais, ['<script> a mais dentro de <figure>: só um <script type="text/vnd.graphviz">.']);
+});
+
 // I2 da revisão final da 2a: a fase de uma aula saía de duas cópias do mesmo seletor, uma em
 // build/validar.mjs e outra em montar/entrada.js, as duas repetindo contrato.blocosDeCorpoFase2 em
 // código. Hoje as duas chamam faseDaAula. A prova de que a lista vem do CONTRATO, e não de um literal

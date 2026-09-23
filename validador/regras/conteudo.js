@@ -1,7 +1,7 @@
 // Regras de conteúdo do slide (spec 5.3 e 9.2): o que o layout exige e o que ele não aceita, dentro da
 // section e dentro dos elementos que o contrato descreve em "filhos".
 import { onde, encurtar } from '../validar.js';
-import { itensDoConteudo, casarSequencia, casaSeletor, nomeDaEntrada } from '../sequencia.js';
+import { itensDoConteudo, casarSequencia, casaSeletor, nomeDaEntrada, nomeLegivel } from '../sequencia.js';
 
 // O parser do navegador cria tbody; o do linkedom, não. Aceitar tr direto na table deixa os dois modos iguais.
 const TRANSPARENTES = { table: ['tr'] };
@@ -119,7 +119,7 @@ export const regras = [
           for (const { item, foraDeOrdem, excedente } of sobrando) {
             const lugar = alvo === secao ? dentroDe(alvo, secao, 'no') : dentroDe(alvo, secao, 'dentro de');
             const nome = nomeDoItem(item);
-            const mensagem = excedente ? `${nome} a mais ${lugar}: só um ${excedente.join(' ou ')}.`
+            const mensagem = excedente ? `${nome} a mais ${lugar}: só um ${excedente.map(nomeLegivel).join(' ou ')}.`
               : foraDeOrdem ? `${nome} fora de ordem ${lugar}.`
                 : `${nome} não é permitido ${lugar}.`;
             yield { ...onde(slides, secao), mensagem, trecho: encurtar(item.trecho) };
