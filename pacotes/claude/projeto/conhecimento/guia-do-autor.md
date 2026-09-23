@@ -97,7 +97,7 @@ Uma aula é um arquivo HTML: um `<head>` com os metadados e a tag do runtime, e 
 <meta name="data" content="2026-03-02">
 <meta name="professor" content="Prof. Nome Sobrenome">
 <script src="https://cdn.jsdelivr.net/npm/aula-usp@0.1.0/dist/aula-usp.js"
-        integrity="sha384-/veCQFOjbK1Ac5dMbud3+aS1leLUdQkkOsD0uI2E2Vh91om7bXSV7cjWHzRmsVG2" crossorigin="anonymous"></script>
+        integrity="sha384-Q/9/5FZze68vzPPEfCx6GFXoKTWGJfWvt+goUNCsZAf2avwhy4NXDJPxqHTT7Jg1" crossorigin="anonymous"></script>
 </head>
 <body>
 
@@ -411,7 +411,7 @@ Atributos proibidos: `style`, `opacity`, `fill-opacity`, `stroke-opacity`, e qua
 
 Comandos de TeX proibidos: `\color`, `\textcolor`, `\colorbox`, `\fcolorbox`, `\htmlStyle`, `\htmlClass`, `\htmlId`, `\htmlData`, e o que casar `\\(red|orange|yellow|green|blue|purple|pink|gray|grey|teal|gold|maroon|mint)[A-H]?(?![a-zA-Z])`.
 
-Classes do sistema, que o sistema escreve e o autor não: `palco`, `slide`, `area`, `cabecalho`, `rotulo`, `mapa`, `quadrado`, `visto`, `atual`, `futuro`, `contador`, `rodape`, `metadados-capa`, `roteiro`, `faixa-de-marca`, `marca-unidade`, `marca-usp`, `numero-bloco`, `fileira`, `nome-curto`, `bloco-n-de-m`, `painel`, `ativo`, `folha`, `modo-palco`, `painel-titulo`, `painel-corpo`, `grupo`, `grupo-titulo`, `cartoes`, `cartao`, `cartao-numero`, `cartao-titulo`, `teclas`, `aviso`, `modo-apresentador`, `apresentador`, `miniatura`, `quadro-miniatura`, `fim-da-aula`, `painel-apresentador`, `posicao`, `cronometro`, `tempo`, `relogio`, `notas-apresentador`, `captura-demo`, `demo-substituta`, `imprimindo`, `numerica`, `equacao`, `tex-invalido`, `linha`, `marcada`, `palavra-chave`, `comentario`, `achados`, `copiar`.
+Classes do sistema, que o sistema escreve e o autor não: `palco`, `slide`, `area`, `cabecalho`, `rotulo`, `mapa`, `quadrado`, `visto`, `atual`, `futuro`, `contador`, `rodape`, `metadados-capa`, `roteiro`, `faixa-de-marca`, `marca-unidade`, `marca-usp`, `numero-bloco`, `fileira`, `nome-curto`, `bloco-n-de-m`, `painel`, `ativo`, `folha`, `modo-palco`, `painel-titulo`, `painel-corpo`, `grupo`, `grupo-titulo`, `cartoes`, `cartao`, `cartao-numero`, `cartao-titulo`, `teclas`, `aviso`, `modo-apresentador`, `apresentador`, `miniatura`, `quadro-miniatura`, `fim-da-aula`, `painel-apresentador`, `posicao`, `cronometro`, `tempo`, `relogio`, `notas-apresentador`, `captura-demo`, `demo-substituta`, `imprimindo`, `numerica`, `equacao`, `tex-invalido`, `linha`, `marcada`, `palavra-chave`, `comentario`, `achados`, `copiar`, `grade`, `serie`, `serie-traco`, `serie-rotulo`, `eixo`, `eixo-x`, `eixo-y`, `eixo-titulo`, `marca`.
 <!-- /gerado -->
 
 <!-- guia/20-layouts.md -->
