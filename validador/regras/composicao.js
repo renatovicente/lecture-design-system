@@ -60,6 +60,22 @@ function* elementosMedidos(slide) {
   }
 }
 
+// Texto de SVG tem o font-size em unidades do viewBox: getComputedStyle diz 14px num gráfico que, numa
+// coluna estreita, aparece com 8 (I3 da revisão final da 2a, medido no Chrome: escala 0,575 numa
+// coluna de grade 4-4-4, 1,212 no layout figura — e getComputedStyle dizia 14px nos dois). A escala
+// de verdade é a da matriz do elemento até a tela (getScreenCTM, que inclui o viewBox, os transform
+// do próprio SVG e os do CSS); a raiz do determinante dá o fator de tamanho mesmo com rotação (o título
+// do eixo y é girado -90°). Divide pela escala do palco — a razão entre a caixa na tela e a caixa de
+// layout do slide — para a medida sair em px do palco, a mesma unidade em que getComputedStyle mede
+// o texto HTML ao lado: um palco reduzido para caber na janela não pode virar texto pequeno.
+function escalaNoSvg(elemento, slide) {
+  const matriz = elemento.getScreenCTM?.();
+  if (!matriz) return 1;
+  const naTela = Math.sqrt(Math.abs(matriz.a * matriz.d - matriz.b * matriz.c));
+  const palco = slide.offsetWidth > 0 ? slide.getBoundingClientRect().width / slide.offsetWidth : 1;
+  return naTela / palco;
+}
+
 function caixaValida(caixa) {
   return caixa.width > 0 && caixa.height > 0;
 }
@@ -178,11 +194,16 @@ export const regras = [
           if (contrato.papeis.excecoes.some((seletor) => elemento.matches(seletor))) continue;
           const papel = papelDe(elemento, contrato.papeis);
           if (!papel) continue;
-          const tamanho = Number.parseFloat(janela.getComputedStyle(elemento).fontSize);
+          const declarado = Number.parseFloat(janela.getComputedStyle(elemento).fontSize);
+          const escala = elemento.closest('svg') ? escalaNoSvg(elemento, slide) : 1;
+          const tamanho = Math.round(declarado * escala * 10) / 10;
           if (tamanho < papel.minimo - FOLGA) {
+            const decimal = (numero) => String(numero).replace('.', ',');
+            const onde_ = escala === 1 ? `${tamanho} px`
+              : `${decimal(tamanho)} px no palco (${decimal(declarado)} px no SVG, que a figura escala por ${decimal(Math.round(escala * 1000) / 1000)})`;
             yield {
               ...onde(slides, slide),
-              mensagem: `<${elemento.nodeName.toLowerCase()}> em ${tamanho} px, abaixo do mínimo de ${papel.minimo} px do papel ${papel.nome}.`,
+              mensagem: `<${elemento.nodeName.toLowerCase()}> em ${onde_}, abaixo do mínimo de ${papel.minimo} px do papel ${papel.nome}.`,
               trecho: trechoDe(elemento),
             };
           }

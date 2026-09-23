@@ -6,7 +6,11 @@ const SVG_NS = 'http://www.w3.org/2000/svg';
 const { tinta, azul, cinza, linha: corDaGrade, amarelo } = tokens.cor;
 const HEX_DA_COR = { tinta, azul, cinza, amarelo };
 const FAMILIA = tokens.fonte.mono.join(', ');
-const TAMANHO_TEXTO = tokens.minimo.rotulo; // 14 — spec 7.2: "marcas e rótulos em Geist Mono 14"
+// 14 — spec 7.2: "marcas e rótulos em Geist Mono 14". Em unidades do viewBox, não em px do palco: o
+// SVG escala com a largura da figura (1,21× no layout figura, 0,575× numa coluna de grade 4-4-4,
+// medido), e o texto escala junto. Quem garante os 14 px no palco é composicao.tamanho-minimo, que
+// mede o texto de SVG no tamanho em que ele aparece — não este número.
+const TAMANHO_TEXTO = tokens.minimo.rotulo;
 const ESPESSURA_EIXO = tokens.regua.normal; // 2 — spec 7.2: "Eixos em tinta de 2 px"
 const COMPRIMENTO_TRACO = 16; // spec 7.2: "traço de 16 px na cor da série"
 const TRACEJADO = '6 4'; // stroke-dasharray da série cinza e do seu traço na ponta

@@ -173,7 +173,7 @@ Um `figure` com **exatamente um** `img` ou `svg`, e um `figcaption` opcional:
 
 Do espécime: `especime/componentes.html#figura-no-corpo`. Dentro de uma coluna, a figura ocupa a largura da coluna; sozinha no layout `figura`, ocupa a zona de conteúdo inteira.
 
-O SVG escrito à mão tem um vocabulário próprio no contrato — uma lista de elementos e de atributos, e as cores dos tokens, como no trecho acima. Qualquer outra cor em `fill` ou `stroke` é `vocabulario.cor-svg`. O texto dentro de um SVG fica fora da conferência de tamanho mínimo, porque um gráfico tem escala própria, mas as regras de cor continuam valendo ali: `vocabulario.azul-svg` e `vocabulario.amarelo-svg` dizem em que tamanho cada uma dessas duas cores pode aparecer em texto ou em traço.
+O SVG escrito à mão tem um vocabulário próprio no contrato — uma lista de elementos e de atributos, e as cores dos tokens, como no trecho acima. Qualquer outra cor em `fill` ou `stroke` é `vocabulario.cor-svg`. O texto dentro de um SVG é medido no tamanho em que aparece no palco — o `font-size` vezes a escala com que a figura desenha o SVG —, contra o mínimo de rótulo, e as regras de cor continuam valendo ali: `vocabulario.azul-svg` e `vocabulario.amarelo-svg` dizem em que tamanho cada uma dessas duas cores pode aparecer em texto ou em traço.
 
 Para imagem de arquivo, o `src` é um caminho em `img/`, ao lado do HTML, ou um URI `data:`; um endereço `https://` gera aviso (`recursos.imagem-externa`), porque não funciona offline nem dentro de um artifact. O `alt` é obrigatório (`recursos.alt`): ele é o que o leitor de tela diz e o que sobra quando a imagem falha. Uma imagem menor que a zona não é ampliada — ampliá-la só a deixaria borrada no projetor. Uma foto colorida vai com `data-foto="pb"` e sai em tons de cinza, para não competir com o azul e o amarelo do sistema: `especime/componentes.html#foto-em-cinza`.
 
@@ -211,11 +211,11 @@ A tabela sai de `contrato/contrato.json` por `npm run guia`, como a de layouts e
 | `leitura` | 24 px | `p:not(.fonte)`, `li`, `th`, `td`, `aside.destaque`, `aside.quadro`, `aside.alerta`, `div.enunciado`, `div.resposta`, `.metadados-capa` |
 | `codigo` | 20 px | `pre`, `code` |
 | `legenda` | 18 px | `figcaption`, `p.fonte` |
-| `rotulo` | 14 px | `.rotulo`, `.rodape`, `.contador`, `.nome-curto`, `.bloco-n-de-m`, `.roteiro li` |
+| `rotulo` | 14 px | `.rotulo`, `.rodape`, `.contador`, `.nome-curto`, `.bloco-n-de-m`, `.roteiro li`, `svg text` |
 
-Fora da medição: `.katex *`, `sub`, `sup`, `svg *`, `.demo *`, `.painel *`, `.faixa-de-marca *`, `figcaption code`, `p.fonte code`.
+Fora da medição: `.katex *`, `sub`, `sup`, `.demo *`, `.painel *`, `.faixa-de-marca *`, `figcaption code`, `p.fonte code`.
 <!-- /gerado -->
 
 Nem todo seletor da tabela é coisa que você escreve: a linha `rotulo` é inteira de cromo, e `.metadados-capa`, na linha `leitura`, também — é o sistema que desenha aquele texto, e ele está aqui porque a regra o mede junto com o seu.
 
-E nem todo elemento tem papel: `h1` e `h2` não casam seletor nenhum da tabela, e a regra não os mede — o tamanho do título vem do layout. A lista de "fora da medição" é o resto do que ela não mede: o miolo de uma fórmula e o interior de um SVG têm escala própria; o índice e o expoente são menores por definição; o interior de uma demo, dos painéis e da faixa de marca é desenhado pelo sistema; e o `code` dentro de uma legenda ou de uma linha de fonte acompanha o tamanho dela, abaixo do mínimo do papel `codigo`.
+E nem todo elemento tem papel: `h1` e `h2` não casam seletor nenhum da tabela, e a regra não os mede — o tamanho do título vem do layout. A lista de "fora da medição" é o resto do que ela não mede: o miolo de uma fórmula tem escala própria; o índice e o expoente são menores por definição; o interior de uma demo, dos painéis e da faixa de marca é desenhado pelo sistema; e o `code` dentro de uma legenda ou de uma linha de fonte acompanha o tamanho dela, abaixo do mínimo do papel `codigo`.

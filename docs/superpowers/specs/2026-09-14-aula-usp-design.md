@@ -170,11 +170,10 @@ Famílias: Geist (400, 600 e itálico 400), Geist Mono (400, 600 e 700) e Open S
 | rótulo | rótulos do cromo, `data-rotulo`, "Bloco N de M" no cabeçalho, rodapé, contador | Geist Mono | 14 / 1,2, caixa alta | 700 no rótulo, 400 no rodapé; +0,16em |
 | rótulo grande | "Bloco N de M" na abertura | Geist Mono | 20 / 1,2, caixa alta | 700; +0,16em |
 
-Tamanhos mínimos, verificados por `composicao.tamanho-minimo` pelo papel de cada elemento, como declarado em `contrato.json`: 24 px para leitura, 20 px para código, 18 px para legendas e 14 px para rótulos. Ficam fora da verificação:
+Tamanhos mínimos, verificados por `composicao.tamanho-minimo` pelo papel de cada elemento, como declarado em `contrato.json`: 24 px para leitura, 20 px para código, 18 px para legendas e 14 px para rótulos. Texto dentro de SVG é rótulo e é medido no tamanho em que aparece no palco — o `font-size` do SVG vezes a escala com que a figura o desenha —, porque o SVG escala com a largura da coluna e um 14 do `viewBox` pode sair com 8 px numa coluna estreita. Ficam fora da verificação:
 
 - o interior das equações do KaTeX (índices, frações e símbolos seguem as regras de tamanho do TeX);
 - `sub` e `sup` em texto, que o sistema define com 0,8em;
-- texto dentro de SVG (gráficos e diagramas têm tamanhos próprios, garantidos pelo gerador);
 - o conteúdo criado por demos dentro de `div.demo`;
 - painéis do motor, fora do palco, e a faixa de marca.
 

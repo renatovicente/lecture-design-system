@@ -103,8 +103,8 @@
     "leitura": { "minimo": 24, "seletores": ["p:not(.fonte)", "li", "th", "td", "aside.destaque", "aside.quadro", "aside.alerta", "div.enunciado", "div.resposta", ".metadados-capa"] },
     "codigo":  { "minimo": 20, "seletores": ["pre", "code"] },
     "legenda": { "minimo": 18, "seletores": ["figcaption", "p.fonte"] },
-    "rotulo":  { "minimo": 14, "seletores": [".rotulo", ".rodape", ".contador", ".nome-curto", ".bloco-n-de-m", ".roteiro li"] },
-    "excecoes": [".katex *", "sub", "sup", "svg *", ".demo *", ".painel *", ".faixa-de-marca *", "figcaption code", "p.fonte code"]
+    "rotulo":  { "minimo": 14, "seletores": [".rotulo", ".rodape", ".contador", ".nome-curto", ".bloco-n-de-m", ".roteiro li", "svg text"] },
+    "excecoes": [".katex *", "sub", "sup", ".demo *", ".painel *", ".faixa-de-marca *", "figcaption code", "p.fonte code"]
   },
   "classesDoSistema": ["palco", "slide", "area", "cabecalho", "rotulo", "mapa", "quadrado", "visto", "atual", "futuro", "contador", "rodape", "metadados-capa", "roteiro", "faixa-de-marca", "marca-unidade", "marca-usp", "numero-bloco", "fileira", "nome-curto", "bloco-n-de-m", "painel", "ativo", "folha", "modo-palco", "painel-titulo", "painel-corpo", "grupo", "grupo-titulo", "cartoes", "cartao", "cartao-numero", "cartao-titulo", "teclas", "aviso", "modo-apresentador", "apresentador", "miniatura", "quadro-miniatura", "fim-da-aula", "painel-apresentador", "posicao", "cronometro", "tempo", "relogio", "notas-apresentador", "captura-demo", "demo-substituta", "imprimindo", "numerica", "equacao", "tex-invalido", "linha", "marcada", "palavra-chave", "comentario", "achados", "copiar"],
   "html": {

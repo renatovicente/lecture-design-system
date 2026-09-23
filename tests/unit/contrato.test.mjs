@@ -225,7 +225,9 @@ test('papéis usam os mínimos dos tokens e têm as exceções da spec (4.3)', (
   for (const papel of ['leitura', 'codigo', 'legenda', 'rotulo'])
     assert.equal(contrato.papeis[papel].minimo, tokens.minimo[papel], papel);
   assert.deepEqual(contrato.papeis.excecoes,
-    ['.katex *', 'sub', 'sup', 'svg *', '.demo *', '.painel *', '.faixa-de-marca *', 'figcaption code', 'p.fonte code']);
+    ['.katex *', 'sub', 'sup', '.demo *', '.painel *', '.faixa-de-marca *', 'figcaption code', 'p.fonte code']);
+  // Spec 4.3, desde o I3 da revisão final da 2a: texto de SVG é rótulo, medido no tamanho do palco.
+  assert.ok(contrato.papeis.rotulo.seletores.includes('svg text'));
 });
 
 test('precedência de papéis e p.fonte só em legenda, não em leitura (F6)', () => {

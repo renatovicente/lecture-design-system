@@ -123,6 +123,34 @@ test('texto abaixo do mínimo do seu papel acusa, e o papel vem do seletor mais 
   assert.match(achados[0].mensagem, /<p> em 18 px, abaixo do mínimo de 24 px do papel leitura\./);
 });
 
+// I3 da revisão final da 2a: texto de SVG tem o font-size em unidades do viewBox, e o SVG escala com
+// a coluna. getComputedStyle diz 14px nos dois casos abaixo; o que a plateia vê é outra coisa. Medido
+// pelo revisor, build real: escala 1,212 no layout figura (~17 px no palco), 0,575 numa coluna de
+// grade 4-4-4 (~8 px). A regra passa a medir o tamanho no palco, e o texto de SVG é rótulo (14 px,
+// spec 7.2: "marcas e rótulos em Geist Mono 14").
+test('texto de gráfico numa coluna estreita acusa tamanho-minimo pelo tamanho no palco; no layout figura, não', async () => {
+  // O gráfico de verdade do espécime, desenhado pelo navegador, copiado para a coluna de 4 do slide
+  // #figura-no-corpo (grade 4-8): mesma largura de coluna que uma grade 4-4-4.
+  const estreita = await medir('componentes.html', () => {
+    const svg = document.querySelector('#grafico-notas figure.grafico svg').cloneNode(true);
+    document.querySelector('#figura-no-corpo .colunas > div').append(svg);
+  });
+  const doTamanho = estreita.filter((achado) => achado.regra === 'composicao.tamanho-minimo');
+  assert.ok(doTamanho.length > 0, JSON.stringify(estreita));
+  for (const achado of doTamanho) {
+    assert.match(achado.mensagem, /^<text> em [\d,]+ px no palco \(14 px no SVG, que a figura escala por 0,5\d+\), abaixo do mínimo de 14 px do papel rotulo\.$/);
+  }
+  // O mesmo gráfico no layout figura: escala maior que 1, nenhum achado.
+  const figura = await medir('componentes.html');
+  assert.deepEqual(figura.filter((achado) => achado.regra === 'composicao.tamanho-minimo'), []);
+  // E a regra de fato mede esse texto (não passou por não olhar): o font-size do gráfico em 11 px no
+  // viewBox, no mesmo layout figura, cai abaixo de 14 no palco e acusa.
+  const menor = await medir('componentes.html', () => {
+    for (const texto of document.querySelectorAll('#grafico-notas svg text')) texto.setAttribute('font-size', '11');
+  });
+  assert.ok(menor.some((achado) => achado.regra === 'composicao.tamanho-minimo' && achado.slide !== null), JSON.stringify(menor));
+});
+
 // O roteiro da capa renderiza a 14 px e casa "li" (leitura, 24) e ".roteiro li" (rotulo, 14):
 // sem precedência por especificidade, todo deck do espécime acusaria.
 test('o roteiro da capa é rótulo, não leitura', async () => {
