@@ -20,10 +20,11 @@ const METAS = {
   // do d3 que componentes/graficos.js consome (d3-scale, d3-shape, d3-array), minificadas juntas num
   // satélite só (build/bundle.mjs).
   //
-  // Meta: 120 KB, 28,0 KB de folga (30,4 %) sobre o medido. A conta segue a folga dos dois satélites
-  // cuja meta já tem uma razão medida nesta mesma tabela — aula-usp.js (700 KB sobre 554,5 KB
-  // medidos = 26,2 %) e aula-usp-tex.js (800 KB sobre 622,8 KB = 28,5 %) — não a de aula-usp-codigo.js
-  // (600 KB sobre 112,4 KB = 433,8 %), que é um outlier e não uma proporção a repetir.
+  // Meta: 120 KB, 28,0 KB de folga (30,4 %) sobre o medido. A conta segue a folga dos dois arquivos
+  // cuja meta já tem uma razão medida nesta mesma tabela — aula-usp.js (700 KB sobre 558,5 KB
+  // medidos na correção final da 2a = 25,3 %) e aula-usp-tex.js (800 KB sobre 622,8 KB = 28,5 %) —
+  // não a de aula-usp-codigo.js (600 KB sobre 112,4 KB = 433,8 %), que é um outlier e não uma
+  // proporção a repetir.
   'aula-usp-graficos.js': 120 * KB,
 };
 
