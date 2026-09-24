@@ -73,7 +73,7 @@ Ao executar, `aula-usp.js`:
 6. depois de carregados scripts, imagens e fontes, roda as regras de carga e de composição (seção 9.3);
 7. inicia o motor.
 
-Todo recurso vai dentro dos scripts, porque os artifacts do Claude só carregam scripts de CDNs permitidas (jsDelivr, no caminho `/npm/`), não aceitam folhas de estilo externas além do Google Fonts e bloqueiam downloads de outros tipos.
+Todo recurso vai dentro dos scripts, porque os artifacts do Claude só carregam scripts de CDNs permitidas (jsDelivr, no caminho `/npm/`), não aceitam folhas de estilo externas além do Google Fonts e bloqueiam downloads de outros tipos. A regra vale para os recursos do sistema. Arquivos do autor referenciados por caminho relativo — imagens e o CSV de um gráfico — são buscados ao lado da aula, e por isso não existem dentro de um artifact: ali, gráfico tem de trazer os dados inline (seção 7.2), e um CSV que não carrega vira `recursos.csv` no painel.
 
 O painel do validador lista as mensagens, abre e fecha com a tecla V e tem o botão "copiar para o chat". Ele abre sozinho só quando há erros e a página não está em tela cheia; avisos não o abrem e ficam também no console. O modo navegador precisa de internet para carregar o runtime; para projetar offline, usa-se o HTML do modo build.
 
@@ -543,7 +543,7 @@ O destaque de código usa o Shiki (núcleo, motor de expressões regulares em Ja
 ```
 
 - Tipos: `linha`, `barras`, `dispersao` e `histograma` (com `"classes"`). Escala `linear` ou `log` por eixo.
-- `dados`: caminho de um CSV (modo build) ou objeto de colunas inline, como `{"epoca": [...], "treino": [...]}`, necessário no modo navegador sem arquivos.
+- `dados`: caminho de um CSV, relativo à pasta da aula, ou objeto de colunas inline, como `{"epoca": [...], "treino": [...]}`. O caminho vale sempre que a aula tem os seus arquivos ao lado — no build, em `aula-usp servir` e em `aula-usp validar`, que leem o CSV pelo mesmo parser; o inline é necessário no modo navegador sem arquivos, como num artifact do Claude.
 - Séries: no máximo 3. Com uma série, ela sai em `tinta`. Com duas ou três, a série em foco (campo `foco`; na falta dele, a última de `y`) sai em `azul`, e as demais em `tinta` e em `cinza` tracejada, nessa ordem.
 - Eixos em `tinta` de 2 px; marcas e rótulos em Geist Mono 14 `cinza`; grade horizontal em `linha`; faixas em `amarelo`, atrás das séries, com rótulo em `tinta`.
 - O `viewBox` do gráfico tem 640 de largura, e o texto de 14 só chega aos 14 px da seção 4.3 numa figura com pelo menos 14 × 640 / 14 = 640 px de largura no palco: o layout `figura` (775 px) e a coluna de 8 (760 px) servem; as colunas de 6 (564 px) e de 4 (368 px), não, e `composicao.tamanho-minimo` acusa o gráfico nelas.
