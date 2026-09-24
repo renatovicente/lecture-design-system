@@ -42,3 +42,13 @@ Rodar a suíte de integração **inteira** — o que ninguém tinha feito nesta 
 - **Três afirmações confiantes estavam erradas, e nenhuma ferramenta pegava.** Um relatório chamou de "ambiental" uma falha determinística: o hash de uma fixture tinha ficado velho, e dois testes estouravam 30 s. Uma legenda do espécime dizia a cor errada de uma série, e virou o exemplo canônico do guia nos três pacotes. Um erro de render era devolvido e nunca lido.
 - **Rodar só os arquivos de teste escolhidos deixou passar duas regressões.** A suíte de integração inteira custa minutos. Custou mais não rodá-la.
 - **Um conserto trocou o sinal do defeito.** Duas casas decimais apagavam o domínio pequeno. Quatro dígitos significativos resolveram esse caso e apagaram o domínio grande. As duas versões fixavam a precisão sem olhar o domínio.
+
+## Os dois pontos abertos, fechados antes do merge
+
+**1. Gráfico com CSV fora da composição do build.** Medir o HTML construído não era possível: o modo `?folha`, que dispõe os slides para medir, só existe no runtime de desenvolvimento. O caminho foi o outro: **o runtime de navegador passou a ler o CSV**, com um parser só, compartilhado pelos dois modos. Isso fechou três coisas de uma vez — a composição do build passa a ver o gráfico, `aula-usp servir` passa a desenhá-lo, e `recursos.csv` deixa de ser muda no navegador. Medido: o gráfico com CSV numa coluna `4-4-4`, que antes saía do build com 0 erros, agora é acusado: *"a figura tem 368 px de largura no palco e precisaria de 640. Ponha a figura numa coluna mais larga ou no layout figura"*.
+
+**2. A edição da spec 4.3 foi mantida e tornada coerente.** Texto de SVG (`text` e `tspan`) é medido no palco contra o mínimo de rótulo; `composicao.azul-pequeno` passa a medir azul em SVG pelo `fill`, no palco; um achado por figura, com ação que o autor segue. As regras estáticas de SVG ficam como condição necessária, e a spec diz isso. A 7.2 ganhou a consequência escrita: um gráfico precisa de uma figura com pelo menos 640 px no palco — o layout `figura` e a coluna de 8 servem; as colunas de 6 e de 4, não. A 3.2 e a 7.2 passaram a dizer onde o CSV do autor é lido.
+
+**Medido no fim:** `npm test` 536/536; `npm run test:integracao` 224/224, as duas inteiras.
+
+**Fica aberto:** traço amarelo num SVG escalado — `vocabulario.amarelo-svg` lê o `stroke-width` em unidades do `viewBox`, e nenhuma regra de composição mede traço; um traço de 4 numa figura escalada por 0,575 aparece com 2,3 px.
