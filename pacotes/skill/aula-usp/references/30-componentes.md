@@ -211,11 +211,11 @@ A tabela sai de `contrato/contrato.json` por `npm run guia`, como a de layouts e
 | `leitura` | 24 px | `p:not(.fonte)`, `li`, `th`, `td`, `aside.destaque`, `aside.quadro`, `aside.alerta`, `div.enunciado`, `div.resposta`, `.metadados-capa` |
 | `codigo` | 20 px | `pre`, `code` |
 | `legenda` | 18 px | `figcaption`, `p.fonte` |
-| `rotulo` | 14 px | `.rotulo`, `.rodape`, `.contador`, `.nome-curto`, `.bloco-n-de-m`, `.roteiro li`, `svg text` |
+| `rotulo` | 14 px | `.rotulo`, `.rodape`, `.contador`, `.nome-curto`, `.bloco-n-de-m`, `.roteiro li`, `svg text`, `svg tspan` |
 
 Fora da medição: `.katex *`, `sub`, `sup`, `.demo *`, `.painel *`, `.faixa-de-marca *`, `figcaption code`, `p.fonte code`.
 <!-- /gerado -->
 
-Nem todo seletor da tabela é coisa que você escreve: a linha `rotulo` é inteira de cromo, e `.metadados-capa`, na linha `leitura`, também — é o sistema que desenha aquele texto, e ele está aqui porque a regra o mede junto com o seu.
+Nem todo seletor da tabela é coisa que você escreve: a linha `rotulo` é de cromo, menos `svg text` e `svg tspan`, e `.metadados-capa`, na linha `leitura`, também — é o sistema que desenha aquele texto, e ele está aqui porque a regra o mede junto com o seu. `svg text` e `svg tspan` são o texto dos seus SVG e dos gráficos: dele vale só o mínimo de rótulo, medido no tamanho em que aparece no palco, com um achado por figura (`50-graficos-diagramas-demos.md`).
 
 E nem todo elemento tem papel: `h1` e `h2` não casam seletor nenhum da tabela, e a regra não os mede — o tamanho do título vem do layout. A lista de "fora da medição" é o resto do que ela não mede: o miolo de uma fórmula tem escala própria; o índice e o expoente são menores por definição; o interior de uma demo, dos painéis e da faixa de marca é desenhado pelo sistema; e o `code` dentro de uma legenda ou de uma linha de fonte acompanha o tamanho dela, abaixo do mínimo do papel `codigo`.

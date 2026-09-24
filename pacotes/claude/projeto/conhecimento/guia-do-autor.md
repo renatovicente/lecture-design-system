@@ -97,7 +97,7 @@ Uma aula é um arquivo HTML: um `<head>` com os metadados e a tag do runtime, e 
 <meta name="data" content="2026-03-02">
 <meta name="professor" content="Prof. Nome Sobrenome">
 <script src="https://cdn.jsdelivr.net/npm/aula-usp@0.1.0/dist/aula-usp.js"
-        integrity="sha384-8uMFuGjX/ZHbkHM6lj8IOHOkTcaXOaehiprxVdlIfGPUe3RDpYbAlC4pbDRQWRtn" crossorigin="anonymous"></script>
+        integrity="sha384-3EP8Q5r8P95HvH4JFG3rOiDsQW/ozAclNcssxOTv+0VkUs6dZE+wu9a9RjDOAQCb" crossorigin="anonymous"></script>
 </head>
 <body>
 
@@ -808,12 +808,12 @@ A tabela sai de `contrato/contrato.json` por `npm run guia`, como a de layouts e
 | `leitura` | 24 px | `p:not(.fonte)`, `li`, `th`, `td`, `aside.destaque`, `aside.quadro`, `aside.alerta`, `div.enunciado`, `div.resposta`, `.metadados-capa` |
 | `codigo` | 20 px | `pre`, `code` |
 | `legenda` | 18 px | `figcaption`, `p.fonte` |
-| `rotulo` | 14 px | `.rotulo`, `.rodape`, `.contador`, `.nome-curto`, `.bloco-n-de-m`, `.roteiro li`, `svg text` |
+| `rotulo` | 14 px | `.rotulo`, `.rodape`, `.contador`, `.nome-curto`, `.bloco-n-de-m`, `.roteiro li`, `svg text`, `svg tspan` |
 
 Fora da medição: `.katex *`, `sub`, `sup`, `.demo *`, `.painel *`, `.faixa-de-marca *`, `figcaption code`, `p.fonte code`.
 <!-- /gerado -->
 
-Nem todo seletor da tabela é coisa que você escreve: a linha `rotulo` é inteira de cromo, e `.metadados-capa`, na linha `leitura`, também — é o sistema que desenha aquele texto, e ele está aqui porque a regra o mede junto com o seu.
+Nem todo seletor da tabela é coisa que você escreve: a linha `rotulo` é de cromo, menos `svg text` e `svg tspan`, e `.metadados-capa`, na linha `leitura`, também — é o sistema que desenha aquele texto, e ele está aqui porque a regra o mede junto com o seu. `svg text` e `svg tspan` são o texto dos seus SVG e dos gráficos: dele vale só o mínimo de rótulo, medido no tamanho em que aparece no palco, com um achado por figura (**Gráficos, diagramas e demos**).
 
 E nem todo elemento tem papel: `h1` e `h2` não casam seletor nenhum da tabela, e a regra não os mede — o tamanho do título vem do layout. A lista de "fora da medição" é o resto do que ela não mede: o miolo de uma fórmula tem escala própria; o índice e o expoente são menores por definição; o interior de uma demo, dos painéis e da faixa de marca é desenhado pelo sistema; e o `code` dentro de uma legenda ou de uma linha de fonte acompanha o tamanho dela, abaixo do mínimo do papel `codigo`.
 
@@ -1115,7 +1115,7 @@ Do espécime: `especime/index.html#figura`. O vocabulário de SVG do contrato es
 Duas coisas que surpreendem quem desenha um gráfico à mão, as duas medidas:
 
 - **o texto dentro do SVG conta no orçamento de palavras.** Rótulo de eixo, nome de série, valor anotado: num slide de `conteudo`, tudo isso entra em `limites.palavras-corpo`, e dentro de uma coluna, também em `limites.palavras-coluna`. Um gráfico muito anotado estoura o orçamento sem uma frase de prosa sequer. No layout `figura`, que não tem orçamento de corpo, a conta não corre.
-- **o texto dentro do SVG é medido no tamanho em que aparece no palco**, contra o mínimo de rótulo, 14 px. O SVG escala com a largura da figura: um `font-size="14"` num `viewBox` mais largo que a coluna sai menor que 14 e é `composicao.tamanho-minimo`.
+- **o texto dentro do SVG é medido no tamanho em que aparece no palco**, contra o mínimo de rótulo, 14 px. O SVG escala com a largura da figura: um `font-size="14"` num `viewBox` mais largo que a coluna sai menor que 14 e é `composicao.tamanho-minimo`. O achado é um por figura, com a menor medida e a largura que a figura precisaria. O azul vale do mesmo jeito: texto de SVG em azul abaixo de 32 px no palco é `composicao.azul-pequeno`, mesmo com `font-size="32"` no fonte.
 
 **Um diagrama hoje** é o mesmo caso: SVG escrito à mão, com as caixas e as setas de que você precisa, ou uma imagem exportada de outra ferramenta.
 
@@ -1197,7 +1197,7 @@ A tabela sai de `contrato/contrato.json` por `npm run guia` — do mesmo arquivo
 |---|---|---|
 | `composicao.azul-pequeno` | erro | Use azul só em texto a partir de 32 px. |
 | `composicao.linhas-titulo` | erro | Encurte o título para caber em duas linhas. |
-| `composicao.tamanho-minimo` | erro | Corte conteúdo em vez de reduzir o texto. |
+| `composicao.tamanho-minimo` | erro | Corte conteúdo em vez de reduzir o texto. Em texto de SVG: ponha a figura numa coluna mais larga ou no layout figura; num SVG seu, aumente também o font-size. |
 | `composicao.texto-no-amarelo` | erro | Use só tinta sobre amarelo. |
 | `composicao.transbordo` | erro | Reduza o conteúdo do slide ou divida-o em dois. |
 | `estrutura.blocos` | aviso | Organize a aula em 2 a 8 blocos, cada um aberto por data-layout="abertura". |

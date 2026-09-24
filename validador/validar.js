@@ -54,7 +54,10 @@ export function validar(doc, { contrato, regras, grupo, fase = 1, ...dados }) {
         id: achado.id ?? null,
         regra: regra.nome,
         mensagem: achado.mensagem,
-        acao: definicao.acao,
+        // Uma regra pode trazer a ação do próprio achado quando o caso pede outra saída ao autor
+        // (composicao.tamanho-minimo em texto de SVG: não há texto para cortar, há figura estreita).
+        // A frase continua vindo do contrato — a regra a lê de lá (acaoSvg), não a escreve.
+        acao: achado.acao ?? definicao.acao,
         trecho: achado.trecho ?? null,
         ordem,
       });

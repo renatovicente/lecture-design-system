@@ -54,7 +54,9 @@ export function tabelaDeRegras(contrato, { fase = 1 } = {}) {
   const linhas = Object.entries(contrato.regras)
     .filter(([, regra]) => regra.fase === fase)
     .sort(([a], [b]) => a.localeCompare(b, 'pt-BR'))
-    .map(([nome, regra]) => `| \`${nome}\` | ${regra.severidade} | ${regra.acao} |`);
+    // acaoSvg: a ação que a regra põe no achado de texto de SVG (composicao.tamanho-minimo), que não
+    // é a mesma de texto HTML — o autor que lê a tabela precisa das duas.
+    .map(([nome, regra]) => `| \`${nome}\` | ${regra.severidade} | ${regra.acao}${regra.acaoSvg ? ` Em texto de SVG: ${regra.acaoSvg[0].toLowerCase()}${regra.acaoSvg.slice(1)}` : ''} |`);
   return ['| regra | severidade | como corrigir |', '|---|---|---|', ...linhas].join('\n');
 }
 

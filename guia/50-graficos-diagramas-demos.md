@@ -121,7 +121,7 @@ Do espécime: `especime/index.html#figura`. O vocabulário de SVG do contrato es
 Duas coisas que surpreendem quem desenha um gráfico à mão, as duas medidas:
 
 - **o texto dentro do SVG conta no orçamento de palavras.** Rótulo de eixo, nome de série, valor anotado: num slide de `conteudo`, tudo isso entra em `limites.palavras-corpo`, e dentro de uma coluna, também em `limites.palavras-coluna`. Um gráfico muito anotado estoura o orçamento sem uma frase de prosa sequer. No layout `figura`, que não tem orçamento de corpo, a conta não corre.
-- **o texto dentro do SVG é medido no tamanho em que aparece no palco**, contra o mínimo de rótulo, 14 px. O SVG escala com a largura da figura: um `font-size="14"` num `viewBox` mais largo que a coluna sai menor que 14 e é `composicao.tamanho-minimo`.
+- **o texto dentro do SVG é medido no tamanho em que aparece no palco**, contra o mínimo de rótulo, 14 px. O SVG escala com a largura da figura: um `font-size="14"` num `viewBox` mais largo que a coluna sai menor que 14 e é `composicao.tamanho-minimo`. O achado é um por figura, com a menor medida e a largura que a figura precisaria. O azul vale do mesmo jeito: texto de SVG em azul abaixo de 32 px no palco é `composicao.azul-pequeno`, mesmo com `font-size="32"` no fonte.
 
 **Um diagrama hoje** é o mesmo caso: SVG escrito à mão, com as caixas e as setas de que você precisa, ou uma imagem exportada de outra ferramenta.
 

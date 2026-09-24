@@ -170,7 +170,7 @@ Famílias: Geist (400, 600 e itálico 400), Geist Mono (400, 600 e 700) e Open S
 | rótulo | rótulos do cromo, `data-rotulo`, "Bloco N de M" no cabeçalho, rodapé, contador | Geist Mono | 14 / 1,2, caixa alta | 700 no rótulo, 400 no rodapé; +0,16em |
 | rótulo grande | "Bloco N de M" na abertura | Geist Mono | 20 / 1,2, caixa alta | 700; +0,16em |
 
-Tamanhos mínimos, verificados por `composicao.tamanho-minimo` pelo papel de cada elemento, como declarado em `contrato.json`: 24 px para leitura, 20 px para código, 18 px para legendas e 14 px para rótulos. Texto dentro de SVG é rótulo e é medido no tamanho em que aparece no palco — o `font-size` do SVG vezes a escala com que a figura o desenha —, porque o SVG escala com a largura da coluna e um 14 do `viewBox` pode sair com 8 px numa coluna estreita. Ficam fora da verificação:
+Tamanhos mínimos, verificados por `composicao.tamanho-minimo` pelo papel de cada elemento, como declarado em `contrato.json`: 24 px para leitura, 20 px para código, 18 px para legendas e 14 px para rótulos. Texto dentro de SVG (`text` e `tspan`) segue o mínimo de rótulo, 14 px — o mínimo, não o papel inteiro: a família é a da seção 5.5 —, medido no tamanho em que aparece no palco, isto é, o `font-size` do SVG vezes a escala com que a figura o desenha: o SVG escala com a largura da coluna, e um 14 do `viewBox` pode sair com 8 px numa coluna estreita. O achado é um por figura, com a menor medida. Ficam fora da verificação:
 
 - o interior das equações do KaTeX (índices, frações e símbolos seguem as regras de tamanho do TeX);
 - `sub` e `sup` em texto, que o sistema define com 0,8em;
@@ -325,7 +325,7 @@ Cada `section` tem um `data-layout` e só pode conter, fora `aside.notas`, os el
 | `demo` | `h2`, `div.demo` (com `img.estatico` opcional como filho) | `h2` e exatamente um `div.demo` | cabeçalho; rodapé; imagem estática no PDF |
 | `encerramento` | `h2`, `ol.sintese`, `p.proxima` | `h2` e `ol.sintese` | cabeçalho com o mapa; faixa de marca |
 
-`div.colunas` tem tantos `div` filhos quanto partes em `data-grade` (dois em `6-6`, três em `4-4-4`), e cada `div` contém só blocos de corpo.
+`div.colunas` tem tantos `div` filhos quanto partes em `data-grade` (dois em `6-6`, três em `4-4-4`), e cada `div` contém só blocos de corpo. Dentro de uma coluna, `figure.grafico` só respeita o mínimo de rótulo na coluna de 8 de `8-4` e `4-8` (seção 7.2).
 
 **Limites de conteúdo.** Os limites de título foram calibrados medindo a Geist 600 do Google Fonts, com o tracking da tabela 4.3, em frases de aula em português. As médias foram de 44,4 px por caractere a 96 px (25 caracteres em 1152 px), 39,3 px a 84 px (23 caracteres em 908 px, a largura que sobra ao lado de "Bloco N de M") e 20,6 px a 44 px (55 caracteres em 1152 px). Os limites adotados são o que cabe na frase mais larga do conjunto medido: 23, 20 e 50. Caracteres são contados por **segmento**, isto é, pelo texto entre `<br>`; como letras largas ainda podem quebrar uma linha dentro do limite, o número de linhas renderizadas é medido no navegador por `composicao.linhas-titulo`.
 
@@ -546,6 +546,7 @@ O destaque de código usa o Shiki (núcleo, motor de expressões regulares em Ja
 - `dados`: caminho de um CSV (modo build) ou objeto de colunas inline, como `{"epoca": [...], "treino": [...]}`, necessário no modo navegador sem arquivos.
 - Séries: no máximo 3. Com uma série, ela sai em `tinta`. Com duas ou três, a série em foco (campo `foco`; na falta dele, a última de `y`) sai em `azul`, e as demais em `tinta` e em `cinza` tracejada, nessa ordem.
 - Eixos em `tinta` de 2 px; marcas e rótulos em Geist Mono 14 `cinza`; grade horizontal em `linha`; faixas em `amarelo`, atrás das séries, com rótulo em `tinta`.
+- O `viewBox` do gráfico tem 640 de largura, e o texto de 14 só chega aos 14 px da seção 4.3 numa figura com pelo menos 14 × 640 / 14 = 640 px de largura no palco: o layout `figura` (775 px) e a coluna de 8 (760 px) servem; as colunas de 6 (564 px) e de 4 (368 px), não, e `composicao.tamanho-minimo` acusa o gráfico nelas.
 - Cada série é rotulada na ponta, em `tinta`, precedida de um traço de 16 px na cor da série, porque texto em `azul` só vale a partir de 32 px. Não há caixa de legenda.
 - O SVG é gerado com `d3-array`, `d3-scale` e `d3-shape`, pelo mesmo módulo nos dois modos.
 - `aula-usp.mplstyle`, gerado dos tokens, serve às figuras feitas em notebooks: ciclo de cores `tinta`, `azul` e `cinza`; eixos de 2 px sem bordas superior e direita; grade horizontal em `linha`; Geist quando instalada no sistema.
@@ -633,14 +634,14 @@ Cada mensagem traz severidade, número e `id` do slide, regra, problema e ação
 | `vocabulario.atributo` | erro | atributo ou valor fora do contrato, em HTML ou SVG |
 | `vocabulario.style` | erro | atributo `style` ou elemento `style` no corpo |
 | `vocabulario.cor-svg` | erro | `fill` ou `stroke` fora dos tokens |
-| `vocabulario.amarelo-svg` | erro | `amarelo` em texto de SVG, ou em traço com menos de 4 px |
-| `vocabulario.azul-svg` | erro | `azul` em texto de SVG com menos de 32 px |
+| `vocabulario.amarelo-svg` | erro | `amarelo` em texto de SVG, ou em traço com menos de 4 px no `stroke-width` do fonte, em unidades do `viewBox` |
+| `vocabulario.azul-svg` | erro | `azul` em texto de SVG com menos de 32 no `font-size` do fonte, em unidades do `viewBox`; condição necessária, não suficiente: o tamanho no palco é de `composicao.azul-pequeno` |
 | `vocabulario.script` | erro | script dentro de `section` fora dos tipos permitidos |
 | `limites.titulo`, `limites.segmentos-titulo`, `limites.nome-curto`, `limites.pergunta`, `limites.lide`, `limites.palavras-corpo`, `limites.palavras-coluna`, `limites.itens`, `limites.destaques`, `limites.alertas`, `limites.rotulo`, `limites.afirmacao`, `limites.fonte`, `limites.legenda`, `limites.sintese`, `limites.proxima`, `limites.codigo-linhas`, `limites.codigo-colunas`, `limites.tabela`, `limites.metadado` | erro | cada limite das seções 5.2 e 5.3 |
 | `composicao.transbordo` | erro | elemento fora da zona de conteúdo do layout ou do palco, medido no estado final |
 | `composicao.linhas-titulo` | erro | título com mais linhas renderizadas que o permitido |
-| `composicao.tamanho-minimo` | erro | texto abaixo do mínimo do seu papel, com as exceções da seção 4.3 |
-| `composicao.azul-pequeno` | erro | texto em `azul` abaixo de 32 px |
+| `composicao.tamanho-minimo` | erro | texto abaixo do mínimo do seu papel, com as exceções da seção 4.3; texto de SVG no tamanho do palco, um achado por figura |
+| `composicao.azul-pequeno` | erro | texto em `azul` abaixo de 32 px; em SVG, pelo `fill` e no tamanho do palco, um achado por figura |
 | `composicao.texto-no-amarelo` | erro | texto sobre `amarelo` em cor diferente de `tinta` |
 | `matematica.tex-invalido` | erro | TeX que o KaTeX não compila, com a mensagem e o trecho |
 | `matematica.comando-proibido` | erro | comando de cor ou de estilo em TeX (seção 5.5) |
@@ -671,6 +672,8 @@ As regras de fase 2 entram no validador com os recursos correspondentes; todas a
 | de carga: `matematica.tex-invalido`, `recursos.imagem`, `recursos.demo-sem-registro`, `recursos.demo-sem-estatico`, `recursos.csv`, `recursos.dot` | o fonte, depois de carregar bibliotecas, imagens e scripts | passo 6, depois do `load` | etapa 1: KaTeX e Graphviz rodam no Node, arquivos são checados no disco, e registros de demo são procurados no texto dos scripts (`AulaUSP.demo('<nome>'`) |
 | composição: `composicao.*` | o documento montado e renderizado, no estado final | passo 6, depois de `montar`, da renderização e de `document.fonts.ready` | etapa 5, no Chrome headless |
 | saída: `saida.*` | o HTML e o PDF finais | não roda | etapas 4 a 7 |
+
+As regras estáticas de SVG (`vocabulario.azul-svg`, `vocabulario.amarelo-svg`) leem `font-size` e `stroke-width` no fonte, em unidades do `viewBox`, e são condição necessária e barata. O tamanho com que o texto de SVG aparece no palco depende da largura da figura, que só o documento montado tem; por isso quem fecha a seção 4.2 e o mínimo de rótulo para texto de SVG são `composicao.azul-pequeno` e `composicao.tamanho-minimo`.
 
 `validador/cobertura.json`, gerado por `aula-usp dist` a partir do `cmap` dos woff2 embutidos, é a fonte única do conjunto de caracteres com glifo. `matematica.simbolo-fora-do-tex` e `saida.glifo-ausente` usam esse arquivo.
 

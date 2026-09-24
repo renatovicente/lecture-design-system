@@ -6,6 +6,10 @@
 <!-- Medido (revisão final do 4c, I3): o <svg> sem width/height próprios caía no tamanho padrão de
      elemento substituído (300×150), estourava a zona de conteúdo e sujava esta fixture com três
      achados de composicao.transbordo. viewBox e width/height iguais (sem magnificação) e um texto
-     bem dentro dos limites resolvem, sem mudar o que a figura ilustra. -->
-<section data-layout="conteudo" id="a"><h2>T</h2><figure><svg viewBox="0 0 40 40" width="40" height="40"><text x="4" y="24" fill="#1094AB" font-size="14">oi</text></svg></figure></section>
+     bem dentro dos limites resolvem, sem mudar o que a figura ilustra.
+     Pendência 2 da fase 2a: até ela, esta figura trazia um texto AZUL de 14 px e era "bom" — a regra
+     só olhava `color`, e texto de SVG pinta com `fill`. Agora a regra mede o texto de SVG em azul no
+     tamanho do palco, e 14 px azul é o que ela existe para acusar. O "bom" passa a ser o azul
+     permitido: 32 px, numa figura sem escala (viewBox igual a width/height). -->
+<section data-layout="conteudo" id="a"><h2>T</h2><figure><svg viewBox="0 0 80 48" width="80" height="48"><text x="4" y="36" fill="#1094AB" font-size="32">oi</text></svg></figure></section>
 </body></html>

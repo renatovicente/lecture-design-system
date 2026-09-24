@@ -228,6 +228,10 @@ test('papéis usam os mínimos dos tokens e têm as exceções da spec (4.3)', (
     ['.katex *', 'sub', 'sup', '.demo *', '.painel *', '.faixa-de-marca *', 'figcaption code', 'p.fonte code']);
   // Spec 4.3, desde o I3 da revisão final da 2a: texto de SVG é rótulo, medido no tamanho do palco.
   assert.ok(contrato.papeis.rotulo.seletores.includes('svg text'));
+  // Pendência 2 da fase 2a: <tspan font-size="…"> escapava do seletor "svg text".
+  assert.ok(contrato.papeis.rotulo.seletores.includes('svg tspan'));
+  // E a ação do achado de texto de SVG vem do contrato, uma frase como as outras.
+  assert.match(contrato.regras['composicao.tamanho-minimo'].acaoSvg, /^\S.*\.$/);
 });
 
 test('precedência de papéis e p.fonte só em legenda, não em leitura (F6)', () => {

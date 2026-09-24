@@ -72,8 +72,51 @@ function escalaNoSvg(elemento, slide) {
   const matriz = elemento.getScreenCTM?.();
   if (!matriz) return 1;
   const naTela = Math.sqrt(Math.abs(matriz.a * matriz.d - matriz.b * matriz.c));
-  const palco = slide.offsetWidth > 0 ? slide.getBoundingClientRect().width / slide.offsetWidth : 1;
-  return naTela / palco;
+  return naTela / escalaDoPalco(slide);
+}
+
+// A escala do palco: a razão entre a caixa do slide na tela e a sua caixa de layout. Divide qualquer
+// medida tirada de getBoundingClientRect para ela sair em px do palco.
+function escalaDoPalco(slide) {
+  return slide.offsetWidth > 0 ? slide.getBoundingClientRect().width / slide.offsetWidth : 1;
+}
+
+const decimal = (numero) => String(numero).replace('.', ',');
+const umaCasa = (numero) => Math.round(numero * 10) / 10;
+
+// Texto de SVG é medido por FIGURA, não por elemento (pendência 2 da fase 2a): um gráfico tem uma
+// dúzia de <text> com o mesmo font-size e a mesma escala, e um erro por <text> dava 16 erros com a
+// mesma causa e a mesma correção — a figura estreita demais. O achado é um só, com a MENOR medida.
+// Só conta quem escreve texto ele mesmo (nó de texto filho direto): um <text> cujo texto está todo
+// num <tspan> não é julgado pelo tamanho do <text>, e sim pelo do <tspan>, que é o que se vê — e
+// é por isso que as duas regras abaixo medem <tspan> (contrato: "svg tspan" em papeis.rotulo).
+function textoProprio(elemento) {
+  return [...elemento.childNodes].some((no) => no.nodeType === Node.TEXT_NODE && no.data.trim());
+}
+
+// A figura a que um texto de SVG pertence, para agrupar: a <figure> em volta (todo SVG do autor mora
+// numa, spec 5.5), ou o próprio <svg> quando não houver.
+function figuraDe(elemento) {
+  return elemento.closest('figure') ?? elemento.closest('svg');
+}
+
+// Guarda, por figura, a menor medida e quantos textos ficaram abaixo do limite.
+function registrarNaFigura(figuras, elemento, medida, abaixo) {
+  const figura = figuraDe(elemento);
+  const atual = figuras.get(figura) ?? { menor: medida, elemento, abaixo: 0 };
+  if (medida.tamanho < atual.menor.tamanho) Object.assign(atual, { menor: medida, elemento });
+  if (abaixo) atual.abaixo += 1;
+  figuras.set(figura, atual);
+}
+
+function medidaNoSvg(elemento, slide, janela) {
+  const declarado = Number.parseFloat(janela.getComputedStyle(elemento).fontSize);
+  const escala = escalaNoSvg(elemento, slide);
+  return { declarado, escala, tamanho: declarado * escala };
+}
+
+function descreverMedida({ declarado, escala, tamanho }) {
+  return `${decimal(umaCasa(tamanho))} px no palco (${decimal(declarado)} px no SVG, que a figura escala por ${decimal(Math.round(escala * 1000) / 1000)})`;
 }
 
 function caixaValida(caixa) {
@@ -189,24 +232,49 @@ export const regras = [
   {
     nome: 'composicao.tamanho-minimo',
     *aplicar({ slides, contrato, janela }) {
+      // Para texto de SVG a saída não é cortar texto, é dar largura à figura: a ação vem do contrato
+      // (acaoSvg), como a de todo achado, e não de uma frase escrita aqui.
+      const { acaoSvg } = contrato.regras['composicao.tamanho-minimo'];
       for (const slide of slides) {
+        const figuras = new Map();
         for (const elemento of elementosMedidos(slide)) {
           if (contrato.papeis.excecoes.some((seletor) => elemento.matches(seletor))) continue;
           const papel = papelDe(elemento, contrato.papeis);
           if (!papel) continue;
-          const declarado = Number.parseFloat(janela.getComputedStyle(elemento).fontSize);
-          const escala = elemento.closest('svg') ? escalaNoSvg(elemento, slide) : 1;
-          const tamanho = Math.round(declarado * escala * 10) / 10;
+          if (elemento.closest('svg')) {
+            if (!textoProprio(elemento)) continue;
+            const medida = { ...medidaNoSvg(elemento, slide, janela), papel };
+            registrarNaFigura(figuras, elemento, medida, umaCasa(medida.tamanho) < papel.minimo - FOLGA);
+            continue;
+          }
+          const tamanho = umaCasa(Number.parseFloat(janela.getComputedStyle(elemento).fontSize));
           if (tamanho < papel.minimo - FOLGA) {
-            const decimal = (numero) => String(numero).replace('.', ',');
-            const onde_ = escala === 1 ? `${tamanho} px`
-              : `${decimal(tamanho)} px no palco (${decimal(declarado)} px no SVG, que a figura escala por ${decimal(Math.round(escala * 1000) / 1000)})`;
             yield {
               ...onde(slides, slide),
-              mensagem: `<${elemento.nodeName.toLowerCase()}> em ${onde_}, abaixo do mínimo de ${papel.minimo} px do papel ${papel.nome}.`,
+              mensagem: `<${elemento.nodeName.toLowerCase()}> em ${tamanho} px, abaixo do mínimo de ${papel.minimo} px do papel ${papel.nome}.`,
               trecho: trechoDe(elemento),
             };
           }
+        }
+        for (const [figura, { menor, elemento, abaixo }] of figuras) {
+          if (abaixo === 0) continue;
+          const { papel } = menor;
+          // A largura que a figura precisaria para o menor texto chegar ao mínimo: a de hoje vezes a
+          // razão entre o mínimo e o que se mede — medida, não suposta (com o viewBox de 640 do
+          // gráfico e texto de 14, dá 640 px; spec 7.2). Arredondada a uma casa antes de subir para o
+          // inteiro, a mesma precisão das medidas de tamanho: 368 × 14 / (14 × 0,575) é 640 na conta
+          // e 640,0000000000001 no ponto flutuante, que Math.ceil sozinho levaria a 641.
+          const svg = elemento.closest('svg');
+          const largura = svg.getBoundingClientRect().width / escalaDoPalco(slide);
+          const precisa = Math.ceil(umaCasa(largura * papel.minimo / menor.tamanho));
+          yield {
+            ...onde(slides, slide),
+            mensagem: `texto de SVG em ${descreverMedida(menor)}, abaixo do mínimo de ${papel.minimo} px do papel ${papel.nome} `
+              + `(${abaixo} ${abaixo === 1 ? 'texto' : 'textos'} abaixo do mínimo nesta figura); `
+              + `a figura tem ${Math.round(largura)} px de largura no palco e precisaria de ${precisa}.`,
+            trecho: trechoDe(figura),
+            acao: acaoSvg,
+          };
         }
       }
     },
@@ -215,14 +283,35 @@ export const regras = [
     nome: 'composicao.azul-pequeno',
     *aplicar({ slides, janela }) {
       for (const slide of slides) {
+        const figuras = new Map();
         for (const elemento of elementosMedidos(slide)) {
           if (!elemento.textContent.trim()) continue;
           const estilo = janela.getComputedStyle(elemento);
+          // Texto de SVG pinta com `fill`, não com `color`, e o font-size dele está em unidades do
+          // viewBox: pelo mesmo método de tamanho-minimo, a medida é a do palco. É aqui que a spec
+          // 4.2 ("texto em azul só com 32 px ou mais") fecha para SVG — vocabulario.azul-svg, que é
+          // estática, lê o font-size do fonte e não tem como saber a escala da figura.
+          if (elemento.closest('svg')) {
+            if (!(elemento instanceof janela.SVGTextContentElement) || !textoProprio(elemento)) continue;
+            if (estilo.fill !== AZUL) continue;
+            const medida = medidaNoSvg(elemento, slide, janela);
+            registrarNaFigura(figuras, elemento, medida, umaCasa(medida.tamanho) < MINIMO_AZUL - FOLGA);
+            continue;
+          }
           if (estilo.color !== AZUL) continue;
           const tamanho = Number.parseFloat(estilo.fontSize);
           if (tamanho < MINIMO_AZUL) {
             yield { ...onde(slides, slide), mensagem: `texto em azul com ${tamanho} px (mín. ${MINIMO_AZUL}).`, trecho: trechoDe(elemento) };
           }
+        }
+        for (const [figura, { menor, abaixo }] of figuras) {
+          if (abaixo === 0) continue;
+          yield {
+            ...onde(slides, slide),
+            mensagem: `texto de SVG em azul com ${descreverMedida(menor)} (mín. ${MINIMO_AZUL}; `
+              + `${abaixo} ${abaixo === 1 ? 'texto' : 'textos'} em azul abaixo disso nesta figura).`,
+            trecho: trechoDe(figura),
+          };
         }
       }
     },

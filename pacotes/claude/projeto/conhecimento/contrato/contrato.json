@@ -103,7 +103,7 @@
     "leitura": { "minimo": 24, "seletores": ["p:not(.fonte)", "li", "th", "td", "aside.destaque", "aside.quadro", "aside.alerta", "div.enunciado", "div.resposta", ".metadados-capa"] },
     "codigo":  { "minimo": 20, "seletores": ["pre", "code"] },
     "legenda": { "minimo": 18, "seletores": ["figcaption", "p.fonte"] },
-    "rotulo":  { "minimo": 14, "seletores": [".rotulo", ".rodape", ".contador", ".nome-curto", ".bloco-n-de-m", ".roteiro li", "svg text"] },
+    "rotulo":  { "minimo": 14, "seletores": [".rotulo", ".rodape", ".contador", ".nome-curto", ".bloco-n-de-m", ".roteiro li", "svg text", "svg tspan"] },
     "excecoes": [".katex *", "sub", "sup", ".demo *", ".painel *", ".faixa-de-marca *", "figcaption code", "p.fonte code"]
   },
   "classesDoSistema": ["palco", "slide", "area", "cabecalho", "rotulo", "mapa", "quadrado", "visto", "atual", "futuro", "contador", "rodape", "metadados-capa", "roteiro", "faixa-de-marca", "marca-unidade", "marca-usp", "numero-bloco", "fileira", "nome-curto", "bloco-n-de-m", "painel", "ativo", "folha", "modo-palco", "painel-titulo", "painel-corpo", "grupo", "grupo-titulo", "cartoes", "cartao", "cartao-numero", "cartao-titulo", "teclas", "aviso", "modo-apresentador", "apresentador", "miniatura", "quadro-miniatura", "fim-da-aula", "painel-apresentador", "posicao", "cronometro", "tempo", "relogio", "notas-apresentador", "captura-demo", "demo-substituta", "imprimindo", "numerica", "equacao", "tex-invalido", "linha", "marcada", "palavra-chave", "comentario", "achados", "copiar", "grade", "serie", "serie-traco", "serie-rotulo", "eixo", "eixo-x", "eixo-y", "eixo-titulo", "marca"],
@@ -215,7 +215,7 @@
     "limites.metadado":          { "severidade": "erro",  "grupo": "estatica", "fase": 1, "acao": "Encurte o metadado ao tamanho previsto." },
     "composicao.transbordo":     { "severidade": "erro",  "grupo": "composicao", "fase": 1, "acao": "Reduza o conteúdo do slide ou divida-o em dois." },
     "composicao.linhas-titulo":  { "severidade": "erro",  "grupo": "composicao", "fase": 1, "acao": "Encurte o título para caber em duas linhas." },
-    "composicao.tamanho-minimo": { "severidade": "erro",  "grupo": "composicao", "fase": 1, "acao": "Corte conteúdo em vez de reduzir o texto." },
+    "composicao.tamanho-minimo": { "severidade": "erro",  "grupo": "composicao", "fase": 1, "acao": "Corte conteúdo em vez de reduzir o texto.", "acaoSvg": "Ponha a figura numa coluna mais larga ou no layout figura; num SVG seu, aumente também o font-size." },
     "composicao.azul-pequeno":   { "severidade": "erro",  "grupo": "composicao", "fase": 1, "acao": "Use azul só em texto a partir de 32 px." },
     "composicao.texto-no-amarelo": { "severidade": "erro", "grupo": "composicao", "fase": 1, "acao": "Use só tinta sobre amarelo." },
     "matematica.tex-invalido":   { "severidade": "erro",  "grupo": "carga",    "fase": 1, "acao": "Corrija o TeX no trecho indicado." },

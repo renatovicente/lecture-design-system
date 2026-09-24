@@ -11,7 +11,7 @@ const RODAR = async (contrato) => {
   const { validar } = await import('/_aula-usp/validador/validar.js');
   const { regras } = await import('/_aula-usp/validador/regras/composicao.js');
   return validar(document, { contrato, regras, grupo: 'composicao', janela: window })
-    .map((achado) => ({ regra: achado.regra, slide: achado.slide, mensagem: achado.mensagem }));
+    .map((achado) => ({ regra: achado.regra, slide: achado.slide, mensagem: achado.mensagem, acao: achado.acao }));
 };
 
 const navegador = await iniciarChrome();
@@ -136,10 +136,11 @@ test('texto de gráfico numa coluna estreita acusa tamanho-minimo pelo tamanho n
     document.querySelector('#figura-no-corpo .colunas > div').append(svg);
   });
   const doTamanho = estreita.filter((achado) => achado.regra === 'composicao.tamanho-minimo');
-  assert.ok(doTamanho.length > 0, JSON.stringify(estreita));
-  for (const achado of doTamanho) {
-    assert.match(achado.mensagem, /^<text> em [\d,]+ px no palco \(14 px no SVG, que a figura escala por 0,5\d+\), abaixo do mínimo de 14 px do papel rotulo\.$/);
-  }
+  // Pendência 2 da fase 2a: UM achado pela figura, com a menor medida e a largura que faltaria — não
+  // um por <text> (eram 14 neste gráfico) —, e a ação de figura estreita, a do contrato.
+  assert.equal(doTamanho.length, 1, JSON.stringify(doTamanho));
+  assert.match(doTamanho[0].mensagem, /^texto de SVG em [\d,]+ px no palco \(14 px no SVG, que a figura escala por 0,5\d+\), abaixo do mínimo de 14 px do papel rotulo \(\d+ textos abaixo do mínimo nesta figura\); a figura tem \d+ px de largura no palco e precisaria de 640\.$/);
+  assert.equal(doTamanho[0].acao, contrato.regras['composicao.tamanho-minimo'].acaoSvg);
   // O mesmo gráfico no layout figura: escala maior que 1, nenhum achado.
   const figura = await medir('componentes.html');
   assert.deepEqual(figura.filter((achado) => achado.regra === 'composicao.tamanho-minimo'), []);
@@ -149,6 +150,66 @@ test('texto de gráfico numa coluna estreita acusa tamanho-minimo pelo tamanho n
     for (const texto of document.querySelectorAll('#grafico-notas svg text')) texto.setAttribute('font-size', '11');
   });
   assert.ok(menor.some((achado) => achado.regra === 'composicao.tamanho-minimo' && achado.slide !== null), JSON.stringify(menor));
+});
+
+// Um achado por FIGURA, não por slide: duas figuras estreitas no mesmo slide são dois achados, cada
+// um com o trecho da sua figura.
+test('duas figuras estreitas no mesmo slide dão dois achados de tamanho-minimo, um por figura', async () => {
+  const achados = await medir('componentes.html', () => {
+    const coluna = document.querySelector('#figura-no-corpo .colunas > div');
+    for (let i = 0; i < 2; i += 1) {
+      const figura = document.createElement('figure');
+      figura.append(document.querySelector('#grafico-notas figure.grafico svg').cloneNode(true));
+      coluna.append(figura);
+    }
+  });
+  const doTamanho = achados.filter((achado) => achado.regra === 'composicao.tamanho-minimo');
+  assert.equal(doTamanho.length, 2, JSON.stringify(doTamanho));
+});
+
+// Pendência 2 da fase 2a: o seletor "svg text" não pegava <tspan font-size="…">, e o texto que ele
+// escreve é o que a plateia vê. No layout figura, com escala > 1, um <tspan> de 6 no viewBox fica
+// abaixo de 14 no palco; o <text> em volta, de 14, não — e não é ele quem é julgado.
+test('um <tspan> pequeno dentro de um <text> do tamanho certo acusa tamanho-minimo', async () => {
+  const achados = await medir('componentes.html', () => {
+    const texto = document.querySelector('#grafico-notas svg text');
+    const tspan = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
+    tspan.setAttribute('font-size', '6');
+    tspan.textContent = 'pequeno';
+    texto.textContent = '';
+    texto.append(tspan);
+  });
+  const doTamanho = achados.filter((achado) => achado.regra === 'composicao.tamanho-minimo');
+  assert.equal(doTamanho.length, 1, JSON.stringify(achados));
+  assert.match(doTamanho[0].mensagem, /^texto de SVG em [\d,]+ px no palco \(6 px no SVG, que a figura escala por 1,2\d+\).*\(1 texto abaixo do mínimo nesta figura\)/);
+});
+
+// Pendência 2 da fase 2a: a spec 4.2 ("texto em azul só com 32 px ou mais") não valia para SVG na
+// composição — a regra olhava `color`, e SVG pinta com `fill` —, e a estática vocabulario.azul-svg
+// mede o font-size do fonte, em unidades do viewBox. Um azul de 32 no viewBox, na coluna de 4
+// (escala ~0,5), aparece com ~16 px. O mesmo azul no layout figura (escala > 1) passa.
+test('texto de SVG em azul é medido pelo fill e no tamanho do palco', async () => {
+  const pintarDeAzul = (seletor) => {
+    for (const texto of document.querySelectorAll(`${seletor} text`)) {
+      texto.setAttribute('fill', '#1094AB');
+      texto.setAttribute('font-size', '32');
+    }
+  };
+  const estreita = await medir('componentes.html', () => {
+    const svg = document.querySelector('#grafico-notas figure.grafico svg').cloneNode(true);
+    const figura = document.createElement('figure');
+    figura.append(svg);
+    document.querySelector('#figura-no-corpo .colunas > div').append(figura);
+    for (const texto of svg.querySelectorAll('text')) {
+      texto.setAttribute('fill', '#1094AB');
+      texto.setAttribute('font-size', '32');
+    }
+  });
+  const azuis = estreita.filter((achado) => achado.regra === 'composicao.azul-pequeno');
+  assert.equal(azuis.length, 1, JSON.stringify(estreita));
+  assert.match(azuis[0].mensagem, /^texto de SVG em azul com [\d,]+ px no palco \(32 px no SVG, que a figura escala por 0,5\d+\) \(mín\. 32; \d+ textos em azul abaixo disso nesta figura\)\.$/);
+  const larga = await medir('componentes.html', `(${pintarDeAzul})('#grafico-notas')`);
+  assert.deepEqual(larga.filter((achado) => achado.regra === 'composicao.azul-pequeno'), []);
 });
 
 // O roteiro da capa renderiza a 14 px e casa "li" (leitura, 24) e ".roteiro li" (rotulo, 14):
