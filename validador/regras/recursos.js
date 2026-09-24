@@ -171,7 +171,8 @@ export const regras = [
     // y inclui o zero por construção e falharia com qualquer dado (TIPOS_COM_ZERO_EM_Y). As três
     // funções vêm de componentes/graficos.js, a mesma fonte que o desenho usa. O que sobra para o
     // desenho: domínio ≤ 0 em log nos outros casos (depende dos VALORES) e as colunas de um CSV, que
-    // uma regra estática — sem carregar nada — não tem; esses erros chegam ao autor pelo build.
+    // uma regra estática — sem carregar nada — não tem; esses erros chegam ao autor pelo build e, no
+    // navegador, pelo console.
     nome: 'recursos.grafico',
     *aplicar({ slides, contrato }) {
       for (const secao of slides) {

@@ -2,11 +2,9 @@
 // As regras não carregam nada — quem carrega é o chamador, e entrega o resultado no contexto:
 //   recursos = { tex: [{ trecho, mensagem }], imagens: Map(src → carregou), demos: Map(nome → { capturar }),
 //                csvs: Map(caminho → carregou) }
-// No navegador isso vem do DOM vivo; no build, do KaTeX rodando no Node e do disco. csvs: hoje só o
-// build preenche (build/carregar.mjs:csvsDoDisco) — montar/entrada.js, o lado navegador, documenta
-// que resolver caminho de CSV não é desta tarefa (a Tarefa 3 da fase 2a já deixou isso escrito, para
-// a renderização); esta regra fica muda no navegador enquanto isso não mudar, do mesmo jeito que
-// recursos.demo-sem-registro fica muda sem `recursos.demos`.
+// No navegador isso vem do DOM vivo; no build, do KaTeX rodando no Node e do disco. csvs: o build
+// preenche pelo disco (build/carregar.mjs:csvsDoDisco) e o navegador pelo resultado do fetch
+// (montar/entrada.js:buscarCsvs), os dois com os caminhos de componentes/csv.js:caminhosDeCsv.
 import { onde, trechoDe, encurtar } from '../validar.js';
 
 export const regras = [

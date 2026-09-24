@@ -10,7 +10,7 @@ import { montar } from '../montar/montar.js';
 import { renderizarTex } from '../componentes/tex.js';
 import { criarDestacador, renderizarCodigo } from '../componentes/codigo.js';
 import { criarDesenhista, desenharGraficos } from '../componentes/graficos.js';
-import { lerCsv } from './csv.mjs';
+import { caminhosDeCsv, colunasDosCsvs } from '../componentes/csv.js';
 
 // Sem 'fontes': estilos/fontes.css é o @font-face de DESENVOLVIMENTO (URL relativa a assets/fontes/,
 // servida por build/servir.mjs). embutirFontes (tarefa 2 do marco 5b) já devolve o @font-face de
@@ -69,41 +69,31 @@ async function prerenderizarCodigo(document, contrato) {
   return renderizarCodigo(document.body, { destacador });
 }
 
-// Os CSVs dos gráficos (spec 7.2: "dados": caminho de um CSV, modo build), resolvidos contra a PASTA
-// DA AULA — o mesmo critério de embutirImagensDoAutor, acima. Devolve o `dados` que desenharGraficos
-// consulta: caminho, como o autor o escreveu, → colunas. Cada entrada é um getter, e não o resultado
-// já lido, por um motivo só: um CSV malformado faz lerCsv lançar, e lançar DENTRO de desenharGraficos
-// (que lê dados[caminho] no try dela) é o que põe a mensagem de lerCsv no erro daquele gráfico, com o
-// trecho do JSON dele — em vez de derrubar o build inteiro aqui. Arquivo que não existe fica fora do
-// mapa: a etapa 1 já recusou a aula por recursos.csv antes de chegar aqui, e para quem chama
+// Os CSVs dos gráficos (spec 7.2: "dados": caminho de um CSV), resolvidos contra a PASTA DA AULA — o
+// mesmo critério de embutirImagensDoAutor, acima, e a mesma base que o runtime usa no navegador (o
+// endereço do documento). Aqui só se leem os bytes do disco: achar os caminhos e interpretar o texto
+// é de componentes/csv.js, o mesmo módulo que montar/entrada.js usa. Arquivo que não existe fica fora
+// do mapa: a etapa 1 já recusou a aula por recursos.csv antes de chegar aqui, e para quem chama
 // construirHtml direto, desenharGraficos diz que os dados não foram lidos.
 async function dadosDosCsvs(document, pastaDaAula) {
-  const dados = {};
-  for (const script of document.querySelectorAll('figure.grafico > script[type="application/json"]')) {
-    let caminho;
+  const textos = new Map();
+  for (const caminho of caminhosDeCsv(document)) {
     try {
-      caminho = JSON.parse(script.textContent).dados;
+      textos.set(caminho, await readFile(new URL(caminho.split('?')[0], pastaDaAula), 'utf8'));
     } catch {
-      continue; // JSON inválido: recursos.grafico já acusou na etapa 1
+      // ausente: ver o comentário acima
     }
-    if (typeof caminho !== 'string' || Object.hasOwn(dados, caminho)) continue;
-    let texto;
-    try {
-      texto = await readFile(new URL(caminho.split('?')[0], pastaDaAula), 'utf8');
-    } catch {
-      continue;
-    }
-    Object.defineProperty(dados, caminho, { enumerable: true, get: () => lerCsv(texto) });
   }
-  return dados;
+  return colunasDosCsvs(textos);
 }
 
 // Gráficos (spec 3.5, fase 2), no mesmo padrão de prerenderizarCodigo: a mesma regra de presença que
 // montar/entrada.js usa (SELETOR_GRAFICO) decide se este passo roda. d3-scale/d3-shape/d3-array
 // entram por import estático no topo do arquivo — Node resolve o pacote sozinho, como katex já faz —
 // e criarDesenhista recebe as quatro funções pelo MESMO parâmetro que o navegador usa (componentes/
-// graficos.js não sabe se está em Node ou no cliente). `dados` é o que só o build tem: os CSVs lidos
-// do disco (dadosDosCsvs, acima); uma especificação com colunas inline não o consulta.
+// graficos.js não sabe se está em Node ou no cliente). `dados` são os CSVs lidos do disco
+// (dadosDosCsvs, acima) — o runtime faz o mesmo por fetch; uma especificação com colunas inline não
+// o consulta.
 async function prerenderizarGraficos(document, pastaDaAula) {
   if (!document.querySelector(SELETOR_GRAFICO)) return [];
   const desenhista = criarDesenhista({ escalaLinear: scaleLinear, escalaLog: scaleLog, linha: line, extensao: extent });

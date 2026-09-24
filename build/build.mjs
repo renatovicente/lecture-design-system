@@ -115,10 +115,16 @@ export async function build({ raiz, caminhoDaAula, destino, semPdf = false, nave
   // silêncio, e medirComposicao devolve achados: [] sempre — um falso "sem erro" (medido: a fixture
   // de transbordo deste próprio arquivo de teste passava limpo). O fonte, servido por
   // criarServidor com o runtime de desenvolvimento (o mesmo caminho que `aula-usp validar` já usa),
-  // é o único lugar onde ?folha funciona. Isto não é uma medição mais fraca: o fato 8 do plano da
-  // tarefa 1 provou os dois modos pixel a pixel iguais — a composição do fonte é a composição do
-  // artefato final, sempre, porque um não é aproximação do outro. Sem Chrome, medirComposicao já
-  // degrada sozinha (build/composicao.mjs): spec 8.1, falta de Chrome não é falha — o quarto final
+  // é o único lugar onde ?folha funciona. Isto só é a composição do artefato final enquanto o runtime
+  // de desenvolvimento desenhar TUDO o que construir() pré-renderizou: o fato 8 do plano da tarefa 1
+  // provou os dois modos pixel a pixel iguais para matemática e código, e a revisão final da fase 2a
+  // mediu 0 pixel de diferença para o gráfico do espécime (tests/integracao/visual.test.mjs). O que um lado desenha e o outro não fica de fora da medição
+  // sem aviso nenhum — foi assim com o gráfico de `dados` em CSV, que só construir() lia: numa coluna
+  // 4-4-4, build saía com 0 erros e o SVG construído tinha texto a 8 px no palco. Por isso o runtime
+  // lê o CSV com o mesmo módulo (componentes/csv.js, relativo ao documento da aula, que aqui é servido
+  // por criarServidor junto com os arquivos da aula). Um desenho novo em construir() — o diagrama da
+  // fase 2b — precisa entrar em montar/entrada.js do mesmo jeito, ou esta etapa não o vê. Sem Chrome,
+  // medirComposicao já degrada sozinha (build/composicao.mjs): spec 8.1, falta de Chrome não é falha — o quarto final
   // (aviso, código 0 se não houver erro) sai por aqui, pulando as etapas 5 e 6.
   progresso('etapa 5/7 — abrindo o Chrome e medindo composição');
   const { achados: achadosDeComposicao, motivo: semChrome } = await medirComposicao(caminhoDaFonte, { contrato });

@@ -9,6 +9,7 @@ import { instalarImpressao } from '../motor/impressao.js';
 import { renderizarTex } from '../componentes/tex.js';
 import { criarDestacador, renderizarCodigo } from '../componentes/codigo.js';
 import { criarDesenhista, desenharGraficos } from '../componentes/graficos.js';
+import { caminhosDeCsv, colunasDosCsvs } from '../componentes/csv.js';
 import { validar, linhaDe, slidesDoFonte, faseDaAula } from '../validador/validar.js';
 import { REGRAS_ESTATICAS, REGRAS_DE_CARGA, REGRAS_DE_COMPOSICAO } from '../validador/regras/index.js';
 // Puro (spec 3.5): o mesmo módulo que build/validar.mjs carrega para a CLI. matematica.simbolo-fora-do-tex
@@ -55,6 +56,29 @@ async function lerCoberturaOpcional(dados) {
       + 'matematica.simbolo-fora-do-tex fica muda nesta aula.');
     return undefined;
   }
+}
+
+// Os CSVs dos gráficos (spec 7.2), buscados RELATIVOS AO DOCUMENTO DA AULA — a mesma base de um
+// <img src="figuras/…"> do autor, e não BASE (a raiz do sistema, de onde vêm os scripts): o CSV é
+// arquivo do autor, ao lado da aula. Vale igual no desenvolvimento e no pacote de dist/, porque os
+// dois passam por iniciar(). Devolve os textos, para colunasDosCsvs (componentes/csv.js, o mesmo
+// leitor do build), e o mapa caminho → carregou, para recursos.csv. Uma falha de rede, um 404 ou uma
+// página aberta como arquivo local (file://, onde o fetch é recusado) dão `false` — nunca uma rejeição
+// que derrube a montagem: a aula aparece, o gráfico não, e o painel diz qual CSV faltou.
+async function buscarCsvs(doc) {
+  const textos = new Map();
+  const carregados = new Map();
+  await Promise.all(caminhosDeCsv(doc).map(async (caminho) => {
+    try {
+      const resposta = await fetch(new URL(caminho, doc.baseURI));
+      if (!resposta.ok) throw new Error(`HTTP ${resposta.status}`);
+      textos.set(caminho, await resposta.text());
+      carregados.set(caminho, true);
+    } catch {
+      carregados.set(caminho, false);
+    }
+  }));
+  return { textos, carregados };
 }
 
 function documentoLido() {
@@ -146,18 +170,21 @@ export async function iniciar({ base, resolver = (nome) => nome, estilo, dados =
     }
     // Os gráficos entram pela mesma regra de presença (spec 3.5, fase 2): d3-scale, d3-shape e
     // d3-array chegam por import() dinâmico, resolvidos ao satélite aula-usp-graficos.js — o
-    // terceiro `resolver(...)` desta função, ao lado de 'katex' e '@shikijs/*' acima. Sem `dados`
-    // (fica no default {} de desenharGraficos): no navegador, caminho de CSV não é lido (spec 7.2: as
-    // colunas inline são "necessário no modo navegador sem arquivos"), e desenharGraficos diz isso
-    // ao autor na mensagem; uma especificação com `dados` inline roda igual sem ele.
+    // terceiro `resolver(...)` desta função, ao lado de 'katex' e '@shikijs/*' acima. Os CSVs de
+    // `dados` são buscados junto (buscarCsvs, abaixo) e chegam a desenharGraficos pelo mesmo `dados`
+    // que o build passa: sem isso, um gráfico com CSV não existia na página que `servir`, `validar` e
+    // a etapa 5 do build medem, e passava pela composição sem ser visto (pendência 1 da fase 2a).
+    let csvs = new Map();
     if (document.querySelector(SELETOR_GRAFICO)) {
-      const [{ scaleLinear, scaleLog }, { line }, { extent }] = await Promise.all([
+      const [{ scaleLinear, scaleLog }, { line }, { extent }, buscados] = await Promise.all([
         import(resolver('d3-scale')),
         import(resolver('d3-shape')),
         import(resolver('d3-array')),
+        buscarCsvs(document),
       ]);
+      csvs = buscados.carregados;
       const desenhista = criarDesenhista({ escalaLinear: scaleLinear, escalaLog: scaleLog, linha: line, extensao: extent });
-      for (const erro of desenharGraficos(document.body, { desenhista })) {
+      for (const erro of desenharGraficos(document.body, { desenhista, dados: colunasDosCsvs(buscados.textos) })) {
         console.error(`Aula USP: gráfico com ${erro.mensagem}`);
       }
     }
@@ -206,6 +233,9 @@ export async function iniciar({ base, resolver = (nome) => nome, estilo, dados =
       // guarda em motor/demos.js:9 (Ruling 11): esvaziar a fila antes deste ponto reabriria a mesma
       // classe de erro falso, desta vez em recursos.demo-sem-registro.
       demos: new Map((window.AulaUSP?.filaDeDemos ?? []).map(({ nome, definicao }) => [nome, { capturar: typeof definicao.capturar === 'function' }])),
+      // O mesmo formato de build/carregar.mjs:csvsDoDisco (caminho → carregou), e é por ele que um
+      // CSV que não carregou vira recursos.csv no painel, não só uma linha no console.
+      csvs,
     };
     const semFolha = !new URLSearchParams(location.search).has('folha');
     const achados = [

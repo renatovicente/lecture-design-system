@@ -414,7 +414,8 @@ export function problemaDosDados(dados) {
 
 // As colunas que a especificação lê e que `colunas` não tem (ou não tem como lista): `x` sempre, e
 // cada série de `y` fora do histograma (que só lê `x`). recursos.grafico usa isto com `dados` inline,
-// antes de desenhar; desenharGraficos, com qualquer origem — inclusive o CSV, que só o build lê.
+// antes de desenhar; desenharGraficos, com qualquer origem — inclusive o CSV, que só se tem depois
+// de buscado.
 export function colunasAusentes(especificacao, colunas) {
   const series = especificacao.tipo === 'histograma' || !Array.isArray(especificacao.y) ? [] : especificacao.y;
   const usadas = [...new Set([especificacao.x, ...series].filter((nome) => typeof nome === 'string'))];
@@ -448,9 +449,10 @@ export function criarDesenhista({ escalaLinear, escalaLog, linha, extensao }) {
 
 // Acrescenta, dentro de raiz, um SVG ao lado do script de cada figure.grafico (script.after: o script
 // fica); devolve os erros, cada um com o trecho do JSON e a mensagem. `dados` resolve o caminho de um
-// CSV (modo build) para colunas — quem lê o arquivo é quem chama (build/embutir.mjs:dadosDosCsvs,
-// spec 7.2); uma especificação com colunas inline (objeto em vez de string) não consulta `dados` e
-// roda igual no navegador sem arquivos.
+// CSV para colunas — quem busca o arquivo é quem chama (build/embutir.mjs:dadosDosCsvs, do disco;
+// montar/entrada.js:buscarCsvs, por fetch), e os dois interpretam com componentes/csv.js; uma
+// especificação com colunas inline (objeto em vez de string) não consulta `dados` e roda igual no
+// navegador sem arquivos.
 // Por que "acrescenta" e não "troca" fica assim, sem virar `exatamenteUmDe` no contrato: depois de
 // renderizada, a figure tem script + svg (+ figcaption opcional), enquanto o contrato descreve a
 // forma de FONTE. Inofensivo hoje porque recursos.grafico (Tarefa 4) e todo o grupo estático leem o
@@ -470,11 +472,13 @@ export function desenharGraficos(raiz, { desenhista, dados = {} }) {
       const especificacao = JSON.parse(trecho);
       const problema = problemaDosDados(especificacao.dados);
       if (problema) throw new Error(problema);
-      // Um caminho que quem chama não leu: no navegador, sempre (ninguém lê CSV lá, spec 7.2); no
-      // build, só quando o arquivo não existe — e aí a etapa 1 já recusou a aula por recursos.csv.
+      // Um caminho que quem chama não leu: o arquivo não existe (build: a etapa 1 já recusou a aula
+      // por recursos.csv) ou a busca falhou (navegador: recursos.csv vai para o painel). A mensagem
+      // cobre o caso que o autor não adivinha: aberta como arquivo local ou num artifact, a aula não
+      // tem de onde buscar o CSV (spec 7.2: inline é "necessário no modo navegador sem arquivos").
       if (typeof especificacao.dados === 'string' && !Object.hasOwn(dados, especificacao.dados)) {
-        throw new Error(`o CSV "${especificacao.dados}" não foi lido: caminho de CSV só é lido por \`aula-usp build\`; `
-          + 'no navegador, ponha as colunas inline em "dados"');
+        throw new Error(`o CSV "${especificacao.dados}" não foi lido: confira o caminho, relativo ao arquivo da aula; `
+          + 'sem servidor de arquivos (arquivo local, artifact), ponha as colunas inline em "dados"');
       }
       const colunas = typeof especificacao.dados === 'string' ? dados[especificacao.dados] : especificacao.dados;
       const ausentes = colunasAusentes(especificacao, colunas);

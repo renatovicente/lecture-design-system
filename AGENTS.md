@@ -35,7 +35,7 @@ Node ≥ 20.6, ES modules. `playwright-core` usa o Google Chrome instalado (cana
 
 ```bash
 npm test                 # 41 arquivos em tests/unit/: 39 sem navegador (linkedom), 2 com Chrome
-npm run test:integracao  # 22 arquivos em tests/integracao/, Chrome de verdade
+npm run test:integracao  # 23 arquivos em tests/integracao/, Chrome de verdade
 ```
 
 Não há CI. Quem roda os testes antes de commitar é você.
@@ -97,7 +97,7 @@ As duas têm a mesma forma e o mesmo perigo: **a ordem errada não falha.** A pr
 
 ## A fronteira: quem pode importar Node
 
-`montar/`, `motor/`, `componentes/` e `validador/` **não importam nada do Node** — rodam no navegador. Medido: zero ocorrências de `node:` nos quatro diretórios. Só `bin/` (1 arquivo) e `build/` (19 arquivos) são Node.
+`montar/`, `motor/`, `componentes/` e `validador/` **não importam nada do Node** — rodam no navegador. Medido: zero ocorrências de `node:` nos quatro diretórios. Só `bin/` (1 arquivo) e `build/` (18 arquivos) são Node.
 
 É o que permite a mesma regra rodar no painel dentro da aula e na linha de comando, e o que torna `dist/` possível: esbuild empacota esses diretórios para o navegador, e um `import … from 'node:fs'` ali não tem como resolver. `tests/` fica fora da fronteira e importa Node à vontade.
 

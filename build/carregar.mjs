@@ -3,6 +3,7 @@
 import { existsSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { compilarTex, segmentosDeTex, textosComTex } from '../componentes/tex.js';
+import { caminhosDeCsv } from '../componentes/csv.js';
 
 // AulaUSP.demo('nome', { … }) — o nome mora numa string, então o passo 1 (achar a chamada e ler o
 // nome) roda sobre o texto original. Aspas simples ou duplas; o nome no padrão de data-demo do
@@ -149,25 +150,16 @@ export function texInvalido(doc, katex) {
 }
 
 // Análogo a imagensDoDisco, para o caminho de CSV de figure.grafico (spec 7.2: "dados": "data/….csv").
-// Lê o JSON do script por conta própria — a mesma duplicação que recursos.imagem/imagensDoDisco já
-// tem com `src` (cada lado varre o DOM e concorda pela mesma chave) — porque quem monta o mapa não
-// tem acesso à especificação já interpretada de ninguém. JSON inválido ou `dados` que não é string
-// (inline, ou ausente): nada para checar no disco, e nada aqui acusa — recursos.grafico (estática)
-// é quem confere a FORMA do campo; este mapa só sabe se o arquivo aponta para algo que existe.
+// Os caminhos vêm de caminhosDeCsv (componentes/csv.js), a mesma lista que o runtime busca por fetch
+// no navegador e que monta, lá, o mesmo mapa (montar/entrada.js): caminho como o autor escreveu →
+// o arquivo existe. JSON inválido ou `dados` que não é texto não entram — recursos.grafico
+// (estática) é quem confere a FORMA do campo; este mapa só sabe se o arquivo aponta para algo que
+// existe.
 export function csvsDoDisco(doc, pastaDaAula) {
-  const csvs = new Map();
-  for (const script of doc.querySelectorAll('figure.grafico > script[type="application/json"]')) {
-    let especificacao;
-    try {
-      especificacao = JSON.parse(script.textContent);
-    } catch {
-      continue;
-    }
-    if (typeof especificacao.dados !== 'string') continue;
-    const caminho = join(pastaDaAula, especificacao.dados.split('?')[0]);
-    csvs.set(especificacao.dados, existsSync(caminho) && statSync(caminho).isFile());
-  }
-  return csvs;
+  return new Map(caminhosDeCsv(doc).map((dados) => {
+    const caminho = join(pastaDaAula, dados.split('?')[0]);
+    return [dados, existsSync(caminho) && statSync(caminho).isFile()];
+  }));
 }
 
 export function carregarNoNode(doc, { pastaDaAula, katex }) {
