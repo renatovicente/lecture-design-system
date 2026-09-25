@@ -14,5 +14,13 @@
     "altura": 128,
     "protecao": 26,
     "alturaMinima": 75
+  },
+  "acs": {
+    "nome": "Agentic Complex Systems",
+    "arquivo": "acs-preto.png",
+    "integraUSP": false,
+    "altura": 120,
+    "protecao": 24,
+    "alturaMinima": 64
   }
 }

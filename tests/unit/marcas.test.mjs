@@ -89,6 +89,12 @@ test('IFUSP vertical preto: PNG com resolução suficiente', async () => {
   assert.ok(dimensoesPng(png).altura >= 512, `altura ${dimensoesPng(png).altura}`);
 });
 
+test('ACS preto: PNG com resolução suficiente', async () => {
+  const png = await ler('assets/marcas/acs-preto.png');
+  assert.ok(assinaturaConfere('png', png));
+  assert.ok(dimensoesPng(png).altura >= 512, `altura ${dimensoesPng(png).altura}`);
+});
+
 test('IFUSP: altura, proteção e altura mínima da ruling do controlador (F3)', async () => {
   const unidades = JSON.parse(await lerTexto('assets/marcas/unidades.json'));
   assert.equal(unidades.ifusp.altura, 128);
@@ -98,9 +104,10 @@ test('IFUSP: altura, proteção e altura mínima da ruling do controlador (F3)',
 
 test('unidades.json e usp.json completos e coerentes', async () => {
   const unidades = JSON.parse(await lerTexto('assets/marcas/unidades.json'));
-  assert.deepEqual(Object.keys(unidades).sort(), ['ifusp', 'ime']);
+  assert.deepEqual(Object.keys(unidades).sort(), ['acs', 'ifusp', 'ime']);
   assert.equal(unidades.ime.integraUSP, true);
   assert.equal(unidades.ifusp.integraUSP, false);
+  assert.equal(unidades.acs.integraUSP, false);
   for (const [chave, u] of Object.entries(unidades)) {
     for (const campo of ['altura', 'protecao', 'alturaMinima'])
       assert.ok(Number.isInteger(u[campo]) && u[campo] > 0, `${chave}.${campo}`);

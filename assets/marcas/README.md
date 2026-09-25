@@ -10,6 +10,7 @@ Nunca redesenhar, recolorir, distorcer ou aplicar efeitos.
 | `origem/usp-logo.pdf` | https://scs.usp.br/identidadevisual/wp-content/uploads/2022/08/usp-logo-pdf.pdf | original vetorial da SCS-USP; 1 página, só o logotipo, sem texto |
 | `usp-preto.svg` | convertido de `origem/usp-logo.pdf` por `build/marcas.mjs` | traços intactos; só o viewBox foi enquadrado |
 | `ime-usp-horizontal-preta.svg` | https://www.ime.usp.br/media/identidade_visual/imagens/IME+USP/Preta/SVG/Horizontal_preta.svg | lockup "Assinatura Conjunta USP" (manual do IME, página 20): busto, sigla "IME" e logotipo USP, sem o nome do instituto por extenso; viewBox enquadrado em 512 268 2600 448 (medido na tinta do desenho, na tela original de 3597×982; só atributos da raiz alterados) |
+| `acs-preto.png` | `acs-webpage/assets/logos/darwin-acs-logo-stylized-transparent.png` (logo do grupo Agentic Complex Systems, o mesmo do site) | só existe em PNG; recortado na caixa de tinta (1254×1254 → 886×901 px), sem outra alteração; não integra a USP, então a faixa traz a assinatura USP à parte |
 | `ifusp-vertical-preto.png` | https://portal.if.usp.br/imprensa/sites/portal.if.usp.br.ifusp/files/logo_IFUSP_2025_VERT_preto.png | só existe em PNG; 1278×2059 px; pedir versão vetorial à comunicação do IF |
 
 O manual de identidade visual do IME consultado é de março de 2021 (MAR2021) e é anterior à
@@ -56,3 +57,14 @@ por extenso (página 20), não a antiga.
   proteção acima) para a altura mínima do arquivo vertical:
   `alturaMinima = ceil(130 × 158,96 / 404,59 / 0,6843) = 75` px. Como a altura de uso (`altura`
   128 px) é maior que a alturaMinima (75 px), ela não muda.
+
+## ACS
+
+O grupo Agentic Complex Systems não tem manual de identidade visual; os três números são decisões
+desta integração, e não regras de manual, e devem ser revistos se o grupo publicar um.
+
+- `altura` 120 px: o desenho é quase quadrado e de traço fino, e em 88 px (a altura do IME) a
+  inscrição "I think" fica ilegível no projetor. 120 px é o máximo que cabe na capa sem tocar o
+  roteiro dos blocos.
+- `protecao` 24 px: um passo da escala de espaçamento de 8 px, o mesmo valor do IME.
+- `alturaMinima` 64 px: abaixo disso, as letras A, C e S nas pontas dos ramos deixam de ser lidas.
