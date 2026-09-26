@@ -169,6 +169,12 @@
   min-height: 0;
 }
 
+/* A classe mono do vocabulário de SVG (contrato.svg.classes): texto em fonte de largura fixa,
+   para código e JSON dentro de figuras, onde o alinhamento das colunas é informação. */
+.area figure svg .mono {
+  font-family: var(--fonte-mono);
+}
+
 /* ---------- matemática ---------- */
 
 .area .katex {
