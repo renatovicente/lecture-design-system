@@ -23,6 +23,104 @@ Feito para o IME-USP e o IFUSP, com a identidade visual da USP.
 
 O aceite da fase 1 foi rodado em 2026-09-21, com Claude Code e Codex CLI, e os dois passaram. O da fase 2 está em `docs/superpowers/revisoes/2026-09-28-aula-usp-fase2-aceite.md`. O da fase 3 (claude.ai e ChatGPT) depende da publicação: `tests/aceite/roteiro.md` fixa o pedido e o critério.
 
+## Guia rápido
+
+Do zero a uma aula projetada, em seis passos. Precisa de Node 20.6 ou superior e, para o painel de composição e o PDF, do Google Chrome instalado.
+
+**1. Instale e crie a aula.**
+
+```bash
+npm install -g aula-usp
+aula-usp novo minha-aula --unidade ime
+```
+
+`--unidade` escolhe o segundo logo da capa: `ime`, `ifusp`, `acs` ou `ciaam`. A pasta nasce com `index.html`, que é a aula inteira, já com a tag do runtime.
+
+**2. Preencha o cabeçalho.** No `<head>` de `minha-aula/index.html`:
+
+```html
+<meta name="unidade" content="ime">
+<meta name="disciplina" content="Física Estatística">   <!-- opcional -->
+<meta name="aula" content="3">                         <!-- opcional -->
+<meta name="data" content="2026-10-05">
+<meta name="professor" content="Prof. Nome Sobrenome">
+<meta name="video" content="canto">                    <!-- opcional -->
+```
+
+- Sem `disciplina` e `aula`, a capa e o rodapé ficam sem a linha "disciplina · Aula N".
+- `video="canto"` reserva o canto inferior direito, 334 × 188 px, para sobrepor a câmera no OBS, Zoom ou Meet. O rodapé e os logos saem dali, e o validador acusa qualquer conteúdo que entre no canto.
+
+**3. Escreva os slides.** Cada slide é uma `section` com um dos sete layouts:
+- `capa`: sempre o primeiro;
+- `abertura`: abre um bloco; de 2 a 8 por aula;
+- `conteudo`, `afirmacao`, `figura` e `demo`: o miolo;
+- `encerramento`: sempre o último.
+
+```html
+<section data-layout="abertura" id="difusao" data-curto="Difusão">
+  <h2>Difusão</h2>
+  <p class="pergunta">Por que a nuvem se espalha como raiz de t?</p>
+</section>
+
+<section data-layout="conteudo" id="variancia">
+  <h2>A variância cresce<br><span class="sinal">linearmente com o tempo.</span></h2>
+  <p class="lide">Depois de N passos de tamanho a, \( \langle x^2 \rangle = N a^2 \).</p>
+  <ol class="passos">
+    <li>Os passos são independentes.</li>
+    <li data-passo>Os termos cruzados somem na média.</li>
+  </ol>
+  <aside class="notas">O que dizer em voz alta e não está no slide.</aside>
+</section>
+```
+
+Algumas convenções:
+- `data-curto` é o nome do bloco no mapa;
+- a segunda linha do título vai em `span.sinal`, em azul;
+- a matemática vai entre `\(` `\)`, ou `\[` `\]` para destaque;
+- `data-passo` revela o item num clique;
+- o código vai em `<pre data-lang="python">`, começando na primeira coluna do arquivo.
+
+O vocabulário é fechado: o que não está no contrato, o validador recusa.
+
+**4. Veja e corrija enquanto escreve.**
+
+```bash
+aula-usp servir minha-aula
+aula-usp validar minha-aula
+```
+
+`servir` abre a aula no navegador: salve o arquivo e recarregue. `validar` lista erros e avisos com o slide, a regra e o que fazer, e sai com 0 quando não há erros.
+
+**5. Apresente.** No navegador:
+
+| tecla | faz |
+|---|---|
+| → ou espaço | avança (passo a passo) |
+| ← | volta |
+| 1 a 8 | pula para o bloco |
+| Esc | visão geral |
+| N | notas |
+| P | janela do apresentador |
+| F | tela cheia |
+| V | painel do validador |
+| ? | ajuda |
+
+**6. Construa para distribuir.**
+
+```bash
+aula-usp build minha-aula
+```
+
+Gera, em `minha-aula/dist/`, um HTML autocontido que abre sem internet e o PDF da aula.
+
+**Com um agente, sem escrever HTML à mão:** `pacotes/` traz um pacote pronto por ambiente:
+- `claude/projeto`: um Projeto do claude.ai;
+- `gpt/gpt-personalizado`: um GPT personalizado;
+- `skill/aula-usp`: Claude Code e Codex CLI;
+- `repositorio-de-disciplina`: o repositório de uma disciplina.
+
+Suba o pacote e peça a aula em português. O que ele gerar passa pelo mesmo `aula-usp validar`. O guia completo do autor está em `guia/`.
+
 ## Instalar
 
 A CLI se instala pelo npm, de um destes dois jeitos:
