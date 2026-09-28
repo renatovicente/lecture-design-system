@@ -152,10 +152,11 @@ test('a demo registrada durante o parsing sobrevive ao pacote do dist', async (t
 // `import()` dinâmico.
 //
 // NENHUM deck do espécime usa matemática E código. Medido: `matematica.html` pede um satélite,
-// `codigo.html` pede oito, `componentes.html` pede um (aula-usp-graficos.js, pelo gráfico do slide
-// #grafico-notas), e os outros três (index, muitos-blocos, ifusp) não pedem nenhum. O plano da
+// `codigo.html` pede oito, `componentes.html` pede dois (aula-usp-graficos.js, pelo gráfico do slide
+// #grafico-notas, e aula-usp-diagramas.js, pelo diagrama do slide #diagrama-rede, desde a fase 2b),
+// e os outros três (index, muitos-blocos, ifusp) não pedem nenhum. O plano da
 // tarefa 3 pedia "uma aula que usa matemática e código" — ela não existe, e a UNIÃO dos três decks
-// reais cobre os mesmos dez sem inventar uma fixture que teria de ser mantida e validada à parte, e
+// reais cobre os mesmos onze (dez até a fase 2b) sem inventar uma fixture que teria de ser mantida e validada à parte, e
 // que ninguém mais olharia.
 const DECKS_DA_PROVA = ['especime/matematica.html', 'especime/codigo.html', 'especime/componentes.html'];
 
@@ -223,9 +224,10 @@ test('todo satélite que o navegador pede tem integrity no import map, e o mapa 
   }
   // E nada sobrando, em nenhum dos decks: uma chave no mapa para um endereço que nenhum deck pede é
   // um `integrity` que o navegador nunca vai conferir — e é assim que a cobertura desta prova
-  // encolheria sem ninguém ver. Quando a fase 2 acrescentar `aula-usp-graficos.js` e
-  // `aula-usp-diagramas.js` (spec 3.5), esta asserção cai até que um deck de DECKS_DA_PROVA os use:
-  // é de propósito, é o que obriga os dois novos a entrar na prova junto com o mecanismo.
+  // encolheria sem ninguém ver. Foi o que aconteceu com os dois satélites da fase 2 (spec 3.5):
+  // `aula-usp-graficos.js` e `aula-usp-diagramas.js` fizeram esta asserção cair até que o gráfico
+  // (2a) e o diagrama (2b) de `componentes.html` os pedissem — de propósito, é o que obriga cada
+  // satélite novo a entrar na prova junto com o mecanismo.
   for (const { deck, mapa } of decks) {
     assert.deepEqual(Object.keys(mapa.integrity).sort(), [...pedidos].sort(),
       `${deck}: o import map e os satélites que os decks da prova pedem divergem`);
@@ -242,6 +244,8 @@ test('todo satélite que o navegador pede tem integrity no import map, e o mapa 
 // cresceu, porque node:test roda os arquivos em paralelo e quem manda no relógio é visual.test.mjs.
 // A Tarefa 3 da fase 2a acrescenta o décimo (aula-usp-graficos.js) ao mesmo mecanismo, sem remedir a
 // escala — a suíte inteira segue dominada por visual.test.mjs, e um satélite a mais não muda isso.
+// A fase 2b acrescenta o décimo primeiro (aula-usp-diagramas.js), pelo diagrama de componentes.html,
+// do mesmo jeito: ele entra nos alvos sozinho, porque o deck o pede.
 // Por esse preço a pergunta "e os outros nove?" deixa de existir. Cobrir só o representante de cada
 // ramo de `arquivoDoSatelite` (tex, código, uma gramática, gráficos) deixaria de fora justamente o
 // defeito que tem forma de "um satélite ficou sem entrada no mapa" — que é por satélite, não por ramo.
@@ -251,8 +255,8 @@ test('todo satélite que o navegador pede tem integrity no import map, e o mapa 
 test('dois bytes a mais em um satélite e a aula não monta: o integrity do import map é conferido mesmo', async (t) => {
   const decks = await levantarSatelites();
   // Um alvo por satélite, mesmo que dois decks peçam o mesmo. Hoje não há sobreposição —
-  // matematica.html pede 1, codigo.html pede 8, componentes.html pede 1,
-  // 1 + 8 + 1 = 10 — e por isso o `new Map` é inerte: continuam dez alvos, os mesmos dez subtestes.
+  // matematica.html pede 1, codigo.html pede 8, componentes.html pede 2,
+  // 1 + 8 + 2 = 11 — e por isso o `new Map` é inerte: continuam onze alvos, os mesmos onze subtestes.
   // Ele existe pelo dia em que DECKS_DA_PROVA ganhar um deck que use matemática E código (o plano
   // original pedia um desses; a fase 2 pode trazê-lo) — ou matemática/código E gráficos juntos:
   // aí `alvos` teria nomes repetidos e o deepEqual abaixo cairia sem que nada estivesse errado.

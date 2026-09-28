@@ -10,6 +10,7 @@ import { renderizarTex } from '../componentes/tex.js';
 import { criarDestacador, renderizarCodigo } from '../componentes/codigo.js';
 import { criarDesenhista, desenharGraficos } from '../componentes/graficos.js';
 import { caminhosDeCsv, colunasDosCsvs } from '../componentes/csv.js';
+import { criarDesenhista as criarDesenhistaDeDiagramas, desenharDiagramas } from '../componentes/diagramas.js';
 import { validar, linhaDe, slidesDoFonte, faseDaAula } from '../validador/validar.js';
 import { REGRAS_ESTATICAS, REGRAS_DE_CARGA, REGRAS_DE_COMPOSICAO } from '../validador/regras/index.js';
 // Puro (spec 3.5): o mesmo módulo que build/validar.mjs carrega para a CLI. matematica.simbolo-fora-do-tex
@@ -23,6 +24,7 @@ import { lerCobertura } from '../validador/cobertura.js';
 let BASE;
 const TEX = /\\\(|\\\[/;
 const SELETOR_GRAFICO = 'figure.grafico';
+const SELETOR_DIAGRAMA = 'figure.diagrama';
 const ESTILOS = ['estilos/tokens.css', 'estilos/fontes.css', 'estilos/base.css', 'estilos/layouts.css', 'estilos/componentes.css', 'estilos/motor.css', 'estilos/impressao.css'];
 
 function carregarEstilo(caminho) {
@@ -188,6 +190,28 @@ export async function iniciar({ base, resolver = (nome) => nome, estilo, dados =
         console.error(`Aula USP: gráfico com ${erro.mensagem}`);
       }
     }
+    // Os diagramas, pela mesma regra de presença (spec 3.5, fase 2): o Graphviz em WASM chega do
+    // satélite aula-usp-diagramas.js — o quarto `resolver(...)` desta função —, com o WASM dentro do
+    // script (spec 7.2), sem nenhum pedido de rede a mais. Graphviz.load() compila o WASM; o
+    // desenho é o mesmo módulo que o build usa (build/embutir.mjs:prerenderizarDiagramas), e é isso
+    // que põe o mesmo layout nos dois modos. O relatório (erro com a mensagem do Graphviz, ou a
+    // contagem de nós) vai para recursos.diagramas, e é por ele que recursos.dot e
+    // recursos.diagrama-grande chegam ao painel — não só ao console.
+    let diagramas = [];
+    if (document.querySelector(SELETOR_DIAGRAMA)) {
+      const { Graphviz } = await import(resolver('@hpcc-js/wasm-graphviz'));
+      const desenhista = criarDesenhistaDeDiagramas({ graphviz: await Graphviz.load() });
+      const relato = desenharDiagramas(document.body, { desenhista });
+      // A mesma ponte de errosDeTex, lá em cima: o grupo de carga roda sobre `fonte`, e a figura que o
+      // relato traz é a deste documento. montar() não soma, remove nem reordena figure.diagrama, então
+      // o mesmo índice entre as figure.diagrama dos dois documentos aponta para a mesma figura.
+      const vivas = [...document.querySelectorAll(SELETOR_DIAGRAMA)];
+      const doFonte = [...fonte.querySelectorAll(SELETOR_DIAGRAMA)];
+      diagramas = relato.map(({ figura, ...resto }) => ({ ...resto, figura: doFonte[vivas.indexOf(figura)] }));
+      for (const { mensagem } of diagramas) {
+        if (mensagem !== undefined) console.error(`Aula USP: diagrama que não desenha: ${mensagem}`);
+      }
+    }
     // Passo 6 da spec 3.2/9.3: carga e composição rodam aqui — depois de scripts, imagens e fontes,
     // antes de iniciarMotor. Crítico e medido: iniciarMotor tira os slides do fluxo normal (só o
     // .ativo fica visível), e depois disso todo slide que não é o atual mede 0×0 — o transbordo
@@ -236,6 +260,8 @@ export async function iniciar({ base, resolver = (nome) => nome, estilo, dados =
       // O mesmo formato de build/carregar.mjs:csvsDoDisco (caminho → carregou), e é por ele que um
       // CSV que não carregou vira recursos.csv no painel, não só uma linha no console.
       csvs,
+      // O mesmo formato de build/carregar.mjs:diagramasDoFonte (componentes/diagramas.js:compilarDiagramas).
+      diagramas,
     };
     const semFolha = !new URLSearchParams(location.search).has('folha');
     const achados = [

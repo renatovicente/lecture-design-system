@@ -26,6 +26,17 @@ const METAS = {
   // não a de aula-usp-codigo.js (600 KB sobre 112,4 KB = 433,8 %), que é um outlier e não uma
   // proporção a repetir.
   'aula-usp-graficos.js': 120 * KB,
+  // aula-usp-diagramas.js também não tem meta na spec 11.2 (fase 2b, mesmo achado de cima). Medido
+  // (dist/manifesto.json, aula-usp dist da fase 2b): 819116 bytes = 799,9 KB — o dist/index.js de
+  // @hpcc-js/wasm-graphviz 1.29.1 com o WASM dentro, em base64, que o esbuild só reescreve de leve
+  // (o arquivo do pacote tem 819284 bytes). É o maior satélite, e o tamanho é o do WASM: não há o
+  // que cortar sem trocar de Graphviz.
+  //
+  // Meta: 1024 KB, 224,1 KB de folga (28,0 %) sobre o medido — a mesma proporção de aula-usp-tex.js
+  // e aula-usp-graficos.js, acima. A spec 14 põe o tamanho do script entre os modos de bloqueio no
+  // artifact; a medição da spec 14 (docs/superpowers/revisoes/2026-09-28-aula-usp-f2b-spec14.md)
+  // serviu um script de 819 KB, e ele compilou — acima disso, ninguém mediu.
+  'aula-usp-diagramas.js': 1024 * KB,
 };
 
 test('os pacotes de dist/ cabem nas metas da spec 11.2, e todos os tamanhos ficam registrados', () => {

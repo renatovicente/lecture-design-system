@@ -77,6 +77,7 @@ const D3_DO_GRAFICO = new Set(['d3-scale', 'd3-shape', 'd3-array']);
 const arquivoDoSatelite = (nome) => nome === 'katex' ? 'aula-usp-tex.js'
   : nome.startsWith('@shikijs/langs/') ? `aula-usp-lang-${nome.split('/').pop()}.js`
   : D3_DO_GRAFICO.has(nome) ? 'aula-usp-graficos.js'
+  : nome === '@hpcc-js/wasm-graphviz' ? 'aula-usp-diagramas.js'
   : 'aula-usp-codigo.js';
 
 // Spec 3.2, passo 5: "cada script secundário é carregado com o seu integrity, que aula-usp.js traz

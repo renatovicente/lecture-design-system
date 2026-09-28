@@ -190,13 +190,16 @@ test('carga sob demanda: só as gramáticas das linguagens usadas; sem pre[data-
   assert.ok(modulosPedidos(matematica.pedidos).includes('katex/dist/katex.mjs'));
   assert.ok(!modulosPedidos(matematica.pedidos).some((modulo) => modulo.startsWith('@shikijs/')), 'aula sem código pediu o Shiki');
 
-  // componentes.html tem um gráfico desde a Tarefa 6 da fase 2a e nenhum código nem TeX: pede o d3
-  // (e só o d3 e a árvore dele), nada do Shiki, nada do KaTeX. Cada módulo pedido tem de ser da
-  // árvore do d3 — se um dia ele pedir o Shiki ou o KaTeX, esta asserção cai com o nome do intruso.
+  // componentes.html tem um gráfico desde a Tarefa 6 da fase 2a, um diagrama desde a fase 2b, e
+  // nenhum código nem TeX: pede o d3 e a árvore dele, e o Graphviz (um módulo só, o dist/index.js do
+  // pacote, com o WASM dentro) — nada do Shiki, nada do KaTeX. Cada módulo pedido tem de ser de uma
+  // das duas árvores; se um dia ele pedir o Shiki ou o KaTeX, esta asserção cai com o nome do intruso.
   const componentes = await abrirAula(navegador, `${servidor.endereco}/componentes.html?folha`);
   t.after(() => componentes.pagina.close());
   const pedidosComponentes = modulosPedidos(componentes.pedidos);
   assert.ok(pedidosComponentes.some((modulo) => modulo.startsWith('d3-scale/')), 'aula com gráfico não pediu o d3-scale');
-  assert.deepEqual(pedidosComponentes.filter((modulo) => !/^(d3-[a-z-]+|internmap)\//.test(modulo)), [],
-    'aula com gráfico e sem código nem TeX pediu módulo fora da árvore do d3');
+  assert.deepEqual(pedidosComponentes.filter((modulo) => modulo.startsWith('@hpcc-js/')), ['@hpcc-js/wasm-graphviz/dist/index.js'],
+    'aula com diagrama não pediu o Graphviz, ou pediu mais que o módulo único dele');
+  assert.deepEqual(pedidosComponentes.filter((modulo) => !/^(d3-[a-z-]+|internmap)\//.test(modulo) && !modulo.startsWith('@hpcc-js/')), [],
+    'aula com gráfico e diagrama e sem código nem TeX pediu módulo fora das árvores do d3 e do Graphviz');
 });

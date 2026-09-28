@@ -9,7 +9,7 @@
 <meta name="data" content="2026-09-16">
 <meta name="professor" content="Prof. Renato Vicente">
 <script src="https://cdn.jsdelivr.net/npm/aula-usp@0.1.0/dist/aula-usp.js"
-        integrity="sha384-PJX7j665y7l7XOKIWPXaWhKOy47Qwmz1s1GQiU1o6nbm9ddk50e+iDp4Gx9MilaU" crossorigin="anonymous"></script>
+        integrity="sha384-7kDcvJJ6gs2NrgS6i2tldYz6HbkxNkBU8HSMfC4SBdsKI5vu/oGXpwjJ9sGOb4VW" crossorigin="anonymous"></script>
 </head>
 <body>
 
@@ -188,6 +188,28 @@
     <figcaption>Duas turmas ao longo de três provas; a turma em foco sai em azul, a outra em tinta.</figcaption>
   </figure>
   <aside class="notas">O JSON descreve a série; o SVG é desenhado pelo mesmo módulo no navegador e no build.</aside>
+</section>
+
+<section data-layout="abertura" id="diagramas">
+  <h2>Diagramas</h2>
+  <p class="pergunta">Como um grafo escrito em texto vira uma figura, sem o autor posicionar nada?</p>
+</section>
+
+<section data-layout="figura" id="diagrama-rede">
+  <h2>Uma rede com uma camada oculta</h2>
+  <figure class="diagrama">
+    <script type="text/vnd.graphviz">
+    digraph {
+      rankdir=LR;
+      x1 [label="entrada 1"]; x2 [label="entrada 2"];
+      x1 -> oculta; x2 -> oculta;
+      oculta -> saida [class="ativo"];
+      oculta [class="foco"]; saida [label="saída"];
+    }
+    </script>
+    <figcaption>Duas entradas, uma camada oculta e a saída; a camada em foco sai em campo amarelo, e a ligação ativa, da oculta para a saída, em azul.</figcaption>
+  </figure>
+  <aside class="notas">O DOT descreve o grafo; o Graphviz decide as posições, e o sistema impõe o estilo depois, igual no navegador e no build.</aside>
 </section>
 
 <section data-layout="encerramento">

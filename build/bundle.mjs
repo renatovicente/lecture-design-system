@@ -134,7 +134,16 @@ export default katex;
   guardar('aula-usp-graficos.js', await esbuild.build({ ...COMUM, absWorkingDir: dir,
     stdin: { contents: "export * from 'd3-scale'; export * from 'd3-shape'; export * from 'd3-array';", resolveDir: dir, loader: 'js' }, format: 'esm' }), { satelite: true });
 
-  // 5. o pacote do navegador: CLÁSSICO (iife), pelos motivos na tarefa 1 do marco 5a. O plugin embute
+  // 5. diagramas (spec 3.5, fase 2): o Graphviz em WASM. O @hpcc-js/wasm-graphviz 1.29.1 já traz o
+  //    WASM embutido no próprio dist/index.js (medido: sem arquivo .wasm à parte, sem fetch do WASM),
+  //    então o satélite não embute de novo (spec 7.2: "se o pacote do Graphviz não o embutir, o
+  //    bundle do Aula USP embute") — e nenhum pedido de rede sai dele, o que
+  //    tests/integracao/dist.test.mjs prova no Chrome. Só `Graphviz` é exportado: é a única coisa que
+  //    montar/entrada.js pede, e componentes/diagramas.js recebe a instância já carregada.
+  guardar('aula-usp-diagramas.js', await esbuild.build({ ...COMUM, absWorkingDir: dir,
+    stdin: { contents: "export { Graphviz } from '@hpcc-js/wasm-graphviz';", resolveDir: dir, loader: 'js' }, format: 'esm' }), { satelite: true });
+
+  // 6. o pacote do navegador: CLÁSSICO (iife), pelos motivos na tarefa 1 do marco 5a. O plugin embute
   //    as fontes do sistema (Geist/Open Sans) como data URI dentro de estilos/fontes.css — ver o
   //    comentário dele. E por último, porque agora leva os hashes de todos os satélites acima.
   //

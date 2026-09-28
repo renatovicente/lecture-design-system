@@ -45,9 +45,13 @@
       "bytes": 94203,
       "integrity": "sha384-h2ALinX1ohJkGDs9Wb77xBexOq05jb/+ns2Pbgh0Xc6sVWWmmjVRW2al5KN35VB2"
     },
+    "aula-usp-diagramas.js": {
+      "bytes": 819116,
+      "integrity": "sha384-NzUKBVrIE2qrjNYJCJoBiGfIjzDc52imnD5EyTqY/DD4BbHLORq5xAGUDJtX92VS"
+    },
     "aula-usp.js": {
-      "bytes": 636378,
-      "integrity": "sha384-PJX7j665y7l7XOKIWPXaWhKOy47Qwmz1s1GQiU1o6nbm9ddk50e+iDp4Gx9MilaU"
+      "bytes": 641677,
+      "integrity": "sha384-7kDcvJJ6gs2NrgS6i2tldYz6HbkxNkBU8HSMfC4SBdsKI5vu/oGXpwjJ9sGOb4VW"
     }
   }
 }

@@ -47,6 +47,10 @@ export const MODULOS_DO_NAVEGADOR = [
   'd3-path',
   'd3-color',
   'internmap',
+  // Diagramas (spec 3.5, fase 2): @hpcc-js/wasm-graphviz não tem dependência nenhuma (package.json
+  // dele: "dependencies": {}) e não importa nada por dentro — medido, nenhum import no dist/index.js
+  // —, então a closure transitiva é ele mesmo.
+  '@hpcc-js/wasm-graphviz',
 ];
 
 const TIPOS = {
