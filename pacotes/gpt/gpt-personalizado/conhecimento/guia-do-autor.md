@@ -97,7 +97,7 @@ Uma aula é um arquivo HTML: um `<head>` com os metadados e a tag do runtime, e 
 <meta name="data" content="2026-03-02">
 <meta name="professor" content="Prof. Nome Sobrenome">
 <script src="https://cdn.jsdelivr.net/npm/aula-usp@0.1.0/dist/aula-usp.js"
-        integrity="sha384-1XCE0DFQVyf/YxnuMk8x/L68J6odFl8ddDBedqZrHsGQxAYEDoa6wDV+5d/BILP3" crossorigin="anonymous"></script>
+        integrity="sha384-ncMmS0Y7Tgw+x6calIGO9pHMBve1gHztsFMles4Txm9We0hTowrglnI4OLwWMW6E" crossorigin="anonymous"></script>
 </head>
 <body>
 
@@ -1006,9 +1006,9 @@ A segunda aula-exemplo, `exemplo-recursos.html`, usa os três numa aula de verda
   <h2>Dez alunos e a reta ajustada</h2>
   <figure class="grafico">
     <script type="application/json">
-    {"tipo":"dispersao","dados":{"horas":[1,2,3,4,5,6,7,8,9,10],"nota":[3.2,4.1,4.3,5.4,5.2,6.3,6.1,7.2,7.1,8.6],"reta":[3.37,3.9,4.43,4.96,5.49,6.01,6.54,7.07,7.6,8.13]},"x":"horas","y":["nota","reta"],"foco":"reta","eixos":{"x":"horas de estudo","y":"nota"}}
+    {"tipo":"dispersao","dados":{"horas":[1,2,3,4,5,6,7,8,9,10],"nota":[3.2,4.1,4.3,5.4,5.2,6.3,6.1,7.2,7.1,8.6],"reta":[3.37,3.9,4.43,4.96,5.49,6.01,6.54,7.07,7.6,8.13]},"x":"horas","y":["nota","reta"],"foco":"reta","linhas":["reta"],"eixos":{"x":"horas de estudo","y":"nota"}}
     </script>
-    <figcaption>Nota de dez alunos contra as horas de estudo; em azul, a previsão da reta ajustada em cada ponto.</figcaption>
+    <figcaption>Nota de dez alunos contra as horas de estudo; em azul, a reta ajustada sobre a nuvem de pontos.</figcaption>
   </figure>
 ```
 
@@ -1026,6 +1026,7 @@ Os campos do JSON:
 | `eixos` | opcional: o título de cada eixo, `{"x": "…", "y": "…"}` |
 | `escalas` | opcional: `{"x": "log", "y": "linear"}`; o padrão é `linear` nos dois |
 | `faixas` | opcional: intervalos de `x` pintados em amarelo atrás das séries, `[{"x": [120, 245], "rotulo": "platô"}]`; ignorado em `barras` |
+| `linhas` | opcional, só no `dispersao`: a lista de séries de `y` a desenhar como reta contínua em vez de pontos, como `["reta"]` |
 | `classes` | só no `histograma`, e obrigatório nele: em quantas classes de largura igual a coluna `x` é dividida |
 
 **Sem `foco`, a última série de `y` sai em azul.** É o engano mais fácil de não ver, porque o gráfico sai bonito de qualquer jeito — só que com o destaque na série errada. Com uma série só, ela sai em preto e o `foco` não muda nada; com duas ou três, a série em foco sai em azul e as outras em preto e em cinza tracejado, nessa ordem. Escreva `foco` sempre que houver mais de uma série.
@@ -1036,7 +1037,9 @@ Não há caixa de legenda. Cada série é rotulada na ponta, com o **nome da col
 
 **Onde cabe.** O texto do gráfico é de 14 px quando a figura tem pelo menos 640 px de largura no palco. Servem o layout `figura` e a coluna de 8 (`data-grade="8-4"` ou `"4-8"`); nas colunas de 6 e de 4 o texto sai menor que 14, e `composicao.tamanho-minimo` acusa o gráfico.
 
-O que o validador confere antes de desenhar, em `recursos.grafico`: o JSON válido, o `tipo` entre os quatro, `x`, pelo menos uma série em `y` e no máximo três, o `foco` dentro de `y`, as `escalas` entre `linear` e `log`, `classes` no histograma e, com dados inline, que as colunas citadas existem. Escala `log` em `y` não vale em `barras` nem em `histograma`, cujo eixo começa no zero. Um CSV que não está onde o caminho diz é `recursos.csv`.
+O que o validador confere antes de desenhar, em `recursos.grafico`: o JSON válido, o `tipo` entre os quatro, `x`, pelo menos uma série em `y` e no máximo três, o `foco` dentro de `y`, as `escalas` entre `linear` e `log`, `classes` no histograma, `linhas` só no `dispersao` e citando nomes que estão em `y`, e, com dados inline, que as colunas citadas existem. Escala `log` em `y` não vale em `barras` nem em `histograma`, cujo eixo começa no zero. Um CSV que não está onde o caminho diz é `recursos.csv`.
+
+Os eixos de `linha` e `dispersao` têm limites arredondados: o domínio ganha folga até a marca redonda mais próxima dos dois lados, para nenhum ponto cair exatamente sobre a borda do gráfico — é por isso que, no trecho acima, o ponto de menor nota não toca a linha do eixo x. `barras` e `histograma` não arredondam: o primeiro já parte do zero, e no segundo as classes têm de bater com os extremos dos dados.
 
 ## Um diagrama
 

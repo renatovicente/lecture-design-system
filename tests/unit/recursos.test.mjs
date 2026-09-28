@@ -146,3 +146,31 @@ test('recursos.grafico: escalas.y "log" é recusada em barras e histograma, e s�
   assert.deepEqual(mensagens(grafico({ tipo: 'linha', dados: INLINE, x: 'epoca', y: ['erro'], escalas: { y: 'log' } })), []);
   assert.deepEqual(mensagens(grafico({ ...barras, escalas: { y: 'linear' } })), []);
 });
+
+// `linhas` (spec 7.2, campo novo do brief "gráfico com reta e limites redondos"): só existe em
+// "dispersao", só como lista de nomes de série (strings) e só citando nomes que estão em "y". As três
+// formas de recusa, na mesma ordem em que a regra confere (tipo, depois forma, depois pertencimento).
+const DISPERSAO = { tipo: 'dispersao', dados: { horas: [1, 2, 3], nota: [3, 4, 5], reta: [3.1, 3.9, 5.2] }, x: 'horas', y: ['nota', 'reta'], foco: 'reta' };
+
+test('recursos.grafico: "linhas" só vale em "dispersao" — em "linha" (que já desenha tudo como reta) é recusado', () => {
+  const linha = { tipo: 'linha', dados: INLINE, x: 'epoca', y: ['erro'], linhas: ['erro'] };
+  assert.deepEqual(mensagens(grafico(linha)), ['"linhas" só vale no tipo "dispersao"; este gráfico é "linha".']);
+  assert.deepEqual(mensagens(grafico({ ...DISPERSAO, linhas: ['reta'] })), []);
+});
+
+test('recursos.grafico: "linhas" tem de ser uma lista de strings', () => {
+  assert.deepEqual(mensagens(grafico({ ...DISPERSAO, linhas: 'reta' })),
+    ['"linhas" tem de ser uma lista de nomes de série (strings): "reta".']);
+  assert.deepEqual(mensagens(grafico({ ...DISPERSAO, linhas: [1] })),
+    ['"linhas" tem de ser uma lista de nomes de série (strings): [1].']);
+  assert.deepEqual(mensagens(grafico({ ...DISPERSAO, linhas: ['reta', 2] })),
+    ['"linhas" tem de ser uma lista de nomes de série (strings): ["reta",2].']);
+});
+
+test('recursos.grafico: nome em "linhas" que não está em "y" é recusado, com o(s) nome(s) que sobra(m)', () => {
+  assert.deepEqual(mensagens(grafico({ ...DISPERSAO, linhas: ['nada'] })),
+    ['"linhas" cita série(s) que não está(ão) em "y": "nada".']);
+  assert.deepEqual(mensagens(grafico({ ...DISPERSAO, linhas: ['reta', 'nada', 'outra'] })),
+    ['"linhas" cita série(s) que não está(ão) em "y": "nada", "outra".']);
+  assert.deepEqual(mensagens(grafico({ ...DISPERSAO, linhas: [] })), [], 'lista vazia não cita nada fora de y — não há o que recusar');
+});

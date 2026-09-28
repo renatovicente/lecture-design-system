@@ -167,9 +167,13 @@ export const regras = [
     // escalas.x/escalas.y ∈ {linear, log}, (5) os campos que cada tipo precisa para desenhar (x
     // sempre; y não vazio fora de histograma; classes em histograma), (6) `dados` presente, como
     // caminho ou objeto de colunas (problemaDosDados); (7) com `dados` inline, que as colunas de x e
-    // de cada y existem (colunasAusentes); e (8) nada de escalas.y "log" em barras e histograma, cujo
-    // y inclui o zero por construção e falharia com qualquer dado (TIPOS_COM_ZERO_EM_Y). As três
-    // funções vêm de componentes/graficos.js, a mesma fonte que o desenho usa. O que sobra para o
+    // de cada y existem (colunasAusentes); (8) nada de escalas.y "log" em barras e histograma, cujo
+    // y inclui o zero por construção e falharia com qualquer dado (TIPOS_COM_ZERO_EM_Y); e (9) `linhas`
+    // (spec 7.2, campo novo) só em dispersão, só lista de strings, e só nomes que estão em `y` — o
+    // campo que faz uma série de dispersão sair como reta em vez de pontos (componentes/graficos.js,
+    // montarDispersao; sem TIPOS_DE_GRAFICO/colunasAusentes/problemaDosDados como fonte comum — a
+    // checagem é local, os três valores vêm direto da especificação já validada acima). As três funções
+    // importadas vêm de componentes/graficos.js, a mesma fonte que o desenho usa. O que sobra para o
     // desenho: domínio ≤ 0 em log nos outros casos (depende dos VALORES) e as colunas de um CSV, que
     // uma regra estática — sem carregar nada — não tem; esses erros chegam ao autor pelo build e, no
     // navegador, pelo console.
@@ -227,6 +231,34 @@ export const regras = [
                 mensagem: `"foco" (${JSON.stringify(especificacao.foco)}) não está em "y".`,
                 trecho,
               };
+            }
+          }
+          // `linhas` (spec 7.2, campo novo): só existe em "dispersao" — a série sai como reta em vez
+          // de pontos. Três formas de recusar, na ordem em que dá para checar cada uma: fora de
+          // dispersão nem chega a olhar a forma; forma errada (não é lista de strings) nem chega a
+          // comparar com y; só then confere se cada nome citado está em y.
+          if (especificacao.linhas !== undefined) {
+            if (especificacao.tipo !== 'dispersao') {
+              yield {
+                ...onde(slides, secao),
+                mensagem: `"linhas" só vale no tipo "dispersao"; este gráfico é "${especificacao.tipo}".`,
+                trecho,
+              };
+            } else if (!Array.isArray(especificacao.linhas) || especificacao.linhas.some((nome) => typeof nome !== 'string')) {
+              yield {
+                ...onde(slides, secao),
+                mensagem: `"linhas" tem de ser uma lista de nomes de série (strings): ${JSON.stringify(especificacao.linhas)}.`,
+                trecho,
+              };
+            } else if (Array.isArray(especificacao.y)) {
+              const foraDeY = especificacao.linhas.filter((nome) => !especificacao.y.includes(nome));
+              if (foraDeY.length > 0) {
+                yield {
+                  ...onde(slides, secao),
+                  mensagem: `"linhas" cita série(s) que não está(ão) em "y": ${foraDeY.map((nome) => `"${nome}"`).join(', ')}.`,
+                  trecho,
+                };
+              }
             }
           }
           for (const eixo of ['x', 'y']) {

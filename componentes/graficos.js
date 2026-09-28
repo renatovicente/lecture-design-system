@@ -133,12 +133,21 @@ function preenchimentoDaSerie(cor, tracejada) {
 // outros casos (linha e dispersão, e o x de qualquer tipo contínuo) o domínio sai dos VALORES, que uma
 // regra estática não tem quando `dados` é um caminho de CSV; aí este throw é a defesa, e o erro dele
 // chega ao autor pelo build (build/construir.mjs:achadosDeGrafico).
-function criarEscala({ escalaLinear, escalaLog }, tipoDeEscala, dominio, alcance) {
+//
+// `limitesRedondos` (spec 7.2): só `linha` e `dispersao` passam true — .nice() do d3-scale estica o
+// domínio até a marca redonda mais próxima dos dois lados, para nenhum ponto cair exatamente em cima
+// do eixo e para a régua terminar num número que se lê bem. Não se aplica a "barras" (já parte de 0,
+// por construção) nem a "histograma" (as classes têm de bater com [minimo, maximo] dos dados — esticar
+// o domínio deslocaria a primeira/última barra da borda do eixo). Funciona em linear e em log (d3-scale
+// dá .nice() nos dois); chamado depois de domain()/range(), porque é o par [domínio, contagem de ticks]
+// que .nice() lê para escolher a marca redonda.
+function criarEscala({ escalaLinear, escalaLog }, tipoDeEscala, dominio, alcance, limitesRedondos = false) {
   if (tipoDeEscala === 'log' && dominio.some((valor) => valor <= 0)) {
     throw new Error(`escala log exige valores maiores que zero no domínio; recebido [${dominio.join(', ')}]`);
   }
   const fabrica = tipoDeEscala === 'log' ? escalaLog : escalaLinear;
-  return fabrica().domain(dominio).range(alcance);
+  const escala = fabrica().domain(dominio).range(alcance);
+  return limitesRedondos ? escala.nice() : escala;
 }
 
 function desenharGrade(escalaY) {
@@ -242,8 +251,8 @@ function montarLinha(biblioteca, especificacao, colunas) {
   const { x: nomeX, y: series, foco, eixos = {}, escalas = {}, faixas } = especificacao;
   const valoresX = colunas[nomeX];
   const todosOsY = series.flatMap((nome) => colunas[nome]);
-  const escalaX = criarEscala(biblioteca, escalas.x, biblioteca.extensao(valoresX), [AREA.x0, AREA.x1]);
-  const escalaY = criarEscala(biblioteca, escalas.y, biblioteca.extensao(todosOsY), [AREA.y1, AREA.y0]);
+  const escalaX = criarEscala(biblioteca, escalas.x, biblioteca.extensao(valoresX), [AREA.x0, AREA.x1], true);
+  const escalaY = criarEscala(biblioteca, escalas.y, biblioteca.extensao(todosOsY), [AREA.y1, AREA.y0], true);
   const gerador = biblioteca.linha()
     .x((ponto) => arredondar(escalaX(ponto.x)))
     .y((ponto) => arredondar(escalaY(ponto.y)));
@@ -267,26 +276,41 @@ function montarLinha(biblioteca, especificacao, colunas) {
   return grade + faixasSvg + seriesSvg + eixosSvg;
 }
 
-// tipo "dispersao": os mesmos dados de "linha", em pontos soltos; a série tracejada vira marcador vazado.
+// tipo "dispersao": os mesmos dados de "linha", em pontos soltos; a série tracejada vira marcador
+// vazado. `linhas` (spec 7.2, campo novo): as séries citadas nela saem como caminho contínuo — o
+// MESMO gerador de "linha" (d3-shape line, ESPESSURA_EIXO, tracejado se a série for a tracejada) — em
+// vez de círculos; é o desenho da reta ajustada sobre a nuvem de pontos. As demais séries de `y`
+// continuam pontos. recursos.grafico recusa `linhas` fora de dispersão, que não seja lista de
+// strings, ou com nome que não está em `y` — aqui não há defesa própria porque a validação estática
+// já corre antes de desenhar (mesma divisão de trabalho que `foco`/`escalas`, comentário de
+// coresDasSeries acima).
 function montarDispersao(biblioteca, especificacao, colunas) {
-  const { x: nomeX, y: series, foco, eixos = {}, escalas = {}, faixas } = especificacao;
+  const { x: nomeX, y: series, foco, eixos = {}, escalas = {}, faixas, linhas = [] } = especificacao;
   const RAIO = 4;
   const valoresX = colunas[nomeX];
   const todosOsY = series.flatMap((nome) => colunas[nome]);
-  const escalaX = criarEscala(biblioteca, escalas.x, biblioteca.extensao(valoresX), [AREA.x0, AREA.x1]);
-  const escalaY = criarEscala(biblioteca, escalas.y, biblioteca.extensao(todosOsY), [AREA.y1, AREA.y0]);
+  const escalaX = criarEscala(biblioteca, escalas.x, biblioteca.extensao(valoresX), [AREA.x0, AREA.x1], true);
+  const escalaY = criarEscala(biblioteca, escalas.y, biblioteca.extensao(todosOsY), [AREA.y1, AREA.y0], true);
+  const geradorDeLinha = biblioteca.linha()
+    .x((ponto) => arredondar(escalaX(ponto.x)))
+    .y((ponto) => arredondar(escalaY(ponto.y)));
 
   const grade = desenharGrade(escalaY);
   const faixasSvg = desenharFaixas(faixas, escalaX);
   const seriesSvg = coresDasSeries(series, foco).map(({ serie, cor, tracejada }) => {
     const pontos = valoresX.map((valor, i) => ({ x: valor, y: colunas[serie][i] }));
-    const marcadores = pontos.map((ponto) => elemento('circle', {
-      cx: arredondar(escalaX(ponto.x)), cy: arredondar(escalaY(ponto.y)), r: RAIO,
-      ...(tracejada ? { fill: 'none', stroke: HEX_DA_COR[cor], 'stroke-width': ESPESSURA_EIXO } : { fill: HEX_DA_COR[cor] }),
-    })).join('');
+    const forma = linhas.includes(serie)
+      ? elemento('path', {
+        d: geradorDeLinha(pontos), fill: 'none', stroke: HEX_DA_COR[cor], 'stroke-width': ESPESSURA_EIXO,
+        'stroke-dasharray': tracejada ? TRACEJADO : undefined,
+      })
+      : pontos.map((ponto) => elemento('circle', {
+        cx: arredondar(escalaX(ponto.x)), cy: arredondar(escalaY(ponto.y)), r: RAIO,
+        ...(tracejada ? { fill: 'none', stroke: HEX_DA_COR[cor], 'stroke-width': ESPESSURA_EIXO } : { fill: HEX_DA_COR[cor] }),
+      })).join('');
     const ponta = pontos.at(-1);
     const rotulo = desenharRotuloDaSerie({ x: escalaX(ponta.x), y: escalaY(ponta.y) }, cor, tracejada, serie);
-    return elemento('g', { class: 'serie', 'data-serie': serie, 'data-cor': cor }, marcadores + rotulo);
+    return elemento('g', { class: 'serie', 'data-serie': serie, 'data-cor': cor }, forma + rotulo);
   }).join('');
   const formatarX = escalaX.tickFormat(5);
   const marcasX = escalaX.ticks(5).map((valor) => [valor, paraPtBr(formatarX(valor))]);

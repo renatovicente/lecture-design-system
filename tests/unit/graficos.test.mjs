@@ -16,12 +16,17 @@ const svgDe = (svgString) => parseHTML(`<!DOCTYPE html><html><body>${svgString}<
 // Snapshots (Passo 4, spec 11.1): capturados de uma execução já conferida à mão, número a número,
 // contra a spec 7.2 (ver o relatório da Tarefa 2). Complementam as asserções de propriedade abaixo —
 // não as substituem: um snapshot sozinho fica verde com a cor errada no dia em que for regravado.
-// Regravado duas vezes desde a rodada 1: (1) rodada 2 — o texto das marcas de eixo y passa a vir de
+// Regravado três vezes desde a rodada 1: (1) rodada 2 — o texto das marcas de eixo y passa a vir de
 // escalaY.tickFormat(5), não de formatarNumero — o "1" da última marca vira "1.0" (tickFormat mantém
 // as mesmas casas decimais em toda a régua, para as marcas lerem como uma sequência, não números
 // soltos); (2) rodada 3 — paraPtBr troca o separador decimal de ponto para vírgula ("1.0" → "1,0"),
-// porque o sistema é em português e tickFormat escreve no padrão dos EUA.
-const SNAPSHOT_LINHA ="<svg viewBox=\"0 0 640 360\" xmlns=\"http://www.w3.org/2000/svg\" font-family=\"Geist Mono, ui-monospace, monospace\"><line class=\"grade\" x1=\"56\" x2=\"492\" y1=\"263.06\" y2=\"263.06\" stroke=\"#D9D9D9\" stroke-width=\"1\"></line><line class=\"grade\" x1=\"56\" x2=\"492\" y1=\"192.47\" y2=\"192.47\" stroke=\"#D9D9D9\" stroke-width=\"1\"></line><line class=\"grade\" x1=\"56\" x2=\"492\" y1=\"121.88\" y2=\"121.88\" stroke=\"#D9D9D9\" stroke-width=\"1\"></line><line class=\"grade\" x1=\"56\" x2=\"492\" y1=\"51.29\" y2=\"51.29\" stroke=\"#D9D9D9\" stroke-width=\"1\"></line><g class=\"faixa\"><rect x=\"165\" y=\"16\" width=\"218\" height=\"300\" fill=\"#FCB421\"></rect><text x=\"274\" y=\"30\" fill=\"#0A0A0A\" font-family=\"Geist Mono, ui-monospace, monospace\" font-size=\"14\" text-anchor=\"middle\">platô</text></g><g class=\"serie\" data-serie=\"treino\" data-cor=\"tinta\"><path d=\"M56,51.29L165,192.47L274,263.06L383,298.35L492,316\" fill=\"none\" stroke=\"#0A0A0A\" stroke-width=\"2\"></path><line class=\"serie-traco\" x1=\"500\" y1=\"316\" x2=\"516\" y2=\"316\" stroke=\"#0A0A0A\" stroke-width=\"2\"></line><text class=\"serie-rotulo\" x=\"522\" y=\"316\" fill=\"#0A0A0A\" font-family=\"Geist Mono, ui-monospace, monospace\" font-size=\"14\" dominant-baseline=\"middle\">treino</text></g><g class=\"serie\" data-serie=\"teste\" data-cor=\"azul\"><path d=\"M56,16L165,157.18L274,210.12L383,227.76L492,234.82\" fill=\"none\" stroke=\"#1094AB\" stroke-width=\"2\"></path><line class=\"serie-traco\" x1=\"500\" y1=\"234.82\" x2=\"516\" y2=\"234.82\" stroke=\"#1094AB\" stroke-width=\"2\"></line><text class=\"serie-rotulo\" x=\"522\" y=\"234.82\" fill=\"#0A0A0A\" font-family=\"Geist Mono, ui-monospace, monospace\" font-size=\"14\" dominant-baseline=\"middle\">teste</text></g><line class=\"eixo eixo-x\" x1=\"56\" y1=\"316\" x2=\"492\" y2=\"316\" stroke=\"#0A0A0A\" stroke-width=\"2\"></line><line class=\"eixo eixo-y\" x1=\"56\" y1=\"16\" x2=\"56\" y2=\"316\" stroke=\"#0A0A0A\" stroke-width=\"2\"></line><text class=\"eixo-titulo\" x=\"274\" y=\"354\" fill=\"#666666\" font-family=\"Geist Mono, ui-monospace, monospace\" font-size=\"14\" text-anchor=\"middle\">época</text><text class=\"eixo-titulo\" x=\"14\" y=\"166\" fill=\"#666666\" font-family=\"Geist Mono, ui-monospace, monospace\" font-size=\"14\" text-anchor=\"middle\" transform=\"rotate(-90 14 166)\">erro</text><text class=\"marca\" x=\"56\" y=\"336\" fill=\"#666666\" font-family=\"Geist Mono, ui-monospace, monospace\" font-size=\"14\" text-anchor=\"middle\">0</text><text class=\"marca\" x=\"165\" y=\"336\" fill=\"#666666\" font-family=\"Geist Mono, ui-monospace, monospace\" font-size=\"14\" text-anchor=\"middle\">1</text><text class=\"marca\" x=\"274\" y=\"336\" fill=\"#666666\" font-family=\"Geist Mono, ui-monospace, monospace\" font-size=\"14\" text-anchor=\"middle\">2</text><text class=\"marca\" x=\"383\" y=\"336\" fill=\"#666666\" font-family=\"Geist Mono, ui-monospace, monospace\" font-size=\"14\" text-anchor=\"middle\">3</text><text class=\"marca\" x=\"492\" y=\"336\" fill=\"#666666\" font-family=\"Geist Mono, ui-monospace, monospace\" font-size=\"14\" text-anchor=\"middle\">4</text><text class=\"marca\" x=\"48\" y=\"263.06\" fill=\"#666666\" font-family=\"Geist Mono, ui-monospace, monospace\" font-size=\"14\" text-anchor=\"end\" dominant-baseline=\"middle\">0,4</text><text class=\"marca\" x=\"48\" y=\"192.47\" fill=\"#666666\" font-family=\"Geist Mono, ui-monospace, monospace\" font-size=\"14\" text-anchor=\"end\" dominant-baseline=\"middle\">0,6</text><text class=\"marca\" x=\"48\" y=\"121.88\" fill=\"#666666\" font-family=\"Geist Mono, ui-monospace, monospace\" font-size=\"14\" text-anchor=\"end\" dominant-baseline=\"middle\">0,8</text><text class=\"marca\" x=\"48\" y=\"51.29\" fill=\"#666666\" font-family=\"Geist Mono, ui-monospace, monospace\" font-size=\"14\" text-anchor=\"end\" dominant-baseline=\"middle\">1,0</text></svg>";
+// porque o sistema é em português e tickFormat escreve no padrão dos EUA; (3) Tarefa 3 (gráfico com
+// reta e limites redondos) — escalaX/escalaY de "linha" passam por .nice(): o domínio de y, extensão
+// crua [0,25; 1,1], vira [0,2; 1,1] (o mínimo ganha folga para baixo; o máximo já era redondo, e
+// .nice() não encolhe), deslocando toda grade e marca de y (0,2/0,4/0,6/0,8/1,0 em vez de
+// 0,25/0,44/0,64/0,84/1,03); o ponto mais alto da série "teste" (y=1,1) deixa de coincidir com o topo
+// da área útil do gráfico — era esse o ponto em cima do limite que a Tarefa 3 resolve.
+const SNAPSHOT_LINHA ="<svg viewBox=\"0 0 640 360\" xmlns=\"http://www.w3.org/2000/svg\" font-family=\"Geist Mono, ui-monospace, monospace\"><line class=\"grade\" x1=\"56\" x2=\"492\" y1=\"316\" y2=\"316\" stroke=\"#D9D9D9\" stroke-width=\"1\"></line><line class=\"grade\" x1=\"56\" x2=\"492\" y1=\"249.33\" y2=\"249.33\" stroke=\"#D9D9D9\" stroke-width=\"1\"></line><line class=\"grade\" x1=\"56\" x2=\"492\" y1=\"182.67\" y2=\"182.67\" stroke=\"#D9D9D9\" stroke-width=\"1\"></line><line class=\"grade\" x1=\"56\" x2=\"492\" y1=\"116\" y2=\"116\" stroke=\"#D9D9D9\" stroke-width=\"1\"></line><line class=\"grade\" x1=\"56\" x2=\"492\" y1=\"49.33\" y2=\"49.33\" stroke=\"#D9D9D9\" stroke-width=\"1\"></line><g class=\"faixa\"><rect x=\"165\" y=\"16\" width=\"218\" height=\"300\" fill=\"#FCB421\"></rect><text x=\"274\" y=\"30\" fill=\"#0A0A0A\" font-family=\"Geist Mono, ui-monospace, monospace\" font-size=\"14\" text-anchor=\"middle\">platô</text></g><g class=\"serie\" data-serie=\"treino\" data-cor=\"tinta\"><path d=\"M56,49.33L165,182.67L274,249.33L383,282.67L492,299.33\" fill=\"none\" stroke=\"#0A0A0A\" stroke-width=\"2\"></path><line class=\"serie-traco\" x1=\"500\" y1=\"299.33\" x2=\"516\" y2=\"299.33\" stroke=\"#0A0A0A\" stroke-width=\"2\"></line><text class=\"serie-rotulo\" x=\"522\" y=\"299.33\" fill=\"#0A0A0A\" font-family=\"Geist Mono, ui-monospace, monospace\" font-size=\"14\" dominant-baseline=\"middle\">treino</text></g><g class=\"serie\" data-serie=\"teste\" data-cor=\"azul\"><path d=\"M56,16L165,149.33L274,199.33L383,216L492,222.67\" fill=\"none\" stroke=\"#1094AB\" stroke-width=\"2\"></path><line class=\"serie-traco\" x1=\"500\" y1=\"222.67\" x2=\"516\" y2=\"222.67\" stroke=\"#1094AB\" stroke-width=\"2\"></line><text class=\"serie-rotulo\" x=\"522\" y=\"222.67\" fill=\"#0A0A0A\" font-family=\"Geist Mono, ui-monospace, monospace\" font-size=\"14\" dominant-baseline=\"middle\">teste</text></g><line class=\"eixo eixo-x\" x1=\"56\" y1=\"316\" x2=\"492\" y2=\"316\" stroke=\"#0A0A0A\" stroke-width=\"2\"></line><line class=\"eixo eixo-y\" x1=\"56\" y1=\"16\" x2=\"56\" y2=\"316\" stroke=\"#0A0A0A\" stroke-width=\"2\"></line><text class=\"eixo-titulo\" x=\"274\" y=\"354\" fill=\"#666666\" font-family=\"Geist Mono, ui-monospace, monospace\" font-size=\"14\" text-anchor=\"middle\">época</text><text class=\"eixo-titulo\" x=\"14\" y=\"166\" fill=\"#666666\" font-family=\"Geist Mono, ui-monospace, monospace\" font-size=\"14\" text-anchor=\"middle\" transform=\"rotate(-90 14 166)\">erro</text><text class=\"marca\" x=\"56\" y=\"336\" fill=\"#666666\" font-family=\"Geist Mono, ui-monospace, monospace\" font-size=\"14\" text-anchor=\"middle\">0</text><text class=\"marca\" x=\"165\" y=\"336\" fill=\"#666666\" font-family=\"Geist Mono, ui-monospace, monospace\" font-size=\"14\" text-anchor=\"middle\">1</text><text class=\"marca\" x=\"274\" y=\"336\" fill=\"#666666\" font-family=\"Geist Mono, ui-monospace, monospace\" font-size=\"14\" text-anchor=\"middle\">2</text><text class=\"marca\" x=\"383\" y=\"336\" fill=\"#666666\" font-family=\"Geist Mono, ui-monospace, monospace\" font-size=\"14\" text-anchor=\"middle\">3</text><text class=\"marca\" x=\"492\" y=\"336\" fill=\"#666666\" font-family=\"Geist Mono, ui-monospace, monospace\" font-size=\"14\" text-anchor=\"middle\">4</text><text class=\"marca\" x=\"48\" y=\"316\" fill=\"#666666\" font-family=\"Geist Mono, ui-monospace, monospace\" font-size=\"14\" text-anchor=\"end\" dominant-baseline=\"middle\">0,2</text><text class=\"marca\" x=\"48\" y=\"249.33\" fill=\"#666666\" font-family=\"Geist Mono, ui-monospace, monospace\" font-size=\"14\" text-anchor=\"end\" dominant-baseline=\"middle\">0,4</text><text class=\"marca\" x=\"48\" y=\"182.67\" fill=\"#666666\" font-family=\"Geist Mono, ui-monospace, monospace\" font-size=\"14\" text-anchor=\"end\" dominant-baseline=\"middle\">0,6</text><text class=\"marca\" x=\"48\" y=\"116\" fill=\"#666666\" font-family=\"Geist Mono, ui-monospace, monospace\" font-size=\"14\" text-anchor=\"end\" dominant-baseline=\"middle\">0,8</text><text class=\"marca\" x=\"48\" y=\"49.33\" fill=\"#666666\" font-family=\"Geist Mono, ui-monospace, monospace\" font-size=\"14\" text-anchor=\"end\" dominant-baseline=\"middle\">1,0</text></svg>";
 // Regravado quatro vezes desde a Tarefa 2: (1) Critical 1 (limites exatos); (2) decisão do
 // coordenador (rótulo na ponta); (3) rodada 2 — as bordas de classe passam por formatarPasso (não
 // mais formatarNumero), que deriva a precisão do passo real entre elas (larguraClasse=0.2125 → 1
@@ -187,14 +192,22 @@ function marcasSemColisao(escala, contagem = 5) {
   return new Set(textos).size === textos.length;
 }
 
-test('marcas de eixo (linha, ponta a ponta): domínio pequeno não perde resolução — Critical 1 original', () => {
+// Regravado pela Tarefa 3 (gráfico com reta e limites redondos): a escalaY de "linha" agora passa por
+// .nice(), e a folga que .nice() dá ao domínio [0,0001; 0,0016] o arredonda para [0; 0,0016] — o passo
+// que .ticks(5) escolhe no domínio niced é mais grosso (0,0005 em vez de 0,0002), e o eixo sai com 4
+// marcas em vez de 8. A propriedade que o Critical 1 original defendia — marcas de valores diferentes
+// nunca colidem no texto — continua valendo (é o que a asserção de tamanho do Set confere); só o
+// NÚMERO de marcas mudou, porque agora vem do domínio niced, não mais do domínio cru dos dados. "0,0000"
+// aqui é o extremo verdadeiro do domínio niced, não o artefato de precisão fixa que o Critical 1
+// original corrigia (aquele colapsava valores DIFERENTES no mesmo texto "0"; aqui não há dois valores
+// que colidam nele).
+test('marcas de eixo (linha, ponta a ponta): domínio pequeno não perde resolução — Critical 1 original (sob .nice(), Tarefa 3)', () => {
   const especificacao = { tipo: 'linha', x: 'epoca', y: ['erro'], eixos: { x: 'epoca', y: 'erro' } };
   const colunas = { epoca: [0, 1, 2, 3, 4, 5, 6, 7], erro: [0.0001, 0.0003, 0.0005, 0.0007, 0.0009, 0.0011, 0.0013, 0.0016] };
   const svg = svgDe(desenhista.desenharSvg(especificacao, colunas));
   const textos = [...svg.querySelectorAll('.marca')].filter((t) => t.getAttribute('text-anchor') === 'end').map((t) => t.textContent);
-  assert.equal(textos.length, 8);
-  assert.ok(textos.every((t) => t !== '0'), 'nenhuma marca vira "0"');
-  assert.equal(new Set(textos).size, 8, 'as 8 marcas são distintas entre si');
+  assert.deepEqual(textos, ['0,0000', '0,0005', '0,0010', '0,0015']);
+  assert.equal(new Set(textos).size, textos.length, 'as marcas são distintas entre si — a propriedade que o Critical 1 defendia');
 });
 
 test('marcas de eixo (linha, ponta a ponta): magnitude grande com variação fina não colide — regressão do próprio conserto do Critical 1, achada na re-revisão', () => {
@@ -245,16 +258,19 @@ test('histograma: bordas de classe (formatarPasso, não tickFormat — não são
 // posição, não só a ausência de colisão — colisão e separador errado são defeitos independentes: o
 // domínio [99997,100003] já não colidia com vírgula de milhar, e mesmo assim estava errado para o
 // público do sistema.
-test('marcas de eixo em pt-BR: domínio pequeno usa vírgula decimal (não ponto), sem perder distinção — Critical 1 revisitado', () => {
+// Regravado pela Tarefa 3, mesmo motivo do teste acima: .nice() no domínio de y arredonda [0,0001;
+// 0,0016] para [0; 0,0016] e muda o passo de .ticks(5) para 0,0005 — 4 marcas em vez de 8. O que este
+// teste prova (separador certo em pt-BR) não muda; só a lista exata das marcas.
+test('marcas de eixo em pt-BR: domínio pequeno usa vírgula decimal (não ponto), sem perder distinção — Critical 1 revisitado (sob .nice(), Tarefa 3)', () => {
   const especificacao = { tipo: 'linha', x: 'x', y: ['y'], eixos: {} };
   const colunas = { x: [0, 1, 2, 3, 4, 5, 6, 7], y: [0.0001, 0.0003, 0.0005, 0.0007, 0.0009, 0.0011, 0.0013, 0.0016] };
   const svg = svgDe(desenhista.desenharSvg(especificacao, colunas));
   const textos = [...svg.querySelectorAll('.marca')].filter((t) => t.getAttribute('text-anchor') === 'end').map((t) => t.textContent);
-  assert.equal(textos.length, 8);
-  assert.equal(new Set(textos).size, 8, 'continuam distintas');
+  assert.equal(textos.length, 4);
+  assert.equal(new Set(textos).size, 4, 'continuam distintas');
   assert.ok(textos.every((t) => t.includes(',')), 'todo decimal usa vírgula');
   assert.ok(textos.every((t) => !t.includes('.')), 'nenhum ponto — não é separador de milhar nem decimal em pt-BR aqui');
-  assert.deepEqual(textos, ['0,0002', '0,0004', '0,0006', '0,0008', '0,0010', '0,0012', '0,0014', '0,0016']);
+  assert.deepEqual(textos, ['0,0000', '0,0005', '0,0010', '0,0015']);
 });
 
 test('marcas de eixo em pt-BR: magnitude grande usa ponto de milhar (não vírgula) — regressão da rodada 2, achado da rodada 3 na mesma medição', () => {
@@ -373,6 +389,73 @@ test('dispersao: a série cinza tracejada vira marcador vazado (contorno), e a a
   const serieAzul = [...svg.querySelectorAll('.serie')].find((g) => g.getAttribute('data-cor') === 'azul');
   assert.equal(serieAzul.getAttribute('data-serie'), 'c');
   assert.ok([...serieAzul.querySelectorAll('circle')].every((c) => c.getAttribute('fill') === tokens.cor.azul), 'a série em foco pinta o fill azul de fato');
+});
+
+// Tarefa 1 do brief: `linhas` (campo novo, só em "dispersao") desenha a série citada como caminho
+// contínuo — o MESMO gerador que "linha" usa (d3-shape line, ESPESSURA_EIXO, tracejado se a série for
+// a tracejada), na cor da própria série — em vez de círculos. As demais séries de `y` continuam
+// pontos. dados e valores aqui são os da aula-exemplo (exemplos/regressao-linear/index.html#dispersao).
+test('dispersao: uma série em "linhas" vira path com o stroke da cor dela; as outras continuam circle', () => {
+  const especificacao = {
+    tipo: 'dispersao', x: 'horas', y: ['nota', 'reta'], foco: 'reta', linhas: ['reta'], eixos: {},
+  };
+  const colunas = { horas: [1, 2, 3, 4, 5], nota: [3.2, 4.1, 4.3, 5.4, 5.2], reta: [3.37, 3.9, 4.43, 4.96, 5.49] };
+  const svg = svgDe(desenhista.desenharSvg(especificacao, colunas));
+  const serieNota = [...svg.querySelectorAll('.serie')].find((g) => g.getAttribute('data-serie') === 'nota');
+  const serieReta = [...svg.querySelectorAll('.serie')].find((g) => g.getAttribute('data-serie') === 'reta');
+  assert.equal(serieNota.querySelectorAll('circle').length, 5, '"nota" não está em linhas: continua ponto por ponto');
+  assert.equal(serieNota.querySelector('path'), null, '"nota" não vira path');
+  assert.equal(serieReta.querySelectorAll('circle').length, 0, '"reta" está em linhas: nenhum círculo');
+  const caminho = serieReta.querySelector('path');
+  assert.ok(caminho, '"reta" desenha um path, como uma série de "linha"');
+  assert.equal(caminho.getAttribute('stroke'), tokens.cor.azul, 'reta é o foco: o path pinta a cor DA SÉRIE (azul), não uma cor fixa de "linha"');
+  assert.equal(caminho.getAttribute('stroke-width'), String(tokens.regua.normal));
+  assert.equal(caminho.getAttribute('fill'), 'none');
+});
+
+test('dispersao: "linhas" com a série tracejada (cinza) sai tracejada no path também, do jeito que sairia contornada em círculo', () => {
+  // sem foco, 3 séries: a última (c) é foco (azul); a (tinta) e b (cinza tracejada) — mesma regra de coresDasSeries
+  const especificacao = { tipo: 'dispersao', x: 'x', y: ['a', 'b', 'c'], linhas: ['b'], eixos: {} };
+  const colunas = { x: [0, 1], a: [0, 1], b: [0, 1], c: [0, 1] };
+  const svg = svgDe(desenhista.desenharSvg(especificacao, colunas));
+  const serieB = [...svg.querySelectorAll('.serie')].find((g) => g.getAttribute('data-serie') === 'b');
+  const caminho = serieB.querySelector('path');
+  assert.ok(caminho, '"b" está em linhas: vira path');
+  assert.equal(caminho.getAttribute('stroke'), tokens.cor.cinza);
+  assert.equal(caminho.getAttribute('stroke-dasharray'), '6 4', 'a série cinza tracejada mantém o tracejado no path, como manteria o contorno vazado no círculo');
+});
+
+test('dispersao sem "linhas": nenhum path — um circle por ponto, como antes desta tarefa (só o domínio de y/x muda, pelo nice da Tarefa 3)', () => {
+  const especificacao = { tipo: 'dispersao', x: 'x', y: ['a'], eixos: {}, dados: { x: [0, 1, 2], a: [1, 2, 3] } };
+  const svg = svgDe(desenhista.desenharSvg(especificacao, especificacao.dados));
+  const serie = svg.querySelector('.serie');
+  assert.equal(serie.querySelectorAll('circle').length, 3);
+  assert.equal(serie.querySelector('path'), null);
+});
+
+// Tarefa 3 do brief: eixos de "linha" e "dispersao" ganham .nice() — o domínio para de ser a extensão
+// crua dos dados, e o primeiro/último ponto deixam de cair exatamente sobre a borda do gráfico. Medido
+// com os dados de verdade da aula-exemplo (y de 3,2 a 8,6, exemplos/regressao-linear/index.html#dispersao):
+// sem nice, o ponto de menor nota (3,2) cairia exatamente sobre a linha do eixo x — o próprio defeito
+// que este brief resolve. A asserção compara a posição (cy) do ponto extremo com a posição (y1) do
+// próprio eixo desenhado, em vez de reimplementar a conta da escala — é a MESMA fonte que o SVG usa.
+test('dispersao: nice() dá folga ao domínio de y (dados da aula, notas de 3,2 a 8,6) — nenhum cy cai sobre a linha do eixo x', () => {
+  const especificacao = { tipo: 'dispersao', x: 'horas', y: ['nota'], eixos: { x: 'horas de estudo', y: 'nota' } };
+  const colunas = { horas: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], nota: [3.2, 4.1, 4.3, 5.4, 5.2, 6.3, 6.1, 7.2, 7.1, 8.6] };
+  const svg = svgDe(desenhista.desenharSvg(especificacao, colunas));
+  const eixoX = svg.querySelector('.eixo-x');
+  const eixoY = svg.querySelector('.eixo-y');
+  const circulos = [...svg.querySelectorAll('circle')];
+  assert.ok(circulos.length > 0);
+  for (const circulo of circulos) {
+    assert.notEqual(circulo.getAttribute('cy'), eixoX.getAttribute('y1'), 'nenhum ponto cai sobre a linha do eixo x (a menor nota, 3,2, não é mais o mínimo do domínio)');
+  }
+  // o ponto de maior nota (8,6) também ganha folga para cima: não encosta no topo da área útil
+  // (a mesma linha y0 que a margem superior usa — desenharEixos não desenha essa borda, então
+  // comparamos com y1 da linha eixo-y, que vai de AREA.y0 a AREA.y1: y1 é a base, e "topo" é o y2).
+  const topoDaArea = Number(eixoY.getAttribute('y1'));
+  const cyMinimo = Math.min(...circulos.map((c) => Number(c.getAttribute('cy'))));
+  assert.ok(cyMinimo > topoDaArea, 'o ponto mais alto (menor cy) fica abaixo do topo da área — folga também no máximo do domínio');
 });
 
 test('histograma: 4 classes de largura igual, contagem certa (4, 2, 0, 2 — conferido à mão), com rótulo na ponta (decisão do coordenador, reverte a exceção da Tarefa 2)', () => {
