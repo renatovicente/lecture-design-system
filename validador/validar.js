@@ -30,8 +30,8 @@ export function trechoDe(elemento, limite = 80) {
 // navegador) chamam esta função, e a lista de seletores é a do contrato, não uma cópia no código.
 // Sem nenhum desses blocos, fase 2 e fase 1 acusam exatamente os mesmos erros, então nenhum deck de
 // fase 1 muda de comportamento por causa disto. Fase 2 aqui quer dizer "o vocabulário da fase 2 vale
-// como forma", não "tudo o que ele descreve já é desenhado": figure.diagrama entra na fase 2 por esta
-// função, e quem o recusa enquanto nada desenha DOT é recursos.dot (validador/regras/carga.js).
+// como forma"; se o CONTEÚDO desenha é das regras de cada bloco — recursos.grafico para o JSON do
+// gráfico, recursos.dot para o DOT do diagrama (validador/regras/recursos.js e carga.js).
 export function faseDaAula(doc, contrato) {
   return contrato.blocosDeCorpoFase2.some((seletor) => doc.querySelector(seletor)) ? 2 : 1;
 }
