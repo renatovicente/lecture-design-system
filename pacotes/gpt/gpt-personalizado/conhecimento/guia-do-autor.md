@@ -97,7 +97,7 @@ Uma aula é um arquivo HTML: um `<head>` com os metadados e a tag do runtime, e 
 <meta name="data" content="2026-03-02">
 <meta name="professor" content="Prof. Nome Sobrenome">
 <script src="https://cdn.jsdelivr.net/npm/aula-usp@1.0.1/dist/aula-usp.js"
-        integrity="sha384-nLbSC36hg1ZNxIO/oLTU+eC3ETdmORIk71U2yn3f3ZXRgSp0KU6rz+yI5OKaauzs" crossorigin="anonymous"></script>
+        integrity="sha384-ic2mDwhYVA/r3PMu0md7Ev5FHiMJKan/phs/3KCOW5Va4evbNVArhgZCQHlE2XgP" crossorigin="anonymous"></script>
 </head>
 <body>
 
@@ -1489,7 +1489,7 @@ aula-usp novo minha-aula --unidade ime
 minha-aula criada a partir de modelos/aula — unidade ime, data 2026-09-20
 ```
 
-`--unidade` é obrigatória e aceita as unidades do sistema (`ime` ou `ifusp` hoje); a data é a de hoje, pelo relógio da sua máquina. As outras três metas — `disciplina`, `aula` e `professor` — ficam com o texto de exemplo, para você as preencher (ou, `disciplina` e `aula`, que são opcionais, apagar): um nome de professor inventado pelo comando seria pior que um lugar visivelmente vazio.
+`--unidade` é obrigatória e aceita as unidades do inventário de marcas do sistema — com uma chave que não existe, o comando sai dizendo quais existem; a data é a de hoje, pelo relógio da sua máquina. As outras três metas — `disciplina`, `aula` e `professor` — ficam com o texto de exemplo, para você as preencher (ou, `disciplina` e `aula`, que são opcionais, apagar): um nome de professor inventado pelo comando seria pior que um lugar visivelmente vazio.
 
 O comando não sobrescreve pasta que já tenha conteúdo, e recusa uma unidade que não exista, com código 2 e sem criar nada. Uma pasta vazia que você já tenha criado é aceita.
 

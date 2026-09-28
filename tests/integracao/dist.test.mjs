@@ -292,3 +292,37 @@ test('dois bytes a mais em um satélite e a aula não monta: o integrity do impo
     });
   }
 });
+
+// 1.0.1 (D6): as marcas do pacote são uma lista escrita em montar/dist.js — o esbuild só embute o que
+// é importado por nome —, e unidades.json é outra. Esta guarda cruza as duas pelo navegador: para
+// TODA unidade do inventário, a mesma aula do espécime, com a unidade trocada, monta pelo pacote de
+// dist/ e o logo da faixa carrega de uma data URI. O universo vem de unidades.json, e o que se mede é
+// o pacote: uma unidade nova sem o import em montar/dist.js sai com src "undefined" e cai aqui.
+test('toda unidade do inventário tem o logo embutido no pacote de dist/', async () => {
+  const unidades = JSON.parse(await readFile(new URL('assets/marcas/unidades.json', RAIZ), 'utf8'));
+  assert.ok(Object.keys(unidades).includes('ciaam'));
+  for (const chave of Object.keys(unidades)) {
+    const pagina = await navegador.newPage({ viewport: { width: 1400, height: 900 } });
+    try {
+      await rotearCdn(pagina);
+      await pagina.route('**/especime/index.html', async (rota) => {
+        const resposta = await rota.fetch();
+        const html = (await resposta.text()).replace('<meta name="unidade" content="ime">', `<meta name="unidade" content="${chave}">`);
+        await rota.fulfill({ response: resposta, body: html });
+      });
+      await pagina.goto(`${sitio.endereco}/especime/index.html`);
+      await esperarMontagem(pagina);
+      const logo = await pagina.evaluate(async () => {
+        const img = document.querySelector('#capa .marca-unidade');
+        // Com teto: um src que não é data URI vira pedido de rede, e um pedido que nunca responde
+        // penduraria o decode — o teste tem de cair com a mensagem de baixo, não por tempo.
+        await Promise.race([img.decode().catch(() => {}), new Promise((pronto) => setTimeout(pronto, 2000))]);
+        return { src: img.getAttribute('src').slice(0, 15), largura: img.naturalWidth };
+      });
+      assert.match(logo.src, /^data:image\//, `${chave}: o logo não veio embutido (${logo.src})`);
+      assert.ok(logo.largura > 0, `${chave}: o logo embutido não decodificou`);
+    } finally {
+      await pagina.close();
+    }
+  }
+});

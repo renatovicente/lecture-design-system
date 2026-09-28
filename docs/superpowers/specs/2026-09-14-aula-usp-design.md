@@ -215,7 +215,7 @@ Faixa de marca, na capa e no encerramento, com a base alinhada em y = 680:
 
 - logo da unidade à esquerda, na altura declarada;
 - se `integraUSP` for falso, à direita ficam "Universidade de São Paulo" (Open Sans 600, 20 px, em duas linhas alinhadas à direita) e o logo USP preto, com 56 px de altura e área de proteção igual à altura do "P" do logotipo (regra da SCS);
-- logos sempre pretos, nunca redesenhados, recoloridos, distorcidos ou com efeito.
+- logos sempre pretos, nunca redesenhados, recoloridos, distorcidos ou com efeito — com uma exceção: o CIAAM usa a inscrição original em azul, por decisão do autor (1.0.1).
 
 Arquivos oficiais, baixados na fase 1 com autorização do autor:
 
@@ -224,6 +224,7 @@ Arquivos oficiais, baixados na fase 1 com autorização do autor:
 | logo USP (PDF vetorial convertido em SVG sem alterar traços) | `https://scs.usp.br/identidadevisual/wp-content/uploads/2022/08/usp-logo-pdf.pdf` |
 | lockup IME+USP preto | `https://www.ime.usp.br/media/identidade_visual/imagens/IME+USP/Preta/SVG/Horizontal_preta.svg` |
 | IFUSP vertical preto (PNG) | `https://portal.if.usp.br/imprensa/sites/portal.if.usp.br.ifusp/files/logo_IFUSP_2025_VERT_preto.png` |
+| CIAAM, logo curto em azul (PNG; não há vetor), baixado com autorização do autor em 2026-09-28 e recortado na caixa de tinta | `https://ciaam.usp.br/wp-content/uploads/sites/1519/2024/07/logo-ciaam-short.png` |
 | manual do IME | `https://www.ime.usp.br/media/identidade_visual/manual-identidade-visual-IME-MAR2021-web.pdf` |
 | manual do IFUSP | o Manual Técnico listado em `https://portal.if.usp.br/imprensa/pt-br/node/3425` |
 

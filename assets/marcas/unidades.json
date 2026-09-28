@@ -22,5 +22,13 @@
     "altura": 120,
     "protecao": 24,
     "alturaMinima": 64
+  },
+  "ciaam": {
+    "nome": "Centro de Inteligência Artificial e Aprendizado de Máquina",
+    "arquivo": "ciaam-azul.png",
+    "integraUSP": false,
+    "altura": 64,
+    "protecao": 24,
+    "alturaMinima": 32
   }
 }

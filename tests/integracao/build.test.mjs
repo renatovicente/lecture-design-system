@@ -23,6 +23,8 @@
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtemp, readdir, readFile } from 'node:fs/promises';
+import { execFileSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { parseHTML } from 'linkedom';
@@ -191,4 +193,17 @@ test('--sem-pdf: pula as etapas 6 e 7, grava HTML e validacao.json, e sai 0', as
   assert.equal(r.codigo, 0);
   assert.deepEqual((await readdir(destino)).sort(), ['aula.html', 'validacao.json']);
   assert.equal(r.paginas, undefined);
+});
+
+// 1.0.1 (D6): a unidade nova pelo caminho do autor, comando a comando — `novo --unidade ciaam`, depois
+// `validar` limpo (com composição) e `build` com PDF. Nenhuma lista de unidades mudou em código: o
+// comando, o validador e a faixa leem assets/marcas/unidades.json.
+test('novo --unidade ciaam cria uma aula que valida limpa e constrói com PDF', async () => {
+  const pasta = join(await pastaTemporaria(), 'aula-ciaam');
+  const cli = fileURLToPath(new URL('bin/aula-usp.mjs', RAIZ));
+  execFileSync('node', [cli, 'novo', pasta, '--unidade', 'ciaam'], { encoding: 'utf8' });
+  assert.match(await readFile(join(pasta, 'index.html'), 'utf8'), /<meta name="unidade" content="ciaam">/);
+  assert.equal(execFileSync('node', [cli, 'validar', pasta], { encoding: 'utf8' }).trim(), 'Validador Aula USP: 0 erros, 0 avisos');
+  execFileSync('node', [cli, 'build', pasta], { encoding: 'utf8', stdio: 'pipe' });
+  assert.deepEqual((await readdir(join(pasta, 'dist'))).sort(), ['aula-ciaam.html', 'aula-ciaam.pdf', 'validacao.json']);
 });

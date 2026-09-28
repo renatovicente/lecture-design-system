@@ -1,7 +1,8 @@
 # Marcas
 
 Arquivos oficiais usados na faixa de marca da capa e do encerramento (spec, seção 4.5).
-Nunca redesenhar, recolorir, distorcer ou aplicar efeitos.
+Nunca redesenhar, recolorir, distorcer ou aplicar efeitos. Todos são pretos, com uma exceção
+nomeada na spec 4.5 por decisão do autor: o CIAAM usa a inscrição original, em azul.
 
 ## Origem
 
@@ -11,6 +12,7 @@ Nunca redesenhar, recolorir, distorcer ou aplicar efeitos.
 | `usp-preto.svg` | convertido de `origem/usp-logo.pdf` por `build/marcas.mjs` | traços intactos; só o viewBox foi enquadrado |
 | `ime-usp-horizontal-preta.svg` | https://www.ime.usp.br/media/identidade_visual/imagens/IME+USP/Preta/SVG/Horizontal_preta.svg | lockup "Assinatura Conjunta USP" (manual do IME, página 20): busto, sigla "IME" e logotipo USP, sem o nome do instituto por extenso; viewBox enquadrado em 512 268 2600 448 (medido na tinta do desenho, na tela original de 3597×982; só atributos da raiz alterados) |
 | `acs-preto.png` | `acs-webpage/assets/logos/darwin-acs-logo-stylized-transparent.png` (logo do grupo Agentic Complex Systems, o mesmo do site) | só existe em PNG; recortado na caixa de tinta (1254×1254 → 886×901 px), sem outra alteração; não integra a USP, então a faixa traz a assinatura USP à parte |
+| `ciaam-azul.png` | https://ciaam.usp.br/wp-content/uploads/sites/1519/2024/07/logo-ciaam-short.png (1648×646 px, sha256 `6ad3dd4c80125d094ca1442d2d9a74ecb7cd40edc5427a452e8bd03d59831308`), baixado com autorização do autor em 2026-09-28 | recortado na caixa de tinta, de (54, 57) a (1592, 597) — 1538×540 px, RGBA —, sem outra alteração; **em azul, a cor original, por decisão do autor** (a versão preta oficial, `logo-ciaam-short-black.png`, existe e não foi usada); não há vetor (o SVG do site dá 404); não integra a USP, então a faixa traz a assinatura USP à parte |
 | `ifusp-vertical-preto.png` | https://portal.if.usp.br/imprensa/sites/portal.if.usp.br.ifusp/files/logo_IFUSP_2025_VERT_preto.png | só existe em PNG; 1278×2059 px; pedir versão vetorial à comunicação do IF |
 
 O manual de identidade visual do IME consultado é de março de 2021 (MAR2021) e é anterior à
@@ -68,3 +70,21 @@ desta integração, e não regras de manual, e devem ser revistos se o grupo pub
   roteiro dos blocos.
 - `protecao` 24 px: um passo da escala de espaçamento de 8 px, o mesmo valor do IME.
 - `alturaMinima` 64 px: abaixo disso, as letras A, C e S nas pontas dos ramos deixam de ser lidas.
+
+## CIAAM
+
+O Centro de Inteligência Artificial e Aprendizado de Máquina não tem manual de identidade visual
+publicado; como no ACS, os três números são decisões desta integração, e devem ser revistos se o
+centro publicar um. O desenho é só a inscrição "CIAAM", e as letras ocupam a altura inteira do
+recorte — a altura de uso é a altura das letras.
+
+- `altura` 64 px: um passo de 8 acima do logo USP (56 px), que fica do outro lado da faixa, e perto
+  das letras "IME" no lockup do IME (cerca de 60 px, a 88 px de lockup). Conferido na captura da capa
+  e do encerramento de uma aula criada com `aula-usp novo --unidade ciaam`: a inscrição fica com
+  182 px de largura e o peso visual da assinatura USP.
+- `protecao` 24 px: um passo da escala de espaçamento de 8 px, o mesmo valor do IME e do ACS. Na capa,
+  o topo do logo fica em y = 616, e 616 − 24 = 592 fica abaixo do roteiro, que termina em 512.
+- `alturaMinima` 32 px: medido no PNG, o vão interno de cada "A" (o triângulo) tem 31 % da altura do
+  desenho e, na base, 15 % de largura (170 × 80 px em 540). Em 32 px, fica com 10 × 5 px, o menor vão
+  em que o "A" ainda não fecha num bloco. Os fios transparentes entre as letras (7 px em 540, 1,3 %)
+  já não se veem na altura de uso: quem separa as letras são as cores, como no desenho original.

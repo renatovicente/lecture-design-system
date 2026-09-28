@@ -26,6 +26,8 @@ import svgIme from '../assets/marcas/ime-usp-horizontal-preta.svg';
 import svgUsp from '../assets/marcas/usp-preto.svg';
 import pngIfusp from '../assets/marcas/ifusp-vertical-preto.png';
 import pngAcs from '../assets/marcas/acs-preto.png';
+// O do CIAAM (1.0.1), o único em cor, pela exceção da spec 4.5.
+import pngCiaam from '../assets/marcas/ciaam-azul.png';
 
 // As chaves são os mesmos caminhos que iniciar() pede; quem empacota resolveu o conteúdo.
 const EMBUTIDAS = new Map([
@@ -50,6 +52,7 @@ const MARCAS = new Map([
   ['usp-preto.svg', `data:image/svg+xml,${encodeURIComponent(svgUsp)}`],
   ['ifusp-vertical-preto.png', pngIfusp],
   ['acs-preto.png', pngAcs],
+  ['ciaam-azul.png', pngCiaam],
 ]);
 
 const ocultar = document.createElement('style');

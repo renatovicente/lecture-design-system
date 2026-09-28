@@ -6,6 +6,7 @@ import {
   assinaturaConfere, dimensoesPng, lerPgm, caixaEscura, enquadrarSvg, coresSvg, ehEscura,
 } from '../../build/marcas.mjs';
 import { lerTokens, simplificar } from '../../build/tokens.mjs';
+import { PNG } from 'pngjs';
 
 const raiz = new URL('../../', import.meta.url);
 const ler = (p) => readFile(new URL(p, raiz));
@@ -95,6 +96,46 @@ test('ACS preto: PNG com resolução suficiente', async () => {
   assert.ok(dimensoesPng(png).altura >= 512, `altura ${dimensoesPng(png).altura}`);
 });
 
+// 1.0.1 (D6): o CIAAM entra com o logo curto do site do centro, recortado na caixa de tinta — o
+// original tem 1648 × 646 px, e a tinta vai de (54, 57) a (1592, 597). Não existe vetor (o SVG do site
+// dá 404), por isso as dimensões do recorte são a identidade do arquivo.
+test('CIAAM: PNG recortado do original, 1538 × 540 px, com transparência', async () => {
+  const png = await ler('assets/marcas/ciaam-azul.png');
+  assert.ok(assinaturaConfere('png', png));
+  assert.deepEqual(dimensoesPng(png), { largura: 1592 - 54, altura: 597 - 57 });
+  const imagem = PNG.sync.read(png);
+  let transparentes = 0;
+  for (let k = 3; k < imagem.data.length; k += 4) if (imagem.data[k] === 0) transparentes += 1;
+  assert.ok(transparentes > 0, 'o recorte perdeu a transparência do fundo');
+});
+
+// Spec 4.5: "logos sempre pretos, nunca redesenhados, recoloridos, distorcidos ou com efeito" — com
+// UMA exceção, nomeada na própria spec por decisão do autor (1.0.1): o CIAAM usa a inscrição original
+// em azul. A lista de exceções é escrita aqui, e não tirada de unidades.json: tirada de lá, ela sairia
+// da mesma fonte que o gerador lê, e uma unidade nova colorida entraria calada na exceção.
+// As SVG (USP e o lockup do IME) já são conferidas cor a cor acima; aqui, todo logo raster de unidade,
+// pixel a pixel, com o mesmo critério de ehEscura (cada canal ≤ 0x40) nos pixels que não são
+// transparentes.
+const EXCECOES_DE_COR_DA_SPEC_4_5 = ['ciaam'];
+test('todo logo raster de unidade é só preto, salvo a exceção que a spec 4.5 nomeia', async () => {
+  const unidades = JSON.parse(await lerTexto('assets/marcas/unidades.json'));
+  const rasters = Object.entries(unidades).filter(([, u]) => u.arquivo.endsWith('.png'));
+  assert.ok(rasters.length >= 2, 'nenhum logo raster para conferir');
+  for (const [chave, u] of rasters) {
+    const imagem = PNG.sync.read(await ler(`assets/marcas/${u.arquivo}`));
+    let coloridos = 0;
+    for (let k = 0; k < imagem.data.length; k += 4) {
+      if (imagem.data[k + 3] === 0) continue;
+      if (imagem.data[k] > 0x40 || imagem.data[k + 1] > 0x40 || imagem.data[k + 2] > 0x40) coloridos += 1;
+    }
+    if (EXCECOES_DE_COR_DA_SPEC_4_5.includes(chave)) {
+      assert.ok(coloridos > 0, `${chave} está na exceção de cor, mas o logo é preto — a exceção envelheceu`);
+    } else {
+      assert.equal(coloridos, 0, `${chave}: ${coloridos} pixels fora do preto em ${u.arquivo}`);
+    }
+  }
+});
+
 test('IFUSP: altura, proteção e altura mínima da ruling do controlador (F3)', async () => {
   const unidades = JSON.parse(await lerTexto('assets/marcas/unidades.json'));
   assert.equal(unidades.ifusp.altura, 128);
@@ -104,10 +145,11 @@ test('IFUSP: altura, proteção e altura mínima da ruling do controlador (F3)',
 
 test('unidades.json e usp.json completos e coerentes', async () => {
   const unidades = JSON.parse(await lerTexto('assets/marcas/unidades.json'));
-  assert.deepEqual(Object.keys(unidades).sort(), ['acs', 'ifusp', 'ime']);
+  assert.deepEqual(Object.keys(unidades).sort(), ['acs', 'ciaam', 'ifusp', 'ime']);
   assert.equal(unidades.ime.integraUSP, true);
   assert.equal(unidades.ifusp.integraUSP, false);
   assert.equal(unidades.acs.integraUSP, false);
+  assert.equal(unidades.ciaam.integraUSP, false);
   for (const [chave, u] of Object.entries(unidades)) {
     for (const campo of ['altura', 'protecao', 'alturaMinima'])
       assert.ok(Number.isInteger(u[campo]) && u[campo] > 0, `${chave}.${campo}`);

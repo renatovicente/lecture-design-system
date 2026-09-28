@@ -344,3 +344,39 @@ test('sem as metas disciplina e aula, o cromo não se move e o painel fica limpo
     await fixturas.fechar();
   }
 });
+
+// 1.0.1 (D6): a faixa do CIAAM, pela mesma aula do espécime com a unidade trocada na rota. O logo na
+// altura declarada, com a base em 680 e na margem, a assinatura USP à direita (integraUSP falso) e as
+// proteções livres — as mesmas medidas do IFUSP, com os números do inventário.
+test('CIAAM: logo de 64 px em azul, assinatura da USP à direita, bases em 680 e proteções livres', async () => {
+  const pagina = await navegador.newPage({ viewport: { width: 1400, height: 900 } });
+  await pagina.route('**/index.html?folha', async (rota) => {
+    const resposta = await rota.fetch();
+    const html = (await resposta.text()).replace('<meta name="unidade" content="ime">', '<meta name="unidade" content="ciaam">');
+    await rota.fulfill({ response: resposta, body: html });
+  });
+  await pagina.goto(`${servidor.endereco}/index.html?folha`);
+  await pagina.waitForFunction(() => document.body?.dataset.montado === 'sim');
+  await pagina.evaluate(() => document.fonts.ready);
+  try {
+    for (const id of ['capa', 'encerramento']) {
+      const [logo, logoUsp, ...outros] = await caixas(pagina, id, '.faixa-de-marca img');
+      assert.equal(outros.length, 0);
+      assert.equal(await pagina.evaluate((i) => document.getElementById(i).querySelector('.marca-unidade').getAttribute('alt'), id),
+        unidades.ciaam.nome);
+      perto(logo.altura, unidades.ciaam.altura, `${id}: altura do logo do CIAAM`);
+      perto(logo.base, 680, `${id}: base do logo do CIAAM`);
+      perto(logo.x, 64, `${id}: logo do CIAAM na margem`);
+      perto(logoUsp.altura, usp.altura, `${id}: altura do logo USP`);
+      perto(logoUsp.direita, 1216, `${id}: logo USP na margem direita`);
+      const assinatura = await caixa(pagina, id, '.marca-usp');
+      const conteudo = await caixas(pagina, id, ':scope > .area > *');
+      const baseDoConteudo = Math.max(...conteudo.map((c) => c.base));
+      assert.ok(logo.y - unidades.ciaam.protecao >= baseDoConteudo, `${id}: proteção do CIAAM invadida`);
+      assert.ok(assinatura.y - usp.protecao >= baseDoConteudo, `${id}: proteção da USP invadida`);
+      assert.ok(assinatura.x - usp.protecao >= logo.direita + unidades.ciaam.protecao, `${id}: logos perto demais`);
+    }
+  } finally {
+    await pagina.close();
+  }
+});

@@ -43,7 +43,7 @@ Num clone deste repositório, `npm link` põe `aula-usp` no PATH.
 aula-usp novo <pasta> --unidade ime
 ```
 
-Copia `modelos/aula/` para uma pasta nova, preenchendo as duas metas que o comando sabe: `unidade`, da opção, e `data`, de hoje. As outras três — `disciplina`, `aula` e `professor` — ficam com o texto de exemplo do modelo, de propósito: um valor inventado para `professor` seria pior que um lugar visivelmente vazio. A unidade tem de ser `ime` ou `ifusp`, e uma pasta que já tenha conteúdo não é sobrescrita.
+Copia `modelos/aula/` para uma pasta nova, preenchendo as duas metas que o comando sabe: `unidade`, da opção, e `data`, de hoje. As outras três — `disciplina`, `aula` e `professor` — ficam com o texto de exemplo do modelo, de propósito: um valor inventado para `professor` seria pior que um lugar visivelmente vazio. A unidade tem de ser uma chave de `assets/marcas/unidades.json` — com outra, o comando sai dizendo quais existem —, e uma pasta que já tenha conteúdo não é sobrescrita.
 
 ```bash
 aula-usp servir <pasta> [--porta 8765]
