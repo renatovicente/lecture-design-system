@@ -746,7 +746,7 @@ O bloco de regras essenciais de `00-principios.md` fica entre marcadores e entra
 - janela do apresentador aberta e sincronizada nos dois sentidos;
 - modo navegador (via `servir`) e modo build visualmente iguais: captura de cada slide nos dois modos, comparada com `pixelmatch`, limiar 0,1 e no máximo 0,5 % de pixels diferentes por slide, com a área das demos mascarada;
 - PDF: número de páginas esperado, páginas de 1280 × 720, fontes embutidas e metadados;
-- tamanhos de `dist/` medidos e registrados, com metas de 700 KB para `aula-usp.js`, 800 KB para `aula-usp-tex.js` e 600 KB para `aula-usp-codigo.js`; acima disso, o teste emite aviso.
+- tamanhos de `dist/` medidos e registrados, com metas de 700 KB para `aula-usp.js`, 800 KB para `aula-usp-tex.js`, 600 KB para `aula-usp-codigo.js`, 120 KB para `aula-usp-graficos.js` e 1024 KB para `aula-usp-diagramas.js`; acima disso, o teste emite aviso. O satélite de diagramas é o maior porque leva o WASM do Graphviz dentro, e a spec 14 mediu num artifact um script de 819 KB — acima disso, ninguém mediu.
 
 ### 11.3. Aceite com modelos
 

@@ -1,7 +1,9 @@
 // Spec 11.2: "tamanhos de dist/ medidos e registrados, com metas de 700 KB para aula-usp.js,
-// 800 KB para aula-usp-tex.js e 600 KB para aula-usp-codigo.js; acima disso, o teste emite aviso."
-// O "registrados" é o console.log de todos os arquivos, que roda sempre; o "acima disso" é a
-// asserção, que só morde quando a folga acaba. Os três números são da spec, não escolhidos aqui.
+// 800 KB para aula-usp-tex.js, 600 KB para aula-usp-codigo.js, 120 KB para aula-usp-graficos.js e
+// 1024 KB para aula-usp-diagramas.js; acima disso, o teste emite aviso." O "registrados" é o
+// console.log de todos os arquivos, que roda sempre; o "acima disso" é a asserção, que só morde
+// quando a folga acaba. Os cinco números são da spec, não escolhidos aqui — os dois últimos foram
+// medidos nas fases 2a e 2b, propostos com a conta abaixo, e aprovados pelo autor para a spec.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -12,11 +14,8 @@ const METAS = {
   'aula-usp.js': 700 * KB,
   'aula-usp-tex.js': 800 * KB,
   'aula-usp-codigo.js': 600 * KB,
-  // aula-usp-graficos.js NÃO tem meta na spec 11.2 (ela só nomeia os três acima — Fato 5 do plano da
-  // Tarefa 3): satélite novo da fase 2a, medido aqui, não copiado de lá. Isto é achado a relatar
-  // para o autor decidir se a spec ganha uma linha — esta tarefa não edita a spec.
-  //
-  // Medido (dist/manifesto.json, aula-usp dist desta tarefa): 94203 bytes = 92,0 KB — as três libs
+  // aula-usp-graficos.js: meta proposta na fase 2a e depois escrita na spec 11.2. A conta que a
+  // justificou fica aqui. Medido (dist/manifesto.json, aula-usp dist desta tarefa): 94203 bytes = 92,0 KB — as três libs
   // do d3 que componentes/graficos.js consome (d3-scale, d3-shape, d3-array), minificadas juntas num
   // satélite só (build/bundle.mjs).
   //
@@ -26,7 +25,7 @@ const METAS = {
   // não a de aula-usp-codigo.js (600 KB sobre 112,4 KB = 433,8 %), que é um outlier e não uma
   // proporção a repetir.
   'aula-usp-graficos.js': 120 * KB,
-  // aula-usp-diagramas.js também não tem meta na spec 11.2 (fase 2b, mesmo achado de cima). Medido
+  // aula-usp-diagramas.js: meta proposta na fase 2b e depois escrita na spec 11.2. Medido
   // (dist/manifesto.json, aula-usp dist da fase 2b): 819116 bytes = 799,9 KB — o dist/index.js de
   // @hpcc-js/wasm-graphviz 1.29.1 com o WASM dentro, em base64, que o esbuild só reescreve de leve
   // (o arquivo do pacote tem 819284 bytes). É o maior satélite, e o tamanho é o do WASM: não há o
