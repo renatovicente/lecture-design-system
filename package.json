@@ -1,6 +1,6 @@
 {
   "name": "aula-usp",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Design system de aulas em HTML para a USP, usado com Claude e GPT.",
   "keywords": [
     "aula",
