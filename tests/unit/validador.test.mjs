@@ -406,16 +406,50 @@ test('estrutura.obrigatorio e fora-do-layout nomeiam o script como tag, não com
 // build/validar.mjs e outra em montar/entrada.js, as duas repetindo contrato.blocosDeCorpoFase2 em
 // código. Hoje as duas chamam faseDaAula. A prova de que a lista vem do CONTRATO, e não de um literal
 // que por acaso coincide com ele, é mudar o contrato em memória e ver a resposta mudar junto.
-test('faseDaAula decide pela presença dos blocos de contrato.blocosDeCorpoFase2, lidos do contrato', () => {
+// Fase 2c: a lista passou a ser TODA marca de fase 2 do contrato (seletoresDeFase2) — um
+// data-captura-ms sozinho liga a fase 2, e uma demo sem ele, não.
+test('faseDaAula decide pela presença das marcas de fase 2 do contrato, lidas do contrato', () => {
   const documento = (corpo) => parseHTML(aula(corpo)).document;
   const comGrafico = documento('<section data-layout="figura"><figure class="grafico"><script type="application/json">{}</script></figure></section>');
   const comDiagrama = documento('<section data-layout="figura"><figure class="diagrama"><script type="text/vnd.graphviz">digraph{}</script></figure></section>');
+  const comCaptura = documento('<section data-layout="demo" id="d"><h2>D</h2><div class="demo" data-demo="x" data-captura-ms="500"></div></section>');
+  const soDemo = documento('<section data-layout="demo" id="d"><h2>D</h2><div class="demo" data-demo="x"></div></section>');
   assert.equal(faseDaAula(parseHTML(BASE).document, contrato), 1);
+  assert.equal(faseDaAula(soDemo, contrato), 1, 'uma demo sem marca de fase 2 não liga a fase 2');
   assert.equal(faseDaAula(comGrafico, contrato), 2);
   assert.equal(faseDaAula(comDiagrama, contrato), 2);
-  const soGrafico = { ...contrato, blocosDeCorpoFase2: ['figure.grafico'] };
-  assert.equal(faseDaAula(comDiagrama, soGrafico), 1, 'a lista de seletores tem de vir do contrato');
-  assert.equal(faseDaAula(comGrafico, { ...contrato, blocosDeCorpoFase2: [] }), 1);
+  assert.equal(faseDaAula(comCaptura, contrato), 2, 'data-captura-ms é marca de fase 2 (contrato.html.atributos)');
+  // Tirar a marca do contrato tira a fase: a resposta acompanha o dado, não um literal no código.
+  const semFase = (regra) => { const { fase, ...resto } = regra; return resto; };
+  const semCaptura = structuredClone(contrato);
+  semCaptura.html.atributos['div.demo']['data-captura-ms'] = semFase(semCaptura.html.atributos['div.demo']['data-captura-ms']);
+  assert.equal(faseDaAula(comCaptura, semCaptura), 1, 'a lista de seletores tem de vir do contrato');
+  const semDiagrama = structuredClone(contrato);
+  semDiagrama.blocosDeCorpoFase2 = ['figure.grafico'];
+  semDiagrama.html.classes.diagrama = semFase(semDiagrama.html.classes.diagrama);
+  semDiagrama.html.elementosFase2.script.dentro = ['figure.grafico'];
+  semDiagrama.html.atributos.script.type = semFase(semDiagrama.html.atributos.script.type);
+  assert.equal(faseDaAula(comDiagrama, semDiagrama), 1, 'a lista de seletores tem de vir do contrato');
+  assert.equal(faseDaAula(comGrafico, semDiagrama), 2);
+  // Só dentro das section: a mesma marca fora de qualquer slide não é conteúdo de aula.
+  const fora = parseHTML(aula('').replace('</body>', '<div class="demo" data-demo="x" data-captura-ms="1"></div></body>')).document;
+  assert.equal(faseDaAula(fora, contrato), 1);
+});
+
+// Por construção, toda marca de fase 2 é algo que a fase 1 recusa (validar.js:seletoresDeFase2).
+// A consequência que importa, medida sobre os decks do repositório: nenhum deck que já existia muda
+// de fase — só componentes.html, que tem gráfico e diagrama, é de fase 2.
+test('faseDaAula: os decks do repositório ficam na fase em que já estavam', () => {
+  const ler = (caminho) => parseHTML(readFileSync(new URL(caminho, RAIZ), 'utf8')).document;
+  const especime = readdirSync(new URL('especime/', RAIZ)).filter((nome) => nome.endsWith('.html'));
+  const fases = Object.fromEntries([
+    ...especime.map((nome) => `especime/${nome}`),
+    'exemplos/descida-do-gradiente/index.html',
+    'modelos/aula/index.html',
+  ].map((caminho) => [caminho, faseDaAula(ler(caminho), contrato)]));
+  for (const [caminho, fase] of Object.entries(fases)) {
+    assert.equal(fase, caminho === 'especime/componentes.html' ? 2 : 1, caminho);
+  }
 });
 
 // Achado da revisão final (Minor, item 8): um data-curto comprido fora da abertura era acusado duas

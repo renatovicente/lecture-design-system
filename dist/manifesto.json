@@ -3,7 +3,7 @@
   "arquivos": {
     "aula-usp-motor.js": {
       "bytes": 20512,
-      "integrity": "sha384-FzzluKBMwsLDRt1VgRKMk7yqzYFznMKY2AboSbn/l+W7Bdyuj+uqyl44byQSU2Su"
+      "integrity": "sha384-B0lzngJnZI4YHEGAkvFCE/+i+mnyQ0jDC9ByY0Q5/FjnJ34XnLxZhh+TepyVxGWd"
     },
     "aula-usp-tex.js": {
       "bytes": 637702,
@@ -50,8 +50,8 @@
       "integrity": "sha384-NzUKBVrIE2qrjNYJCJoBiGfIjzDc52imnD5EyTqY/DD4BbHLORq5xAGUDJtX92VS"
     },
     "aula-usp.js": {
-      "bytes": 645844,
-      "integrity": "sha384-s/yJ996zdT1hmytuXl9DPvK6UojHHV9a+jZNFnzb5amIyGqoQ2kfwMRgtzSVRPhO"
+      "bytes": 646268,
+      "integrity": "sha384-9D2mYNKqKRBzluDaYuhROy+xPgh9/2o6BTcEdHsC1g1ftf77eY62zzeJXwAprTq+"
     }
   }
 }
