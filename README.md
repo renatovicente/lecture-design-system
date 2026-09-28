@@ -8,33 +8,23 @@ Feito para o IME-USP e o IFUSP, com a identidade visual da USP.
 
 ## Estado
 
-**Fase 1 completa: os sete marcos.** O aceite foi rodado em 2026-09-21 e os dois ambientes passaram.
+**Fases 1 e 2 completas; a fase 3, a publicação, em andamento.**
 
 | | |
 |---|---|
 | Layouts | os 7 do contrato: `capa`, `abertura`, `conteudo`, `afirmacao`, `figura`, `demo`, `encerramento` |
 | Motor | navegação, passos revelados, notas do apresentador, visão geral, ajuda, janela do apresentador, impressão |
 | Componentes | campos, exercício, listas, tabela, figura, código com destaque (Shiki), matemática (KaTeX, com `\passo`) |
-| Validador | as **60 regras da fase 1, todas implementadas**: 47 estáticas, 4 de carga, 5 de composição e 4 de saída |
+| Recursos visuais | gráficos (`linha`, `barras`, `dispersao`, `histograma`), diagramas em DOT desenhados pelo Graphviz, controles de demo, e a foto automática das demos no PDF |
+| Validador | as **64 regras do contrato, todas implementadas**: 48 estáticas, 7 de carga, 5 de composição e 4 de saída |
 | CLI | os **6 comandos** da spec 8.1 |
-| Guia e pacotes | 11 arquivos de guia do autor e 4 pacotes montados a partir deles, para Claude, GPT e um repositório de disciplina |
-| Testes | **472 unitários** (38 arquivos; 36 sem navegador, e 2 que sobem um Chrome de verdade) e **202 de integração** (22 arquivos, em Chrome de verdade), zero pulos |
+| Guia e pacotes | 16 arquivos de guia do autor e 4 pacotes montados a partir deles, para Claude, GPT e um repositório de disciplina |
 
-## O que ainda não existe
-
-Quatro coisas, e nenhuma delas é detalhe de acabamento.
-
-**A fase 2: gráficos, diagramas e controles de demo.** `contrato.json` já traz as 4 regras da fase 2, e **nenhuma está implementada**. Na prática, `figure.grafico` e `figure.diagrama` são **recusados** hoje — `guia/50-graficos-diagramas-demos.md` mede o que acontece com quem tentar, erro por erro, e diz o que fazer no lugar. Junto com elas vêm a captura automática de demos no PDF e o `aula-usp.mplstyle`.
-
-**A publicação no npm.** `npm install -g aula-usp` **não funciona**: o pacote não está publicado. Hoje a CLI se instala com `npm link` neste repositório, e é assim que os pacotes para agentes descrevem a instalação.
-
-**A tag do runtime resolvendo.** O modelo, a aula-exemplo, os decks do espécime e os quatro pacotes já trazem a tag com a versão exata e o `integrity` reais — **o endereço é que ainda não resolve**, pela mesma razão acima. Nos fluxos com terminal isso não muda nada: `aula-usp servir` troca a tag pelo runtime local e `aula-usp build` a troca pelo motor embutido, e os dois a reconhecem pelo `src` terminado em `/aula-usp.js`. O que não funciona até a publicação é abrir o HTML do modelo direto no navegador, com dois cliques.
-
-**O aceite.** `tests/aceite/roteiro.md` fixa o pedido, os ambientes e o critério — zero erros em até três rodadas mais a revisão visual do autor — e traz os resultados da fase 1, rodada em 2026-09-21: **Claude Code e Codex CLI passaram os dois**, cada um com apenas o pacote da skill. As aulas que produziram estão em `tests/aceite/aulas/`. A tabela da fase 3 continua vazia, e depende da publicação.
+O aceite da fase 1 foi rodado em 2026-09-21, com Claude Code e Codex CLI, e os dois passaram. O da fase 2 está em `docs/superpowers/revisoes/2026-09-28-aula-usp-fase2-aceite.md`. O da fase 3 (claude.ai e ChatGPT) depende da publicação: `tests/aceite/roteiro.md` fixa o pedido e o critério.
 
 ## Instalar
 
-Quando o pacote estiver publicado no npm (fase 3b; hoje ainda não está), a CLI se instala de um destes dois jeitos:
+A CLI se instala pelo npm, de um destes dois jeitos:
 
 ```bash
 npm install -g aula-usp
@@ -47,7 +37,7 @@ O pacote leva a CLI, o runtime de `dist/`, o modelo, a aula-exemplo e o guia do 
 
 ## Os comandos
 
-Antes da publicação, `npm link` põe `aula-usp` no PATH.
+Num clone deste repositório, `npm link` põe `aula-usp` no PATH.
 
 ```bash
 aula-usp novo <pasta> --unidade ime
@@ -87,7 +77,7 @@ aula-usp dist
 aula-usp pacotes
 ```
 
-Os dois últimos são manutenção do sistema, não de uma aula: `dist` regenera `validador/cobertura.json` e os 12 arquivos versionados de `dist/`; `pacotes` fixa a tag do runtime, gera o guia e monta `pacotes/`, nessa ordem, conferindo os limites da spec 11.1.
+Os dois últimos são manutenção do sistema, não de uma aula: `dist` regenera `validador/cobertura.json` e os 14 arquivos versionados de `dist/`; `pacotes` fixa a tag do runtime, gera o guia e monta `pacotes/`, nessa ordem, conferindo os limites da spec 11.1.
 
 ## Como rodar aqui
 
@@ -113,19 +103,19 @@ npm run servir -- especime
 ## Como está organizado
 
 ```
-contrato/contrato.json   o contrato como DADO: layouts, vocabulário, papéis, 33 limites e as 64 regras
+contrato/contrato.json   o contrato como DADO: layouts, vocabulário, papéis, 34 limites e as 64 regras
 tokens/                  fonte única dos tokens (DTCG); estilos/tokens.css é gerado daqui
 estilos/                 base, layouts, componentes, motor, impressão
 montar/                  transforma o fonte do autor no slide montado
 motor/                   navegação, passos, notas, apresentador, painéis, impressão
-componentes/             matemática (KaTeX) e código (Shiki), nos dois modos
+componentes/             matemática (KaTeX), código (Shiki), gráficos, diagramas e controles, nos dois modos
 validador/               validar.js e regras/*.js — executam o contrato, não o repetem
 build/                   glue de Node: servir, validar, construir, PDF, empacotar
-dist/                    o runtime versionado: 12 arquivos, gerados por `aula-usp dist`
-guia/                    o guia do autor, 11 arquivos, e em pacotes/ os 5 fontes dos pacotes
-pacotes/                 os 4 pacotes para agentes, 25 arquivos, gerados por `aula-usp pacotes`
+dist/                    o runtime versionado: 14 arquivos, gerados por `aula-usp dist`
+guia/                    o guia do autor, 16 arquivos, com as fontes dos pacotes em guia/pacotes/
+pacotes/                 os 4 pacotes para agentes, 49 arquivos, gerados por `aula-usp pacotes`
 modelos/aula/            o esqueleto que `aula-usp novo` copia
-exemplos/                a aula-exemplo: descida do gradiente
+exemplos/                as aulas-exemplo: descida do gradiente, e regressão linear com gráfico, diagrama e demo
 especime/                seis decks que exercitam tudo
 tests/                   unit/, integracao/, fixtures/ e o roteiro de aceite
 docs/superpowers/        a spec, os planos de cada marco e as revisões finais
@@ -133,7 +123,7 @@ docs/superpowers/        a spec, os planos de cada marco e as revisões finais
 
 Uma divisão importa mais que as outras: **`montar/`, `motor/`, `componentes/` e `validador/` não importam nada do Node** — rodam no navegador. Só `bin/` e `build/` são Node. É o que permite a mesma regra rodar no painel dentro da aula e na linha de comando.
 
-Seis artefatos são **gerados e versionados**, cada um com uma guarda que falha se o arquivo em disco divergir do gerador: `estilos/tokens.css` e `tokens/tokens.js`, `estilos/fontes.css`, `validador/cobertura.json`, `dist/`, os blocos gerados de quatro arquivos do `guia/`, e `pacotes/`.
+Sete artefatos são **gerados e versionados**, cada um com uma guarda que falha se o arquivo em disco divergir do gerador: `estilos/tokens.css` e `tokens/tokens.js`, `estilos/fontes.css`, `validador/cobertura.json`, `dist/`, os blocos gerados de quatro arquivos do `guia/`, `pacotes/` e `assets/aula-usp.mplstyle`.
 
 ### O contrato é dado, não código
 
@@ -143,8 +133,8 @@ As 64 regras vivem em `contrato/contrato.json` com severidade, grupo, fase e o t
 
 | grupo | sobre o quê | quando | quantas |
 |---|---|---|---|
-| estáticas | o fonte do autor | antes de montar | 47 |
-| carga | o fonte, depois de bibliotecas, imagens e scripts carregarem | depois do `load` | 4 |
+| estáticas | o fonte do autor | antes de montar | 48 |
+| carga | o fonte, depois de bibliotecas, imagens, scripts, CSV e DOT carregarem | depois do `load` | 7 |
 | composição | o documento montado e renderizado | medido no Chrome, antes do motor iniciar | 5 |
 | saída | o HTML e o PDF finais | dentro do `build`, sobre o que foi escrito em `<pasta>/dist/` | 4 |
 
@@ -167,7 +157,7 @@ O vocabulário é fechado de propósito: o validador recusa elemento, classe ou 
 
 Este arquivo é a porta de entrada, e para de propósito aqui. Quem chega vai para um de dois lugares:
 
-- **escrever aulas** — `guia/`, os onze arquivos do guia do autor: layouts, componentes, matemática e código, o que o validador cobra, e um arquivo por fluxo de trabalho (terminal, chat, artifact do Claude, GPT personalizado). Para trabalhar com um agente, os quatro pacotes prontos estão em `pacotes/`;
+- **escrever aulas** — `guia/`, o guia do autor: layouts, componentes, matemática e código, gráficos, diagramas e demos, o que o validador cobra, e um arquivo por fluxo de trabalho (terminal, chat, artifact do Claude, GPT personalizado). Para trabalhar com um agente, os quatro pacotes prontos estão em `pacotes/`;
 - **desenvolver o sistema** — `AGENTS.md`, que é onde estão a fronteira do Node, as guardas dos artefatos gerados, como se acrescenta uma regra e o que este projeto já aprendeu errando.
 
 A spec é a autoridade sobre os dois: `docs/superpowers/specs/2026-09-14-aula-usp-design.md`.
