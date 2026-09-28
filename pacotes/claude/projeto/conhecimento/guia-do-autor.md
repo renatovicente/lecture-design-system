@@ -97,7 +97,7 @@ Uma aula é um arquivo HTML: um `<head>` com os metadados e a tag do runtime, e 
 <meta name="data" content="2026-03-02">
 <meta name="professor" content="Prof. Nome Sobrenome">
 <script src="https://cdn.jsdelivr.net/npm/aula-usp@0.1.0/dist/aula-usp.js"
-        integrity="sha384-tLUmP8WoB4cinQRk4xzTE4bUYygiO5cLDG/A7f+j4xtsSAGya6K2TgkbSxdqtKn1" crossorigin="anonymous"></script>
+        integrity="sha384-pSjnr5OYmw57AjhAMPRo67m7G1OCXPfvqJN4TSfAa4gpzFudSk7WmfI96bCyP0JR" crossorigin="anonymous"></script>
 </head>
 <body>
 
@@ -992,9 +992,9 @@ Um trecho que precise de mais de uma linha não é `code` no meio da frase: é u
 
 # Gráficos, diagramas e demos
 
-Três nomes num arquivo só, com estados diferentes: **a demo interativa, o gráfico (`figure.grafico`) e o diagrama (`figure.diagrama`) funcionam hoje; os controles do sistema ainda não existem, e o validador os recusa com erro.** O gráfico tem exemplo no layout `figura`, em **Layouts**, e o diagrama, logo abaixo; o capítulo completo sobre os dois ainda vai ser escrito.
+Três nomes num arquivo só: **a demo interativa, os controles do sistema, o gráfico (`figure.grafico`) e o diagrama (`figure.diagrama`) funcionam hoje, e o build fotografa sozinho a demo sem imagem própria numa aula de fase 2.** O gráfico tem exemplo no layout `figura`, em **Layouts**, e o diagrama, logo abaixo; o capítulo completo sobre os dois ainda vai ser escrito.
 
-Este arquivo diz o que você pode usar agora, mostra a forma da demo, e depois diz o que a fase 2 vai trazer, sem mostrar marcação de coisa que não roda. Documentar como pronto o que não existe é pior do que não documentar.
+Este arquivo diz o que você pode usar agora e mostra a forma da demo, dos controles e da captura. Documentar como pronto o que não existe é pior do que não documentar.
 
 ## O que existe hoje
 
@@ -1005,8 +1005,8 @@ Este arquivo diz o que você pode usar agora, mostra a forma da demo, e depois d
 | imagem de arquivo em `img/`, ou URI `data:` | funciona (**Componentes**) |
 | `figure.grafico` com a especificação do gráfico em JSON | funciona (**Layouts**, layout `figura`) |
 | `figure.diagrama` com o grafo em DOT | funciona (abaixo) |
-| controles do sistema, como `button.controle` | fase 2: erro hoje |
-| captura automática da demo no build (`data-captura-ms`) | fase 2: erro hoje |
+| controles do sistema (`AulaUSP.controles`), criados pela demo | funciona (abaixo) |
+| captura automática da demo no build (`data-captura-ms`) | funciona numa aula de fase 2 (abaixo) |
 
 Quem decide isso não é esta tabela: é `contrato/contrato.json`, onde as entradas de fase 2 estão marcadas, e é dele que o validador lê. A tabela de vocabulário de **A estrutura de uma aula** é gerada **da fase 1**, e é por isso que nenhuma das linhas de fase 2 acima aparece lá — se um dia aparecerem, é porque passaram a valer.
 
@@ -1030,7 +1030,7 @@ Do espécime: `especime/index.html#demo`. O que há nele:
 - **`data-opcoes` é um objeto JSON**, entregue ao registro quando a demo é montada. É o que deixa a mesma demo servir a duas aulas com parâmetros diferentes, sem copiar código.
 - **`img.estatico` é o que sai no PDF.** É o único filho que o contrato aceita dentro de `div.demo`.
 
-**A interface da demo não se escreve no HTML.** Botão, controle deslizante, canvas: tudo isso é criado pelo código do registro, dentro da `div.demo`, quando o slide abre. Escrevê-los no fonte é erro — um `<button>` no corpo da aula é `vocabulario.elemento`, porque ele não está no vocabulário da fase 1 (medido).
+**A interface da demo não se escreve no HTML.** Botão, controle deslizante, canvas: tudo isso é criado pelo código do registro, dentro da `div.demo`, quando o slide abre. Escrevê-los no fonte é erro, em qualquer fase — um `<button>` no corpo da aula é `vocabulario.elemento`, porque ele não está no vocabulário (medido). Para botão, controle deslizante e leitura, o sistema dá os seus prontos: `AulaUSP.controles`, abaixo.
 
 ## O registro fica fora dos slides
 
@@ -1085,9 +1085,10 @@ O PDF é papel: nada nele é interativo. O que sai no lugar da demo, em ordem:
 
 1. **a `img.estatico`, se houver.** É a forma recomendada, e a que o espécime usa: você escolhe o instante que representa a demo.
 2. **o resultado de `capturar()`**, se o registro definir essa função. Ela devolve um canvas ou um URI de imagem, e é útil quando o quadro que importa depende do que aconteceu na sala.
-3. **um aviso**, se não houver nem uma nem outra: um bloco com "Demo interativa: abra o HTML", no idioma da aula.
+3. **a foto que o build tira**, numa aula de fase 2 gerada com `aula-usp build` (abaixo);
+4. **um aviso**, se não houver nada disso: um bloco com "Demo interativa: abra o HTML", no idioma da aula.
 
-`recursos.demo-sem-estatico` é o aviso que aparece no caso 3 — ele acusa antes de você descobrir o buraco no PDF. E `recursos.demo-sem-registro` é erro: uma `div.demo` cujo `data-demo` não tem registro correspondente não tem como funcionar em lugar nenhum.
+`recursos.demo-sem-estatico` é o aviso que aparece no caso 4 — ele acusa antes de você descobrir o buraco no PDF. Numa aula de fase 2 ele não aparece no `aula-usp build` nem no `aula-usp validar`, porque o build fotografa a demo, e volta a aparecer, com o motivo, se a foto falhar; no navegador ele continua, porque o "Salvar como PDF" do navegador não passa pelo build. E `recursos.demo-sem-registro` é erro: uma `div.demo` cujo `data-demo` não tem registro correspondente não tem como funcionar em lugar nenhum.
 
 ## Um gráfico hoje
 
@@ -1124,14 +1125,40 @@ O que você escreve no DOT e o sistema não segue tem dois destinos:
 
 O texto de 20 também é medido no palco. Um diagrama mais largo que a figura encolhe com ela, e numa coluna estreita cai abaixo de 14; um diagrama mais alto que o espaço embaixo do título encolhe pela altura no layout `figura` — medido, uma cadeia de dez nós de cima para baixo sai com 13,3 px, e da esquerda para a direita, com 20. Do espécime: `especime/componentes.html#diagrama-rede`.
 
-## O que a fase 2 vai trazer
+## Controles e captura
 
-Nada nesta seção funciona hoje. Ela está aqui para você saber o que não vale a pena improvisar e o que virá pronto.
+Os controles do sistema são `AulaUSP.controles`, e a demo os cria no `montar`, dentro da `div.demo`: `botao(raiz, texto, aoClicar)`, `alternar(botao, ativo)` para o estado ativo (campo tinta, texto papel), `deslizante(raiz, { min, max, passo, valor, rotulo }, aoMudar)` e `leitura(raiz, valor, { casas })`, com `escrever(leitura, valor, { casas })` para trocar o número, que sai no formato do idioma da aula. A forma — contorno de 2 px, sem canto arredondado, cursor quadrado — vem pronta; não escreva estilo para eles.
 
-- **Os controles**, para as demos não terem de criar botão e cursor na mão, e saírem iguais em todas as aulas.
-- **A captura automática**, que fotografa a demo no build e dispensa a `img.estatico` escrita à mão.
+```html
+<section data-layout="demo" id="demo-controles">
+  <h2>Controles do sistema, fotografados pelo build</h2>
+  <div class="demo" data-demo="soma" data-opcoes='{"passo": 3}' data-captura-ms="500"></div>
+  <aside class="notas">A demo não tem img.estatico nem capturar(): no build, o Chrome a fotografa meio segundo depois de iniciar, e é essa foto que sai no PDF.</aside>
+</section>
+```
 
-Escrever qualquer um deles hoje não é ficar um passo à frente: é ganhar erro.
+Do espécime: `especime/componentes.html#demo-controles`, com o registro logo antes de `</body>`:
+
+```html
+<script>
+AulaUSP.demo('soma', {
+  montar(raiz, opcoes) {
+    const { botao, alternar, deslizante, leitura, escrever } = AulaUSP.controles;
+    this.total = 0;
+    this.passo = opcoes.passo ?? 1;
+    this.dobro = botao(raiz, 'dobrar', () => alternar(this.dobro));
+    this.passos = deslizante(raiz, { min: 1, max: 10, valor: this.passo, rotulo: 'passo' }, (valor) => { this.passo = valor; });
+    botao(raiz, 'somar', () => escrever(this.saida, (this.total += this.passo * (this.dobro.classList.contains('ativo') ? 2 : 1))));
+    this.saida = leitura(raiz, this.total);
+  },
+  iniciar() {
+    AulaUSP.controles.alternar(this.dobro, true);
+  },
+});
+</script>
+```
+
+**A captura.** Numa aula de fase 2, `aula-usp build` abre o HTML construído, vai até o slide de cada demo sem `img.estatico` e sem `capturar()`, espera `data-captura-ms` milissegundos depois de `iniciar()` (3000, se você não escrever) e fotografa a `div.demo`; a foto entra no HTML como `img.estatico` e é ela que sai no PDF. Uma aula é de fase 2 quando usa alguma marca de fase 2 do contrato: gráfico, diagrama ou o próprio `data-captura-ms` — numa aula sem nenhuma, escreva `data-captura-ms` na `div.demo` para ela ser fotografada. Se a foto falhar — a demo não desenhou nada, lançou erro, ou não se registrou na página —, o build diz qual demo e por quê, e ela sai no PDF como no caso 4.
 
 <!-- guia/60-validador.md -->
 
@@ -1242,7 +1269,7 @@ A tabela sai de `contrato/contrato.json` por `npm run guia` — do mesmo arquivo
 | `matematica.simbolo-fora-do-tex` | erro | Escreva o símbolo em TeX: \( \to \), \( \alpha \), \( \leq \). |
 | `matematica.tex-invalido` | erro | Corrija o TeX no trecho indicado. |
 | `recursos.alt` | erro | Descreva a imagem no atributo alt. |
-| `recursos.demo-sem-estatico` | aviso | Acrescente img.estatico à demo ou implemente capturar(). Numa aula de fase 2, no navegador: gere o PDF com aula-usp build, que fotografa a demo, ou acrescente img.estatico à demo ou implemente capturar(). Se a captura do build falhou: corrija a demo para que ela desenhe na div.demo ao iniciar, ou acrescente img.estatico à demo ou implemente capturar(). |
+| `recursos.demo-sem-estatico` | aviso | Acrescente img.estatico à demo, implemente capturar() ou escreva data-captura-ms na div.demo, para o build fotografá-la. Numa aula de fase 2, no navegador: gere o PDF com aula-usp build, que fotografa a demo, ou acrescente img.estatico à demo ou implemente capturar(). Se a captura do build falhou: corrija a demo para que ela desenhe na div.demo ao iniciar, ou acrescente img.estatico à demo ou implemente capturar(). |
 | `recursos.demo-sem-registro` | erro | Registre a demo com AulaUSP.demo('<nome>', { … }). |
 | `recursos.imagem` | erro | Confira o caminho da imagem em img/. |
 | `recursos.imagem-externa` | aviso | Guarde a imagem em img/, com autorização do autor para baixá-la. |

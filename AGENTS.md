@@ -34,8 +34,8 @@ Node ≥ 20.6, ES modules. `playwright-core` usa o Google Chrome instalado (cana
 ## Testes
 
 ```bash
-npm test                 # 42 arquivos em tests/unit/: 40 sem navegador (linkedom), 2 com Chrome
-npm run test:integracao  # 24 arquivos em tests/integracao/, Chrome de verdade
+npm test                 # 44 arquivos em tests/unit/: 42 sem navegador (linkedom), 2 com Chrome
+npm run test:integracao  # 25 arquivos em tests/integracao/, Chrome de verdade
 ```
 
 Não há CI. Quem roda os testes antes de commitar é você.
@@ -46,7 +46,7 @@ Os de integração são pesados — abrem Chrome, constroem decks, comparam pixe
 node --test tests/integracao/composicao.test.mjs
 ```
 
-Uma distinção que confunde: **"falta de Chrome não é falha" é regra da CLI**, não dos testes. `validar` e `build` degradam sozinhos — pulam composição e PDF, emitem aviso no stderr e terminam com 0 se não houver erros (spec 8.1). Os testes de integração não têm essa tolerância: chamam `chromium.launch()` direto (`tests/integracao/utilitarios.mjs:35`) e falham sem Chrome. Os dois arquivos de `tests/unit/` que sobem Chrome — `validar-cli.test.mjs` e `novo.test.mjs`, os dois por `validarArquivo` — seguem a regra da CLI e **pulam anunciando**: medido, `CHROME_PATH` inexistente dá 586 passam e 2 pulados, e nenhum pulo é mudo.
+Uma distinção que confunde: **"falta de Chrome não é falha" é regra da CLI**, não dos testes. `validar` e `build` degradam sozinhos — pulam composição e PDF, emitem aviso no stderr e terminam com 0 se não houver erros (spec 8.1). Os testes de integração não têm essa tolerância: chamam `chromium.launch()` direto (`tests/integracao/utilitarios.mjs:35`) e falham sem Chrome. Os dois arquivos de `tests/unit/` que sobem Chrome — `validar-cli.test.mjs` e `novo.test.mjs`, os dois por `validarArquivo` — seguem a regra da CLI e **pulam anunciando**: medido, `CHROME_PATH` inexistente dá 602 passam e 2 pulados, e nenhum pulo é mudo.
 
 ## `dist/` é rastreado, e os testes comparam byte a byte
 
@@ -97,7 +97,7 @@ As duas têm a mesma forma e o mesmo perigo: **a ordem errada não falha.** A pr
 
 ## A fronteira: quem pode importar Node
 
-`montar/`, `motor/`, `componentes/` e `validador/` **não importam nada do Node** — rodam no navegador. Medido: zero ocorrências de `node:` nos quatro diretórios. Só `bin/` (1 arquivo) e `build/` (18 arquivos) são Node.
+`montar/`, `motor/`, `componentes/` e `validador/` **não importam nada do Node** — rodam no navegador. Medido: zero ocorrências de `node:` nos quatro diretórios. Só `bin/` (1 arquivo) e `build/` (19 arquivos) são Node.
 
 É o que permite a mesma regra rodar no painel dentro da aula e na linha de comando, e o que torna `dist/` possível: esbuild empacota esses diretórios para o navegador, e um `import … from 'node:fs'` ali não tem como resolver. `tests/` fica fora da fronteira e importa Node à vontade.
 
@@ -126,6 +126,8 @@ Número que **não** vem do contrato — porque é da spec — entra como consta
 4. Carga, composição e saída não se provam por fixture de linkedom: as de carga precisam de recursos de verdade, as de composição só existem dentro do Chrome (`tests/integracao/composicao.test.mjs`), e as quatro `saida.*` medem o artefato construído — por isso são as únicas quatro regras de fase 1 sem pasta de fixture.
 
 A ordem dos grupos não é detalhe: composição mede o documento montado **antes** de o motor iniciar, porque depois disso todo slide que não é o atual mede 0×0 e o transbordo deixa de existir para o validador.
+
+Dois eixos chegam a toda regra pelo contexto de `validar()`: `fase`, que `faseDaAula` decide por presença de qualquer marca de fase 2 do contrato (`seletoresDeFase2`, em `validador/validar.js` — derivada do contrato, sem lista em código), e `modo` (`'navegador'`, o padrão, ou `'build'`, que todo o lado Node passa). Hoje só `recursos.demo-sem-estatico` lê o modo: na fase 2 ela se cala no build porque `build/captura.mjs` fotografa exatamente as demos que ela acusaria — as duas pontas chamam `demoSemImagem` (`validador/regras/carga.js`), e `tests/unit/captura.test.mjs` fica vermelho se uma delas passar a decidir sozinha. A foto que falha volta à regra por `falhasDeCaptura` (`build/build.mjs`, depois da etapa 5): calar uma regra no build só vale enquanto quem a substitui falha alto.
 
 ## Português
 

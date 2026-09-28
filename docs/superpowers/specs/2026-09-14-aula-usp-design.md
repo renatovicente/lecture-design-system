@@ -402,7 +402,7 @@ Palavras são as sequências separadas por espaço nos nós de texto, sem contar
 
 **Proibido em qualquer lugar do corpo:** atributo `style`, elemento `style`, atributos de evento (`onclick` e afins), `iframe`, `video`, `audio`, `font`, `foreignObject`, `image`, gradientes, filtros, máscaras, padrões, `opacity` e suas variantes, e comandos de cor e de estilo em TeX (`\color`, `\textcolor`, `\colorbox`, `\fcolorbox`, `\htmlStyle`, `\htmlClass`, `\htmlId`); de `\htmlData`, só o gerado por `\passo`.
 
-Scripts de demos ficam fora das `section`: `<script src="demos/<nome>.js">` no modo build, ou um `<script>` inline só com registros `AulaUSP.demo(...)` no modo navegador. O conteúdo que uma demo cria dentro da sua `div.demo` fica fora do contrato de vocabulário.
+Scripts de demos ficam fora das `section`: `<script src="demos/<nome>.js">` no modo build, ou um `<script>` inline só com registros `AulaUSP.demo(...)` no modo navegador. O conteúdo que uma demo cria dentro da sua `div.demo` fica fora do contrato de vocabulário — inclusive os controles do sistema da fase 2 (seção 7.2), que a demo cria com `AulaUSP.controles` e o autor não escreve no fonte.
 
 ### 5.6. `contrato.json`
 
@@ -567,7 +567,7 @@ O destaque de código usa o Shiki (núcleo, motor de expressões regulares em Ja
 - Até 15 nós; acima disso, aviso.
 - O WASM tem de ir dentro do script; se o pacote do Graphviz não o embutir, o bundle do Aula USP embute.
 
-**Demos.** Entram os controles do sistema, em `componentes/controles.js` e no CSS: `button.controle` (retangular, contorno de 2 px, Geist 600 20 px; ativo em campo `tinta` com texto `papel`), `input.controle[type=range]` (trilho de 2 px em `linha`, cursor quadrado de 16 px em `tinta`) e `output.leitura` (Geist Mono 20 px). Entra também a captura automática no build (`build/captura.mjs`): para demos sem `img.estatico` e sem `capturar()`, o Chrome headless fotografa a `div.demo` depois de `iniciar()` e de `data-captura-ms` (padrão 3000 ms).
+**Demos.** Entram os controles do sistema, em `componentes/controles.js` e no CSS: `button.controle` (retangular, contorno de 2 px, Geist 600 20 px; ativo em campo `tinta` com texto `papel`), `input.controle[type=range]` (trilho de 2 px em `linha`, cursor quadrado de 16 px em `tinta`) e `output.leitura` (Geist Mono 20 px). A demo os cria dentro da sua `div.demo`, no `montar`, com `AulaUSP.controles` — `botao(raiz, texto, aoClicar)`, `alternar(botao, ativo)`, `deslizante(raiz, { min, max, passo, valor, rotulo }, aoMudar)`, `leitura(raiz, valor, { casas })` e `escrever(leitura, valor, { casas })`, que formata o número no idioma da aula —; como todo conteúdo criado pela demo, eles ficam fora do vocabulário do fonte (seção 5.5), e as classes `controle` e `leitura` são classes do sistema. Entra também a captura automática no build (`build/captura.mjs`): para demos sem `img.estatico` e sem `capturar()`, o Chrome headless fotografa a `div.demo` depois de `iniciar()` e de `data-captura-ms` (padrão 3000 ms). A foto é tirada no `<slug>.html` da etapa 4, com o motor montando e iniciando a demo ao navegar até o slide, e entra nele como `img.estatico` antes do PDF. A captura vale numa aula de fase 2 — a que usa alguma marca de fase 2 do contrato, como gráfico, diagrama ou `data-captura-ms`; numa aula sem nenhuma, o build se comporta como na fase 1. Uma demo que o build não consegue fotografar (sem registro na página, erro ao montar ou iniciar, `div.demo` sem tamanho ou foto de uma cor só) não é silêncio: o build a nomeia, com o motivo, e ela sai no PDF como na fase 1.
 
 ## 8. Build, CLI e PDF
 
@@ -652,7 +652,7 @@ Cada mensagem traz severidade, número e `id` do slide, regra, problema e ação
 | `recursos.imagem-externa` | aviso | `img` com `src` em `https://` |
 | `recursos.alt` | erro | `img` sem `alt` |
 | `recursos.demo-sem-registro` | erro | `data-demo` sem `AulaUSP.demo` correspondente |
-| `recursos.demo-sem-estatico` | aviso | demo sem `img.estatico` e sem `capturar()`; na fase 2, só no modo navegador, porque o build captura |
+| `recursos.demo-sem-estatico` | aviso | demo sem `img.estatico` e sem `capturar()`; na fase 2, só no modo navegador, porque o build captura — e, no build, a demo que a captura não conseguiu fotografar, com o motivo |
 | `recursos.linguagem` | erro | `data-lang` fora da lista da seção 7.1 |
 | `recursos.csv` | erro | CSV de gráfico ausente (fase 2) |
 | `recursos.grafico` | erro | JSON de gráfico inválido (fase 2) |

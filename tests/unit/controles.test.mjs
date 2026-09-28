@@ -7,6 +7,8 @@ import { readFileSync } from 'node:fs';
 import { parseHTML } from 'linkedom';
 import { criarControles } from '../../componentes/controles.js';
 import { instalarDemos } from '../../motor/demos.js';
+import { validar } from '../../validador/validar.js';
+import { REGRAS_ESTATICAS } from '../../validador/regras/index.js';
 
 const contrato = JSON.parse(readFileSync(new URL('../../contrato/contrato.json', import.meta.url), 'utf8'));
 
@@ -98,4 +100,26 @@ test('instalarDemos entrega AulaUSP.controles antes do primeiro montar()', () =>
   instalarDemos(motor, api);
   assert.equal(typeof api.controles?.botao, 'function');
   assert.equal(raiz.querySelector('button.controle')?.textContent, 'somar');
+});
+
+// A decisão de desenho da 2c (spec 5.5): os controles são criados pela demo, e nunca escritos no
+// fonte. O critério do plano — "um slide sem demo não ganha botão, em fase nenhuma" — vale aqui com
+// folga: nem dentro da div.demo o fonte aceita um. Inversão rodada: com "button" acrescentado a
+// contrato.html.elementos, este teste fica vermelho.
+test('button, input e output escritos no fonte são recusados nas duas fases, dentro ou fora de div.demo', () => {
+  const corpos = {
+    'dentro da demo': (controle) => `<section data-layout="demo" id="d"><h2>D</h2><div class="demo" data-demo="x">${controle}</div></section>`,
+    'num slide de conteúdo': (controle) => `<section data-layout="conteudo" id="c"><h2>C</h2><p>Texto.</p>${controle}</section>`,
+  };
+  const controles = ['<button class="controle">a</button>', '<input class="controle" type="range">', '<output class="leitura">1</output>'];
+  for (const [onde, corpo] of Object.entries(corpos)) {
+    for (const controle of controles) {
+      for (const fase of [1, 2]) {
+        const { document } = parseHTML(`<!DOCTYPE html><html lang="pt-BR"><head></head><body>${corpo(controle)}</body></html>`);
+        const achados = validar(document, { contrato, regras: REGRAS_ESTATICAS, grupo: 'estatica', fase })
+          .filter((achado) => achado.regra === 'vocabulario.elemento');
+        assert.equal(achados.length, 1, `${controle} ${onde}, fase ${fase}`);
+      }
+    }
+  }
 });
