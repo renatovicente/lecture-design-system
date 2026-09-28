@@ -18,8 +18,10 @@ A CLI vive em `bin/aula-usp.mjs`. Sem `npm link`, chame por `node bin/aula-usp.m
 | `aula-usp servir <pasta> [--porta 8765]` | serve a aula com o runtime local de `dist/`; troca o endereço da tag e remove o `integrity` |
 | `aula-usp validar <pasta> [--json]` | regras estáticas e de carga e, havendo Chrome, as de composição |
 | `aula-usp build <pasta> [--sem-pdf]` | as sete etapas da spec 3.3; escreve só em `<pasta>/dist/` |
-| `aula-usp dist` | gera `validador/cobertura.json` e os 13 scripts de `dist/` (manutenção do sistema) |
-| `aula-usp pacotes` | fixa a tag do runtime, gera o guia e monta `pacotes/`, nessa ordem; confere os limites da spec 11.1 (manutenção do sistema) |
+| `aula-usp dist` | gera `validador/cobertura.json` e os 13 scripts de `dist/` (manutenção do sistema; fora de um clone do repositório recusa com 2) |
+| `aula-usp pacotes` | fixa a tag do runtime, gera o guia e monta `pacotes/`, nessa ordem; confere os limites da spec 11.1 (manutenção do sistema; fora de um clone do repositório recusa com 2) |
+
+`dist` e `pacotes` precisam do repositório — `especime/` e as devDependencies, como o `esbuild` —, e o pacote do npm não leva nenhum dos dois (`files`, em `package.json`). No pacote instalado, `exigirRepositorio` (`bin/aula-usp.mjs`) os recusa antes de qualquer `import()`, com saída 2 e a mensagem "comando de manutenção do sistema"; `tests/integracao/instalacao.test.mjs` mede isso no tarball extraído.
 
 Códigos de saída (spec 8.1): 0 sem erros, avisos permitidos; 1 com erros de validação; 2 com falha de ambiente. Cada comando aceita **só as suas** flags: `--json` em `build` ou `--porta` em `validar` saem com o uso e código 2, como uma flag inexistente — melhor recusar que ignorar em silêncio.
 
@@ -34,8 +36,8 @@ Node ≥ 20.6, ES modules. `playwright-core` usa o Google Chrome instalado (cana
 ## Testes
 
 ```bash
-npm test                 # 44 arquivos em tests/unit/: 42 sem navegador (linkedom), 2 com Chrome
-npm run test:integracao  # 25 arquivos em tests/integracao/, Chrome de verdade
+npm test                 # 46 arquivos em tests/unit/: 44 sem navegador, 2 com Chrome
+npm run test:integracao  # 26 arquivos em tests/integracao/, Chrome de verdade
 ```
 
 Não há CI. Quem roda os testes antes de commitar é você.
@@ -99,11 +101,13 @@ As duas têm a mesma forma e o mesmo perigo: **a ordem errada não falha.** A pr
 
 ## A fronteira: quem pode importar Node
 
-`montar/`, `motor/`, `componentes/` e `validador/` **não importam nada do Node** — rodam no navegador. Medido: zero ocorrências de `node:` nos quatro diretórios. Só `bin/` (1 arquivo) e `build/` (19 arquivos) são Node.
+`montar/`, `motor/`, `componentes/` e `validador/` **não importam nada do Node** — rodam no navegador. Medido: zero ocorrências de `node:` nos quatro diretórios. Só `bin/` (1 arquivo) e `build/` (20 arquivos) são Node.
 
 É o que permite a mesma regra rodar no painel dentro da aula e na linha de comando, e o que torna `dist/` possível: esbuild empacota esses diretórios para o navegador, e um `import … from 'node:fs'` ali não tem como resolver. `tests/` fica fora da fronteira e importa Node à vontade.
 
 Não há teste que varra imports: a fronteira se mantém à mão. Se você se vir precisando de `node:` em um dos quatro, o que você quer provavelmente é receber o dado já lido por parâmetro — é assim que o validador recebe o contrato, as unidades e a cobertura.
+
+Do lado Node, um arquivo de dependência se acha como o Node acha (`import.meta.resolve`), nunca montando `node_modules/…` sobre a raiz do sistema: instalado por `npx` ou por `npm install` num projeto, o npm iça as dependências para o lado de `aula-usp`, e `<raiz>/node_modules/` não existe. Medido na fase 3a: `build/fontes-embutidas.mjs` lia `katex.min.css` assim, e o `build` de toda aula com TeX saía com 2 no pacote instalado. `tests/integracao/instalacao.test.mjs` monta o pacote nesse arranjo. (`build/bundle.mjs` ainda monta o caminho, e pode: só roda em `aula-usp dist`, num clone.) Uma dependência que um comando do autor importa é de produção, não de desenvolvimento — o `fontkit` era devDependency e o mesmo teste o achou.
 
 Em `bin/` vale uma regra própria, escrita no topo do arquivo: nada que leia disco ou dependência externa no escopo do módulo entra na CLI por `import` estático. Todos os módulos de `build/` entram por `import()` dentro do comando que precisa deles, para que uma dependência ausente vire "falha de ambiente" com saída 2, e não uma stack trace.
 
