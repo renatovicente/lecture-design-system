@@ -42,11 +42,11 @@ O bloco abaixo é o sistema inteiro em um punhado de linhas. Ele entra **literal
 
 **Você não escolhe cor, escolhe papel.** Preto para ler, cinza para legenda e comentário, azul só na segunda linha de um título (`<span class="sinal">`), amarelo só como campo atrás de texto preto (`aside.destaque`, célula de tabela, linha marcada de código). Nenhuma outra cor, nem em SVG, nem em TeX.
 
-**Nada de `style`.** Sem atributo ou elemento `style`, sem `script` dentro do slide, sem `iframe`, `video`, `audio`, gradiente, sombra, transparência ou canto arredondado.
+**Nada de `style`.** Sem atributo ou elemento `style`, sem `script` dentro do slide (o de dados de gráfico e diagrama é a exceção), sem `iframe`, `video`, `audio`, gradiente, sombra, transparência ou canto arredondado.
 
 **Matemática sempre em TeX:** `\( … \)` no meio da frase e `\[ … \]` em linha própria, como texto solto dentro da `section` — não existe elemento de equação. `$` não é delimitador.
 
-**Código em `<pre data-lang="…">`**, numa das linguagens do contrato. **Toda `img` tem `alt`**, e toda demo tem `img.estatico`, que é o que sai no PDF.
+**Código em `<pre data-lang="…">`**, numa das linguagens do contrato. **Toda `img` tem `alt`.** Uma demo sai no PDF pela sua `img.estatico` ou pela foto que o `aula-usp build` tira dela; impressa pelo navegador, só pela primeira.
 
 **Os limites são do contrato, e o validador os mede:** tamanho de título, lide e pergunta; palavras no corpo e na coluna; itens por lista; código e tabela. Quando um estoura, corte o conteúdo ou divida o slide em dois — nunca diminua a letra.
 
@@ -63,11 +63,11 @@ O bloco abaixo é o sistema inteiro em um punhado de linhas. Ele entra **literal
 | `20-layouts.md` | o que cada layout aceita, em que ordem, e um exemplo de cada |
 | `30-componentes.md` | o trecho pronto de cada bloco de corpo |
 | `40-matematica-e-codigo.md` | delimitadores, `\passo`, derivações reveladas e linhas marcadas de código |
-| `50-graficos-diagramas-demos.md` | demos e, na fase 2, gráficos e diagramas |
+| `50-graficos-diagramas-demos.md` | gráficos, diagramas, demos e os controles delas |
 | `60-validador.md` | a tabela de regras e o que fazer quando cada uma acusa |
 | `70-fluxo-terminal.md` | escrever a aula com a CLI instalada |
 | `71-fluxo-chat.md` | escrever a aula num chat, sem terminal |
 | `72-artifact-claude.md` | a aula como artifact do Claude, e o que não funciona lá dentro |
 | `73-chatgpt.md` | entregar a aula pelo ChatGPT |
 
-Um caminho curto para a primeira aula: leia este capítulo e `10-estrutura.md`, crie a pasta com `aula-usp novo minha-aula --unidade ime` — que copia o esqueleto já com `unidade` e `data` preenchidas —, escreva, e use `60-validador.md` quando o validador falar. Sem terminal, o esqueleto é o que `10-estrutura.md` mostra inteiro, e `71-fluxo-chat.md` conta o resto. A aula-exemplo — `assets/exemplo.html` — é uma aula inteira, escrita dentro do sistema, para ver como fica.
+Um caminho curto para a primeira aula: leia este capítulo e `10-estrutura.md`, crie a pasta com `aula-usp novo minha-aula --unidade ime` — que copia o esqueleto já com `unidade` e `data` preenchidas —, escreva, e use `60-validador.md` quando o validador falar. Sem terminal, o esqueleto é o que `10-estrutura.md` mostra inteiro, e `71-fluxo-chat.md` conta o resto. A aula-exemplo — `assets/exemplo.html` — é uma aula inteira, escrita dentro do sistema, para ver como fica; a segunda — `assets/exemplo-recursos.html` — faz o mesmo com gráfico, diagrama e demo.

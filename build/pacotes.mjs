@@ -11,9 +11,11 @@ import { FONTES_DE_PACOTE, decksDoEspecime, montarPacote, regrasEssenciais } fro
 
 const RAIZ = new URL('../', import.meta.url);
 
-// Spec 10.2: "`exemplo.html` é `exemplos/descida-do-gradiente/`". O modelo é o da spec 10.3.
+// Spec 10.2: "`exemplo.html` é `exemplos/descida-do-gradiente/`. Na fase 2, entra também
+// `exemplo-recursos.html`, de `exemplos/regressao-linear/`". O modelo é o da spec 10.3.
 const MODELO = 'modelos/aula/index.html';
 const EXEMPLO = 'exemplos/descida-do-gradiente/index.html';
+const EXEMPLO_RECURSOS = 'exemplos/regressao-linear/index.html';
 
 // Os TRÊS pacotes que levam o guia, e o caminho que cada um dá ao que o guia manda abrir.
 //
@@ -28,9 +30,15 @@ const EXEMPLO = 'exemplos/descida-do-gradiente/index.html';
 // guia citava `assets/exemplo.html` e `assets/modelo.html` dentro dos pacotes do Claude e do GPT,
 // que não têm `assets/` — a prosa tinha sido escrita para um pacote e viajava nos três.
 export const PACOTES_COM_GUIA = {
-  'pacotes/skill/aula-usp': { base: '', modelo: 'assets/modelo.html', exemplo: 'assets/exemplo.html' },
-  'pacotes/claude/projeto': { base: 'conhecimento/', modelo: 'modelo.html', exemplo: 'exemplo.html' },
-  'pacotes/gpt/gpt-personalizado': { base: 'conhecimento/', modelo: 'modelo.html', exemplo: 'exemplo.html' },
+  'pacotes/skill/aula-usp': {
+    base: '', modelo: 'assets/modelo.html', exemplo: 'assets/exemplo.html', exemploRecursos: 'assets/exemplo-recursos.html',
+  },
+  'pacotes/claude/projeto': {
+    base: 'conhecimento/', modelo: 'modelo.html', exemplo: 'exemplo.html', exemploRecursos: 'exemplo-recursos.html',
+  },
+  'pacotes/gpt/gpt-personalizado': {
+    base: 'conhecimento/', modelo: 'modelo.html', exemplo: 'exemplo.html', exemploRecursos: 'exemplo-recursos.html',
+  },
 };
 
 // O acervo que viaja junto do guia, além do modelo e do exemplo. O critério é um só e é medido, não
@@ -68,12 +76,15 @@ export function acervo(raiz = RAIZ) {
 // E o que ela NÃO toca, de propósito: `modelos/aula` sem o `/index.html`, que aparece uma vez em
 // guia/70-fluxo-terminal.md dentro da SAÍDA que `aula-usp novo` imprime. Reescrevê-la faria o guia
 // mentir sobre o que o comando escreve na tela — é um literal de outro mundo, não um ponteiro.
-export function apontar(texto, { modelo, exemplo }) {
-  const pastaDoExemplo = EXEMPLO.slice(0, EXEMPLO.lastIndexOf('/') + 1);
+// A segunda aula-exemplo (fase 2d) segue a mesma regra, com o mesmo cuidado de ordem.
+export function apontar(texto, { modelo, exemplo, exemploRecursos }) {
+  const pasta = (caminho) => caminho.slice(0, caminho.lastIndexOf('/') + 1);
   return texto
     .split(MODELO).join(modelo)
     .split(EXEMPLO).join(exemplo)
-    .split(pastaDoExemplo).join(exemplo);
+    .split(pasta(EXEMPLO)).join(exemplo)
+    .split(EXEMPLO_RECURSOS).join(exemploRecursos)
+    .split(pasta(EXEMPLO_RECURSOS)).join(exemploRecursos);
 }
 
 // As TRÊS pastas que a spec 8.1 nomeia, `especime/` inclusive.
@@ -262,6 +273,7 @@ export function montarPacotes({ raiz = RAIZ, escrever: gravar = false } = {}) {
   const guia = guiaNumArquivo(raiz);
   const modelo = readFileSync(new URL(MODELO, raiz), 'utf8');
   const exemplo = readFileSync(new URL(EXEMPLO, raiz), 'utf8');
+  const exemploRecursos = readFileSync(new URL(EXEMPLO_RECURSOS, raiz), 'utf8');
 
   const arquivos = new Map();
   for (const [fonte, opcoes] of Object.entries(FONTES_DE_PACOTE)) {
@@ -279,9 +291,10 @@ export function montarPacotes({ raiz = RAIZ, escrever: gravar = false } = {}) {
   }
   // O modelo, o exemplo e o acervo, nos três pacotes que levam o guia, cada um no caminho que a
   // tabela lhe dá. Os bytes são os mesmos do repositório: o acervo é cópia, não uma segunda versão.
-  for (const [pacote, { base, modelo: nomeModelo, exemplo: nomeExemplo }] of Object.entries(PACOTES_COM_GUIA)) {
+  for (const [pacote, { base, modelo: nomeModelo, exemplo: nomeExemplo, exemploRecursos: nomeRecursos }] of Object.entries(PACOTES_COM_GUIA)) {
     arquivos.set(`${pacote}/${base}${nomeModelo}`, modelo);
     arquivos.set(`${pacote}/${base}${nomeExemplo}`, exemplo);
+    arquivos.set(`${pacote}/${base}${nomeRecursos}`, exemploRecursos);
     for (const caminho of acervo(raiz)) {
       arquivos.set(`${pacote}/${base}${caminho}`, readFileSync(new URL(caminho, raiz), 'utf8'));
     }

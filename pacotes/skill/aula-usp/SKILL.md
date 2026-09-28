@@ -43,11 +43,11 @@ Quando uma regra acusar e você não souber o conserto, abra `references/60-vali
 
 **Você não escolhe cor, escolhe papel.** Preto para ler, cinza para legenda e comentário, azul só na segunda linha de um título (`<span class="sinal">`), amarelo só como campo atrás de texto preto (`aside.destaque`, célula de tabela, linha marcada de código). Nenhuma outra cor, nem em SVG, nem em TeX.
 
-**Nada de `style`.** Sem atributo ou elemento `style`, sem `script` dentro do slide, sem `iframe`, `video`, `audio`, gradiente, sombra, transparência ou canto arredondado.
+**Nada de `style`.** Sem atributo ou elemento `style`, sem `script` dentro do slide (o de dados de gráfico e diagrama é a exceção), sem `iframe`, `video`, `audio`, gradiente, sombra, transparência ou canto arredondado.
 
 **Matemática sempre em TeX:** `\( … \)` no meio da frase e `\[ … \]` em linha própria, como texto solto dentro da `section` — não existe elemento de equação. `$` não é delimitador.
 
-**Código em `<pre data-lang="…">`**, numa das linguagens do contrato. **Toda `img` tem `alt`**, e toda demo tem `img.estatico`, que é o que sai no PDF.
+**Código em `<pre data-lang="…">`**, numa das linguagens do contrato. **Toda `img` tem `alt`.** Uma demo sai no PDF pela sua `img.estatico` ou pela foto que o `aula-usp build` tira dela; impressa pelo navegador, só pela primeira.
 
 **Os limites são do contrato, e o validador os mede:** tamanho de título, lide e pergunta; palavras no corpo e na coluna; itens por lista; código e tabela. Quando um estoura, corte o conteúdo ou divida o slide em dois — nunca diminua a letra.
 
@@ -64,7 +64,7 @@ Quando uma regra acusar e você não souber o conserto, abra `references/60-vali
 | `references/20-layouts.md` | o que cada layout aceita, na ordem, com um exemplo de cada |
 | `references/30-componentes.md` | o trecho pronto de cada bloco de corpo |
 | `references/40-matematica-e-codigo.md` | delimitadores, derivações reveladas, código e linhas marcadas |
-| `references/50-graficos-diagramas-demos.md` | demos; e o que é da fase 2 e ainda dá erro |
+| `references/50-graficos-diagramas-demos.md` | gráfico, diagrama e demo: a forma de cada um e o que o validador confere |
 | `references/60-validador.md` | a tabela de regras e o que fazer quando cada uma acusa |
 | `references/70-fluxo-terminal.md` | o modo terminal, de ponta a ponta |
 | `references/71-fluxo-chat.md` | o modo navegador, de ponta a ponta |
@@ -72,6 +72,7 @@ Quando uma regra acusar e você não souber o conserto, abra `references/60-vali
 | `references/73-chatgpt.md` | a entrega pelo ChatGPT: fluxo do autor, e onde o arquivo costuma sair cortado |
 | `assets/modelo.html` | o esqueleto de onde toda aula começa |
 | `assets/exemplo.html` | uma aula inteira escrita dentro do sistema |
+| `assets/exemplo-recursos.html` | outra aula inteira, com gráfico, diagrama e demo |
 | `contrato/contrato.json` | o vocabulário fechado inteiro, e os limites — é este arquivo que o validador lê |
 | `especime/` | os seis decks que exercitam todo layout e todo componente; é para eles que o guia aponta por âncora |
 

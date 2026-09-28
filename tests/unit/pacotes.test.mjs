@@ -236,6 +236,8 @@ const TROCA_DA_SKILL = [
   ['modelos/aula/index.html', 'assets/modelo.html'],
   ['exemplos/descida-do-gradiente/index.html', 'assets/exemplo.html'],
   ['exemplos/descida-do-gradiente/', 'assets/exemplo.html'],
+  ['exemplos/regressao-linear/index.html', 'assets/exemplo-recursos.html'],
+  ['exemplos/regressao-linear/', 'assets/exemplo-recursos.html'],
 ];
 
 test('references/ traz exatamente os arquivos de guia/, e nenhum de guia/pacotes/', () => {
@@ -423,6 +425,26 @@ test('o contrato e os seis decks do espécime chegam inteiros aos três pacotes 
         texto(caminho),
         `${noPacote} divergiu de ${caminho} — rode \`aula-usp pacotes\``,
       );
+    }
+  }
+});
+
+// Spec 10.2: "`exemplo.html` é `exemplos/descida-do-gradiente/`. Na fase 2, entra também
+// `exemplo-recursos.html`, de `exemplos/regressao-linear/`". Os nomes no pacote estão escritos aqui,
+// e não importados de PACOTES_COM_GUIA, pela mesma razão das outras guardas desta seção. Cópia byte a
+// byte: a tag já fixada chega pelo fonte reescrito, e não por uma segunda reescrita no pacote.
+const AULAS_EXEMPLO = {
+  'exemplos/descida-do-gradiente/index.html': 'exemplo.html',
+  'exemplos/regressao-linear/index.html': 'exemplo-recursos.html',
+};
+
+test('as duas aulas-exemplo chegam inteiras aos três pacotes que levam o guia', () => {
+  for (const [pacote, base] of Object.entries(BASE_DO_ACERVO)) {
+    const pasta = pacote === 'pacotes/skill/aula-usp' ? 'assets/' : base;
+    for (const [fonte, nome] of Object.entries(AULAS_EXEMPLO)) {
+      const noPacote = `${pacote}/${pasta}${nome}`;
+      assert.equal(existsSync(new URL(noPacote, RAIZ)), true, `${noPacote} não existe`);
+      assert.equal(texto(noPacote), texto(fonte), `${noPacote} divergiu de ${fonte} — rode \`aula-usp pacotes\``);
     }
   }
 });

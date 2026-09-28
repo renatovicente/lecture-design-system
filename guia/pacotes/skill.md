@@ -52,7 +52,7 @@ Quando uma regra acusar e você não souber o conserto, abra `references/60-vali
 | `references/20-layouts.md` | o que cada layout aceita, na ordem, com um exemplo de cada |
 | `references/30-componentes.md` | o trecho pronto de cada bloco de corpo |
 | `references/40-matematica-e-codigo.md` | delimitadores, derivações reveladas, código e linhas marcadas |
-| `references/50-graficos-diagramas-demos.md` | demos; e o que é da fase 2 e ainda dá erro |
+| `references/50-graficos-diagramas-demos.md` | gráfico, diagrama e demo: a forma de cada um e o que o validador confere |
 | `references/60-validador.md` | a tabela de regras e o que fazer quando cada uma acusa |
 | `references/70-fluxo-terminal.md` | o modo terminal, de ponta a ponta |
 | `references/71-fluxo-chat.md` | o modo navegador, de ponta a ponta |
@@ -60,6 +60,7 @@ Quando uma regra acusar e você não souber o conserto, abra `references/60-vali
 | `references/73-chatgpt.md` | a entrega pelo ChatGPT: fluxo do autor, e onde o arquivo costuma sair cortado |
 | `assets/modelo.html` | o esqueleto de onde toda aula começa |
 | `assets/exemplo.html` | uma aula inteira escrita dentro do sistema |
+| `assets/exemplo-recursos.html` | outra aula inteira, com gráfico, diagrama e demo |
 | `contrato/contrato.json` | o vocabulário fechado inteiro, e os limites — é este arquivo que o validador lê |
 | `especime/` | os seis decks que exercitam todo layout e todo componente; é para eles que o guia aponta por âncora |
 

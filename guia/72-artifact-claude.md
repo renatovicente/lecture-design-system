@@ -29,6 +29,8 @@ Você copia o bloco, cola num editor de texto e salva com extensão `.html`. É 
 
 **A quarta linha é dos diagramas.** O gerador de diagramas usa o Graphviz compilado em WASM, e o WASM viaja dentro do próprio script de diagramas, sem arquivo à parte. O que se mediu, num artifact de verdade e antes de os diagramas entrarem no sistema, foi exatamente isto: um script com o pacote do Graphviz inteiro, o WASM embutido nele, compilou esse WASM e desenhou um grafo de três nós. Não se mediu um WASM carregado à parte — o sistema não carrega nenhum —, nem o script de diagramas que o sistema gera hoje, que é o mesmo pacote reempacotado. Por isso o plano B da especificação — outro motor de layout, só no navegador — não foi preciso (`50-graficos-diagramas-demos.md`).
 
+**E os gráficos, só com dados inline.** Um artifact é um arquivo só, sem pasta em volta, e um gráfico que aponta para um CSV não tem de onde lê-lo: escreva as colunas dentro do próprio JSON do gráfico, como faz a segunda aula-exemplo (`50-graficos-diagramas-demos.md`).
+
 ## O que o projeto assume que um artifact *pode* bloquear
 
 Estes três são incertos — a especificação os lista como "pode bloquear" —, e cada um tem o que fazer no lugar.
@@ -53,7 +55,7 @@ O botão de copiar depende de contexto seguro, e um artifact é servido por `htt
 
 ## Como trabalhar, na prática
 
-1. **Dê o guia ao modelo.** Num Projeto do Claude, os arquivos de conhecimento do projeto trazem o guia inteiro, o modelo, a aula-exemplo, o contrato que o validador lê e os seis decks do espécime; num fio avulso, anexe o pacote. Sem isso, o modelo escreve HTML comum e você passa a primeira meia hora corrigindo vocabulário.
+1. **Dê o guia ao modelo.** Num Projeto do Claude, os arquivos de conhecimento do projeto trazem o guia inteiro, o modelo, as duas aulas-exemplo, o contrato que o validador lê e os seis decks do espécime; num fio avulso, anexe o pacote. Sem isso, o modelo escreve HTML comum e você passa a primeira meia hora corrigindo vocabulário.
 2. **Peça a aula como artifact**, e escreva com ele: um bloco por vez, conferindo na tela.
 3. **Tecle V a cada rodada**, copie a lista e cole na conversa. Zero erros antes de seguir para o bloco seguinte.
 4. **Peça o arquivo num bloco de código** quando a aula estiver pronta, e salve como `.html`.

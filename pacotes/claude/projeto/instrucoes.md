@@ -6,9 +6,11 @@ Uma aula é **um arquivo HTML**. O professor escreve o conteúdo; o sistema faz 
 
 ## O conhecimento deste projeto
 
-Os arquivos de conhecimento trazem o guia inteiro do autor, o modelo, uma aula-exemplo, o contrato que o validador lê e os seis decks do espécime — que são exatamente os arquivos para onde o guia aponta quando manda ver como uma coisa é feita. **Consulte-os; não escreva HTML de memória.** Quando você não souber o que um layout aceita, ou o que fazer com um achado do validador, a resposta está lá, e é mais barato ler do que errar e corrigir.
+Os arquivos de conhecimento trazem o guia inteiro do autor, o modelo, duas aulas-exemplo (a segunda com gráfico, diagrama e demo), o contrato que o validador lê e os seis decks do espécime — que são exatamente os arquivos para onde o guia aponta quando manda ver como uma coisa é feita. **Consulte-os; não escreva HTML de memória.** Quando você não souber o que um layout aceita, ou o que fazer com um achado do validador, a resposta está lá, e é mais barato ler do que errar e corrigir.
 
 Comece toda aula a partir do modelo. Ele é o esqueleto que valida: capa, duas aberturas, slides de conteúdo e encerramento, com as metas do `<head>` no lugar.
+
+**Gráfico, diagrama e demo** têm a forma e as armadilhas no capítulo de gráficos, diagramas e demos do guia, e a segunda aula-exemplo usa os três. Aqui não há arquivo ao lado da aula: os dados de um gráfico vão inline, dentro do JSON dele, nunca num CSV.
 
 ## Como trabalhar aqui
 
@@ -33,11 +35,11 @@ Não escreva a aula em vários blocos de código, e não resuma nenhum trecho co
 
 **Você não escolhe cor, escolhe papel.** Preto para ler, cinza para legenda e comentário, azul só na segunda linha de um título (`<span class="sinal">`), amarelo só como campo atrás de texto preto (`aside.destaque`, célula de tabela, linha marcada de código). Nenhuma outra cor, nem em SVG, nem em TeX.
 
-**Nada de `style`.** Sem atributo ou elemento `style`, sem `script` dentro do slide, sem `iframe`, `video`, `audio`, gradiente, sombra, transparência ou canto arredondado.
+**Nada de `style`.** Sem atributo ou elemento `style`, sem `script` dentro do slide (o de dados de gráfico e diagrama é a exceção), sem `iframe`, `video`, `audio`, gradiente, sombra, transparência ou canto arredondado.
 
 **Matemática sempre em TeX:** `\( … \)` no meio da frase e `\[ … \]` em linha própria, como texto solto dentro da `section` — não existe elemento de equação. `$` não é delimitador.
 
-**Código em `<pre data-lang="…">`**, numa das linguagens do contrato. **Toda `img` tem `alt`**, e toda demo tem `img.estatico`, que é o que sai no PDF.
+**Código em `<pre data-lang="…">`**, numa das linguagens do contrato. **Toda `img` tem `alt`.** Uma demo sai no PDF pela sua `img.estatico` ou pela foto que o `aula-usp build` tira dela; impressa pelo navegador, só pela primeira.
 
 **Os limites são do contrato, e o validador os mede:** tamanho de título, lide e pergunta; palavras no corpo e na coluna; itens por lista; código e tabela. Quando um estoura, corte o conteúdo ou divida o slide em dois — nunca diminua a letra.
 

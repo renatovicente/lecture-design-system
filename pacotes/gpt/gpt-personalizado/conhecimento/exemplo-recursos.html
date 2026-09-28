@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Regressão linear</title>
+<meta name="unidade" content="ime">
+<meta name="disciplina" content="Aprendizado de Máquina">
+<meta name="aula" content="5">
+<meta name="data" content="2026-09-21">
+<meta name="professor" content="Prof. Renato Vicente">
+<script src="https://cdn.jsdelivr.net/npm/aula-usp@0.1.0/dist/aula-usp.js"
+        integrity="sha384-UmEX/pG2X2fZu1LVC/bxJOb1d4qP0lEv7/FDnxg95QD+4bC5DqHFjeD9eE/hXzY+" crossorigin="anonymous"></script>
+</head>
+<body>
+
+<section data-layout="capa">
+  <h1>Regressão linear<br><span class="sinal">a reta que erra menos</span></h1>
+</section>
+
+<section data-layout="abertura" id="modelo">
+  <h2>O modelo</h2>
+  <p class="pergunta">Que reta descreve uma nuvem de pontos que não cabe em reta nenhuma?</p>
+</section>
+
+<section data-layout="conteudo" id="reta">
+  <h2>Uma reta tem dois números<br><span class="sinal">e cada ponto a desmente um pouco.</span></h2>
+  <p class="lide">O modelo prevê a nota a partir das horas de estudo com uma reta, \( \hat{y} = a + b\,x \).</p>
+  <p>O intercepto \( a \) é a nota prevista para quem não estudou; a inclinação \( b \) diz quanto cada hora a mais parece render. Nenhuma escolha dos dois acerta todos os alunos, e o que sobra em cada ponto é o que o ajuste tenta reduzir.</p>
+  <aside class="destaque" data-rotulo="Definição">Resíduo: \( r_i = y_i - a - b\,x_i \), o quanto a reta erra no ponto \( i \).</aside>
+  <aside class="notas">Perguntar à turma o que \( b = 0 \) significaria: estudar não mudaria a nota. A pergunta costuma render a leitura correta da inclinação antes de qualquer conta.</aside>
+</section>
+
+<section data-layout="figura" id="dispersao">
+  <h2>Dez alunos e a reta ajustada</h2>
+  <figure class="grafico">
+    <script type="application/json">
+    {"tipo":"dispersao","dados":{"horas":[1,2,3,4,5,6,7,8,9,10],"nota":[3.2,4.1,4.3,5.4,5.2,6.3,6.1,7.2,7.1,8.6],"reta":[3.37,3.9,4.43,4.96,5.49,6.01,6.54,7.07,7.6,8.13]},"x":"horas","y":["nota","reta"],"foco":"reta","eixos":{"x":"horas de estudo","y":"nota"}}
+    </script>
+    <figcaption>Nota de dez alunos contra as horas de estudo; em azul, a previsão da reta ajustada em cada ponto.</figcaption>
+  </figure>
+  <aside class="notas">A reta azul é a de mínimos quadrados, com \( a \approx 2{,}84 \) e \( b \approx 0{,}53 \). Apontar a distância vertical entre cada ponto preto e o azul logo acima ou abaixo dele: é o resíduo do slide anterior.</aside>
+</section>
+
+<section data-layout="abertura" id="erro">
+  <h2>O erro</h2>
+  <p class="pergunta">Entre todas as retas possíveis, qual erra menos, e como se chega até ela?</p>
+</section>
+
+<section data-layout="conteudo" id="derivacao">
+  <h2>Do erro médio<br><span class="sinal">até a reta de mínimos quadrados.</span></h2>
+  <ol class="passos">
+    <li>O erro é a média dos resíduos ao quadrado: \( E(a,b) = \tfrac{1}{2n} \sum_{i=1}^{n} (y_i - a - b\,x_i)^2 \).</li>
+    <li data-passo>Derive em \( a \) e iguale a zero: \( -\tfrac{1}{n} \sum_{i=1}^{n} (y_i - a - b\,x_i) = 0 \), logo \( a = \bar{y} - b\,\bar{x} \).</li>
+    <li data-passo>Derive em \( b \) e iguale a zero: \( -\tfrac{1}{n} \sum_{i=1}^{n} x_i\,(y_i - a - b\,x_i) = 0 \).</li>
+    <li data-passo>Substitua \( a \) e isole \( b \): \( b = \dfrac{\sum_{i} (x_i - \bar{x})(y_i - \bar{y})}{\sum_{i} (x_i - \bar{x})^2} \).</li>
+  </ol>
+  <aside class="notas">Revelar um passo por vez. O fator \( \tfrac{1}{2} \) só existe para cancelar o 2 que a derivada do quadrado traz. No quarto passo, a soma de \( \bar{x}\,(y_i - \bar{y}) \) é zero, e é por isso que \( x_i \) vira \( x_i - \bar{x} \) no numerador.</aside>
+</section>
+
+<section data-layout="demo" id="inclinacao">
+  <h2>Mova a inclinação<br><span class="sinal">e acompanhe o erro.</span></h2>
+  <div class="demo" data-demo="reta" data-opcoes='{"x":[1,2,3,4,5,6,7,8,9,10],"y":[3.2,4.1,4.3,5.4,5.2,6.3,6.1,7.2,7.1,8.6],"inclinacao":0.2}' data-captura-ms="500"></div>
+  <aside class="notas">O intercepto acompanha a inclinação, \( a = \bar{y} - b\,\bar{x} \), então a reta gira em torno do ponto médio. Os traços cinza são os resíduos. Levar \( b \) de 0 a 1 devagar: o erro cai, passa pelo mínimo perto de 0,53 e volta a subir, e a turma tende a reconhecer sozinha o vale da aula passada.</aside>
+</section>
+
+<section data-layout="abertura" id="treino">
+  <h2>O treino</h2>
+  <p class="pergunta">E quando não houver fórmula fechada, como a máquina chega à mesma reta?</p>
+</section>
+
+<section data-layout="figura" id="ciclo">
+  <h2>O treino é um ciclo</h2>
+  <figure class="diagrama">
+    <script type="text/vnd.graphviz">
+    digraph {
+      dados [label="dados (x, y)"];
+      reta [label="reta a + b x"];
+      previsao [label="previsão"];
+      erro [label="erro E(a, b)", class="foco"];
+      dados -> previsao; reta -> previsao;
+      previsao -> erro -> gradiente;
+      gradiente -> reta [class="ativo", constraint=false];
+    }
+    </script>
+    <figcaption>A reta prevê, o erro mede, e o gradiente do erro ajusta a reta; a volta em azul é o passo de descida.</figcaption>
+  </figure>
+  <aside class="notas">É o laço da aula passada com um modelo concreto dentro. Para a reta a fórmula fechada existe, e o laço serve de conferência; num modelo com milhões de pesos, provavelmente só o laço funciona.</aside>
+</section>
+
+<section data-layout="conteudo" id="codigo">
+  <h2>Duas derivadas<br><span class="sinal">num laço de descida.</span></h2>
+  <p class="lide">Cada volta mede os resíduos e move \( a \) e \( b \) contra as derivadas do segundo e do terceiro passo.</p>
+<pre data-lang="python">
+def ajustar(x, y, eta=0.02, passos=5000):
+    """Descida do gradiente para a reta a + b x."""
+    a, b = 0.0, 0.0
+    for _ in range(passos):
+        residuo = y - (a + b * x)
+        a = a + eta * residuo.mean()
+        b = b + eta * (residuo * x).mean()
+    return a, b
+
+a, b = ajustar(horas, notas)
+</pre>
+  <aside class="notas">O sinal de mais não é engano: a derivada tem um menos na frente, e andar contra ela vira somar. As médias são o \( \tfrac{1}{n} \) da derivação. Com as horas e as notas do gráfico em arrays do NumPy, o resultado bate com a fórmula fechada, cerca de 2,84 e 0,53.</aside>
+</section>
+
+<section data-layout="conteudo" id="exercicio">
+  <h2>Uma reta na mão<br><span class="sinal">antes de rodar código.</span></h2>
+  <div class="exercicio">
+    <div class="enunciado">
+      <p>Ajuste a reta de mínimos quadrados aos pontos \( (0, 1) \), \( (1, 2) \) e \( (2, 6) \).</p>
+    </div>
+    <div class="resposta" data-passo>
+      <p>Com \( \bar{x} = 1 \) e \( \bar{y} = 3 \), \( b = 5/2 = 2{,}5 \) e \( a = 3 - 2{,}5 = 0{,}5 \).</p>
+    </div>
+  </div>
+  <aside class="notas">Dar alguns minutos antes de revelar. O numerador é \( (-1)(-2) + 0 + (1)(3) = 5 \) e o denominador, \( 1 + 0 + 1 = 2 \). Quem esquecer de centrar os dados provavelmente chega a outro número, e vale mostrar onde.</aside>
+</section>
+
+<section data-layout="encerramento">
+  <h2>O que fica</h2>
+  <ol class="sintese">
+    <li>Uma reta tem dois números, e o resíduo mede o quanto ela erra em cada ponto.</li>
+    <li>Zerar as duas derivadas do erro dá a reta de mínimos quadrados.</li>
+    <li>A descida do gradiente chega à mesma reta, sem fórmula fechada.</li>
+  </ol>
+  <p class="proxima">Próxima aula: mais de uma variável de entrada, e a reta vira um plano.</p>
+</section>
+
+<script>
+AulaUSP.demo('reta', {
+  montar(raiz, opcoes) {
+    const { deslizante, leitura } = AulaUSP.controles;
+    this.x = opcoes.x;
+    this.y = opcoes.y;
+    const n = this.x.length;
+    this.mediaX = this.x.reduce((soma, valor) => soma + valor, 0) / n;
+    this.mediaY = this.y.reduce((soma, valor) => soma + valor, 0) / n;
+    this.inclinacao = opcoes.inclinacao ?? 0;
+    deslizante(raiz, { min: 0, max: 1, passo: 0.01, valor: this.inclinacao, rotulo: 'inclinação' }, (valor) => {
+      this.inclinacao = valor;
+      this.desenhar();
+    });
+    this.saida = leitura(raiz);
+    this.figura = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    this.figura.setAttribute('viewBox', '0 0 1152 380');
+    this.figura.setAttribute('width', '1152');
+    this.figura.setAttribute('height', '380');
+    raiz.append(this.figura);
+    this.desenhar();
+  },
+  // E(a, b) = 1/(2n) · Σ (y_i − a − b x_i)², com a = ȳ − b x̄: o erro do segundo passo da derivação.
+  erro(a, b) {
+    const soma = this.x.reduce((total, xi, i) => total + (this.y[i] - a - b * xi) ** 2, 0);
+    return soma / (2 * this.x.length);
+  },
+  desenhar() {
+    const b = this.inclinacao;
+    const a = this.mediaY - b * this.mediaX;
+    const px = (valor) => 40 + (valor / 11) * 1072;
+    const py = (valor) => 360 - ((valor - 1) / 9) * 340;
+    const svg = 'http://www.w3.org/2000/svg';
+    const novo = (nome, atributos) => {
+      const elemento = document.createElementNS(svg, nome);
+      for (const [chave, valor] of Object.entries(atributos)) elemento.setAttribute(chave, String(valor));
+      return elemento;
+    };
+    this.figura.replaceChildren(
+      ...this.x.map((xi, i) => novo('line', { x1: px(xi), y1: py(this.y[i]), x2: px(xi), y2: py(a + b * xi), stroke: '#666666', 'stroke-width': 2 })),
+      novo('line', { x1: px(0), y1: py(a), x2: px(11), y2: py(a + b * 11), stroke: '#1094AB', 'stroke-width': 4 }),
+      ...this.x.map((xi, i) => novo('circle', { cx: px(xi), cy: py(this.y[i]), r: 8, fill: '#0A0A0A' })),
+    );
+    const formato = (valor, casas) => new Intl.NumberFormat(document.documentElement.lang, { minimumFractionDigits: casas, maximumFractionDigits: casas }).format(valor);
+    AulaUSP.controles.escrever(this.saida, `b = ${formato(b, 2)}   E = ${formato(this.erro(a, b), 3)}`);
+  },
+});
+</script>
+
+</body>
+</html>
