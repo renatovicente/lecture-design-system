@@ -17,7 +17,7 @@ A segunda aula-exemplo, `assets/exemplo-recursos.html`, usa os três numa aula d
   </figure>
 ```
 
-Da aula-exemplo: `assets/exemplo-recursos.html#dispersao`. O `script` com `type="application/json"` é o único filho obrigatório; a `figcaption` é opcional. É o único lugar da aula em que um `script` pode ficar dentro de uma `section` — ele não roda, é dado.
+Da aula-exemplo: `assets/exemplo-recursos.html#dispersao`. O `script` com `type="application/json"` é o único filho obrigatório; a `figcaption` é opcional. `figure.grafico` e `figure.diagrama` são os dois únicos lugares da aula em que um `script` pode ficar dentro de uma `section` — ele não roda, é dado.
 
 Os campos do JSON:
 
@@ -95,9 +95,9 @@ Um slide de demo tem o título e a demo, e nada mais:
 
 Do espécime: `especime/index.html#demo`. O que há nele:
 
-- **`data-demo` é o nome**, em minúsculas, números e hífens. É por ele que o sistema acha o registro correspondente.
+- **`data-demo` é o nome**, começando por letra minúscula e seguido de minúsculas, números e hífens (`^[a-z][a-z0-9-]*$`). É por ele que o sistema acha o registro correspondente.
 - **`data-opcoes` é um objeto JSON**, entregue ao registro quando a demo é montada. É o que deixa a mesma demo servir a duas aulas com parâmetros diferentes, sem copiar código.
-- **`img.estatico` é o que sai no PDF**, quando você a escreve. É o único filho que o contrato aceita dentro de `div.demo`, e ela é opcional: sem ela, o `aula-usp build` fotografa a demo (a última seção deste capítulo).
+- **`img.estatico` é o que sai no PDF**, quando você a escreve. É o único filho que o contrato aceita dentro de `div.demo`, e ela é opcional: sem ela, o `aula-usp build` fotografa a demo ("Controles e captura", abaixo).
 
 **A interface da demo não se escreve no HTML.** Botão, controle deslizante, canvas: tudo isso é criado pelo código do registro, dentro da `div.demo`, quando o slide abre. Escrevê-los no fonte é erro — um `<button>` no corpo da aula é `vocabulario.elemento`, porque ele não está no vocabulário (medido). Para botão, controle deslizante e leitura, o sistema dá os seus prontos: `AulaUSP.controles`, abaixo.
 
@@ -208,7 +208,7 @@ Da aula-exemplo: `assets/exemplo-recursos.html#inclinacao`. Os dados vão em `da
 
 Nem todo desenho cabe num gráfico de quatro tipos ou num grafo. Para o resto, há dois caminhos.
 
-**A figura pronta.** Gere a figura onde você já a gera — notebook, R, o que for —, exporte como arquivo, guarde ao lado da aula em `img/` e use `<img>` dentro de `figure`, com `alt` (`30-componentes.md`). No build, a imagem é embutida no HTML final, então a aula continua sendo um arquivo só. Vale conferir o que o sistema não confere por você: cores da paleta, eixos legíveis de longe, e nada de legenda em caixa.
+**A figura pronta.** Gere a figura onde você já a gera — notebook, R, o que for —, exporte como arquivo, guarde ao lado da aula em `img/` e use `<img>` dentro de `figure`, com `alt` (`30-componentes.md`). No build, a imagem é embutida no HTML final, então a aula continua sendo um arquivo só. Vale conferir o que o sistema não confere por você: cores da paleta, eixos legíveis de longe, e nada de legenda em caixa. Para quem plota em matplotlib, o sistema guarda uma folha de estilo com as cores da aula em assets/aula-usp.mplstyle, fora deste guia e dos pacotes — ative com `plt.style.use(caminho)` antes de plotar, apontando para esse arquivo dentro do seu clone do sistema.
 
 **O SVG escrito à mão**, quando o desenho é simples e você quer que ele siga o sistema por construção:
 

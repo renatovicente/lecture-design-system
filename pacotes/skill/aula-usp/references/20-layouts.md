@@ -44,7 +44,7 @@ A tabela sai de `contrato/contrato.json` por `npm run guia`, e é do mesmo contr
 
 **`figura`** dá à figura a zona de conteúdo inteira, com a legenda embaixo. O título é opcional, porque muitas vezes a legenda já diz o que é. Uma figura por slide: para figura ao lado de texto, o layout é `conteudo` com colunas.
 
-**`demo`** dá a mesma área a uma demo interativa, que você conduz ao vivo. É uma demo por slide, e a imagem estática dentro dela é o que sai no PDF: a que você escreve, ou, sem ela, a foto que o `aula-usp build` tira da demo — é o caso do exemplo abaixo. Impressa pelo navegador, a demo sem imagem escrita sai sem nada, e `recursos.demo-sem-estatico` avisa (`50-graficos-diagramas-demos.md`).
+**`demo`** dá a mesma área a uma demo interativa, que você conduz ao vivo. É uma demo por slide, e o que sai no PDF é a `img.estatico` que você escreve ou, sem ela, `capturar()` — os dois já na impressão do navegador — ou, faltando ambos, a foto que o `aula-usp build` tira da demo, como no exemplo abaixo. Impressa pelo navegador sem nenhum dos dois, a demo sai sem nada, e `recursos.demo-sem-estatico` avisa (`50-graficos-diagramas-demos.md`).
 
 **`encerramento`** fecha a aula com a síntese — os pontos que o aluno leva — e, opcionalmente, o anúncio da próxima. O cabeçalho volta com todos os blocos marcados como vistos, e a faixa de marca toma o lugar do rodapé.
 

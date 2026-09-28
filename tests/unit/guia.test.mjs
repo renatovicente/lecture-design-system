@@ -302,9 +302,10 @@ const aparado = (texto) => texto.split('\n').map((linha) => linha.trim()).filter
 // pronto, tirado de um arquivo que valida … com o endereço da seção de onde veio" — e que
 // 00-principios.md repete para o guia inteiro.
 //
-// Medido: 28 blocos ```html de guia/ trazem âncora, e os 28 são literais. Outros três não trazem
+// Medido: 32 blocos ```html de guia/ trazem âncora, e os 32 são literais. Outros quatro não trazem
 // âncora nenhuma, e é correto que não tragam: não são trechos tirados de arquivo — são um `ol` de
-// ilustração, o `<script>` de registro de uma demo, e a tag de CDN que ainda não existe.
+// ilustração, os dois `<script>` de registro de demo (`contador`, `soma`), e a tag de CDN que ainda
+// não existe.
 test('todo trecho de guia/ com âncora é literal na seção que ele cita', () => {
   let conferidos = 0;
   for (const nome of readdirSync(new URL('guia/', RAIZ)).filter((arquivo) => arquivo.endsWith('.md')).sort()) {

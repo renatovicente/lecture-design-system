@@ -14,7 +14,7 @@ Spec 12, fase 2: *"Aceite: testes verdes e essa aula validada, com uma demo sem 
 | `npm run test:integracao` | 241/241 |
 | `aula-usp validar exemplos/regressao-linear` | 0 erros, 0 avisos, código 0 (com Chrome: composição incluída) |
 | `aula-usp build exemplos/regressao-linear` | código 0; 12 páginas; "1 de 1 demo(s) capturada(s)" |
-| a demo no PDF | página 7: uma imagem embutida, 2304 × 858 (a `div.demo` de 1152 px a 2 pixels por px), 36 863 pixels não brancos (`pdfimages -list` e o teste de integração, pelo mesmo número) |
+| a demo no PDF | página 7: uma imagem embutida, 2304 × 858 (a `div.demo` de 1152 px a 2 pixels por px, por `pdfimages -list`), 36 863 pixels não brancos (medidos pelo teste de integração) |
 
 A imagem foi medida como imagem embutida, não como página: o quadro "Demo interativa: abra o HTML" também pinta a página. A demo da aula não tem `img.estatico` nem `capturar()`; o fonte é conferido no próprio teste (`tests/integracao/captura.test.mjs`, "aceite da fase 2"), que também exige zero achados e fase 2 na aula. Inversões rodadas: com `montar()` lançando erro, o teste cai em "zero erros e zero avisos"; sem essa asserção, cai em "a página da demo não desenha imagem nenhuma".
 
@@ -32,9 +32,12 @@ Registrada em `2026-09-28-aula-usp-f2b-spec14.md`: num artifact do Claude, o WAS
 
 ## O que fica aberto para a fase 3
 
-- **`package.json`** tem `private: true` e não tem `license`, `author`, `repository` nem `files`. Medido agora com `npm pack --dry-run`: 462 arquivos, 3,5 MB empacotados, 7,8 MB desempacotados — tudo o que não é ignorado entra.
+- **`package.json`** tem `private: true` e não tem `license`, `author`, `repository` nem `files`. Medido agora com `npm pack --dry-run`: 463 arquivos, 3,5 MB empacotados, 7,8 MB desempacotados — tudo o que não é ignorado entra.
 - **A decisão sobre `pacotes/` e `dist/` sobreviverem à instalação** pelo npm (hoje são rastreados no git; o que vai no pacote npm não foi decidido).
 - **Medir se o produto preserva subpastas** ao subir `conhecimento/` no GPT e no Projeto do Claude: o acervo viaja em `contrato/` e `especime/`, e o guia cita esses caminhos.
 - **O traço amarelo em SVG escalado** não foi medido no palco: a regra de amarelo em SVG confere o fonte, não a espessura depois da escala.
 - **O flake de `tests/unit/codigo.test.mjs:36`**, que passa isolado; não apareceu nesta rodada, e não foi investigado.
 - O aceite com modelos da fase 3 (claude.ai e ChatGPT, spec 11.3) depende do runtime publicado.
+- **O gráfico não mistura pontos e linha.** A "reta ajustada" da aula-exemplo é uma série de `tipo: "dispersao"`, e `montarDispersao` desenha toda série em pontos soltos (`componentes/graficos.js:270`) — não há um `tipo` que junte uma série em linha com outra em pontos no mesmo gráfico. E o domínio do eixo x começa no menor dado (`biblioteca.extensao(valoresX)`), então o primeiro ponto cai sobre o próprio eixo.
+- **A ação de `recursos.csv`** ("Confira o caminho do CSV em `data/`.", `contrato/contrato.json:231`) nomeia uma única pasta, mas o guia aceita qualquer caminho relativo para o CSV (`50-graficos-diagramas-demos.md`, "o caminho de um CSV, relativo ao arquivo da aula") — `data/` é só o costume, não a regra; a frase da ação devia dizer isso.
+- **O satélite `aula-usp-diagramas.js` gerado não foi servido num artifact** — a verificação da spec 14 mediu um script equivalente (o pacote do Graphviz reempacotado antes de os diagramas entrarem no sistema), não o script que `aula-usp dist` gera hoje.

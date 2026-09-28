@@ -9,7 +9,7 @@
 <meta name="data" content="2026-09-21">
 <meta name="professor" content="Prof. Renato Vicente">
 <script src="https://cdn.jsdelivr.net/npm/aula-usp@0.1.0/dist/aula-usp.js"
-        integrity="sha384-UmEX/pG2X2fZu1LVC/bxJOb1d4qP0lEv7/FDnxg95QD+4bC5DqHFjeD9eE/hXzY+" crossorigin="anonymous"></script>
+        integrity="sha384-1XCE0DFQVyf/YxnuMk8x/L68J6odFl8ddDBedqZrHsGQxAYEDoa6wDV+5d/BILP3" crossorigin="anonymous"></script>
 </head>
 <body>
 
@@ -143,14 +143,32 @@ AulaUSP.demo('reta', {
       this.desenhar();
     });
     this.saida = leitura(raiz);
-    this.figura = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    const svgNS = 'http://www.w3.org/2000/svg';
+    this.figura = document.createElementNS(svgNS, 'svg');
     this.figura.setAttribute('viewBox', '0 0 1152 380');
     this.figura.setAttribute('width', '1152');
     this.figura.setAttribute('height', '380');
+    // A reta ajustada e os resíduos podem sair da área desenhada perto dos extremos do controle
+    // (inclinação alta desloca a=ȳ−bx̄ para muito abaixo ou acima dos dados); o clipPath recorta os
+    // dois à área do gráfico, sem tocar no cálculo de `a`, `b` nem `erro`.
+    this.recorte = `recorte-reta-${Math.random().toString(36).slice(2)}`;
+    const defs = document.createElementNS(svgNS, 'defs');
+    const clip = document.createElementNS(svgNS, 'clipPath');
+    clip.setAttribute('id', this.recorte);
+    const area = document.createElementNS(svgNS, 'rect');
+    area.setAttribute('x', '0');
+    area.setAttribute('y', '0');
+    area.setAttribute('width', '1152');
+    area.setAttribute('height', '380');
+    clip.append(area);
+    defs.append(clip);
+    this.figura.append(defs);
+    this.grupo = document.createElementNS(svgNS, 'g');
+    this.figura.append(this.grupo);
     raiz.append(this.figura);
     this.desenhar();
   },
-  // E(a, b) = 1/(2n) · Σ (y_i − a − b x_i)², com a = ȳ − b x̄: o erro do segundo passo da derivação.
+  // E(a, b) = 1/(2n) · Σ (y_i − a − b x_i)², o erro do passo 1; a = ȳ − b x̄ vem do passo 2 da derivação.
   erro(a, b) {
     const soma = this.x.reduce((total, xi, i) => total + (this.y[i] - a - b * xi) ** 2, 0);
     return soma / (2 * this.x.length);
@@ -166,13 +184,14 @@ AulaUSP.demo('reta', {
       for (const [chave, valor] of Object.entries(atributos)) elemento.setAttribute(chave, String(valor));
       return elemento;
     };
-    this.figura.replaceChildren(
-      ...this.x.map((xi, i) => novo('line', { x1: px(xi), y1: py(this.y[i]), x2: px(xi), y2: py(a + b * xi), stroke: '#666666', 'stroke-width': 2 })),
-      novo('line', { x1: px(0), y1: py(a), x2: px(11), y2: py(a + b * 11), stroke: '#1094AB', 'stroke-width': 4 }),
+    const recorte = `url(#${this.recorte})`;
+    this.grupo.replaceChildren(
+      ...this.x.map((xi, i) => novo('line', { x1: px(xi), y1: py(this.y[i]), x2: px(xi), y2: py(a + b * xi), stroke: '#666666', 'stroke-width': 2, 'clip-path': recorte })),
+      novo('line', { x1: px(0), y1: py(a), x2: px(11), y2: py(a + b * 11), stroke: '#1094AB', 'stroke-width': 4, 'clip-path': recorte }),
       ...this.x.map((xi, i) => novo('circle', { cx: px(xi), cy: py(this.y[i]), r: 8, fill: '#0A0A0A' })),
     );
     const formato = (valor, casas) => new Intl.NumberFormat(document.documentElement.lang, { minimumFractionDigits: casas, maximumFractionDigits: casas }).format(valor);
-    AulaUSP.controles.escrever(this.saida, `b = ${formato(b, 2)}   E = ${formato(this.erro(a, b), 3)}`);
+    AulaUSP.controles.escrever(this.saida, `b = ${formato(b, 2)} · E = ${formato(this.erro(a, b), 3)}`);
   },
 });
 </script>

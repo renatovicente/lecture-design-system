@@ -286,13 +286,17 @@ export const regras = [
       for (const { secao, elemento } of elementosDoCorpo(slides)) {
         if (nomeDe(elemento) !== 'script') continue;
         const dentro = permitido?.dentro?.some((pai) => elemento.closest(pai));
-        // Na fase 2 o script de gráfico e de diagrama é legítimo; na fase 1 ele é recusado com a
-        // frase que diz por quê. Fora desses pais, é recusado em qualquer fase: registro de demo
-        // não entra em slide.
+        // Na fase 2 o script de gráfico e de diagrama é legítimo. "dentro && fase < 2" não acontece
+        // pelos dois pontos de entrada do produto (build/validar.mjs, montar/entrada.js): os dois
+        // calculam `fase` com faseDaAula sobre este mesmo documento, e seletoresDeFase2 constrói,
+        // para cada pai de contrato.html.elementosFase2.script, o seletor "<pai> script" — o mesmo
+        // script que cai aqui com dentro=true já fez faseDaAula devolver 2. A mensagem de "fase 2"
+        // que existia para esse ramo nunca chegava a um autor; um script fora desses pais continua
+        // erro em qualquer fase, com uma única frase.
         if (dentro && fase >= 2) continue;
         yield {
           ...onde(slides, secao),
-          mensagem: dentro ? 'script dentro da section: gráficos e diagramas são da fase 2.' : 'script dentro da section: registros de demo ficam fora dos slides.',
+          mensagem: 'script dentro da section: registros de demo ficam fora dos slides.',
           trecho: trechoDe(elemento),
         };
       }

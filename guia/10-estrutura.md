@@ -19,7 +19,7 @@ Uma aula é um arquivo HTML: um `<head>` com os metadados e a tag do runtime, e 
 <meta name="data" content="2026-03-02">
 <meta name="professor" content="Prof. Nome Sobrenome">
 <script src="https://cdn.jsdelivr.net/npm/aula-usp@0.1.0/dist/aula-usp.js"
-        integrity="sha384-UmEX/pG2X2fZu1LVC/bxJOb1d4qP0lEv7/FDnxg95QD+4bC5DqHFjeD9eE/hXzY+" crossorigin="anonymous"></script>
+        integrity="sha384-1XCE0DFQVyf/YxnuMk8x/L68J6odFl8ddDBedqZrHsGQxAYEDoa6wDV+5d/BILP3" crossorigin="anonymous"></script>
 </head>
 <body>
 
@@ -184,7 +184,7 @@ Do espécime: `especime/matematica.html#passo-a-passo`.
 
 - **Cromo escrito à mão** — cabeçalho, rodapé, número de slide, logo, mapa. Tudo isso o sistema desenha; escrito de novo, aparece duas vezes.
 - **`style`, em qualquer forma**, e qualquer elemento ou atributo fora do contrato. É `vocabulario.style` e companhia, e a correção é sempre usar o layout ou o componente que faz aquilo.
-- **`script` dentro de uma `section`.** O registro de uma demo mora fora dos slides (`50-graficos-diagramas-demos.md`).
+- **`script` dentro de uma `section`**, fora o `script` de dados dentro de `figure.grafico` ou `figure.diagrama`. O registro de uma demo mora fora dos slides (`50-graficos-diagramas-demos.md`).
 - **Conteúdo que não cabe.** Os limites do contrato estão medidos para a projeção: quando um deles acusa, a resposta é cortar ou dividir o slide, nunca reduzir o texto. Quanto é "não cabe", em cada caso, está na seção seguinte.
 
 O que pode entrar em cada layout, na ordem, está em `20-layouts.md`; o trecho pronto de cada componente, em `30-componentes.md`.
