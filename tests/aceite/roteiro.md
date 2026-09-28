@@ -34,9 +34,9 @@ A spec 11.3 divide o aceite em duas fases, e **só a primeira cabe neste reposit
 | 3 | ChatGPT: GPT personalizado | idem |
 
 Os dois da fase 3 usam o mesmo pedido e o mesmo critério, com `pacotes/claude/projeto/` e
-`pacotes/gpt/gpt-personalizado/` no lugar da skill. Eles entram neste arquivo quando a publicação
-acontecer (spec 12); até lá, a tag que o modelo e os pacotes carregam não resolve, e nada nesses dois
-ambientes carrega o sistema.
+`pacotes/gpt/gpt-personalizado/` no lugar da skill. A condução deles está em "Fase 3: preparação e
+condução", logo abaixo do critério; rodá-los depende da publicação (spec 12), porque até lá a tag que
+o modelo e os pacotes carregam não resolve, e nada nesses dois ambientes carrega o sistema.
 
 ## A condição, que é o que o aceite mede
 
@@ -99,6 +99,46 @@ Entregue o pedido, uma vez, e **não ajude**. A partir daí:
 
 Uma quarta rodada não é fracasso do agente: é achado sobre o pacote. Registre **o que faltava no
 pacote**, não "o modelo errou" — o consumidor do aceite é `guia/`, e é lá que o conserto entra.
+
+## Fase 3: preparação e condução
+
+Mesmo pedido, literal, e mesmo critério da spec 11.3: **zero erros em até três rodadas, mais a
+revisão visual do autor.** O que muda é o ambiente, e com ele a forma de uma rodada: não há CLI do
+lado do agente, e quem roda o validador é o condutor, sobre o HTML que o agente entregou.
+
+**Antes de qualquer um dos dois**, com a publicação da 3b feita:
+
+1. a conferência da CDN, com a autorização do autor, porque faz pedido de rede —
+   `build/conferir-cdn.mjs`, com o `fetch` passado como `buscar` (o comando está no topo do
+   arquivo). Todo arquivo de `dist/manifesto.json` tem de sair `ok`: um `integrity` que não bate faz
+   o navegador recusar o runtime, e o aceite mediria a CDN, não o pacote;
+2. no repositório, com a árvore limpa, `aula-usp pacotes` não produz diff — o mesmo passo 1 da
+   preparação da fase 1;
+3. anote o SHA do sistema, a versão publicada e o produto e modelo usados, como na fase 1.
+
+**claude.ai — Projeto.** Um Projeto novo, com os arquivos de `pacotes/claude/projeto/conhecimento/`
+no conhecimento do Projeto e o texto de `pacotes/claude/projeto/instrucoes.md` nas instruções dele.
+Numa conversa nova dentro do Projeto, o pedido. O agente entrega a aula como artifact: abra o
+artifact e olhe o painel do validador dentro da própria aula, que é o que o autor desse ambiente vê.
+Para a tabela, salve o HTML do artifact numa pasta fora do repositório e rode
+`aula-usp validar <pasta> --json` sobre ele.
+
+**ChatGPT — GPT personalizado.** Um GPT novo, com `pacotes/gpt/gpt-personalizado/instrucoes.txt` nas
+instruções e os arquivos de `conhecimento/` no conhecimento dele (os iniciadores de
+`iniciadores.txt` são opcionais e não entram no pedido). Numa conversa nova, o pedido. O agente
+entrega a aula num bloco de código: salve-o como `index.html` numa pasta fora do repositório, abra-o
+no navegador — é o que o autor desse ambiente faz — e rode `aula-usp validar <pasta> --json` sobre
+ele.
+
+**Em cada rodada dos dois**, os achados do `--json` voltam ao agente inteiros, na mesma conversa. A
+saída de cada rodada vai para `rodada-<ambiente>-<n>.json`, no formato das rodadas da fase 1 (o array
+de `--json`, como está), com `<ambiente>` `claude-projeto` ou `chatgpt-gpt`.
+
+**Registre também, em cada ambiente, se o produto preservou as subpastas de `conhecimento/`** (item
+herdado do aceite da fase 2). O acervo viaja em `conhecimento/contrato/` e `conhecimento/especime/`,
+e o guia cita esses caminhos; um produto que achate as pastas deixa as citações sem endereço. A
+resposta vai na coluna própria da tabela e nas observações — não no `.json`, que continua sendo só a
+saída do validador. Se o produto achatou, registre também se o agente achou os arquivos mesmo assim.
 
 ---
 
@@ -201,13 +241,14 @@ blocos, derivação em passos, um bloco de Python, um exercício e notas em 8 sl
 
 ## Fase 3
 
-| ambiente | data | erros da 1ª versão | rodadas até zero | revisão visual |
-|---|---|---|---|---|
-| claude.ai — Projeto | — | — | — | — |
-| claude.ai — artifact | — | — | — | — |
-| ChatGPT — GPT personalizado | — | — | — | — |
+| ambiente | data | sistema (SHA) e versão publicada | produto e modelo | subpastas de `conhecimento/` preservadas | erros da 1ª versão | regras citadas | avisos | rodadas até zero | revisão visual |
+|---|---|---|---|---|---|---|---|---|---|
+| claude.ai — Projeto, com artifact | — | — | — | — | — | — | — | — | — |
+| ChatGPT — GPT personalizado | — | — | — | — | — | — | — | — | — |
 
-**Não rodável hoje**, e não por falta de tempo: os três dependem do runtime publicado no npm e da
-tag da CDN resolvendo, que são da fase 3 (spec 12). `guia/71-fluxo-chat.md`, `72-artifact-claude.md`
+**Não rodável hoje**, e não por falta de tempo: os dois dependem do runtime publicado no npm e da
+tag da CDN resolvendo, que são da fase 3 (spec 12). A condução está em "Fase 3: preparação e
+condução"; o Projeto e o artifact do claude.ai, que eram duas linhas aqui, são um ambiente só — o
+artifact é como o Projeto entrega a aula. `guia/71-fluxo-chat.md`, `72-artifact-claude.md`
 e `73-chatgpt.md` declaram a mesma coisa, cada um no seu leitor, e é este aceite que vai exercitá-los
 pela primeira vez.
