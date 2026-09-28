@@ -127,7 +127,7 @@ Duas coisas que surpreendem quem desenha um gráfico à mão, as duas medidas:
 
 O que você escreve no DOT e o sistema não segue tem dois destinos:
 
-- **descartado, sem aviso**, porque o desenho sai certo sem ele: cor (`color`, `fillcolor`, `fontcolor`, `bgcolor`), espessura (`penwidth`), forma e tamanho de seta (`arrowhead`, `arrowtail`, `arrowsize`), `shape` que não seja `record`, e `style` que não seja `invis`;
+- **descartado, sem aviso**, porque o desenho sai certo sem ele: cor (`color`, `fillcolor`, `fontcolor`, `bgcolor`), espessura (`penwidth`), forma de seta (`arrowhead`, `arrowtail`), `shape` que não seja `record`, e `style` que não seja `invis`;
 - **recusado, com `recursos.dot`**, porque descartado desenharia outra coisa: `style=invis` (sairia visível), `shape=record` e `Mrecord` (sairiam sem as divisões), rótulo HTML `label=<…>` (sem negrito e fora do lugar), `headlabel`, `taillabel` e `xlabel` (sumiriam), `label` no grafo (o título vai na `figcaption`) ou num subgrafo que não é `cluster_…`, `fontsize`, `fontname`, `fixedsize`, `width`, `height` e `margin` (o texto é sempre 20, e a caixa seria medida para outro), classe fora de `foco` num nó e `ativo` numa aresta, e mais de um grafo no mesmo bloco (só o primeiro seria desenhado).
 
 O texto de 20 também é medido no palco. Um diagrama mais largo que a figura encolhe com ela, e numa coluna estreita cai abaixo de 14; um diagrama mais alto que o espaço embaixo do título encolhe pela altura no layout `figura` — medido, uma cadeia de dez nós de cima para baixo sai com 13,3 px, e da esquerda para a direita, com 20. Do espécime: `especime/componentes.html#diagrama-rede`.

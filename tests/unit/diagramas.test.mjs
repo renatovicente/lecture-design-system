@@ -121,7 +121,7 @@ for (const [caso, dot, mensagem] of RECUSADOS) {
 
 test('o que é descartado de propósito — cor, espessura, seta, forma, estilo que não é invis — não é recusado', () => {
   const dot = 'digraph { rankdir=TB; bgcolor=gray; node [shape=ellipse color=red style="filled,rounded" fillcolor=green penwidth=5 fontcolor=blue]; '
-    + 'edge [color=red penwidth=7 arrowhead=diamond arrowsize=2 style=dashed fontcolor=red]; '
+    + 'edge [color=red penwidth=7 arrowhead=diamond style=dashed fontcolor=red]; '
     + 'subgraph cluster_0 { label="grupo"; color=blue; a } a -> b [label="rótulo"]; c [shape=circle]; }';
   assert.deepEqual(atributosRecusados(graphviz, dot), []);
   assert.equal(desenhista.desenhar(dot).nos, 3);
