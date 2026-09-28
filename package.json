@@ -22,6 +22,7 @@
     "aula-usp": "bin/aula-usp.mjs"
   },
   "dependencies": {
+    "@hpcc-js/wasm-graphviz": "1.29.1",
     "@shikijs/engine-javascript": "4.4.3",
     "@shikijs/langs": "4.4.3",
     "@shikijs/primitive": "4.4.3",
