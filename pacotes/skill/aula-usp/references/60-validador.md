@@ -25,7 +25,7 @@ As regras são de quatro grupos, e o grupo diz **quando** a regra tem como saber
 
 **As estáticas** são a maioria, e são as que se respondem lendo o arquivo: estrutura, vocabulário, limites de tamanho, cor em SVG, comandos proibidos no TeX.
 
-**As de carga** são as que só se sabem depois de tentar: se o TeX compila, se a imagem existe no disco, se a demo tem registro. Hoje são quatro — `matematica.tex-invalido`, `recursos.imagem`, `recursos.demo-sem-registro` e `recursos.demo-sem-estatico`.
+**As de carga** são as que só se sabem depois de tentar: se o TeX compila, se a imagem existe no disco, se a demo tem registro, se o CSV do gráfico existe, se o DOT do diagrama compila. São sete — `matematica.tex-invalido`, `recursos.imagem`, `recursos.demo-sem-registro`, `recursos.demo-sem-estatico`, `recursos.csv`, `recursos.dot` e `recursos.diagrama-grande`.
 
 **As de composição** são as que exigem medir a página desenhada: o que transbordou da zona de conteúdo, o título que tomou uma linha a mais, o texto que chegou à tela abaixo do mínimo do seu papel. No navegador elas rodam sempre; na linha de comando, só quando há um Chrome para abrir, e a CLI avisa quando não há. Um "zero erros" sem Chrome não é o mesmo "zero erros" de quem tem.
 
@@ -55,7 +55,7 @@ AVISO · slide 4 #lista-grande · estrutura.notas-ausentes · slide de layout "c
 
 A lista vem por grupo, e **dentro de cada grupo** ordenada pela aula: primeiro o que é da aula inteira, depois slide a slide, e dentro de um slide na ordem das regras. Como um grupo vem depois do outro, o número do slide volta atrás quando o grupo seguinte começa — leia pelo `#id`, não pela posição na lista.
 
-## As regras da fase 1
+## As regras
 
 A tabela sai de `contrato/contrato.json` por `npm run guia` — do mesmo arquivo que o validador lê, de modo que ela não tem como discordar do que roda. Três colunas: o nome da regra, a severidade, e a ação, que é a frase com que toda mensagem daquela regra termina.
 
@@ -105,8 +105,12 @@ A tabela sai de `contrato/contrato.json` por `npm run guia` — do mesmo arquivo
 | `matematica.simbolo-fora-do-tex` | erro | Escreva o símbolo em TeX: \( \to \), \( \alpha \), \( \leq \). |
 | `matematica.tex-invalido` | erro | Corrija o TeX no trecho indicado. |
 | `recursos.alt` | erro | Descreva a imagem no atributo alt. |
+| `recursos.csv` | erro | Confira o caminho do CSV em data/. |
 | `recursos.demo-sem-estatico` | aviso | Acrescente img.estatico à demo ou implemente capturar(). No navegador: gere o PDF com aula-usp build, que fotografa a demo, ou acrescente img.estatico à demo ou implemente capturar(). Se a captura do build falhou: corrija a demo para que ela desenhe na div.demo ao iniciar, ou acrescente img.estatico à demo ou implemente capturar(). |
 | `recursos.demo-sem-registro` | erro | Registre a demo com AulaUSP.demo('<nome>', { … }). |
+| `recursos.diagrama-grande` | aviso | Simplifique o diagrama para até 15 nós. |
+| `recursos.dot` | erro | Corrija o DOT do diagrama. |
+| `recursos.grafico` | erro | Corrija o JSON do gráfico. |
 | `recursos.imagem` | erro | Confira o caminho da imagem em img/. |
 | `recursos.imagem-externa` | aviso | Guarde a imagem em img/, com autorização do autor para baixá-la. |
 | `recursos.linguagem` | erro | Use em data-lang uma destas linguagens: python, r, sql, javascript, bash, json, latex. |
@@ -138,13 +142,13 @@ A coluna "como corrigir" diz o que fazer; ela não tem espaço para dizer o que 
 
 **`matematica.*` — delimitador, comando ou símbolo.** Os três casos e os consertos estão em `40-matematica-e-codigo.md`.
 
-**`recursos.*` — a imagem, a linguagem ou a demo.** `recursos.imagem` é caminho errado ou arquivo que não veio junto; `recursos.linguagem` traz a lista das aceitas na **ação** da regra — a coluna "como corrigir" da tabela acima, e o campo `acao` do `--json` —, não na mensagem, que diz só qual valor você escreveu; as duas de demo estão em `50-graficos-diagramas-demos.md`.
+**`recursos.*` — a imagem, a linguagem, a demo, o gráfico ou o diagrama.** `recursos.imagem` é caminho errado ou arquivo que não veio junto; `recursos.linguagem` traz a lista das aceitas na **ação** da regra — a coluna "como corrigir" da tabela acima, e o campo `acao` do `--json` —, não na mensagem, que diz só qual valor você escreveu; as de demo, de gráfico e de diagrama estão em `50-graficos-diagramas-demos.md`.
 
 **`saida.*` — o produto final.** São raras, e uma delas não é culpa sua: `saida.pdf-paginas` pede que você **relate o defeito**, porque o número de páginas é conta do sistema, não escolha do autor.
 
 Dois hábitos que economizam tempo em qualquer família:
 
-- **conserte a causa, não a mensagem.** Uma causa só costuma render várias mensagens — um recurso de fase 2 escrito hoje rende quatro de uma vez (`50-graficos-diagramas-demos.md`). Corrija o que está errado e rode de novo; a lista encolhe sozinha.
+- **conserte a causa, não a mensagem.** Uma causa só costuma render várias mensagens. Corrija o que está errado e rode de novo; a lista encolhe sozinha.
 - **rode depois de cada slide novo**, e não no fim da aula. As mensagens são baratas quando são duas e caras quando são quarenta.
 
 ## Quando ela não acusa

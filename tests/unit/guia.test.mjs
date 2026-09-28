@@ -13,17 +13,23 @@ import {
   decksDoEspecime,
   decksLimpos,
   exemplosPorLayout,
+  faseMaxima,
   gerarGuia,
   montarPacote,
   regrasEssenciais,
   tabelaDeLayouts,
   tabelaDeLimites,
   tabelaDePapeis,
+  tabelaDeRegras,
   tabelaDeVocabulario,
 } from '../../build/guia.mjs';
 
 const RAIZ = new URL('../../', import.meta.url);
 const contrato = JSON.parse(readFileSync(new URL('contrato/contrato.json', RAIZ), 'utf8'));
+// A maior fase que o contrato declara, calculada AQUI e não importada do gerador — é o molde de
+// tests/unit/validador.test.mjs. Uma guarda que perguntasse ao gerador até que fase documentar
+// aprovaria qualquer fase que ele passasse a devolver.
+const FASE_MAXIMA = Math.max(...Object.values(contrato.regras).map((regra) => regra.fase));
 
 test('os blocos gerados de guia/ batem com o que está em disco', async () => {
   const regerado = await gerarGuia({ raiz: RAIZ });
@@ -73,8 +79,37 @@ test('todo layout do contrato aparece na tabela e tem exemplo extraído do espé
 //      `abertura` ele escolhia uma seção sem `id`, que o validador acusa com estrutura.id-ausente,
 //      num guia que manda "copie a forma".
 //
+// Em que fase o (3) valida: na de cada deck, a mesma que o extrator usa — os dois leem decksLimpos,
+// que pergunta a lerERodarEstatica, que calcula a fase pela aula (faseDaAula). Medido na 2d: com
+// essa fase presa em 1, componentes.html sai dos limpos, abertura, figura e demo passam a vir de
+// index.html, e ESTA guarda fica verde — extrator e guarda concordam porque erram juntos. Quem cai é
+// a guarda de cima, que conta os decks limpos.
+//
 // As três juntas são o que guia/00-principios.md promete ao leitor: "a marcação deste guia é tirada
 // de arquivos que o validador aprova, e vem com o endereço de onde saiu".
+// A janela que o Fato 1 do plano da 2d nomeou, fechada por propriedade: um deck do espécime que
+// DEIXA de validar limpo não falha nada no extrator — ele só some da fonte de exemplos, e o guia
+// fica menor calado. O caso concreto é componentes.html, o único deck de fase 2: validado na fase 1,
+// o gráfico e o diagrama dele são erro, e três layouts (abertura, figura e demo) perdem a sua fonte.
+//
+// A exceção é escrita aqui, pelo nome, e é uma só: muitos-blocos.html existe para provocar aviso
+// (a guarda de baixo cobra que ele continue provocando). Todo deck novo do espécime entra nesta
+// conta sozinho, e sair dela é o que tem de doer.
+const DECKS_QUE_AVISAM = new Set(['muitos-blocos.html']);
+
+test('todo deck do espécime conta como limpo, salvo o que existe para provocar aviso', async () => {
+  const limpos = await decksLimpos(RAIZ);
+  const decks = decksDoEspecime(RAIZ);
+  assert.ok(decks.length > 0, 'especime/ não tem deck nenhum');
+  for (const deck of decks) {
+    assert.equal(
+      limpos.has(deck),
+      !DECKS_QUE_AVISAM.has(deck),
+      `especime/${deck}: ${limpos.has(deck) ? 'passou a validar limpo' : 'deixou de validar limpo, e sai calado da fonte de exemplos do guia'}`,
+    );
+  }
+});
+
 test('todo exemplo publicado é trecho literal de um deck pt-BR que valida limpo', async () => {
   const exemplos = await exemplosPorLayout(RAIZ);
   const limpos = await decksLimpos(RAIZ);
@@ -97,22 +132,50 @@ test('todo exemplo publicado é trecho literal de um deck pt-BR que valida limpo
 
 // Spec 5.6: "as tabelas de layouts, vocabulário, papéis e regras do guia são geradas dele". Deriva
 // do contrato, não de uma lista escrita aqui — classe nova entra nesta guarda sozinha.
-test('a tabela de vocabulário traz toda classe e todo atributo de fase 1 do contrato', () => {
+//
+// Desde a 2d, "toda" é toda até a maior fase do contrato — o guia documenta o sistema que existe.
+// Uma tabela presa à fase 1 esconde `.grafico`, `.diagrama`, `data-captura-ms` e o `type` do
+// `script`, e o autor que só lê o guia não tem como escrever um gráfico.
+test('a tabela de vocabulário traz toda classe e todo atributo do contrato, até a maior fase', () => {
+  assert.equal(faseMaxima(contrato), FASE_MAXIMA, 'o gerador documenta até outra fase que não a maior do contrato');
   const tabela = tabelaDeVocabulario(contrato);
   for (const elemento of contrato.html.elementos) {
     assert.ok(tabela.includes(`\`${elemento}\``), `o elemento ${elemento} não aparece na tabela`);
   }
+  for (const [elemento, { dentro }] of Object.entries(contrato.html.elementosFase2 ?? {})) {
+    assert.ok(tabela.includes(`\`${elemento}\`, só dentro de`), `o elemento ${elemento} não aparece com o seu pai obrigatório`);
+    for (const pai of dentro) assert.ok(tabela.includes(`\`${pai}\``), `o pai ${pai} de ${elemento} não aparece`);
+  }
   for (const [nome, regra] of Object.entries(contrato.html.classes)) {
     const presente = tabela.includes(`| \`.${nome}\` |`);
-    assert.equal(presente, !(regra.fase > 1), `classe ${nome}: presença errada para a fase 1`);
+    assert.equal(presente, !(regra.fase > FASE_MAXIMA), `classe ${nome}: presença errada`);
   }
   for (const [seletor, doSeletor] of Object.entries(contrato.html.atributos)) {
     for (const [nome, regra] of Object.entries(doSeletor)) {
       const onde = seletor === '*' ? 'qualquer elemento' : `\`${seletor}\``;
       const presente = tabela.includes(`| \`${nome}\` | ${onde} |`);
-      assert.equal(presente, !(regra.fase > 1), `atributo ${nome} em ${seletor}: presença errada para a fase 1`);
+      assert.equal(presente, !(regra.fase > FASE_MAXIMA), `atributo ${nome} em ${seletor}: presença errada`);
     }
   }
+});
+
+// A guarda que o capítulo de regras não tinha. A de regerar-e-comparar não a substitui: com o
+// filtro de tabelaDeRegras preso a uma fase, `npm run guia` publica a tabela menor e as duas voltam
+// a bater. O "todas" vem do contrato, nunca de um número escrito aqui, e a busca é no ARQUIVO em
+// disco, entre os marcadores — é esse o texto que o autor lê e que os pacotes levam.
+test('o capítulo de regras gerado traz todas as regras do contrato, e uma linha por regra', () => {
+  const validador = readFileSync(new URL('guia/60-validador.md', RAIZ), 'utf8');
+  const entre = validador.match(/<!-- gerado:tabela-de-regras -->\n([\s\S]*?)<!-- \/gerado -->/);
+  assert.ok(entre, 'guia/60-validador.md não tem o bloco gerado da tabela de regras');
+  const linhas = entre[1].split('\n').filter((linha) => linha.startsWith('| `'));
+  const nomes = Object.keys(contrato.regras);
+  assert.ok(nomes.length > 0, 'o contrato não declarou nenhuma regra');
+  assert.equal(linhas.length, nomes.length, `a tabela tem ${linhas.length} regras, e o contrato declara ${nomes.length}`);
+  for (const nome of nomes) {
+    assert.ok(linhas.some((linha) => linha.startsWith(`| \`${nome}\` |`)), `a regra ${nome} não está no capítulo de regras`);
+  }
+  // E o gerador, chamado sem argumento, é o que produz isso — não só o arquivo em disco.
+  assert.equal(tabelaDeRegras(contrato).split('\n').filter((linha) => linha.startsWith('| `')).length, nomes.length);
 });
 
 // O motivo concreto de a tabela existir: `data-grade="12"` não é usado por deck nenhum de
@@ -392,14 +455,14 @@ test('a tabela de metadados de guia/10-estrutura.md traz as metas do contrato, e
 // responde em prosa. Dos quatro grupos, três se deduzem do prefixo do nome (composicao.*, saida.* e,
 // por exclusão, as estáticas); o de carga não — ele junta uma regra de matematica.* e três de
 // recursos.*, e o arquivo as nomeia à mão. A busca é na prosa, com o bloco gerado FORA: a tabela de
-// regras cita todas as regras da fase 1, então procurar no arquivo inteiro passaria sempre.
-test('guia/60-validador.md nomeia, na prosa, todas as regras do grupo de carga da fase 1', () => {
+// regras cita todas as regras, então procurar no arquivo inteiro passaria sempre.
+test('guia/60-validador.md nomeia, na prosa, todas as regras do grupo de carga', () => {
   const validador = readFileSync(new URL('guia/60-validador.md', RAIZ), 'utf8');
   const prosa = validador.replace(/<!-- gerado:[\s\S]*?<!-- \/gerado -->/g, '');
   const daCarga = Object.entries(contrato.regras)
-    .filter(([, regra]) => regra.grupo === 'carga' && !(regra.fase > 1))
+    .filter(([, regra]) => regra.grupo === 'carga' && !(regra.fase > FASE_MAXIMA))
     .map(([nome]) => nome);
-  assert.ok(daCarga.length > 0, 'o contrato não declarou nenhuma regra de fase 1 no grupo de carga');
+  assert.ok(daCarga.length > 0, 'o contrato não declarou nenhuma regra no grupo de carga');
   for (const nome of daCarga) {
     assert.ok(prosa.includes(`\`${nome}\``), `a regra de carga ${nome} não é nomeada na prosa de guia/60-validador.md`);
   }

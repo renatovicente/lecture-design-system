@@ -52,9 +52,26 @@ export function tabelaDeLayouts(contrato) {
 
 const minuscula = (frase) => `${frase[0].toLowerCase()}${frase.slice(1)}`;
 
-export function tabelaDeRegras(contrato, { fase = 1 } = {}) {
+// A maior fase que o contrato declara, lida dele: é até ela que o guia documenta (fase 2d). O molde
+// é o FASE_MAXIMA de tests/unit/validador.test.mjs, alargado às três listas do contrato que marcam
+// fase — regras, classes e atributos —, para que um item novo de fase 3 puxe o guia sozinho mesmo
+// que nenhuma regra tenha nascido junto. Para o AUTOR, fase é detalhe do nosso projeto: o guia não
+// rotula nada com ela, só usa o número para saber o que já vale.
+export function faseMaxima(contrato) {
+  const fases = [
+    ...Object.values(contrato.regras),
+    ...Object.values(contrato.html.classes),
+    ...Object.values(contrato.html.atributos).flatMap((doSeletor) => Object.values(doSeletor)),
+  ].map((entrada) => entrada.fase ?? 1);
+  return Math.max(1, ...fases);
+}
+
+// Cumulativo, como daFase, abaixo: até a fase 2d o filtro era `regra.fase === fase`, com fase 1 por
+// padrão — o capítulo de regras mostrava as 60 da fase 1 e escondia as 4 da fase 2, e chamado com
+// `fase: 2` cairia para 4 (medido: 60 e 4, de 64).
+export function tabelaDeRegras(contrato, { fase = faseMaxima(contrato) } = {}) {
   const linhas = Object.entries(contrato.regras)
-    .filter(([, regra]) => regra.fase === fase)
+    .filter(([, regra]) => daFase(regra, fase))
     .sort(([a], [b]) => a.localeCompare(b, 'pt-BR'))
     // acaoSvg e acaoSvgAltura: as ações que a regra põe no achado de texto de SVG
     // (composicao.tamanho-minimo) — a da figura estreita e a da figura que encolheu pela altura —,
@@ -86,8 +103,9 @@ function ondeVale(seletor) {
 }
 
 // Um item do contrato com `fase: 2` não vale na fase 1 — é o mesmo teste que vocabulario.classe e
-// vocabulario.atributo fazem (`regra.fase > fase`). Sem ele o guia da fase 1 documentaria classe e
-// atributo que o validador recusa hoje.
+// vocabulario.atributo fazem (`regra.fase > fase`). Sem ele um guia de fase 1 documentaria classe e
+// atributo que o validador daquela fase recusa. Declarada com `function` para valer já em
+// tabelaDeRegras, que vem antes no arquivo.
 function daFase(entrada, fase) {
   return !(entrada.fase > fase);
 }
@@ -117,10 +135,17 @@ function tabela(cabecalho, linhas) {
 // A segunda das quatro tabelas da spec 5.6. Ela é o que deixa o guia enumerar valor de atributo sem
 // depender de alguém ter usado o valor num deck: `data-grade="12"` não aparece em especime/,
 // modelos/ nem exemplos/ (medido), então o extrator de exemplos nunca o mostraria.
-export function tabelaDeVocabulario(contrato, { fase = 1 } = {}) {
+export function tabelaDeVocabulario(contrato, { fase = faseMaxima(contrato) } = {}) {
   const partes = [];
 
-  partes.push(`### Elementos\n\n${emCodigo(contrato.html.elementos)}.`);
+  // html.elementosFase2 é o elemento que só vale dentro de certos pais — hoje o `script` de
+  // figure.grafico e figure.diagrama (validador/regras/vocabulario.js). O nome da chave é a fase dele.
+  const restritos = fase >= 2
+    ? Object.entries(contrato.html.elementosFase2 ?? {})
+      .map(([elemento, { dentro }]) => `; e \`${elemento}\`, só dentro de ${dentro.map((pai) => `\`${pai}\``).join(' ou ')}`)
+      .join('')
+    : '';
+  partes.push(`### Elementos\n\n${emCodigo(contrato.html.elementos)}${restritos}.`);
 
   const classes = Object.entries(contrato.html.classes)
     .filter(([, regra]) => daFase(regra, fase))
