@@ -579,10 +579,12 @@ test('o texto de exemplo citado no passo 3 do SKILL.md é o que o esqueleto do p
   const { metadados } = JSON.parse(texto('contrato/contrato.json'));
   const preenchidas = [...texto('bin/aula-usp.mjs').matchAll(/trocarMeta\(html, '([a-z]+)'/g)]
     .map(([, nome]) => nome);
-  // Só as obrigatórias: uma meta opcional que o esqueleto não traz (1.0.1: `video`) não tem texto de
-  // exemplo nenhum a citar, e o passo 3 não manda deixá-la — manda não pô-la.
+  // Só as da fase 1, que são as que o esqueleto (uma aula de fase 1) traz: `video`, de fase 2 e
+  // opcional (1.0.1), não tem texto de exemplo nenhum a citar, e o passo 3 não manda deixá-la —
+  // manda não pô-la. `disciplina` e `aula` também ficaram opcionais na 1.0.1, mas continuam no
+  // esqueleto, com texto de exemplo, e continuam aqui.
   const deixadas = Object.entries(metadados)
-    .filter(([nome, regra]) => regra.obrigatorio && !preenchidas.includes(nome)).map(([nome]) => nome);
+    .filter(([nome, regra]) => (regra.fase ?? 1) === 1 && !preenchidas.includes(nome)).map(([nome]) => nome);
   // Sem isto a guarda fica vazia por um caminho silencioso: `novo` passando a preencher tudo, ou o
   // reconhecimento acima deixando de achar as chamadas, dariam uma lista sem nada a conferir.
   assert.ok(deixadas.length > 0, 'nenhuma meta sobra para o autor preencher — o passo 3 fala de um comando que mudou');

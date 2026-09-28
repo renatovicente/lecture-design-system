@@ -74,7 +74,7 @@ A tabela sai de `contrato/contrato.json` por `npm run guia` — do mesmo arquivo
 | `estrutura.id-ausente` | aviso | Dê à section um id curto, com letras minúsculas, números e hífens. |
 | `estrutura.id-duplicado` | erro | Dê a cada section um id único. |
 | `estrutura.layout` | erro | Use um layout do contrato: capa, abertura, conteudo, afirmacao, figura, demo ou encerramento. |
-| `estrutura.metadados` | erro | Preencha no <head> as metas unidade, disciplina, aula, data (AAAA-MM-DD) e professor. |
+| `estrutura.metadados` | erro | Preencha no <head> as metas obrigatórias, unidade, data (AAAA-MM-DD) e professor, e dê às outras só valores válidos. |
 | `estrutura.nome-curto` | erro | Acrescente à abertura data-curto com até 10 caracteres. |
 | `estrutura.notas-ausentes` | aviso | Acrescente <aside class="notas"> com o que dizer neste slide. |
 | `estrutura.obrigatorio` | erro | Acrescente o elemento obrigatório do layout. |

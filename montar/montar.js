@@ -14,6 +14,9 @@ export function slug(texto) {
     .slice(0, 40).replace(/-+$/, '');
 }
 
+// Partes de uma linha do cromo, unidas por ponto médio; as vazias saem sem deixar separador.
+const juntar = (partes) => partes.filter(Boolean).join(' · ');
+
 export function secoesDaAula(doc) {
   return [...doc.body.children].filter((el) => el.nodeName === 'SECTION' && el.hasAttribute('data-layout'));
 }
@@ -57,7 +60,10 @@ export function montar(doc, { unidades, usp, marca, limites }) {
   const { blocos, blocoDaSecao, modo } = derivarBlocos(secoes, limites);
   for (const bloco of blocos) bloco.id = secoes[bloco.indice].getAttribute('id');
   const total = secoes.length;
-  const rodape = `${meta.disciplina} · ${rot.aula} ${meta.aula}`;
+  // disciplina e aula são opcionais (spec 5.2, 1.0.1): a linha junta só as que existem, sem " · "
+  // sobrando, e sem nenhuma das duas não há linha — nem na capa, nem no rodapé. Com as duas, é o
+  // texto de sempre, "disciplina · Aula N".
+  const rodape = juntar([meta.disciplina, meta.aula && `${rot.aula} ${meta.aula}`]);
 
   secoes.forEach((secao, i) => {
     const layout = secao.getAttribute('data-layout');
@@ -73,7 +79,8 @@ export function montar(doc, { unidades, usp, marca, limites }) {
     const area = envolverEmArea(doc, secao);
 
     if (layout === 'capa') {
-      area.append(criarMetadadosCapa(doc, [rodape, `${meta.professor} · ${formatarData(meta.data, meta.lang)}`]));
+      const linhas = [rodape, juntar([meta.professor, formatarData(meta.data, meta.lang)])].filter(Boolean);
+      area.append(criarMetadadosCapa(doc, linhas));
       if (modo !== 'nenhum') area.append(criarRoteiro(doc, blocos));
       secao.append(criarFaixaDeMarca(doc, { unidade, usp, marca }));
       return;
@@ -97,7 +104,8 @@ export function montar(doc, { unidades, usp, marca, limites }) {
       blocoAtual: encerramento ? null : numero,
       contador: `${i + 1} / ${total}`,
     }));
-    secao.append(encerramento ? criarFaixaDeMarca(doc, { unidade, usp, marca }) : criarRodape(doc, rodape));
+    if (encerramento) secao.append(criarFaixaDeMarca(doc, { unidade, usp, marca }));
+    else if (rodape) secao.append(criarRodape(doc, rodape));
   });
 
   doc.documentElement.setAttribute('data-aula-usp', 'montada');

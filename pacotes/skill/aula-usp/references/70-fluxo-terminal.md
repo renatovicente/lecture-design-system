@@ -55,7 +55,7 @@ aula-usp novo minha-aula --unidade ime
 minha-aula criada a partir de modelos/aula — unidade ime, data 2026-09-20
 ```
 
-`--unidade` é obrigatória e aceita as unidades do sistema (`ime` ou `ifusp` hoje); a data é a de hoje, pelo relógio da sua máquina. As outras três metas — `disciplina`, `aula` e `professor` — ficam com o texto de exemplo, para você as preencher: um nome de professor inventado pelo comando seria pior que um lugar visivelmente vazio.
+`--unidade` é obrigatória e aceita as unidades do sistema (`ime` ou `ifusp` hoje); a data é a de hoje, pelo relógio da sua máquina. As outras três metas — `disciplina`, `aula` e `professor` — ficam com o texto de exemplo, para você as preencher (ou, `disciplina` e `aula`, que são opcionais, apagar): um nome de professor inventado pelo comando seria pior que um lugar visivelmente vazio.
 
 O comando não sobrescreve pasta que já tenha conteúdo, e recusa uma unidade que não exista, com código 2 e sem criar nada. Uma pasta vazia que você já tenha criado é aceita.
 

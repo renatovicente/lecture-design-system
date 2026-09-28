@@ -113,6 +113,38 @@ test('capa: metadados em duas linhas, roteiro e faixa do IME sem assinatura sepa
   assert.equal(capa.querySelector('.cabecalho'), null);
 });
 
+// 1.0.1 (D5): disciplina e aula são opcionais. A linha "disciplina · Aula N" da capa e do rodapé
+// junta só as que existem, sem " · " sobrando; sem nenhuma, não há linha na capa nem rodapé nos
+// slides. As quatro combinações, e em nenhuma delas "undefined" ou um ponto médio solto.
+test('metas disciplina e aula opcionais: as quatro combinações na capa e no rodapé', () => {
+  const tirar = (html, nome) => html.replace(new RegExp(`<meta name="${nome}" content="[^"]*">`), '');
+  const casos = [
+    [[], 'Aprendizado de Máquina · Aula 4'],
+    [['aula'], 'Aprendizado de Máquina'],
+    [['disciplina'], 'Aula 4'],
+    [['disciplina', 'aula'], null],
+  ];
+  for (const [tiradas, linha] of casos) {
+    const html = tiradas.reduce(tirar, AULA_IME());
+    assert.equal(tiradas.length, (AULA_IME().match(/<meta /g).length - html.match(/<meta /g).length), 'o teste não tirou as metas');
+    const { document } = montado(html);
+    const capa = document.getElementById('capa');
+    const esperadas = [...(linha ? [linha] : []), 'Prof. Renato Vicente · 14 set 2026'];
+    assert.deepEqual(textos(capa.querySelectorAll('.metadados-capa p')), esperadas, tiradas.join('+') || 'as duas');
+    const rodapes = textos(document.querySelectorAll('.rodape'));
+    if (linha) {
+      assert.equal(rodapes.length, 3, 'um rodapé por slide de conteúdo — capa, abertura e encerramento não têm');
+      assert.ok(rodapes.every((texto) => texto === linha), rodapes.join(' / '));
+    } else {
+      assert.deepEqual(rodapes, [], 'sem as duas metas, nenhum rodapé');
+    }
+    const tudo = document.documentElement.outerHTML;
+    assert.ok(!tudo.includes('undefined'), `"undefined" na aula montada (${tiradas.join('+')})`);
+    assert.ok(![...document.querySelectorAll('.metadados-capa p, .rodape')].some((el) => /^ · | · $|^·|·$/.test(el.textContent)),
+      'ponto médio sobrando');
+  }
+});
+
 test('introdução: rótulo, quadrados futuros com links, contador e rodapé', () => {
   const { document } = montado(AULA_IME());
   const intro = document.getElementById('por-que-descer');

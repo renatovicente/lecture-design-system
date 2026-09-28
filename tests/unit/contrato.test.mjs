@@ -49,8 +49,9 @@ test('blocos de corpo, grades e filhos (5.3)', () => {
 test('metadados (5.2)', () => {
   assert.deepEqual(contrato.metadados, {
     unidade: { obrigatorio: true, tipo: 'unidade' },
-    disciplina: { obrigatorio: true, tipo: 'texto', max: 60 },
-    aula: { obrigatorio: true, tipo: 'texto', max: 12 },
+    // 1.0.1: disciplina e aula opcionais, por decisão do autor (spec 5.2).
+    disciplina: { obrigatorio: false, tipo: 'texto', max: 60 },
+    aula: { obrigatorio: false, tipo: 'texto', max: 12 },
     data: { obrigatorio: true, tipo: 'data-iso' },
     professor: { obrigatorio: true, tipo: 'texto', max: 40 },
     // 1.0.1: o canto do vídeo do ministrante, opcional e de fase 2 (spec 5.2).

@@ -297,3 +297,50 @@ test('capturas de todos os slides em tests/integracao/saida/', async () => {
   const gravadas = (await readdir(SAIDA)).filter((nome) => nome.endsWith('.png'));
   assert.equal(gravadas.length, 13 + 6 + 12);
 });
+
+// 1.0.1 (D5): sem disciplina e aula, a capa perde a linha "disciplina · Aula N" e os slides perdem o
+// rodapé — e nada mais se move. A referência é a mesma aula com as duas metas, injetadas pela rota:
+// todo elemento que existe nas duas montagens, fora a linha de metadados da capa, fica no mesmo
+// lugar, ao centésimo de px. E o painel do validador, no modo de apresentação, não acusa nada.
+test('sem as metas disciplina e aula, o cromo não se move e o painel fica limpo', async () => {
+  const fixturas = await servirPasta('tests/fixtures/metas/');
+  const endereco = `${fixturas.endereco}/sem-disciplina-e-aula.html`;
+  const POSICOES = () => [...document.querySelectorAll('section.slide')].flatMap((slide) => {
+    const palco = slide.getBoundingClientRect();
+    return [...slide.querySelectorAll('*')]
+      .filter((el) => !el.closest('.metadados-capa, .rodape'))
+      .map((el) => {
+        const r = el.getBoundingClientRect();
+        return [`${slide.id} ${el.nodeName.toLowerCase()}.${[...el.classList].join('.')} ${el.textContent.slice(0, 20)}`,
+          [r.left - palco.left, r.top - palco.top, r.width, r.height].map((v) => Math.round(v * 100) / 100).join(' ')];
+      });
+  });
+  try {
+    const { pagina: sem } = await abrirAula(navegador, `${endereco}?folha`);
+    const com = await navegador.newPage({ viewport: { width: 1400, height: 900 } });
+    await com.route('**/sem-disciplina-e-aula.html?folha', async (rota) => {
+      const resposta = await rota.fetch();
+      const html = (await resposta.text()).replace('<meta name="data"', '<meta name="disciplina" content="Física Estatística">\n<meta name="aula" content="1">\n<meta name="data"');
+      await rota.fulfill({ response: resposta, body: html });
+    });
+    await com.goto(`${endereco}?folha`);
+    await com.waitForFunction(() => document.body?.dataset.montado === 'sim');
+    await com.evaluate(() => document.fonts.ready);
+    assert.equal(await com.evaluate(() => document.querySelectorAll('.rodape').length), 2, 'a referência tem de ter rodapé');
+    assert.equal(await sem.evaluate(() => document.querySelectorAll('.rodape').length), 0);
+    assert.deepEqual(await sem.evaluate(() => [...document.querySelectorAll('.metadados-capa p')].map((p) => p.textContent)),
+      ['Prof. Renato Vicente · 28 set 2026']);
+    assert.deepEqual(await sem.evaluate(POSICOES), await com.evaluate(POSICOES));
+    assert.ok(!(await sem.evaluate(() => document.body.innerText + document.title)).includes('undefined'));
+    await sem.close();
+    await com.close();
+
+    const { pagina, erros } = await abrirAula(navegador, endereco);
+    assert.deepEqual(erros, []);
+    assert.equal(await pagina.evaluate(() => document.querySelector('[data-painel="validador"] .painel-titulo')?.textContent),
+      'Validador Aula USP: 0 erros, 0 avisos');
+    await pagina.close();
+  } finally {
+    await fixturas.fechar();
+  }
+});

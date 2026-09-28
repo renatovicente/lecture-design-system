@@ -13,7 +13,7 @@ Cada `<section>` do corpo do arquivo é um slide. O `data-layout` da seção diz
 O sistema deriva das seções, e desenha sozinho:
 
 - o cabeçalho de cada slide, com o rótulo do bloco, o mapa de quadrados e o contador;
-- o rodapé, com a disciplina e o número da aula;
+- o rodapé, com a disciplina e o número da aula, quando a aula os tem;
 - a linha de metadados e o roteiro da aula, na capa;
 - o número do bloco, a fileira de quadrados e os nomes curtos, nas aberturas;
 - a faixa de marca, com os logos da unidade e da USP, na capa e no encerramento;

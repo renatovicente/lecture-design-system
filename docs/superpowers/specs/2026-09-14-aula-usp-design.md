@@ -303,11 +303,13 @@ Uma unidade nova entra com uma entrada em `unidades.json` e o arquivo do logo, s
 | meta | obrigatório | formato |
 |---|---|---|
 | `unidade` | sim | chave de `unidades.json` (`ime`, `ifusp`) |
-| `disciplina` | sim | texto, até 60 caracteres |
-| `aula` | sim | número ou texto curto, até 12 caracteres |
+| `disciplina` | não | texto, até 60 caracteres |
+| `aula` | não | número ou texto curto, até 12 caracteres |
 | `data` | sim | ISO `AAAA-MM-DD`, exibida por extenso curto no idioma da aula ("14 set 2026" em `pt-BR`, "14 Sep 2026" em `en`) |
 | `professor` | sim | texto, até 40 caracteres |
 | `video` | não | `canto`: reserva o canto inferior direito do slide para o vídeo do ministrante (seção 4.4); marca de fase 2 |
+
+`disciplina` e `aula` são opcionais por decisão do autor (1.0.1): a linha "disciplina · Aula N" da capa e do rodapé (seção 5.3) junta só as que existem, sem separador sobrando ("Física Estatística", ou "Aula 1"), e sem as duas não existe — a capa fica só com "professor · data", e os slides, sem rodapé. O assunto do PDF (seção 8.4) é a disciplina, e sem ela o PDF sai sem assunto.
 
 O `lang` do `<html>` (`pt-BR` ou `en`) escolhe os rótulos do sistema (seção 6.8).
 
@@ -357,8 +359,8 @@ Palavras são as sequências separadas por espaço nos nós de texto, sem contar
 
 - rótulo do cabeçalho: número do bloco com dois dígitos, ponto médio e o `h2` da abertura em caixa alta, com os segmentos unidos por espaço ("03 · BACKPROPAGATION"); antes da primeira abertura, "INTRODUÇÃO"; no encerramento, "ENCERRAMENTO";
 - contador à direita do mapa: "17 / 42";
-- rodapé: "disciplina · Aula N";
-- linha de metadados da capa, em duas linhas de leitura: "disciplina · Aula N" e "professor · data".
+- rodapé: "disciplina · Aula N", só com as metas que existem (seção 5.2);
+- linha de metadados da capa, em duas linhas de leitura: "disciplina · Aula N" e "professor · data" — a primeira só com as metas que existem, e ausente sem as duas.
 
 ### 5.4. Mapa de blocos
 

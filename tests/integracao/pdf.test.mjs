@@ -2,7 +2,9 @@
 // de páginas, tamanho da página e metadados. Chrome de verdade, porque é ele quem gera.
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, mkdir } from 'node:fs/promises';
+import { mkdtemp, mkdir, copyFile, readFile } from 'node:fs/promises';
+import { execFileSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { inflateSync } from 'node:zlib';
@@ -207,5 +209,22 @@ test('printBackground pinta o fundo de cada página (spec 8.4)', async () => {
     const preenchidos = retangulosPreenchidos(pdf, indice);
     assert.ok(preenchidos.includes(fundoDaPagina),
       `página ${indice} sem o preenchimento de fundo "${fundoDaPagina} re f" — printBackground não chegou ao pagina.pdf(). Retângulos preenchidos nesta página: ${JSON.stringify(preenchidos)}`);
+  }
+});
+
+// 1.0.1 (D5): disciplina é opcional, e é ela o assunto do PDF (spec 8.4). Pelo comando inteiro, como
+// o autor o roda: sem a meta, o PDF sai sem assunto — nunca com "undefined" nem vazio —, e os outros
+// metadados continuam lá.
+test('o build de uma aula sem disciplina nem aula grava o PDF sem assunto, e sem "undefined"', async () => {
+  const pasta = await mkdtemp(join(tmpdir(), 'metas-'));
+  await copyFile(new URL('tests/fixtures/metas/sem-disciplina-e-aula.html', RAIZ), join(pasta, 'index.html'));
+  execFileSync('node', [fileURLToPath(new URL('bin/aula-usp.mjs', RAIZ)), 'build', pasta], { encoding: 'utf8', stdio: 'pipe' });
+  const nome = pasta.split('/').pop();
+  const pdf = await PDFDocument.load(await readFile(join(pasta, 'dist', `${nome}.pdf`)));
+  assert.equal(pdf.getSubject(), undefined);
+  assert.equal(pdf.getAuthor(), 'Prof. Renato Vicente');
+  assert.equal(pdf.getTitle(), 'Uma aula sem disciplina nem número');
+  for (const valor of [pdf.getTitle(), pdf.getAuthor(), pdf.getSubject(), pdf.getKeywords()]) {
+    assert.ok(!String(valor ?? '').includes('undefined'), valor);
   }
 });

@@ -19,7 +19,7 @@ Uma aula é um arquivo HTML: um `<head>` com os metadados e a tag do runtime, e 
 <meta name="data" content="2026-03-02">
 <meta name="professor" content="Prof. Nome Sobrenome">
 <script src="https://cdn.jsdelivr.net/npm/aula-usp@1.0.1/dist/aula-usp.js"
-        integrity="sha384-yPcXIrs2tlCMpF+E66YNv6hPZ0mjeKkVWK1wElEVtb9pjm+GET8TaIYQg1k7JbUY" crossorigin="anonymous"></script>
+        integrity="sha384-nLbSC36hg1ZNxIO/oLTU+eC3ETdmORIk71U2yn3f3ZXRgSp0KU6rz+yI5OKaauzs" crossorigin="anonymous"></script>
 </head>
 <body>
 
@@ -86,13 +86,13 @@ Com terminal, `aula-usp novo minha-aula --unidade ime` cria a pasta com este arq
 
 ## Os metadados
 
-As cinco primeiras metas do `<head>` são obrigatórias, e `estrutura.metadados` acusa a que faltar; a última, `video`, é opcional:
+`unidade`, `data` e `professor` são obrigatórias, e `estrutura.metadados` acusa a que faltar; `disciplina`, `aula` e `video` são opcionais:
 
 | meta | o que faz |
 |---|---|
 | `unidade` | escolhe o logo e o nome do instituto na faixa de marca da capa e do encerramento |
-| `disciplina` | entra no rodapé de todo slide e na linha de metadados da capa |
-| `aula` | idem; é um número ou um texto curto, como `4` ou `3b` |
+| `disciplina` | opcional; entra no rodapé de todo slide e na linha de metadados da capa |
+| `aula` | opcional, idem; é um número ou um texto curto, como `4` ou `3b` |
 | `data` | em `AAAA-MM-DD`; o sistema a escreve por extenso curto, no idioma da aula |
 | `professor` | entra na linha de metadados da capa |
 | `video` | opcional; com `canto`, reserva o canto inferior direito do slide para o seu vídeo, e nada da aula aparece ali (`20-layouts.md`) |
@@ -100,6 +100,8 @@ As cinco primeiras metas do `<head>` são obrigatórias, e `estrutura.metadados`
 Esta é a única tabela do guia que não é gerada, porque o contrato tem os nomes das metas mas não tem a coluna da direita, que é justamente o que há para ler aqui. Em lugar do gerador, uma guarda: os testes do sistema comparam os nomes desta tabela com `contrato.metadados` e cobram que sejam os mesmos, na mesma ordem.
 
 `unidade` é uma chave do inventário de marcas do sistema; se a sua não estiver lá, o validador recusa o valor e diz, na mensagem, quais existem. Uma unidade nova entra com uma linha nesse inventário e o arquivo do logo, sem tocar em código.
+
+Sem `disciplina` nem `aula`, a capa fica só com a linha do professor e da data, e os slides ficam sem rodapé; com só uma das duas, a linha traz só a que existe ("Física Estatística", ou "Aula 1"). O esqueleto traz as duas com texto de exemplo: apague a meta que não quiser, em vez de deixá-la vazia.
 
 `disciplina`, `aula` e `professor` têm um tamanho máximo, porque cabem numa linha de rodapé ou de capa; quando um passa, `limites.metadado` diz de quanto era o limite e de quanto foi o seu texto. Não há por que adivinhar: escreva e deixe o validador medir.
 

@@ -77,6 +77,17 @@ test('estrutura.metadados: a meta video é opcional e só aceita os valores do c
   assert.deepEqual(comVideo('sim'), ['a meta "video" aceita só "canto": "sim".']);
 });
 
+// 1.0.1 (D5): disciplina e aula opcionais. Sem uma, sem a outra ou sem as duas, estrutura.metadados
+// não diz nada; unidade, data e professor continuam obrigatórias.
+test('estrutura.metadados: disciplina e aula são opcionais; unidade, data e professor, não', () => {
+  const sem = (...nomes) => rodar(nomes.reduce((html, nome) => html.replace(new RegExp(`<meta name="${nome}" content="[^"]*">`), ''), BASE))
+    .filter((a) => a.regra === 'estrutura.metadados').map((a) => a.mensagem);
+  assert.deepEqual(sem('disciplina'), []);
+  assert.deepEqual(sem('aula'), []);
+  assert.deepEqual(sem('disciplina', 'aula'), []);
+  for (const nome of ['unidade', 'data', 'professor']) assert.deepEqual(sem(nome), [`falta a meta "${nome}" no <head>.`]);
+});
+
 test('o trecho entra numa segunda linha, recuado', () => {
   const linha = linhaDe({ severidade: 'aviso', slide: 3, id: null, regra: 'r', mensagem: 'm.', acao: 'a.', trecho: '<p>x</p>' });
   assert.equal(linha, 'AVISO · slide 3 · r · m. a.\n    <p>x</p>');

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Uma aula sem disciplina nem número</title>
+<!-- 1.0.1 (D5): disciplina e aula são opcionais. Sem as duas, a capa não traz a linha
+     "disciplina · Aula N" e os slides não têm rodapé; a aula valida limpa. A mesma aula com as duas
+     metas é a referência de alinhamento em tests/integracao/layouts.test.mjs. -->
+<meta name="unidade" content="ime">
+<meta name="data" content="2026-09-28">
+<meta name="professor" content="Prof. Renato Vicente">
+<script src="../../../dist/aula-usp.js"></script>
+</head>
+<body>
+
+<section data-layout="capa">
+  <h1>Uma aula avulsa<br><span class="sinal">sem disciplina</span></h1>
+</section>
+
+<section data-layout="abertura" id="primeiro">
+  <h2>Primeiro</h2>
+  <p class="pergunta">O que muda na capa quando a aula não tem disciplina?</p>
+</section>
+
+<section data-layout="conteudo" id="a-capa">
+  <h2>A capa fica com uma linha só</h2>
+  <p>Professor e data continuam embaixo do título; a linha da disciplina e do número some inteira.</p>
+  <aside class="notas">Mostrar a capa de novo.</aside>
+</section>
+
+<section data-layout="abertura" id="segundo">
+  <h2>Segundo</h2>
+  <p class="pergunta">E o rodapé dos slides?</p>
+</section>
+
+<section data-layout="conteudo" id="o-rodape">
+  <h2>O rodapé também some</h2>
+  <p>Sem disciplina e sem número de aula, não há texto de rodapé, e o resto do cromo fica onde estava.</p>
+  <aside class="notas">Apontar o cabeçalho e o contador, que não se movem.</aside>
+</section>
+
+<section data-layout="encerramento">
+  <h2>O que fica</h2>
+  <ol class="sintese">
+    <li>As duas metas são opcionais.</li>
+  </ol>
+</section>
+
+</body>
+</html>

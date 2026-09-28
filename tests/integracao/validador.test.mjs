@@ -27,11 +27,18 @@ test('validar sem argumento explica o uso e sai com 2', () => {
 });
 
 test('cada deck do espécime valida com o que a spec espera', () => {
-  const limpos = ['componentes', 'matematica', 'codigo', 'ifusp'];
+  const limpos = ['componentes', 'matematica', 'codigo', 'ifusp', 'video'];
   for (const nome of limpos) {
     const saida = execFileSync('node', [CLI, 'validar', join(RAIZ, `especime/${nome}.html`)], { encoding: 'utf8' });
     assert.match(saida, /^Validador Aula USP: 0 erros, 0 avisos$/m, `${nome}.html deveria estar limpo`);
   }
   const muitos = execFileSync('node', [CLI, 'validar', join(RAIZ, 'especime/muitos-blocos.html')], { encoding: 'utf8' });
   assert.match(muitos, /^Validador Aula USP: 0 erros, 10 avisos$/m);
+});
+
+// 1.0.1 (D5): disciplina e aula são opcionais. Uma aula sem as duas valida limpa, com os três grupos
+// rodando — composição inclusive, que é onde um cromo desalinhado apareceria.
+test('uma aula sem as metas disciplina e aula valida limpa, com composição', () => {
+  const saida = execFileSync('node', [CLI, 'validar', join(RAIZ, 'tests/fixtures/metas/sem-disciplina-e-aula.html')], { encoding: 'utf8' });
+  assert.equal(saida.trim(), 'Validador Aula USP: 0 erros, 0 avisos');
 });

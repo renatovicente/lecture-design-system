@@ -15,7 +15,7 @@ Cada `<section>` do corpo do arquivo é um slide. O `data-layout` da seção diz
 O sistema deriva das seções, e desenha sozinho:
 
 - o cabeçalho de cada slide, com o rótulo do bloco, o mapa de quadrados e o contador;
-- o rodapé, com a disciplina e o número da aula;
+- o rodapé, com a disciplina e o número da aula, quando a aula os tem;
 - a linha de metadados e o roteiro da aula, na capa;
 - o número do bloco, a fileira de quadrados e os nomes curtos, nas aberturas;
 - a faixa de marca, com os logos da unidade e da USP, na capa e no encerramento;
@@ -97,7 +97,7 @@ Uma aula é um arquivo HTML: um `<head>` com os metadados e a tag do runtime, e 
 <meta name="data" content="2026-03-02">
 <meta name="professor" content="Prof. Nome Sobrenome">
 <script src="https://cdn.jsdelivr.net/npm/aula-usp@1.0.1/dist/aula-usp.js"
-        integrity="sha384-yPcXIrs2tlCMpF+E66YNv6hPZ0mjeKkVWK1wElEVtb9pjm+GET8TaIYQg1k7JbUY" crossorigin="anonymous"></script>
+        integrity="sha384-nLbSC36hg1ZNxIO/oLTU+eC3ETdmORIk71U2yn3f3ZXRgSp0KU6rz+yI5OKaauzs" crossorigin="anonymous"></script>
 </head>
 <body>
 
@@ -164,13 +164,13 @@ Com terminal, `aula-usp novo minha-aula --unidade ime` cria a pasta com este arq
 
 ## Os metadados
 
-As cinco primeiras metas do `<head>` são obrigatórias, e `estrutura.metadados` acusa a que faltar; a última, `video`, é opcional:
+`unidade`, `data` e `professor` são obrigatórias, e `estrutura.metadados` acusa a que faltar; `disciplina`, `aula` e `video` são opcionais:
 
 | meta | o que faz |
 |---|---|
 | `unidade` | escolhe o logo e o nome do instituto na faixa de marca da capa e do encerramento |
-| `disciplina` | entra no rodapé de todo slide e na linha de metadados da capa |
-| `aula` | idem; é um número ou um texto curto, como `4` ou `3b` |
+| `disciplina` | opcional; entra no rodapé de todo slide e na linha de metadados da capa |
+| `aula` | opcional, idem; é um número ou um texto curto, como `4` ou `3b` |
 | `data` | em `AAAA-MM-DD`; o sistema a escreve por extenso curto, no idioma da aula |
 | `professor` | entra na linha de metadados da capa |
 | `video` | opcional; com `canto`, reserva o canto inferior direito do slide para o seu vídeo, e nada da aula aparece ali (**Layouts**) |
@@ -178,6 +178,8 @@ As cinco primeiras metas do `<head>` são obrigatórias, e `estrutura.metadados`
 Esta é a única tabela do guia que não é gerada, porque o contrato tem os nomes das metas mas não tem a coluna da direita, que é justamente o que há para ler aqui. Em lugar do gerador, uma guarda: os testes do sistema comparam os nomes desta tabela com `contrato.metadados` e cobram que sejam os mesmos, na mesma ordem.
 
 `unidade` é uma chave do inventário de marcas do sistema; se a sua não estiver lá, o validador recusa o valor e diz, na mensagem, quais existem. Uma unidade nova entra com uma linha nesse inventário e o arquivo do logo, sem tocar em código.
+
+Sem `disciplina` nem `aula`, a capa fica só com a linha do professor e da data, e os slides ficam sem rodapé; com só uma das duas, a linha traz só a que existe ("Física Estatística", ou "Aula 1"). O esqueleto traz as duas com texto de exemplo: apague a meta que não quiser, em vez de deixá-la vazia.
 
 `disciplina`, `aula` e `professor` têm um tamanho máximo, porque cabem numa linha de rodapé ou de capa; quando um passa, `limites.metadado` diz de quanto era o limite e de quanto foi o seu texto. Não há por que adivinhar: escreva e deixe o validador medir.
 
@@ -1340,7 +1342,7 @@ A tabela sai de `contrato/contrato.json` por `npm run guia` — do mesmo arquivo
 | `estrutura.id-ausente` | aviso | Dê à section um id curto, com letras minúsculas, números e hífens. |
 | `estrutura.id-duplicado` | erro | Dê a cada section um id único. |
 | `estrutura.layout` | erro | Use um layout do contrato: capa, abertura, conteudo, afirmacao, figura, demo ou encerramento. |
-| `estrutura.metadados` | erro | Preencha no <head> as metas unidade, disciplina, aula, data (AAAA-MM-DD) e professor. |
+| `estrutura.metadados` | erro | Preencha no <head> as metas obrigatórias, unidade, data (AAAA-MM-DD) e professor, e dê às outras só valores válidos. |
 | `estrutura.nome-curto` | erro | Acrescente à abertura data-curto com até 10 caracteres. |
 | `estrutura.notas-ausentes` | aviso | Acrescente <aside class="notas"> com o que dizer neste slide. |
 | `estrutura.obrigatorio` | erro | Acrescente o elemento obrigatório do layout. |
@@ -1487,7 +1489,7 @@ aula-usp novo minha-aula --unidade ime
 minha-aula criada a partir de modelos/aula — unidade ime, data 2026-09-20
 ```
 
-`--unidade` é obrigatória e aceita as unidades do sistema (`ime` ou `ifusp` hoje); a data é a de hoje, pelo relógio da sua máquina. As outras três metas — `disciplina`, `aula` e `professor` — ficam com o texto de exemplo, para você as preencher: um nome de professor inventado pelo comando seria pior que um lugar visivelmente vazio.
+`--unidade` é obrigatória e aceita as unidades do sistema (`ime` ou `ifusp` hoje); a data é a de hoje, pelo relógio da sua máquina. As outras três metas — `disciplina`, `aula` e `professor` — ficam com o texto de exemplo, para você as preencher (ou, `disciplina` e `aula`, que são opcionais, apagar): um nome de professor inventado pelo comando seria pior que um lugar visivelmente vazio.
 
 O comando não sobrescreve pasta que já tenha conteúdo, e recusa uma unidade que não exista, com código 2 e sem criar nada. Uma pasta vazia que você já tenha criado é aceita.
 

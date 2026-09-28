@@ -4,8 +4,8 @@
   "idiomas": ["pt-BR", "en"],
   "metadados": {
     "unidade":    { "obrigatorio": true, "tipo": "unidade" },
-    "disciplina": { "obrigatorio": true, "tipo": "texto", "max": 60 },
-    "aula":       { "obrigatorio": true, "tipo": "texto", "max": 12 },
+    "disciplina": { "obrigatorio": false, "tipo": "texto", "max": 60 },
+    "aula":       { "obrigatorio": false, "tipo": "texto", "max": 12 },
     "data":       { "obrigatorio": true, "tipo": "data-iso" },
     "professor":  { "obrigatorio": true, "tipo": "texto", "max": 40 },
     "video":      { "obrigatorio": false, "tipo": "valor", "valores": ["canto"], "fase": 2 }
@@ -176,7 +176,7 @@
     "estrutura.primeiro-slide":  { "severidade": "erro",  "grupo": "estatica", "fase": 1, "acao": "Comece a aula com <section data-layout=\"capa\">." },
     "estrutura.ultimo-slide":    { "severidade": "erro",  "grupo": "estatica", "fase": 1, "acao": "Termine a aula com <section data-layout=\"encerramento\">." },
     "estrutura.layout":          { "severidade": "erro",  "grupo": "estatica", "fase": 1, "acao": "Use um layout do contrato: capa, abertura, conteudo, afirmacao, figura, demo ou encerramento." },
-    "estrutura.metadados":       { "severidade": "erro",  "grupo": "estatica", "fase": 1, "acao": "Preencha no <head> as metas unidade, disciplina, aula, data (AAAA-MM-DD) e professor." },
+    "estrutura.metadados":       { "severidade": "erro",  "grupo": "estatica", "fase": 1, "acao": "Preencha no <head> as metas obrigatórias, unidade, data (AAAA-MM-DD) e professor, e dê às outras só valores válidos." },
     "estrutura.obrigatorio":     { "severidade": "erro",  "grupo": "estatica", "fase": 1, "acao": "Acrescente o elemento obrigatório do layout." },
     "estrutura.fora-do-layout":  { "severidade": "erro",  "grupo": "estatica", "fase": 1, "acao": "Remova o elemento ou mova-o para um layout que o aceite, na ordem prevista." },
     "estrutura.colunas":         { "severidade": "erro",  "grupo": "estatica", "fase": 1, "acao": "Dê à div.colunas um div filho para cada parte de data-grade." },
