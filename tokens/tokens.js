@@ -225,6 +225,15 @@ export const tokens = {
     "numeroProporcao": 0.55,
     "faixaBlocoNDeM": 220
   },
+  "video": {
+    "colunas": 3,
+    "proporcao": 0.5625,
+    "aberturaTopoMin": 312,
+    "largura": 334,
+    "altura": 188,
+    "esquerda": 946,
+    "topo": 532
+  },
   "marca": {
     "uspAltura": 56
   }

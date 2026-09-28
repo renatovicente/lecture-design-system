@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Monte Carlo com o canto do vídeo</title>
+<meta name="unidade" content="ime">
+<meta name="disciplina" content="Métodos Numéricos">
+<meta name="aula" content="7">
+<meta name="data" content="2026-09-28">
+<meta name="professor" content="Prof. Renato Vicente">
+<meta name="video" content="canto">
+<script src="https://cdn.jsdelivr.net/npm/aula-usp@1.0.1/dist/aula-usp.js"
+        integrity="sha384-yPcXIrs2tlCMpF+E66YNv6hPZ0mjeKkVWK1wElEVtb9pjm+GET8TaIYQg1k7JbUY" crossorigin="anonymous"></script>
+</head>
+<body>
+
+<section data-layout="capa">
+  <h1>Monte Carlo<br><span class="sinal">estimar com o acaso</span></h1>
+</section>
+
+<section data-layout="conteudo" id="a-ideia">
+  <h2>Sortear pontos para medir uma área</h2>
+  <div class="colunas" data-grade="8-4">
+    <div>
+      <p>Um quadrado de lado 1 contém um quarto de círculo de raio 1. Sorteamos pontos uniformes no quadrado e contamos quantos caem dentro do círculo.</p>
+      <p>A fração de pontos dentro estima a razão entre as duas áreas, que é \(\pi/4\). Nenhuma integral foi escrita: só contamos.</p>
+    </div>
+    <div>
+      <aside class="destaque" data-rotulo="Ideia">Área é probabilidade vezes a área do quadrado.</aside>
+    </div>
+  </div>
+  <aside class="notas">Desenhar o quadrado e o quarto de círculo no quadro antes de mostrar a conta. A coluna da direita termina cedo de propósito: o canto de baixo é do vídeo.</aside>
+</section>
+
+<section data-layout="abertura" id="sorteio">
+  <h2>O sorteio</h2>
+  <p class="pergunta">Como uma chuva de pontos ao acaso mede a área de um círculo?</p>
+</section>
+
+<section data-layout="conteudo" id="a-conta">
+  <h2>A conta cabe em uma linha</h2>
+  <p class="lide">Com \(N\) pontos, dos quais \(N_d\) caem dentro do círculo:</p>
+  \[ \pi \approx 4 \, \frac{N_d}{N} \]
+  <p>Cada ponto é uma moeda com chance \(\pi/4\) de dar cara.</p>
+  <aside class="notas">Dizer a regra em palavras antes da fórmula: quatro vezes a fração de acertos.</aside>
+</section>
+
+<section data-layout="figura" id="quarto-de-circulo">
+  <h2>Os pontos dentro e fora do quarto de círculo</h2>
+  <figure>
+    <svg viewBox="0 0 640 360" role="img" aria-label="Quadrado com um quarto de círculo e pontos sorteados, dentro em azul e fora em tinta">
+      <rect x="140" y="20" width="320" height="320" fill="none" stroke="#0A0A0A" stroke-width="2"/>
+      <path d="M 140 20 A 320 320 0 0 1 460 340" fill="none" stroke="#0A0A0A" stroke-width="2"/>
+      <circle cx="180" cy="300" r="6" fill="#1094AB"/>
+      <circle cx="220" cy="240" r="6" fill="#1094AB"/>
+      <circle cx="300" cy="280" r="6" fill="#1094AB"/>
+      <circle cx="260" cy="160" r="6" fill="#1094AB"/>
+      <circle cx="350" cy="220" r="6" fill="#1094AB"/>
+      <circle cx="200" cy="100" r="6" fill="#1094AB"/>
+      <circle cx="400" cy="300" r="6" fill="#1094AB"/>
+      <circle cx="420" cy="80" r="6" fill="#0A0A0A"/>
+      <circle cx="440" cy="150" r="6" fill="#0A0A0A"/>
+      <circle cx="380" cy="50" r="6" fill="#0A0A0A"/>
+      <text x="480" y="340" font-size="20" fill="#666666">1</text>
+      <text x="112" y="36" font-size="20" fill="#666666">1</text>
+    </svg>
+    <figcaption>Sete de dez pontos caíram dentro: a estimativa é 4 × 7/10 = 2,8. Com mais pontos, ela se aproxima de 3,14.</figcaption>
+  </figure>
+  <aside class="notas">Com dez pontos a estimativa é grosseira; a próxima pergunta é quantos pontos bastam.</aside>
+</section>
+
+<section data-layout="afirmacao" id="erro">
+  <p class="afirmacao">O erro cai com a raiz do número de pontos: quatro vezes mais pontos, metade do erro.</p>
+  <p class="fonte">Teorema central do limite, aplicado à fração de acertos</p>
+  <aside class="notas">Parar aqui. É a frase que explica por que Monte Carlo é lento, mas não depende da dimensão.</aside>
+</section>
+
+<section data-layout="abertura" id="na-pratica" data-curto="Prática">
+  <h2>Na prática</h2>
+  <p class="pergunta">Quanto código é preciso para reproduzir a estimativa?</p>
+</section>
+
+<section data-layout="conteudo" id="em-python">
+  <h2>Sete linhas de Python</h2>
+  <div class="colunas" data-grade="8-4">
+    <div>
+<pre data-lang="python" data-linhas="5-6">
+import numpy as np
+
+def estimar_pi(n, semente=0):
+    gerador = np.random.default_rng(semente)
+    x, y = gerador.random((2, n))
+    dentro = x**2 + y**2 <= 1
+    return 4 * dentro.mean()
+</pre>
+    </div>
+    <div>
+      <p>As linhas marcadas são o método inteiro.</p>
+    </div>
+  </div>
+  <aside class="notas">Rodar com n = 100, 10 000 e 1 000 000 e comparar o erro com a afirmação de antes.</aside>
+</section>
+
+<section data-layout="demo" id="chuva-de-pontos">
+  <h2>Uma chuva de pontos, cem de cada vez</h2>
+  <div class="demo" data-demo="chuva" data-opcoes='{"lote": 100}'>
+    <img class="estatico" alt="Contagem inicial da demo, sem pontos sorteados" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'%3E%3Crect width='16' height='9' fill='%23D9D9D9'/%3E%3C/svg%3E">
+  </div>
+  <aside class="notas">Clicar três ou quatro vezes e ler a estimativa em voz alta a cada lote.</aside>
+</section>
+
+<section data-layout="encerramento">
+  <h2>O que fica</h2>
+  <ol class="sintese">
+    <li>Uma área vira uma probabilidade, e uma probabilidade vira contagem.</li>
+    <li>O erro cai com a raiz do número de pontos.</li>
+  </ol>
+  <p class="proxima">Próxima aula: amostragem por importância.</p>
+</section>
+
+<script>
+AulaUSP.demo('chuva', {
+  montar(raiz, opcoes) {
+    this.lote = opcoes.lote ?? 100;
+    this.semente = 1;
+    this.total = 0;
+    this.dentro = 0;
+    this.saida = document.createElement('output');
+    const botao = document.createElement('button');
+    botao.type = 'button';
+    botao.textContent = 'sortear';
+    botao.addEventListener('click', () => this.sortear());
+    raiz.append(botao, this.saida);
+    this.mostrar();
+  },
+  // Gerador congruencial com semente fixa: a mesma sequência a cada execução.
+  aleatorio() {
+    this.semente = (this.semente * 48271) % 2147483647;
+    return this.semente / 2147483647;
+  },
+  sortear() {
+    for (let i = 0; i < this.lote; i += 1) {
+      const x = this.aleatorio();
+      const y = this.aleatorio();
+      if (x * x + y * y <= 1) this.dentro += 1;
+    }
+    this.total += this.lote;
+    this.mostrar();
+  },
+  mostrar() {
+    this.saida.textContent = this.total === 0
+      ? 'nenhum ponto ainda'
+      : `${this.total} pontos, estimativa ${(4 * this.dentro / this.total).toFixed(3)}`;
+  },
+});
+</script>
+
+</body>
+</html>

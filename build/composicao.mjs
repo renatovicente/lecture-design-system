@@ -11,9 +11,15 @@ import { criarServidor } from './servir.mjs';
 // fila é fato, não a inferência de texto de build/carregar.mjs; é o que a Task 4 promove a
 // recursos.demos quando há Chrome (instrução do controlador, não da spec 9.3 original).
 const NA_PAGINA = async (contrato) => {
-  const { validar } = await import('/_aula-usp/validador/validar.js');
+  const { validar, faseDaAula } = await import('/_aula-usp/validador/validar.js');
   const { regras } = await import('/_aula-usp/validador/regras/composicao.js');
-  const achados = validar(document, { contrato, regras, grupo: 'composicao', janela: window });
+  // A fase, pela mesma função que o resto do validador chama (1.0.1): até composicao.canto-video, toda
+  // regra de composição era de fase 1, e o default de validar() bastava; sem a fase aqui, a primeira
+  // regra de composição de fase 2 ficaria muda na CLI e no build, e só o painel a veria. Medida sobre
+  // o documento montado: as marcas de fase 2 (metas do <head>, classes e atributos do autor dentro das
+  // section) passam pela montagem intactas, e o cromo não usa nenhuma.
+  const fase = faseDaAula(document, contrato);
+  const achados = validar(document, { contrato, regras, grupo: 'composicao', janela: window, fase });
   // Entradas, não Map: o retorno de page.evaluate atravessa serialização, e um array de pares
   // [nome, definicao] chega intacto onde um Map poderia não chegar. medirComposicao remonta o Map.
   const demos = (window.AulaUSP?.filaDeDemos ?? [])

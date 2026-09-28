@@ -344,6 +344,10 @@ export async function exemplosPorLayout(raiz) {
     if (!limpos.has(nome)) continue;
     const html = readFileSync(new URL(`especime/${nome}`, raiz), 'utf8');
     if (!/<html lang="pt/.test(html)) continue;
+    // 1.0.1: o deck do canto do vídeo (especime/video.html) não dá exemplo canônico. As seções dele
+    // são moldadas para o canto — a coluna da direita para cedo —, e o exemplo de cada layout é a
+    // forma sem ele. Sem este filtro, a capa dele, por ser a menor, tomava o lugar da de index.html.
+    if (/<meta name="video"/.test(html)) continue;
     for (const trecho of html.match(/<section data-layout="[a-z-]+"[\s\S]*?<\/section>/g) ?? []) {
       const layout = trecho.match(/data-layout="([a-z-]+)"/)[1];
       if (!achados[layout] || trecho.length < achados[layout].trecho.length) {

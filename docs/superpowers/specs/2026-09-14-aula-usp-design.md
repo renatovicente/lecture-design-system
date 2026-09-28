@@ -192,6 +192,7 @@ Outras regras:
 - Grades de colunas (`data-grade`): `12`, `6-6`, `8-4`, `4-8` e `4-4-4`.
 - Espaços em múltiplos de 8: 8, 16, 24, 32, 48, 64 e 96.
 - Réguas: `regua`, de 2 px (divisões de passos, contorno de `quadro`, régua superior do código, separador do cabeçalho de tabela), e `regua-forte`, de 4 px (topo e base de tabelas).
+- Canto do vídeo (com a meta `video`, seção 5.2): um retângulo 16:9 de 334 × 188 px encostado nas bordas direita e de baixo, de x = 946 a 1280 e de y = 532 a 720, onde nada da aula aparece. Os dois números são derivados dos tokens do palco por `build/tokens.mjs`, e não digitados: a largura é a das 3 colunas da direita (`video.colunas`), com as 2 calhas entre elas e a margem direita, 3 × 74 + 2 × 24 + 64 = 334 — a coluna 10 começa em 64 + 9 × (74 + 24) = 946; a altura é 334 × 9/16 (`video.proporcao`) arredondado para cima, 188. O cromo recua uma calha para a esquerda do retângulo (rodapé e faixa de marca) ou para cima dele (o conjunto título e pergunta da abertura termina em y = 508 e não começa acima de y = 312, `video.aberturaTopoMin`; a afirmação se centra acima de y = 508); a figura do layout `figura` e a demo perdem as colunas 10 a 12. O corpo do `conteudo` é do autor, e `composicao.canto-video` o confere.
 
 ### 4.5. Marca
 
@@ -306,6 +307,7 @@ Uma unidade nova entra com uma entrada em `unidades.json` e o arquivo do logo, s
 | `aula` | sim | número ou texto curto, até 12 caracteres |
 | `data` | sim | ISO `AAAA-MM-DD`, exibida por extenso curto no idioma da aula ("14 set 2026" em `pt-BR`, "14 Sep 2026" em `en`) |
 | `professor` | sim | texto, até 40 caracteres |
+| `video` | não | `canto`: reserva o canto inferior direito do slide para o vídeo do ministrante (seção 4.4); marca de fase 2 |
 
 O `lang` do `<html>` (`pt-BR` ou `en`) escolhe os rótulos do sistema (seção 6.8).
 
@@ -645,6 +647,7 @@ Cada mensagem traz severidade, número e `id` do slide, regra, problema e ação
 | `composicao.tamanho-minimo` | erro | texto abaixo do mínimo do seu papel, com as exceções da seção 4.3; texto de SVG no tamanho do palco, um achado por figura |
 | `composicao.azul-pequeno` | erro | texto em `azul` abaixo de 32 px; em SVG, pelo `fill` e no tamanho do palco, um achado por figura |
 | `composicao.texto-no-amarelo` | erro | texto sobre `amarelo` em cor diferente de `tinta` |
+| `composicao.canto-video` | erro | com a meta `video`, elemento que pinta alguma coisa — texto próprio, imagem, SVG, controle, fórmula, fundo ou borda — com a caixa dentro do canto do vídeo (seção 4.4), do autor ou do cromo; contêiner que só arruma os filhos não conta, e os filhos contam por si (fase 2) |
 | `matematica.tex-invalido` | erro | TeX que o KaTeX não compila, com a mensagem e o trecho |
 | `matematica.comando-proibido` | erro | comando de cor ou de estilo em TeX (seção 5.5) |
 | `matematica.simbolo-fora-do-tex` | erro | caractere sem glifo nas fontes embutidas, fora de TeX e de código |
@@ -782,7 +785,7 @@ Entregas: repositório no GitHub, com visibilidade decidida pelo autor; pacote n
 
 ## 13. Fora do escopo
 
-Tema Beamer; documentos A4; site de disciplina; modo escuro; transições e animações de slide; vídeo e áudio embutidos; recarga automática no `servir`; mensagens do validador em inglês; portar as aulas de Redes Neurais e de CompAtuaria, que fica para um projeto próprio.
+Tema Beamer; documentos A4; site de disciplina; modo escuro; transições e animações de slide; vídeo e áudio embutidos — com a meta `video`, o sistema reserva o canto do vídeo do ministrante (seção 4.4), mas não embute, não mostra nem controla o vídeo, que o programa de gravação ou transmissão sobrepõe; recarga automática no `servir`; mensagens do validador em inglês; portar as aulas de Redes Neurais e de CompAtuaria, que fica para um projeto próprio.
 
 ## 14. Riscos e mitigações
 

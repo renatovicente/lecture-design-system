@@ -53,6 +53,8 @@ test('metadados (5.2)', () => {
     aula: { obrigatorio: true, tipo: 'texto', max: 12 },
     data: { obrigatorio: true, tipo: 'data-iso' },
     professor: { obrigatorio: true, tipo: 'texto', max: 40 },
+    // 1.0.1: o canto do vídeo do ministrante, opcional e de fase 2 (spec 5.2).
+    video: { obrigatorio: false, tipo: 'valor', valores: ['canto'], fase: 2 },
   });
   assert.deepEqual(contrato.idiomas, ['pt-BR', 'en']);
 });
@@ -98,7 +100,7 @@ test('regras da seção 9.2: ids, severidade, grupo e fase', () => {
     'limites.tabela': [E, est, 1], 'limites.metadado': [E, est, 1],
     'composicao.transbordo': [E, comp, 1], 'composicao.linhas-titulo': [E, comp, 1],
     'composicao.tamanho-minimo': [E, comp, 1], 'composicao.azul-pequeno': [E, comp, 1],
-    'composicao.texto-no-amarelo': [E, comp, 1],
+    'composicao.texto-no-amarelo': [E, comp, 1], 'composicao.canto-video': [E, comp, 2],
     'matematica.tex-invalido': [E, car, 1], 'matematica.comando-proibido': [E, est, 1],
     'matematica.simbolo-fora-do-tex': [E, est, 1], 'matematica.cifrao-suspeito': [A, est, 1],
     'recursos.imagem': [E, car, 1], 'recursos.imagem-externa': [A, est, 1], 'recursos.alt': [E, est, 1],
@@ -108,7 +110,7 @@ test('regras da seção 9.2: ids, severidade, grupo e fase', () => {
     'saida.referencia-externa': [E, sai, 1], 'saida.tamanho': [A, sai, 1],
     'saida.glifo-ausente': [E, sai, 1], 'saida.pdf-paginas': [E, sai, 1],
   };
-  assert.equal(Object.keys(ESPERADO).length, 64);
+  assert.equal(Object.keys(ESPERADO).length, 65);
   assert.deepEqual(Object.keys(contrato.regras).sort(), Object.keys(ESPERADO).sort());
   for (const [id, [severidade, grupo, fase]] of Object.entries(ESPERADO)) {
     const r = contrato.regras[id];

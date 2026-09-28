@@ -13,7 +13,13 @@
     "$type": "fontFamily",
     "sans":  { "$value": ["Geist", "system-ui", "sans-serif"] },
     "mono":  { "$value": ["Geist Mono", "ui-monospace", "monospace"] },
-    "marca": { "$value": ["Open Sans", "sans-serif"] }
+    "video": {
+    "$description": "Canto do vídeo do ministrante (meta video=\"canto\"): as medidas saem de build/tokens.mjs, derivadas destas duas e do palco.",
+    "colunas":   { "$type": "number", "$value": 3, "$description": "colunas da direita que o vídeo ocupa, com as calhas entre elas e a margem direita" },
+    "proporcao": { "$type": "number", "$value": 0.5625, "$description": "altura ÷ largura de um vídeo 16:9" },
+    "aberturaTopoMin": { "$type": "dimension", "$value": { "value": 312, "unit": "px" }, "$description": "com o vídeo, o conjunto título e pergunta da abertura sobe para terminar uma calha acima do canto (y = 508); o topo dele não sobe acima daqui: o primeiro múltiplo de 8 com ao menos 16 px livres abaixo dos nomes da fileira (que terminam em 288,8)" }
+  },
+  "marca": { "$value": ["Open Sans", "sans-serif"] }
   },
   "tipo": {
     "$type": "typography",
@@ -88,6 +94,12 @@
     "folgaRoteiroCapa":    { "$type": "dimension", "$value": { "value": 8, "unit": "px" }, "$description": "folga entre a base do roteiro da capa e a base da zona de conteúdo: absorve o arredondamento entre ambientes (o artifact do claude.ai acusou 1 px de transbordo onde o Chrome local media 0,2)" },
     "numeroProporcao":     { "$type": "number", "$value": 0.55, "$description": "altura do número do bloco atual em relação ao lado do quadrado" },
     "faixaBlocoNDeM":      { "$type": "dimension", "$value": { "value": 220, "unit": "px" } }
+  },
+  "video": {
+    "$description": "Canto do vídeo do ministrante (meta video=\"canto\"): as medidas saem de build/tokens.mjs, derivadas destas duas e do palco.",
+    "colunas":   { "$type": "number", "$value": 3, "$description": "colunas da direita que o vídeo ocupa, com as calhas entre elas e a margem direita" },
+    "proporcao": { "$type": "number", "$value": 0.5625, "$description": "altura ÷ largura de um vídeo 16:9" },
+    "aberturaTopoMin": { "$type": "dimension", "$value": { "value": 312, "unit": "px" }, "$description": "com o vídeo, o conjunto título e pergunta da abertura sobe para terminar uma calha acima do canto (y = 508); o topo dele não sobe acima daqui: o primeiro múltiplo de 8 com ao menos 16 px livres abaixo dos nomes da fileira (que terminam em 288,8)" }
   },
   "marca": {
     "$type": "dimension",

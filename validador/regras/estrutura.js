@@ -60,6 +60,9 @@ export const regras = [
         if (regra.tipo === 'data-iso' && !DATA_ISO.test(valor)) {
           yield { mensagem: `a meta "${nome}" não está em AAAA-MM-DD: "${valor}".` };
         }
+        if (regra.valores && !regra.valores.includes(valor)) {
+          yield { mensagem: `a meta "${nome}" aceita só ${regra.valores.map((v) => `"${v}"`).join(' ou ')}: "${valor}".` };
+        }
         if (regra.tipo === 'unidade' && unidades && !Object.hasOwn(unidades, valor)) {
           yield { mensagem: `unidade desconhecida: "${valor}". Use ${Object.keys(unidades).join(' ou ')}.` };
         }

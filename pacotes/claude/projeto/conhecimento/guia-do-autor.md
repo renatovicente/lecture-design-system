@@ -97,7 +97,7 @@ Uma aula é um arquivo HTML: um `<head>` com os metadados e a tag do runtime, e 
 <meta name="data" content="2026-03-02">
 <meta name="professor" content="Prof. Nome Sobrenome">
 <script src="https://cdn.jsdelivr.net/npm/aula-usp@1.0.1/dist/aula-usp.js"
-        integrity="sha384-h9hScvJ0DZpH8sXEJ13OrwJ8/Cz7K4ZeougGR6AdC3/3qF22ReACpo/WRwPdCDyL" crossorigin="anonymous"></script>
+        integrity="sha384-yPcXIrs2tlCMpF+E66YNv6hPZ0mjeKkVWK1wElEVtb9pjm+GET8TaIYQg1k7JbUY" crossorigin="anonymous"></script>
 </head>
 <body>
 
@@ -164,7 +164,7 @@ Com terminal, `aula-usp novo minha-aula --unidade ime` cria a pasta com este arq
 
 ## Os metadados
 
-As metas do `<head>` são todas obrigatórias, e `estrutura.metadados` acusa a que faltar:
+As cinco primeiras metas do `<head>` são obrigatórias, e `estrutura.metadados` acusa a que faltar; a última, `video`, é opcional:
 
 | meta | o que faz |
 |---|---|
@@ -173,6 +173,7 @@ As metas do `<head>` são todas obrigatórias, e `estrutura.metadados` acusa a q
 | `aula` | idem; é um número ou um texto curto, como `4` ou `3b` |
 | `data` | em `AAAA-MM-DD`; o sistema a escreve por extenso curto, no idioma da aula |
 | `professor` | entra na linha de metadados da capa |
+| `video` | opcional; com `canto`, reserva o canto inferior direito do slide para o seu vídeo, e nada da aula aparece ali (**Layouts**) |
 
 Esta é a única tabela do guia que não é gerada, porque o contrato tem os nomes das metas mas não tem a coluna da direita, que é justamente o que há para ler aqui. Em lugar do gerador, uma guarda: os testes do sistema comparam os nomes desta tabela com `contrato.metadados` e cobram que sejam os mesmos, na mesma ordem.
 
@@ -491,6 +492,39 @@ Do espécime: `especime/index.html#grade-8-4`. Os valores de `data-grade` são a
 A escolha da grade é de significado, não de estética: colunas iguais quando as duas partes têm o mesmo peso — antes e depois, texto e figura —, e desiguais quando uma argumenta e a outra comenta.
 
 Duas contas correm no corpo, e as duas acusam por cortar, nunca por encolher a letra: o total de palavras do slide (`limites.palavras-corpo`) e o de cada coluna (`limites.palavras-coluna`). O total **não** conta o título nem o lide, que têm limite próprio, nem o que está em código, em matemática ou nas notas — é o texto de leitura do corpo, e só ele.
+
+## O canto do vídeo
+
+Para gravar ou transmitir a aula com o seu vídeo sobreposto no canto inferior direito do slide — pelo OBS, pelo Zoom, pelo Meet —, ponha no `<head>` uma meta a mais:
+
+```html
+<meta name="video" content="canto">
+```
+
+O sistema não mostra vídeo nenhum: ele **reserva** o canto. É um retângulo 16:9 de 334 × 188 px no palco de 1280 × 720, encostado nas bordas direita e de baixo — de x = 946 a 1280 e de y = 532 a 720, a largura das colunas 10 a 12 mais a margem direita. Nada da aula aparece ali, e não há moldura: o canto só fica vazio, para o vídeo que o seu programa de transmissão põe por cima. Sem a meta, nada muda.
+
+O que o sistema arruma sozinho:
+
+- o rodapé e a faixa de marca da capa e do encerramento terminam uma calha antes do canto;
+- a abertura sobe: o título e a pergunta terminam em y = 508, e o conjunto não começa acima de y = 312. Cabe um título de duas linhas sem pergunta, ou de uma linha com uma pergunta de até duas; mais que isso é `composicao.transbordo`;
+- a afirmação se centra na zona que sobra acima do canto;
+- a figura do layout `figura` e a demo perdem a faixa das colunas 10 a 12 e mantêm a altura.
+
+O que fica com você é o corpo do `conteudo`. **A coluna da direita termina antes de y = 532**; as outras vão até a base da zona, como sempre. Numa grade `12`, ou num corpo sem colunas, é o corpo inteiro que termina antes do canto. Conta a caixa do bloco, não só as letras: um parágrafo da coluna da direita que desce abaixo de y = 532 entra no canto mesmo que a última linha seja curta. Quem confere é `composicao.canto-video`, com um erro por bloco que entrou e quanto ele entrou, em px.
+
+```html
+<div class="colunas" data-grade="8-4">
+  <div>
+    <p>Um quadrado de lado 1 contém um quarto de círculo de raio 1. Sorteamos pontos uniformes no quadrado e contamos quantos caem dentro do círculo.</p>
+    <p>A fração de pontos dentro estima a razão entre as duas áreas, que é \(\pi/4\). Nenhuma integral foi escrita: só contamos.</p>
+  </div>
+  <div>
+    <aside class="destaque" data-rotulo="Ideia">Área é probabilidade vezes a área do quadrado.</aside>
+  </div>
+</div>
+```
+
+Do espécime: `especime/video.html#a-ideia`. Na grade 8-4, a coluna estreita, que é a da direita, leva um destaque curto e para cedo; a larga, à esquerda, pode descer até a base da zona. O deck inteiro, com os sete layouts e o canto ligado, é `especime/video.html`.
 
 ## Um exemplo de cada layout
 
@@ -1295,6 +1329,7 @@ A tabela sai de `contrato/contrato.json` por `npm run guia` — do mesmo arquivo
 | regra | severidade | como corrigir |
 |---|---|---|
 | `composicao.azul-pequeno` | erro | Use azul só em texto a partir de 32 px. |
+| `composicao.canto-video` | erro | Tire o conteúdo do canto inferior direito, reservado ao vídeo: encurte a coluna da direita, passe o bloco para uma coluna à esquerda ou divida o slide em dois. |
 | `composicao.linhas-titulo` | erro | Encurte o título para caber em duas linhas. |
 | `composicao.tamanho-minimo` | erro | Corte conteúdo em vez de reduzir o texto. Em texto de SVG: ponha a figura numa coluna mais larga ou no layout figura; num SVG seu, aumente também o font-size. Se a figura encolheu pela altura: empilhe menos na vertical: num diagrama, deixe a direção da esquerda para a direita (rankdir=LR, o padrão), use menos níveis ou divida-o em dois; num SVG seu, faça o viewBox mais largo que alto ou aumente o font-size. |
 | `composicao.texto-no-amarelo` | erro | Use só tinta sobre amarelo. |
@@ -1370,7 +1405,7 @@ A coluna "como corrigir" diz o que fazer; ela não tem espaço para dizer o que 
 
 **`limites.*` — não cabe.** A resposta é sempre uma das duas: **corte o conteúdo ou divida o slide em dois.** Reduzir a letra não é uma opção que exista — não há `style`, e nada no sistema encolhe texto para caber. Quando um limite acusa repetidamente no mesmo slide, o problema raramente é o limite: é um slide com duas ideias dentro.
 
-**`composicao.*` — o fonte parecia bem, a página desenhada não.** É o grupo que mede o que só o navegador sabe: quanto de fato ocupou, em quantas linhas o título quebrou, com que tamanho o texto chegou à tela. O conserto é o mesmo dos limites, e a diferença é que aqui você já viu a página e sabe o que sobra.
+**`composicao.*` — o fonte parecia bem, a página desenhada não.** É o grupo que mede o que só o navegador sabe: quanto de fato ocupou, em quantas linhas o título quebrou, com que tamanho o texto chegou à tela. O conserto é o mesmo dos limites, e a diferença é que aqui você já viu a página e sabe o que sobra. Com a meta `video`, `composicao.canto-video` acusa o bloco que entrou no canto reservado ao vídeo; o conserto é tirá-lo de lá — encurtar a coluna da direita ou passar o bloco para a da esquerda (**Layouts**).
 
 **`matematica.*` — delimitador, comando ou símbolo.** Os três casos e os consertos estão em **Matemática e código**.
 

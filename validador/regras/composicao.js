@@ -2,6 +2,9 @@
 // Roda dentro da página — no navegador, no passo 6, antes do motor; no build, no Chrome headless.
 // Só API padrão do DOM, como o resto de validador/.
 import { onde, trechoDe } from '../validar.js';
+// O retângulo do canto do vídeo (tokens video.*, derivados dos do palco por build/tokens.mjs): o mesmo
+// módulo que componentes/ lê para as cores dos gráficos e do código. Nenhum número dele mora aqui.
+import { tokens } from '../../tokens/tokens.js';
 
 const FOLGA = 0.5; // meio pixel, a mesma tolerância dos testes de geometria
 const AMARELO = 'rgb(252, 180, 33)';
@@ -194,6 +197,44 @@ function contarLinhas(titulo) {
   return linhas;
 }
 
+// Canto do vídeo (1.0.1): o que "aparece" num lugar, para composicao.canto-video. Um elemento aparece
+// onde a caixa dele está quando ele pinta alguma coisa por conta própria — tem texto próprio (nó de
+// texto filho direto), é substituído (imagem, SVG, canvas, controle de formulário) ou tem fundo ou
+// borda. Contêiner que só arruma os filhos (div.colunas, a coluna, ul, figure, .area) não conta: a
+// caixa de div.colunas vai até a base da coluna mais longa em toda a largura, e acusá-la pelo canto
+// seria acusar a coluna da esquerda pelo que a da direita não tem. Os filhos dele contam por si.
+// Uma fórmula conta pela caixa do .katex (a do .katex-display é a largura inteira da coluna); o miolo
+// dela não, pela mesma razão de elementosMedidos.
+const SUBSTITUIDOS = new Set(['img', 'svg', 'canvas', 'video', 'input', 'button', 'select', 'textarea', 'output']);
+
+function pinta(elemento, janela) {
+  const nome = elemento.nodeName.toLowerCase();
+  if (elemento.matches('.katex')) return true;
+  if (SUBSTITUIDOS.has(nome)) return true;
+  if (textoProprio(elemento)) return true;
+  const estilo = janela.getComputedStyle(elemento);
+  if (estilo.backgroundColor !== 'rgba(0, 0, 0, 0)' || estilo.backgroundImage !== 'none') return true;
+  return ['Top', 'Right', 'Bottom', 'Left']
+    .some((lado) => Number.parseFloat(estilo[`border${lado}Width`]) > 0 && estilo[`border${lado}Style`] !== 'none');
+}
+
+function* elementosQuePintam(slide, janela) {
+  for (const elemento of slide.querySelectorAll('*')) {
+    if (elemento.nodeName === 'BR' || elemento.closest('aside.notas')) continue;
+    if (elemento.parentElement?.closest('.katex')) continue;
+    // Dentro de um SVG, quem responde é o próprio <svg>, pela caixa inteira.
+    if (elemento.parentElement?.closest('svg')) continue;
+    if (janela.getComputedStyle(elemento).visibility === 'hidden') continue;
+    if (pinta(elemento, janela)) yield elemento;
+  }
+}
+
+// O canto ligado: a meta `video` com um dos valores do contrato (hoje só "canto").
+function cantoLigado(doc, contrato) {
+  const valor = doc.querySelector('meta[name="video"]')?.getAttribute('content')?.trim() ?? '';
+  return (contrato.metadados.video?.valores ?? []).includes(valor);
+}
+
 export const regras = [
   {
     nome: 'composicao.transbordo',
@@ -229,6 +270,45 @@ export const regras = [
             yield {
               ...onde(slides, slide),
               mensagem: `<${elemento.nodeName.toLowerCase()}> tem ${elemento.scrollWidth - elemento.clientWidth} px de conteúdo além da largura.`,
+              trecho: trechoDe(elemento),
+            };
+          }
+        }
+      }
+    },
+  },
+  {
+    // Com a meta video="canto" (spec 5.2 e 4.4), nada da aula aparece no retângulo do vídeo — nem do
+    // autor, nem do sistema. A mesma medida de composicao.transbordo: caixas na tela, com o retângulo
+    // levado do palco para a tela pela escala do palco, e a mesma FOLGA. Sem a meta, não diz nada.
+    // Um achado por elemento, e só pelo de fora: um <strong> dentro de um <p> que já entrou no canto
+    // é o mesmo problema, com a mesma correção.
+    nome: 'composicao.canto-video',
+    *aplicar({ doc, slides, contrato, janela }) {
+      if (!cantoLigado(doc, contrato)) return;
+      const { esquerda, topo, largura, altura } = tokens.video;
+      for (const slide of slides) {
+        const palco = slide.getBoundingClientRect();
+        const escala = escalaDoPalco(slide);
+        const canto = {
+          left: palco.left + esquerda * escala,
+          top: palco.top + topo * escala,
+          right: palco.left + (esquerda + largura) * escala,
+          bottom: palco.top + (topo + altura) * escala,
+        };
+        const acusados = [];
+        for (const elemento of elementosQuePintam(slide, janela)) {
+          if (acusados.some((acusado) => acusado.contains(elemento))) continue;
+          const caixa = elemento.getBoundingClientRect();
+          if (!caixaValida(caixa)) continue;
+          const largo = Math.min(caixa.right, canto.right) - Math.max(caixa.left, canto.left);
+          const alto = Math.min(caixa.bottom, canto.bottom) - Math.max(caixa.top, canto.top);
+          if (largo > FOLGA && alto > FOLGA) {
+            acusados.push(elemento);
+            yield {
+              ...onde(slides, slide),
+              mensagem: `<${elemento.nodeName.toLowerCase()}> entra ${Math.round(largo / escala)} × ${Math.round(alto / escala)} px `
+                + `no canto reservado ao vídeo (x ≥ ${esquerda}, y ≥ ${topo}).`,
               trecho: trechoDe(elemento),
             };
           }

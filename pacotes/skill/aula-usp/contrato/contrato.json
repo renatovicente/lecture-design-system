@@ -7,7 +7,8 @@
     "disciplina": { "obrigatorio": true, "tipo": "texto", "max": 60 },
     "aula":       { "obrigatorio": true, "tipo": "texto", "max": 12 },
     "data":       { "obrigatorio": true, "tipo": "data-iso" },
-    "professor":  { "obrigatorio": true, "tipo": "texto", "max": 40 }
+    "professor":  { "obrigatorio": true, "tipo": "texto", "max": 40 },
+    "video":      { "obrigatorio": false, "tipo": "valor", "valores": ["canto"], "fase": 2 }
   },
   "blocosDeCorpo": ["p", "ul", "ol.passos", "aside.destaque", "aside.quadro", "aside.alerta", "div.exercicio", "table", "pre", "figure", "tex-destaque"],
   "blocosDeCorpoFase2": ["figure.grafico", "figure.diagrama"],
@@ -218,6 +219,7 @@
     "composicao.tamanho-minimo": { "severidade": "erro",  "grupo": "composicao", "fase": 1, "acao": "Corte conteúdo em vez de reduzir o texto.", "acaoSvg": "Ponha a figura numa coluna mais larga ou no layout figura; num SVG seu, aumente também o font-size.", "acaoSvgAltura": "Empilhe menos na vertical: num diagrama, deixe a direção da esquerda para a direita (rankdir=LR, o padrão), use menos níveis ou divida-o em dois; num SVG seu, faça o viewBox mais largo que alto ou aumente o font-size." },
     "composicao.azul-pequeno":   { "severidade": "erro",  "grupo": "composicao", "fase": 1, "acao": "Use azul só em texto a partir de 32 px." },
     "composicao.texto-no-amarelo": { "severidade": "erro", "grupo": "composicao", "fase": 1, "acao": "Use só tinta sobre amarelo." },
+    "composicao.canto-video":    { "severidade": "erro",  "grupo": "composicao", "fase": 2, "acao": "Tire o conteúdo do canto inferior direito, reservado ao vídeo: encurte a coluna da direita, passe o bloco para uma coluna à esquerda ou divida o slide em dois." },
     "matematica.tex-invalido":   { "severidade": "erro",  "grupo": "carga",    "fase": 1, "acao": "Corrija o TeX no trecho indicado." },
     "matematica.comando-proibido": { "severidade": "erro", "grupo": "estatica", "fase": 1, "acao": "Remova do TeX os comandos de cor e de estilo." },
     "matematica.simbolo-fora-do-tex": { "severidade": "erro", "grupo": "estatica", "fase": 1, "acao": "Escreva o símbolo em TeX: \\( \\to \\), \\( \\alpha \\), \\( \\leq \\)." },

@@ -80,6 +80,34 @@ test('grid, zonas, espaços, réguas e mínimos (4.3 e 4.4)', () => {
   assert.deepEqual(s.marca, { uspAltura: 56 });
 });
 
+// Canto do vídeo (spec 4.4, 1.0.1). Os números da spec entram aqui como constantes, com a derivação
+// ao lado: 334 é a largura das colunas 10 a 12 mais a margem direita (a coluna 10 começa em
+// 64 + 9 × (74 + 24) = 946), e 188 é 334 × 9/16 arredondado para cima. O JSON não traz nenhum dos
+// dois: build/tokens.mjs os deriva de video.colunas, video.proporcao e do palco.
+const VIDEO_DA_SPEC = { largura: 334, altura: 188, esquerda: 946, topo: 532 };
+test('canto do vídeo: 334 × 188, encostado nas bordas direita e de baixo, derivado e não digitado', () => {
+  const { colunas, proporcao, aberturaTopoMin, ...medidas } = s.video;
+  assert.deepEqual(medidas, VIDEO_DA_SPEC);
+  assert.equal(colunas, 3);
+  assert.equal(aberturaTopoMin % 8, 0, 'o topo mínimo da abertura com vídeo sai da escala de 8');
+  // A borda esquerda do vídeo é o início da coluna 10 (a primeira das `colunas` da direita).
+  assert.equal(s.video.esquerda, s.palco.margem + (12 - colunas) * (s.palco.coluna + s.palco.calha));
+  assert.equal(s.video.esquerda + s.video.largura, s.palco.largura);
+  assert.equal(s.video.topo + s.video.altura, s.palco.altura);
+  assert.ok(s.video.altura / s.video.largura >= proporcao, 'o retângulo não cabe um vídeo 16:9');
+  for (const nome of Object.keys(VIDEO_DA_SPEC)) {
+    assert.ok(!Object.hasOwn(tokens.video, nome), `video.${nome} está digitado no JSON; tem de ser derivado`);
+  }
+  // A derivação acompanha o dado: com duas colunas, o canto encolhe junto.
+  const duas = structuredClone(tokens);
+  duas.video.colunas.$value = 2;
+  assert.deepEqual(simplificar(duas).video.largura, 2 * 74 + 24 + 64);
+  // E um derivado digitado no JSON é recusado, em vez de competir com a conta.
+  const digitado = structuredClone(tokens);
+  digitado.video.largura = { $type: 'dimension', $value: { value: 334, unit: 'px' } };
+  assert.throws(() => simplificar(digitado), /derivado/);
+});
+
 test('CSS gerado tem as variáveis esperadas e é determinístico', () => {
   const css = gerarCss(tokens);
   assert.equal(css, gerarCss(tokens));
@@ -89,6 +117,7 @@ test('CSS gerado tem as variáveis esperadas e é determinístico', () => {
     '--tipo-leitura-peso-enfase: 600;', '--palco-util: 1152px;', '--espaco-7: 96px;',
     '--zona-conteudo-base: 652px;', '--mapa-quadrado-cabecalho: 16px;', '--mapa-numero-proporcao: 0.55;',
     '--contraste-azul-texto-minimo: 32px;', '--mapa-faixa-bloco-n-de-m: 220px;',
+    '--video-largura: 334px;', '--video-altura: 188px;', '--video-esquerda: 946px;', '--video-topo: 532px;',
   ]) assert.ok(css.includes(v), `faltou ${v}`);
 });
 

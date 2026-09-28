@@ -117,5 +117,12 @@
   --mapa-folga-roteiro-capa: 8px;
   --mapa-numero-proporcao: 0.55;
   --mapa-faixa-bloco-n-de-m: 220px;
+  --video-colunas: 3;
+  --video-proporcao: 0.5625;
+  --video-abertura-topo-min: 312px;
+  --video-largura: 334px;
+  --video-altura: 188px;
+  --video-esquerda: 946px;
+  --video-topo: 532px;
   --marca-usp-altura: 56px;
 }

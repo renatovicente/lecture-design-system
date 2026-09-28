@@ -46,8 +46,18 @@ export function seletoresDeFase2(contrato) {
   for (const [elemento, regra] of Object.entries(contrato.html.elementosFase2 ?? {})) {
     for (const pai of regra.dentro ?? ['']) seletores.push(pai ? `${pai} ${elemento}` : elemento);
   }
+  // 1.0.1: as metas marcadas fase 2 em contrato.metadados (hoje só `video`). Moram no <head>, não
+  // numa section: faseDaAula as procura lá, e só elas (ver SELETOR_DE_META).
+  for (const [nome, regra] of Object.entries(contrato.metadados ?? {})) {
+    if (regra.fase === 2) seletores.push(`meta[name="${nome}"]`);
+  }
   return [...new Set(seletores)];
 }
+
+// Os seletores de meta são os únicos que faseDaAula procura no <head>. Os demais continuam só dentro
+// das section: `script[type]` (html.atributos.script.type, fase 2) casaria um <script type="module">
+// qualquer do <head>, que não é marca de fase nenhuma.
+const SELETOR_DE_META = /^meta\[/;
 
 // A fase de validação de uma aula, decidida por presença: fase 2 quando algum slide do fonte usa
 // alguma das marcas de fase 2 do contrato (seletoresDeFase2, acima), fase 1 quando não usa nenhuma.
@@ -61,8 +71,11 @@ export function seletoresDeFase2(contrato) {
 // gráfico, recursos.dot para o DOT do diagrama (validador/regras/recursos.js e carga.js).
 export function faseDaAula(doc, contrato) {
   const seletores = seletoresDeFase2(contrato);
+  const noCorpo = seletores.filter((seletor) => !SELETOR_DE_META.test(seletor));
+  const noCabecalho = seletores.filter((seletor) => SELETOR_DE_META.test(seletor));
   const slides = slidesDoFonte(doc.body);
-  return slides.some((secao) => seletores.some((seletor) => secao.querySelector(seletor))) ? 2 : 1;
+  if (noCabecalho.some((seletor) => doc.head?.querySelector(seletor))) return 2;
+  return slides.some((secao) => noCorpo.some((seletor) => secao.querySelector(seletor))) ? 2 : 1;
 }
 
 // Os dois modos da spec 3 (3.2 e 3.3). O padrão é o navegador: é o comportamento de antes de o

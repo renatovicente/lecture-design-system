@@ -110,6 +110,19 @@ test('todo deck do espécime conta como limpo, salvo o que existe para provocar 
   }
 });
 
+// 1.0.1: o exemplo canônico de cada layout é a forma sem o canto do vídeo. Medido: sem o filtro de
+// exemplosPorLayout, a capa de especime/video.html, a menor de todas, tomava o lugar da de index.html
+// em silêncio — e a guarda de igualdade, regerada, ficava verde. Com o filtro fora, esta cai.
+test('nenhum exemplo canônico vem de um deck com a meta video', async () => {
+  const exemplos = await exemplosPorLayout(RAIZ);
+  const comVideo = decksDoEspecime(RAIZ)
+    .filter((nome) => readFileSync(new URL(`especime/${nome}`, RAIZ), 'utf8').includes('<meta name="video"'));
+  assert.ok(comVideo.length > 0, 'o espécime não tem deck com a meta video — esta guarda não mede nada');
+  for (const [layout, { deck }] of Object.entries(exemplos)) {
+    assert.ok(!comVideo.includes(deck), `o exemplo de ${layout} vem de especime/${deck}, que tem a meta video`);
+  }
+});
+
 test('todo exemplo publicado é trecho literal de um deck pt-BR que valida limpo', async () => {
   const exemplos = await exemplosPorLayout(RAIZ);
   const limpos = await decksLimpos(RAIZ);

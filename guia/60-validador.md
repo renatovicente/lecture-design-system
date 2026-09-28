@@ -63,6 +63,7 @@ A tabela sai de `contrato/contrato.json` por `npm run guia` — do mesmo arquivo
 | regra | severidade | como corrigir |
 |---|---|---|
 | `composicao.azul-pequeno` | erro | Use azul só em texto a partir de 32 px. |
+| `composicao.canto-video` | erro | Tire o conteúdo do canto inferior direito, reservado ao vídeo: encurte a coluna da direita, passe o bloco para uma coluna à esquerda ou divida o slide em dois. |
 | `composicao.linhas-titulo` | erro | Encurte o título para caber em duas linhas. |
 | `composicao.tamanho-minimo` | erro | Corte conteúdo em vez de reduzir o texto. Em texto de SVG: ponha a figura numa coluna mais larga ou no layout figura; num SVG seu, aumente também o font-size. Se a figura encolheu pela altura: empilhe menos na vertical: num diagrama, deixe a direção da esquerda para a direita (rankdir=LR, o padrão), use menos níveis ou divida-o em dois; num SVG seu, faça o viewBox mais largo que alto ou aumente o font-size. |
 | `composicao.texto-no-amarelo` | erro | Use só tinta sobre amarelo. |
@@ -138,7 +139,7 @@ A coluna "como corrigir" diz o que fazer; ela não tem espaço para dizer o que 
 
 **`limites.*` — não cabe.** A resposta é sempre uma das duas: **corte o conteúdo ou divida o slide em dois.** Reduzir a letra não é uma opção que exista — não há `style`, e nada no sistema encolhe texto para caber. Quando um limite acusa repetidamente no mesmo slide, o problema raramente é o limite: é um slide com duas ideias dentro.
 
-**`composicao.*` — o fonte parecia bem, a página desenhada não.** É o grupo que mede o que só o navegador sabe: quanto de fato ocupou, em quantas linhas o título quebrou, com que tamanho o texto chegou à tela. O conserto é o mesmo dos limites, e a diferença é que aqui você já viu a página e sabe o que sobra.
+**`composicao.*` — o fonte parecia bem, a página desenhada não.** É o grupo que mede o que só o navegador sabe: quanto de fato ocupou, em quantas linhas o título quebrou, com que tamanho o texto chegou à tela. O conserto é o mesmo dos limites, e a diferença é que aqui você já viu a página e sabe o que sobra. Com a meta `video`, `composicao.canto-video` acusa o bloco que entrou no canto reservado ao vídeo; o conserto é tirá-lo de lá — encurtar a coluna da direita ou passar o bloco para a da esquerda (`20-layouts.md`).
 
 **`matematica.*` — delimitador, comando ou símbolo.** Os três casos e os consertos estão em `40-matematica-e-codigo.md`.
 

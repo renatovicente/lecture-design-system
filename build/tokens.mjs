@@ -38,6 +38,21 @@ const px = (d) => {
 const extensao = (token) => token.$extensions?.['br.usp.aula'] ?? {};
 const familiaCss = (lista) => lista.map((f) => (/\s/.test(f) ? `"${f}"` : f)).join(', ');
 
+// Medidas que a spec manda DERIVAR, não digitar: o JSON guarda o que é decisão (quantas colunas o
+// vídeo do ministrante ocupa, a proporção dele), e o gerador faz a conta com os tokens do palco. O
+// formato DTCG não tem expressões, por isso a conta mora aqui e não no JSON; as medidas saem no CSS e
+// no JS como qualquer outra dimensão (spec 4.4, canto do vídeo).
+//   largura = as `colunas` da direita, as calhas entre elas e a margem direita (3 colunas: 334 px);
+//   altura  = largura × proporção (9/16), arredondada para cima (188 px);
+//   esquerda e topo = o canto que sobra encostado nas bordas direita e de baixo (x = 946, y = 532).
+function derivados(saida) {
+  const { video, palco } = saida;
+  if (!video || !palco) return {};
+  const largura = video.colunas * palco.coluna + (video.colunas - 1) * palco.calha + palco.margem;
+  const altura = Math.ceil(largura * video.proporcao);
+  return { video: { largura, altura, esquerda: palco.largura - largura, topo: palco.altura - altura } };
+}
+
 export function simplificar(tokens) {
   const saida = {};
   for (const [grupoNome, grupo] of Object.entries(tokens)) {
@@ -63,6 +78,12 @@ export function simplificar(tokens) {
       } else throw new Error(`tipo não suportado: ${tipo} em ${grupoNome}.${nome}`);
     }
   }
+  for (const [grupo, medidas] of Object.entries(derivados(saida))) {
+    for (const nome of Object.keys(medidas)) {
+      if (Object.hasOwn(saida[grupo], nome)) throw new Error(`${grupo}.${nome} é derivado: tire-o do JSON`);
+    }
+    Object.assign(saida[grupo], medidas);
+  }
   return saida;
 }
 
@@ -72,7 +93,8 @@ export function gerarCss(tokens) {
   for (const [grupo, itens] of Object.entries(s)) {
     for (const [nome, valor] of Object.entries(itens)) {
       const base = `--${kebab(grupo)}-${kebab(nome)}`;
-      const tipo = tokens[grupo][nome].$type ?? tokens[grupo].$type;
+      // Derivado (ver derivados, acima): não está no JSON, e é sempre uma medida em px.
+      const tipo = tokens[grupo][nome] ? tokens[grupo][nome].$type ?? tokens[grupo].$type : 'dimension';
       if (tipo === 'color') linhas.push([base, valor]);
       else if (tipo === 'dimension') linhas.push([base, `${valor}px`]);
       else if (tipo === 'number' || tipo === 'fontWeight') linhas.push([base, String(valor)]);

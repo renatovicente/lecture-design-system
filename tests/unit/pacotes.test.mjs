@@ -404,7 +404,7 @@ const BASE_DO_ACERVO = {
   'pacotes/gpt/gpt-personalizado': 'conhecimento/',
 };
 
-test('o contrato e os seis decks do espécime chegam inteiros aos três pacotes que levam o guia', () => {
+test('o contrato e todos os decks do espécime chegam inteiros aos três pacotes que levam o guia', () => {
   const decks = decksDoEspecime(RAIZ);
   assert.ok(decks.length > 0, 'especime/ não tem deck nenhum — o resto desta guarda não mede nada');
   const doRepositorio = ['contrato/contrato.json', ...decks.map((nome) => `especime/${nome}`)];
@@ -579,7 +579,10 @@ test('o texto de exemplo citado no passo 3 do SKILL.md é o que o esqueleto do p
   const { metadados } = JSON.parse(texto('contrato/contrato.json'));
   const preenchidas = [...texto('bin/aula-usp.mjs').matchAll(/trocarMeta\(html, '([a-z]+)'/g)]
     .map(([, nome]) => nome);
-  const deixadas = Object.keys(metadados).filter((nome) => !preenchidas.includes(nome));
+  // Só as obrigatórias: uma meta opcional que o esqueleto não traz (1.0.1: `video`) não tem texto de
+  // exemplo nenhum a citar, e o passo 3 não manda deixá-la — manda não pô-la.
+  const deixadas = Object.entries(metadados)
+    .filter(([nome, regra]) => regra.obrigatorio && !preenchidas.includes(nome)).map(([nome]) => nome);
   // Sem isto a guarda fica vazia por um caminho silencioso: `novo` passando a preencher tudo, ou o
   // reconhecimento acima deixando de achar as chamadas, dariam uma lista sem nada a conferir.
   assert.ok(deixadas.length > 0, 'nenhuma meta sobra para o autor preencher — o passo 3 fala de um comando que mudou');

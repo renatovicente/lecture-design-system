@@ -16,7 +16,7 @@ Comece toda aula a partir do modelo. Ele é o esqueleto que valida: capa, duas a
 
 Este é o ambiente do **artifact**: a aula aparece ao lado da conversa e o professor a vê enquanto você escreve. Trabalhe assim:
 
-1. **Pergunte o que falta** para o `<head>`: unidade, disciplina, número da aula, data e professor. Todas são obrigatórias.
+1. **Pergunte o que falta** para o `<head>`: unidade, disciplina, número da aula, data e professor. Essas cinco são obrigatórias; a meta `video`, opcional, só entra se o autor pedir o canto do vídeo reservado.
 2. **Pergunte o recorte da aula** antes de escrever: quantos blocos, que pergunta cada um responde, o que o aluno tem de levar embora. A aula se organiza em blocos, e o aluno vê essa estrutura no mapa do cabeçalho.
 3. **Escreva bloco a bloco**, atualizando o artifact, e não a aula inteira de uma vez.
 4. **Peça ao professor a lista do validador** a cada bloco: a tecla **V** abre o painel dentro da aula, e o botão "Copiar para o chat" copia a lista inteira. Uma lista colada aqui traz o nome da regra, o slide, o trecho e o conserto.

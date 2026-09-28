@@ -71,6 +71,39 @@ A escolha da grade é de significado, não de estética: colunas iguais quando a
 
 Duas contas correm no corpo, e as duas acusam por cortar, nunca por encolher a letra: o total de palavras do slide (`limites.palavras-corpo`) e o de cada coluna (`limites.palavras-coluna`). O total **não** conta o título nem o lide, que têm limite próprio, nem o que está em código, em matemática ou nas notas — é o texto de leitura do corpo, e só ele.
 
+## O canto do vídeo
+
+Para gravar ou transmitir a aula com o seu vídeo sobreposto no canto inferior direito do slide — pelo OBS, pelo Zoom, pelo Meet —, ponha no `<head>` uma meta a mais:
+
+```html
+<meta name="video" content="canto">
+```
+
+O sistema não mostra vídeo nenhum: ele **reserva** o canto. É um retângulo 16:9 de 334 × 188 px no palco de 1280 × 720, encostado nas bordas direita e de baixo — de x = 946 a 1280 e de y = 532 a 720, a largura das colunas 10 a 12 mais a margem direita. Nada da aula aparece ali, e não há moldura: o canto só fica vazio, para o vídeo que o seu programa de transmissão põe por cima. Sem a meta, nada muda.
+
+O que o sistema arruma sozinho:
+
+- o rodapé e a faixa de marca da capa e do encerramento terminam uma calha antes do canto;
+- a abertura sobe: o título e a pergunta terminam em y = 508, e o conjunto não começa acima de y = 312. Cabe um título de duas linhas sem pergunta, ou de uma linha com uma pergunta de até duas; mais que isso é `composicao.transbordo`;
+- a afirmação se centra na zona que sobra acima do canto;
+- a figura do layout `figura` e a demo perdem a faixa das colunas 10 a 12 e mantêm a altura.
+
+O que fica com você é o corpo do `conteudo`. **A coluna da direita termina antes de y = 532**; as outras vão até a base da zona, como sempre. Numa grade `12`, ou num corpo sem colunas, é o corpo inteiro que termina antes do canto. Conta a caixa do bloco, não só as letras: um parágrafo da coluna da direita que desce abaixo de y = 532 entra no canto mesmo que a última linha seja curta. Quem confere é `composicao.canto-video`, com um erro por bloco que entrou e quanto ele entrou, em px.
+
+```html
+<div class="colunas" data-grade="8-4">
+  <div>
+    <p>Um quadrado de lado 1 contém um quarto de círculo de raio 1. Sorteamos pontos uniformes no quadrado e contamos quantos caem dentro do círculo.</p>
+    <p>A fração de pontos dentro estima a razão entre as duas áreas, que é \(\pi/4\). Nenhuma integral foi escrita: só contamos.</p>
+  </div>
+  <div>
+    <aside class="destaque" data-rotulo="Ideia">Área é probabilidade vezes a área do quadrado.</aside>
+  </div>
+</div>
+```
+
+Do espécime: `especime/video.html#a-ideia`. Na grade 8-4, a coluna estreita, que é a da direita, leva um destaque curto e para cedo; a larga, à esquerda, pode descer até a base da zona. O deck inteiro, com os sete layouts e o canto ligado, é `especime/video.html`.
+
 ## Um exemplo de cada layout
 
 Um por layout, extraído dos decks de `especime/` que validam **sem nenhum achado** — nem erro, nem aviso. É o que torna seguro o que vem a seguir: copie a forma, porque a forma abaixo é a que o validador aprova em silêncio. O texto é de demonstração e existe para exercitar o layout.

@@ -380,3 +380,39 @@ figcaption {
 .demo > img.estatico {
   display: none;
 }
+
+/* ---------- canto do vídeo (spec 4.4 e 5.2, meta video="canto") ---------- */
+
+/* Só sob data-video, que montar/montar.js põe em cada slide quando a meta existe: sem a meta, nenhuma
+   regra desta seção casa, e a aula monta como antes. O retângulo de tokens video.* (x de 946 a 1280,
+   y de 532 a 720) fica vazio — sem moldura, o sistema não desenha o vídeo, só o espaço dele. O cromo
+   sai de lá por dois caminhos, escolhidos por elemento:
+   - para a esquerda, com uma calha de folga, o que tem de ficar na linha de base de sempre: rodapé e
+     faixa de marca (a assinatura USP, à direita, é o que entrava no canto);
+   - para cima, uma calha acima do canto, o que o layout alinha pela base da zona: o conjunto título e
+     pergunta da abertura (e com ele "Bloco N de M") e a afirmação, centrada na zona que sobra;
+   - figura e demo, que ocupam a zona inteira, perdem a faixa das colunas 10 a 12 e mantêm a altura:
+     uma figura larga perde menos assim que pela altura. */
+.slide[data-video="canto"] {
+  --video-recuo: calc(var(--video-largura) + var(--palco-calha));
+  --video-base: calc(var(--video-topo) - var(--palco-calha));
+}
+
+.slide[data-video="canto"] > .rodape,
+.slide[data-video="canto"] > .faixa-de-marca {
+  right: var(--video-recuo);
+}
+
+.slide[data-video="canto"][data-layout="abertura"] > .area {
+  bottom: calc(var(--palco-altura) - var(--video-base));
+  max-height: calc(var(--video-base) - var(--video-abertura-topo-min));
+}
+
+.slide[data-video="canto"][data-layout="afirmacao"] > .area {
+  bottom: calc(var(--palco-altura) - var(--video-base));
+}
+
+.slide[data-video="canto"][data-layout="figura"] figure,
+.slide[data-video="canto"][data-layout="demo"] .demo {
+  margin-right: calc(var(--video-recuo) - var(--palco-margem));
+}

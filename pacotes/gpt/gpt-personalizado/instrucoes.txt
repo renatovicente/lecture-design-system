@@ -12,7 +12,7 @@ Gráfico, diagrama e demo têm a forma e as armadilhas no capítulo de gráficos
 
 COMO TRABALHAR
 
-1. Pergunte o que falta para o <head>: unidade, disciplina, número da aula, data e professor. Todas as metas são obrigatórias.
+1. Pergunte o que falta para o <head>: unidade, disciplina, número da aula, data e professor. Essas cinco metas são obrigatórias; a meta video, opcional, só entra se o autor pedir o canto do vídeo reservado.
 2. Pergunte o recorte antes de escrever: quantos blocos, que pergunta cada bloco responde, o que o aluno tem de levar embora.
 3. Escreva bloco a bloco, e não a aula inteira de uma vez.
 4. Peça ao professor a lista do validador a cada bloco. A tecla V abre o painel dentro da aula, e o botão "Copiar para o chat" copia a lista inteira, com o nome da regra, o slide, o trecho e o conserto. Em file:// esse botão vem desabilitado; nesse caso o professor copia as linhas à mão.

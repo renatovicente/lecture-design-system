@@ -8,22 +8,22 @@ const documento = (cabeca, lang) => parseHTML(
   `<!DOCTYPE html><html${lang ? ` lang="${lang}"` : ''}><head>${cabeca}</head><body></body></html>`,
 ).document;
 
-test('lerMetadados lê as cinco metas e o idioma', () => {
+test('lerMetadados lê as seis metas e o idioma', () => {
   const doc = documento(
     '<meta name="unidade" content="ime"><meta name="disciplina" content=" Redes Neurais ">'
     + '<meta name="aula" content="4"><meta name="data" content="2026-09-14">'
-    + '<meta name="professor" content="Prof. Renato Vicente">',
+    + '<meta name="professor" content="Prof. Renato Vicente"><meta name="video" content="canto">',
     'en',
   );
   assert.deepEqual(lerMetadados(doc), {
     unidade: 'ime', disciplina: 'Redes Neurais', aula: '4', data: '2026-09-14',
-    professor: 'Prof. Renato Vicente', lang: 'en',
+    professor: 'Prof. Renato Vicente', video: 'canto', lang: 'en',
   });
 });
 
 test('metas ausentes viram texto vazio e o idioma padrão é pt-BR', () => {
   assert.deepEqual(lerMetadados(documento('')), {
-    unidade: '', disciplina: '', aula: '', data: '', professor: '', lang: 'pt-BR',
+    unidade: '', disciplina: '', aula: '', data: '', professor: '', video: '', lang: 'pt-BR',
   });
 });
 

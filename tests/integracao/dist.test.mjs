@@ -45,7 +45,7 @@ async function montar(caminho) {
   return { ...aberta, titulo };
 }
 
-for (const deck of ['index.html', 'matematica.html', 'codigo.html']) {
+for (const deck of ['index.html', 'matematica.html', 'codigo.html', 'video.html']) {
   test(`${deck} monta pelo pacote de dist/, sem erro de console`, async (t) => {
     const { pagina, erros, titulo } = await montar(`especime/${deck}`);
     t.after(() => pagina.close());

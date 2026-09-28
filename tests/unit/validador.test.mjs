@@ -67,6 +67,16 @@ test('achado que não é de um slide escreve "aula" no lugar do número', () => 
   assert.ok(linhaDe(achado).startsWith('ERRO · aula · estrutura.metadados · falta a meta "professor" no <head>.'));
 });
 
+// 1.0.1: meta opcional com valores fechados (contrato.metadados.video.valores). Ausente, nada; com um
+// valor do contrato, nada; com outro, estrutura.metadados diz quais valem.
+test('estrutura.metadados: a meta video é opcional e só aceita os valores do contrato', () => {
+  const comVideo = (valor) => rodar(BASE.replace('</head>', `<meta name="video" content="${valor}"></head>`), estrutura, { fase: 2 })
+    .filter((a) => a.regra === 'estrutura.metadados').map((a) => a.mensagem);
+  assert.deepEqual(rodar(BASE).filter((a) => a.regra === 'estrutura.metadados'), []);
+  assert.deepEqual(comVideo('canto'), []);
+  assert.deepEqual(comVideo('sim'), ['a meta "video" aceita só "canto": "sim".']);
+});
+
 test('o trecho entra numa segunda linha, recuado', () => {
   const linha = linhaDe({ severidade: 'aviso', slide: 3, id: null, regra: 'r', mensagem: 'm.', acao: 'a.', trecho: '<p>x</p>' });
   assert.equal(linha, 'AVISO · slide 3 · r · m. a.\n    <p>x</p>');
@@ -434,6 +444,16 @@ test('faseDaAula decide pela presença das marcas de fase 2 do contrato, lidas d
   // Só dentro das section: a mesma marca fora de qualquer slide não é conteúdo de aula.
   const fora = parseHTML(aula('').replace('</body>', '<div class="demo" data-demo="x" data-captura-ms="1"></div></body>')).document;
   assert.equal(faseDaAula(fora, contrato), 1);
+  // 1.0.1: uma meta de fase 2 (contrato.metadados.video) liga a fase 2 pelo <head> — e só as metas
+  // são procuradas lá: um <script type="module"> no <head> casaria `script[type]`, que é de fase 2
+  // dentro de figure.grafico, e não pode ligar nada.
+  const comVideo = parseHTML(aula('').replace('</head>', '<meta name="video" content="canto"></head>')).document;
+  assert.equal(faseDaAula(comVideo, contrato), 2);
+  const semVideo = structuredClone(contrato);
+  semVideo.metadados.video = semFase(semVideo.metadados.video);
+  assert.equal(faseDaAula(comVideo, semVideo), 1, 'a meta de fase 2 tem de vir do contrato');
+  const comModulo = parseHTML(aula('').replace('</head>', '<script type="module"></script></head>')).document;
+  assert.equal(faseDaAula(comModulo, contrato), 1);
 });
 
 // Por construção, toda marca de fase 2 é algo que a fase 1 recusa (validar.js:seletoresDeFase2).
@@ -447,8 +467,10 @@ test('faseDaAula: os decks do repositório ficam na fase em que já estavam', ()
     'exemplos/descida-do-gradiente/index.html',
     'modelos/aula/index.html',
   ].map((caminho) => [caminho, faseDaAula(ler(caminho), contrato)]));
+  // 1.0.1: especime/video.html é de fase 2 pela meta video, que mora no <head>.
+  const deFase2 = ['especime/componentes.html', 'especime/video.html'];
   for (const [caminho, fase] of Object.entries(fases)) {
-    assert.equal(fase, caminho === 'especime/componentes.html' ? 2 : 1, caminho);
+    assert.equal(fase, deFase2.includes(caminho) ? 2 : 1, caminho);
   }
 });
 

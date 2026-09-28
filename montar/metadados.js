@@ -1,7 +1,7 @@
 // Metadados da aula (spec 5.2) e data no idioma da aula.
 import { rotulosPara } from '../motor/rotulos.js';
 
-const METAS = ['unidade', 'disciplina', 'aula', 'data', 'professor'];
+const METAS = ['unidade', 'disciplina', 'aula', 'data', 'professor', 'video'];
 
 export function lerMetadados(doc) {
   const dados = {};

@@ -65,6 +65,10 @@ export function montar(doc, { unidades, usp, marca, limites }) {
     secao.classList.add('slide');
     secao.setAttribute('data-indice', String(i + 1));
     secao.setAttribute('data-mapa', modo);
+    // Canto do vídeo (spec 5.2 e 4.4): a marca vai em cada slide, como data-mapa, e é só sob ela que
+    // o CSS recua o cromo (estilos/layouts.css). Sem a meta, nenhum atributo — e nada muda. O valor
+    // passa como está: quem o confere contra o contrato é estrutura.metadados.
+    if (meta.video) secao.setAttribute('data-video', meta.video);
     if (numero !== null) secao.setAttribute('data-bloco', String(numero));
     const area = envolverEmArea(doc, secao);
 

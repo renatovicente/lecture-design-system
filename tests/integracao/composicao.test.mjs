@@ -1,16 +1,20 @@
 // Composição (spec 9.2 e 9.3): as cinco regras medidas no Chrome, sobre o espécime e sobre mutações.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
+import { readFile, readdir } from 'node:fs/promises';
+import { PNG } from 'pngjs';
 import { iniciarChrome, servirPasta, RAIZ } from './utilitarios.mjs';
+import { tokens } from '../../tokens/tokens.js';
 
 const contrato = JSON.parse(await readFile(new URL('contrato/contrato.json', RAIZ), 'utf8'));
 
 // Dentro da página: importa o validador pelo caminho do servidor e roda o grupo de composição.
 const RODAR = async (contrato) => {
-  const { validar } = await import('/_aula-usp/validador/validar.js');
+  const { validar, faseDaAula } = await import('/_aula-usp/validador/validar.js');
   const { regras } = await import('/_aula-usp/validador/regras/composicao.js');
-  return validar(document, { contrato, regras, grupo: 'composicao', janela: window })
+  // A fase como build/composicao.mjs a calcula: composicao.canto-video é de fase 2.
+  const fase = faseDaAula(document, contrato);
+  return validar(document, { contrato, regras, grupo: 'composicao', janela: window, fase })
     .map((achado) => ({ regra: achado.regra, slide: achado.slide, mensagem: achado.mensagem, acao: achado.acao }));
 };
 
@@ -35,8 +39,11 @@ async function medir(arquivo, mutacao) {
   return achados;
 }
 
-test('os seis decks do espécime não têm problema de composição', async () => {
-  for (const arquivo of ['index.html', 'componentes.html', 'matematica.html', 'codigo.html', 'ifusp.html', 'muitos-blocos.html']) {
+const DECKS = (await readdir(new URL('especime/', RAIZ))).filter((nome) => nome.endsWith('.html')).sort();
+
+test('nenhum deck do espécime tem problema de composição', async () => {
+  assert.ok(DECKS.includes('video.html'), 'o espécime perdeu o deck do canto do vídeo');
+  for (const arquivo of DECKS) {
     const achados = await medir(arquivo);
     assert.deepEqual(achados, [], `${arquivo}: ${achados.map((a) => a.mensagem).join(' / ')}`);
   }
@@ -252,14 +259,14 @@ async function medirFixture(pasta, arquivo) {
 // eram o mecanismo errado (fill de SVG e <sub>, que está em papeis.excecoes) e agora mostram o
 // mecanismo certo, mesmo continuando fora do alcance do vocabulário de um autor real (ver comentário
 // em cada fixture).
-test('as cinco fixtures de composição discriminam bom de ruim, medidas no Chrome', async () => {
-  const nomes = [
-    'composicao.transbordo',
-    'composicao.linhas-titulo',
-    'composicao.tamanho-minimo',
-    'composicao.azul-pequeno',
-    'composicao.texto-no-amarelo',
-  ];
+// 1.0.1: a lista deixou de ser escrita aqui — são todas as regras do grupo composicao no contrato,
+// cada uma com o seu par em tests/fixtures/validador/ (a sexta é composicao.canto-video: a mesma aula
+// com a meta video, ruim, e sem ela, bom). RODAR calcula a fase pela aula, como build/composicao.mjs.
+// Inversão medida: sem o laço de composicao.canto-video, é este o teste que cai ("ruim.html de
+// composicao.canto-video não acusou a própria regra"); a guarda do CSS, abaixo, fica verde.
+test('toda regra de composição do contrato tem fixture que discrimina bom de ruim, medida no Chrome', async () => {
+  const nomes = Object.entries(contrato.regras).filter(([, regra]) => regra.grupo === 'composicao').map(([nome]) => nome);
+  assert.ok(nomes.includes('composicao.canto-video'));
   for (const nome of nomes) {
     const bom = await medirFixture(nome, 'bom.html');
     const ruim = await medirFixture(nome, 'ruim.html');
@@ -277,4 +284,151 @@ test('conteúdo dentro de aside.notas não é medido', async () => {
       + '<div style="background:rgb(252,180,33);color:red">amarelo</div>';
   });
   assert.deepEqual(achados, []);
+});
+
+// ---------- canto do vídeo (1.0.1) ----------
+
+// O retângulo, dos tokens (build/tokens.mjs o deriva do palco: x ≥ 946, y ≥ 532).
+const CANTO = {
+  esquerda: tokens.video.esquerda,
+  topo: tokens.video.topo,
+  direita: tokens.video.esquerda + tokens.video.largura,
+  base: tokens.video.topo + tokens.video.altura,
+};
+
+// Dentro da página, com o retângulo em px do palco: os elementos do slide que pintam alguma coisa —
+// texto próprio, imagem, SVG, controle, fórmula, fundo ou borda — e cuja caixa entra no retângulo.
+// Escrita aqui de novo, e não importada de validador/regras/composicao.js: esta é a guarda do CSS, e
+// não pode herdar um defeito da regra (a regra tem a fixture dela, no teste de fixtures acima).
+const INTERSECOES = (canto) => {
+  const pinta = (el) => {
+    if (el.matches('img, svg, canvas, video, input, button, select, textarea, output, .katex')) return true;
+    if ([...el.childNodes].some((no) => no.nodeType === Node.TEXT_NODE && no.data.trim())) return true;
+    const e = getComputedStyle(el);
+    if (e.backgroundColor !== 'rgba(0, 0, 0, 0)' || e.backgroundImage !== 'none') return true;
+    return ['Top', 'Right', 'Bottom', 'Left'].some((l) => parseFloat(e[`border${l}Width`]) > 0 && e[`border${l}Style`] !== 'none');
+  };
+  const achados = [];
+  for (const slide of document.querySelectorAll('section.slide')) {
+    const palco = slide.getBoundingClientRect();
+    const escala = palco.width / slide.offsetWidth;
+    for (const el of slide.querySelectorAll('*')) {
+      if (el.closest('aside.notas') || el.parentElement?.closest('svg, .katex')) continue;
+      if (!pinta(el)) continue;
+      const r = el.getBoundingClientRect();
+      if (!r.width || !r.height) continue;
+      const x0 = (r.left - palco.left) / escala;
+      const x1 = (r.right - palco.left) / escala;
+      const y0 = (r.top - palco.top) / escala;
+      const y1 = (r.bottom - palco.top) / escala;
+      if (Math.min(x1, canto.direita) - Math.max(x0, canto.esquerda) > 0.5 && Math.min(y1, canto.base) - Math.max(y0, canto.topo) > 0.5) {
+        achados.push(`${slide.id}: <${el.nodeName.toLowerCase()} class="${el.className}"> em x ${Math.round(x0)}–${Math.round(x1)}, y ${Math.round(y0)}–${Math.round(y1)}`);
+      }
+    }
+  }
+  return achados;
+};
+
+// Guarda de propriedade do CSS do canto: no deck do espécime com a meta, montado no Chrome, nenhum
+// elemento que pinta — do autor ou do cromo — entra no retângulo, em nenhum slide; e, pela outra ponta,
+// os pixels do retângulo na captura de cada slide são todos papel. As duas pontas medem coisas
+// diferentes: a caixa vê o rodapé (a caixa dele ia até x = 1216, embora o texto termine antes de 946)
+// e a captura vê o que só um ::before desenha, que nenhum seletor alcança.
+// Inversão medida: sem a regra que recua o rodapé (estilos/layouts.css), esta guarda cai com o
+// <footer class="rodape"> dos seis slides que têm rodapé (x 64–1216, y 675–692) — e o teste dos decks
+// do espécime cai junto, pela regra. A captura, sozinha, não cairia: o texto do rodapé termina antes
+// de x = 946.
+test('video.html: nada que pinta entra no canto do vídeo, e os pixels do canto são papel, em todo slide', async () => {
+  const pagina = await navegador.newPage({ viewport: { width: 1400, height: 900 } });
+  try {
+    await pagina.goto(`${sitio.endereco}/video.html?folha`);
+    await pagina.waitForFunction(() => document.body?.dataset.montado === 'sim');
+    await pagina.evaluate(() => document.fonts.ready);
+    assert.deepEqual(await pagina.evaluate(INTERSECOES, CANTO), []);
+    const slides = pagina.locator('section.slide');
+    const total = await slides.count();
+    assert.ok(total >= 10, `video.html com ${total} slides`);
+    for (let i = 0; i < total; i += 1) {
+      const png = PNG.sync.read(await slides.nth(i).screenshot());
+      assert.equal(png.width, 1280, 'a captura tem de estar na escala do palco');
+      let sujos = 0;
+      for (let y = CANTO.topo; y < CANTO.base; y += 1) {
+        for (let x = CANTO.esquerda; x < CANTO.direita; x += 1) {
+          const k = (y * png.width + x) * 4;
+          if (png.data[k] !== 255 || png.data[k + 1] !== 255 || png.data[k + 2] !== 255) sujos += 1;
+        }
+      }
+      assert.equal(sujos, 0, `slide ${i + 1}: ${sujos} pixels fora do papel no canto do vídeo`);
+    }
+  } finally {
+    await pagina.close();
+  }
+});
+
+// D2 do autor: o desenho com vídeo é OPCIONAL. A mesma aula (video.html) sem a meta: nenhum slide
+// ganha data-video, e tirar do documento toda regra de CSS que fala de data-video não move nenhum
+// elemento — as regras do canto são inertes sem a marca, e a aula monta como a 1.0.0. Com a meta, o
+// que se move é só o que o CSS do canto promete mover: rodapé, faixa de marca, o conjunto da abertura,
+// a afirmação, a figura do layout figura e a demo — e o que está dentro deles.
+test('meta video: sem ela nada muda de lugar; com ela, só o cromo e as zonas que o canto recua', async () => {
+  const POSICOES = () => [...document.querySelectorAll('section.slide')].flatMap((slide) => {
+    const palco = slide.getBoundingClientRect();
+    return [...slide.querySelectorAll('*')].map((el, i) => {
+      const r = el.getBoundingClientRect();
+      return [`${slide.id} ${i} ${el.nodeName.toLowerCase()}.${[...el.classList].join('.')}`,
+        [r.left - palco.left, r.top - palco.top, r.width, r.height].map((v) => Math.round(v * 100) / 100).join(' ')];
+    });
+  });
+  const abrir = async (semMeta) => {
+    const pagina = await navegador.newPage({ viewport: { width: 1400, height: 900 } });
+    if (semMeta) {
+      await pagina.route('**/video.html?folha', async (rota) => {
+        const resposta = await rota.fetch();
+        const html = await resposta.text();
+        await rota.fulfill({ response: resposta, body: html.replace('<meta name="video" content="canto">', '') });
+      });
+    }
+    await pagina.goto(`${sitio.endereco}/video.html?folha`);
+    await pagina.waitForFunction(() => document.body?.dataset.montado === 'sim');
+    await pagina.evaluate(() => document.fonts.ready);
+    return pagina;
+  };
+  const sem = await abrir(true);
+  const com = await abrir(false);
+  try {
+    assert.equal(await sem.evaluate(() => document.querySelector('meta[name="video"]')), null, 'a rota não tirou a meta');
+    assert.equal(await sem.evaluate(() => document.querySelectorAll('[data-video]').length), 0);
+    const antes = await sem.evaluate(POSICOES);
+    const regrasDoCanto = await sem.evaluate(() => {
+      let tiradas = 0;
+      for (const folha of document.styleSheets) {
+        for (let i = folha.cssRules.length - 1; i >= 0; i -= 1) {
+          if (folha.cssRules[i].cssText.includes('data-video')) {
+            folha.deleteRule(i);
+            tiradas += 1;
+          }
+        }
+      }
+      return tiradas;
+    });
+    assert.ok(regrasDoCanto >= 5, `só ${regrasDoCanto} regras de CSS falam de data-video`);
+    assert.deepEqual(await sem.evaluate(POSICOES), antes, 'sem a meta, as regras do canto moveram algum elemento');
+
+    const depois = new Map(await com.evaluate(POSICOES));
+    assert.deepEqual([...depois.keys()], antes.map(([chave]) => chave), 'a meta mudou a estrutura montada');
+    const movidos = antes.filter(([chave, posicao]) => depois.get(chave) !== posicao).map(([chave]) => chave);
+    const permitidos = await com.evaluate(() => [...document.querySelectorAll('section.slide')].flatMap((slide) => {
+      const recuados = [...slide.querySelectorAll(':scope > .rodape, :scope > .faixa-de-marca, '
+        + ':scope:is([data-layout="abertura"], [data-layout="afirmacao"]) > .area, '
+        + ':scope[data-layout="figura"] figure, :scope[data-layout="demo"] .demo')];
+      return [...slide.querySelectorAll('*')].map((el, i) => [el, i])
+        .filter(([el]) => recuados.some((recuado) => recuado.contains(el)))
+        .map(([el, i]) => `${slide.id} ${i} ${el.nodeName.toLowerCase()}.${[...el.classList].join('.')}`);
+    }));
+    assert.deepEqual(movidos.filter((chave) => !permitidos.includes(chave)), [], 'a meta moveu o que o canto não recua');
+    assert.ok(movidos.length > 0, 'a meta não moveu nada');
+  } finally {
+    await sem.close();
+    await com.close();
+  }
 });

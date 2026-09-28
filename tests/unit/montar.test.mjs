@@ -60,6 +60,20 @@ test('a montagem rotula exercícios no idioma da aula e marca células numérica
   assert.deepEqual([...document.querySelectorAll('td')].map((celula) => celula.className), ['numerica', '']);
 });
 
+// Canto do vídeo (spec 5.2, 1.0.1): a meta marca cada slide com data-video, e é só sob essa marca que
+// o CSS recua o cromo. Sem a meta, nenhum slide ganha o atributo, e o resto da montagem é idêntico.
+test('meta video: cada slide ganha data-video com o valor da meta; sem ela, nenhum atributo e o resto igual', () => {
+  const sem = montado(AULA_IME()).document;
+  const com = montado(AULA_IME().replace('</head>', '<meta name="video" content="canto"></head>')).document;
+  const slidesSem = [...sem.querySelectorAll('section.slide')];
+  const slidesCom = [...com.querySelectorAll('section.slide')];
+  assert.equal(sem.querySelectorAll('[data-video]').length, 0);
+  assert.deepEqual(slidesCom.map((slide) => slide.getAttribute('data-video')), slidesCom.map(() => 'canto'));
+  assert.equal(com.querySelectorAll('[data-video]').length, slidesCom.length, 'a marca vai só nos slides');
+  slidesCom.forEach((slide) => slide.removeAttribute('data-video'));
+  assert.deepEqual(slidesCom.map((slide) => slide.outerHTML), slidesSem.map((slide) => slide.outerHTML));
+});
+
 test('título de abertura com TeX dá id, rótulo do cabeçalho e aria-label sem barras', () => {
   const { document, resumo } = montado(AULA_IME().replace('<h2>Backpropagation</h2>', '<h2>O papel de \\(\\eta\\)</h2>'));
   assert.equal(resumo.blocos[1].titulo, 'O papel de eta');
