@@ -4,7 +4,7 @@ A tabela de riscos da spec 14 manda verificar no início da fase 2 se a polític
 
 ## O que foi servido
 
-`@hpcc-js/wasm-graphviz@1.29.1` empacotado num script só, de 819 KB — o `dist/index.js` do próprio pacote, que já traz o WASM embutido (sem arquivo `.wasm` à parte e sem `fetch` do WASM). Servido dentro de um artifact real do Claude, não num HTML local: a política só existe lá.
+`@hpcc-js/wasm-graphviz@1.29.1` empacotado num script só, de 819 KB, com o WASM dentro — o pacote já o traz embutido no seu `dist/index.js` (medido numa sonda fora do repositório: sem arquivo `.wasm` à parte e sem `fetch` do WASM). Servido dentro de um artifact real do Claude, não num HTML local: a política só existe lá. O satélite que `aula-usp dist` produz hoje (`aula-usp-diagramas.js`, 819116 bytes) é o mesmo pacote reminificado pelo esbuild; ele próprio não foi servido num artifact.
 
 ## O resultado
 
