@@ -68,6 +68,20 @@ test('uma aula com data-lang fora do contrato constrói com erros > 0 e o valida
   assert.match(daRegra[0].mensagem, /cobol/);
 });
 
+// Mesmo defeito, canal de diagrama (fase 2b): prerenderizarDiagramas relata o DOT que o Graphviz não
+// desenhou, e construir() não pode descartar o canal — foi assim que errosDeGrafico nasceu na 2a,
+// devolvido e nunca lido. Dentro de `aula-usp build` a etapa 1 para antes; aqui, construir() direto.
+test('uma aula com DOT inválido constrói com erros > 0 e o validacao.json cita recursos.dot com a mensagem do Graphviz', async () => {
+  const destino = await pastaTemporaria();
+  const caminhoDaAula = new URL('../fixtures/construir/aula-com-dot-invalido/aula.html', import.meta.url);
+  const { achados, erros } = await construir({ raiz: RAIZ, caminhoDaAula, destino });
+  assert.ok(erros > 0, `esperava erros > 0, veio ${erros}`);
+  const daRegra = achados.filter((achado) => achado.regra === 'recursos.dot');
+  assert.equal(daRegra.length, 1, `esperava 1 achado de recursos.dot, veio ${daRegra.length}`);
+  assert.match(daRegra[0].mensagem, /syntax error in line 1 near ';'/);
+  assert.equal(daRegra[0].trecho, 'digraph { a -> ; }');
+});
+
 // I7 da revisão final do 5c: `slugDaAula` era `basename(dirname(caminhoDaAula))` — o nome da PASTA —
 // para QUALQUER alvo, e `caminhoDaAula` (build/validar.mjs) aceita pasta ou arquivo de propósito.
 // Com alvo-arquivo, dois decks na mesma pasta produziam o mesmo `<slug>.html` e um apagava o outro

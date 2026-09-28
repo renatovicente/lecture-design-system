@@ -174,7 +174,8 @@ const numerosDe = (texto) => new Set((texto.match(/[0-9]+/g) ?? []).map(Number))
 // Ficam fora, e é registro, não proposta: `vocabulario.amarelo-svg` (4 px) e
 // `vocabulario.azul-svg`/`composicao.azul-pequeno` (32 px) citam números que são CONSTANTES no
 // fonte da regra e não estão no contrato — o espião não tem o que anotar ali —, e
-// `recursos.diagrama-grande` (15) é de fase 2 e não tem implementação.
+// `recursos.diagrama-grande` (15), que lê o limite mas é do grupo de carga, fora das estáticas que
+// este espião roda; o acao dela cita o 15, conferido à mão na fase 2b.
 test('o acao de cada regra que lê um limite cita os números que ela usa, ou nenhum', () => {
   const { document } = parseHTML(AULA_DE_TODOS_OS_LAYOUTS);
   const noContrato = REGRAS_ESTATICAS.filter((regra) => contrato.regras[regra.nome]);

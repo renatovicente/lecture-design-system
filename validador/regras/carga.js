@@ -1,8 +1,9 @@
 // Regras de carga (spec 9.2 e 9.3): o que só se sabe depois de carregar bibliotecas, imagens e scripts.
 // As regras não carregam nada — quem carrega é o chamador, e entrega o resultado no contexto:
 //   recursos = { tex: [{ trecho, mensagem }], imagens: Map(src → carregou), demos: Map(nome → { capturar }),
-//                csvs: Map(caminho → carregou) }
-// No navegador isso vem do DOM vivo; no build, do KaTeX rodando no Node e do disco. csvs: o build
+//                csvs: Map(caminho → carregou),
+//                diagramas: [{ figura, trecho, nos } | { figura, trecho, mensagem }] }
+// No navegador isso vem do DOM vivo; no build, do KaTeX e do Graphviz rodando no Node e do disco. csvs: o build
 // preenche pelo disco (build/carregar.mjs:csvsDoDisco) e o navegador pelo resultado do fetch
 // (montar/entrada.js:buscarCsvs), os dois com os caminhos de componentes/csv.js:caminhosDeCsv.
 import { onde, trechoDe, encurtar } from '../validar.js';
@@ -97,23 +98,40 @@ export const regras = [
     },
   },
   {
-    // "DOT que não compila" (spec 9.2) — e hoje nenhum compila, porque nada no Aula USP desenha DOT
-    // ainda: o Graphviz é da fase 2b. faseDaAula (validador/validar.js) põe a aula na fase 2 quando
-    // ela tem figure.diagrama, e isso abre a FORMA do diagrama para estrutura.* e vocabulario.*; sem
-    // esta regra, um diagrama passava por `validar` e por `build` com 0 erros e a figura saía vazia
-    // (Critical 1 da revisão final da 2a). Não depende de `recursos`: não há o que carregar, então
-    // acusa nos dois lados (CLI e navegador), com ou sem gráfico na mesma aula. A fase 2b troca o
-    // corpo desta regra pela compilação de verdade, com a mensagem do Graphviz.
+    // "DOT que não compila" (spec 9.2): quem compila é o chamador — o Graphviz no Node, na etapa 1 do
+    // build (build/carregar.mjs:diagramasDoFonte), e o do satélite no navegador (montar/entrada.js) —,
+    // os dois pela mesma função, componentes/diagramas.js:compilarDiagramas. A mensagem é a do
+    // Graphviz, com a linha do DOT, como matematica.tex-invalido traz a do KaTeX: é ela que torna o
+    // erro corrigível. Também cai aqui a classe fora do vocabulário do DOT (só `foco` em nó, só
+    // `ativo` em aresta, spec 7.2): o diagrama sairia desenhado sem o que o autor pediu.
     nome: 'recursos.dot',
-    *aplicar({ slides }) {
-      for (const secao of slides) {
-        for (const figura of secao.querySelectorAll('figure.diagrama')) {
-          yield {
-            ...onde(slides, secao),
-            mensagem: 'diagrama ainda não está disponível nesta versão do Aula USP: nada desenha o DOT, e a figura sairia vazia.',
-            trecho: trechoDe(figura),
-          };
-        }
+    *aplicar({ slides, recursos }) {
+      for (const diagrama of recursos?.diagramas ?? []) {
+        if (diagrama.mensagem === undefined) continue;
+        const secao = diagrama.figura?.closest('section');
+        yield {
+          ...(secao ? onde(slides, secao) : {}),
+          mensagem: `diagrama que não desenha: ${diagrama.mensagem}.`,
+          trecho: encurtar(diagrama.trecho ?? ''),
+        };
+      }
+    },
+  },
+  {
+    // Conta os nós do resultado COMPILADO (compilarDiagramas devolve `nos`), nunca o texto do DOT:
+    // `a -> b -> c` declara três nós sem listá-los, e um regex erraria para menos exatamente nos
+    // diagramas que mais interessam. O limite é contrato.limites['diagrama.nos'] (spec 7.2: 15).
+    nome: 'recursos.diagrama-grande',
+    *aplicar({ slides, recursos, contrato }) {
+      const limite = contrato.limites['diagrama.nos'];
+      for (const diagrama of recursos?.diagramas ?? []) {
+        if (!(diagrama.nos > limite)) continue;
+        const secao = diagrama.figura?.closest('section');
+        yield {
+          ...(secao ? onde(slides, secao) : {}),
+          mensagem: `diagrama com ${diagrama.nos} nós; o limite é ${limite}.`,
+          trecho: encurtar(diagrama.trecho ?? ''),
+        };
       }
     },
   },

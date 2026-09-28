@@ -86,6 +86,25 @@ function achadosDeGrafico(contrato, errosDeGrafico) {
   }));
 }
 
+// O mesmo para diagramas (fase 2b): o DOT que o Graphviz não desenhou na etapa 3. A etapa 1 já recusa
+// a aula por recursos.dot antes de chegar aqui (build/validar.mjs compila o mesmo DOT com o mesmo
+// Graphviz), então dentro de `aula-usp build` isto é defesa em profundidade — para quem chama
+// construir() direto, e para um figure.diagrama fora de qualquer slide, que a regra, varrendo `slides`,
+// ainda acusa (sem slide) mas que aqui não pode sumir. Erro devolvido e nunca lido foi o defeito que a
+// revisão da 2a achou em errosDeGrafico; por isso este canal nasce lido.
+function achadosDeDiagrama(contrato, errosDeDiagrama) {
+  const definicao = contrato.regras['recursos.dot'];
+  return errosDeDiagrama.map((erro) => ({
+    severidade: definicao.severidade,
+    slide: null,
+    id: null,
+    regra: 'recursos.dot',
+    mensagem: `diagrama que não desenha: ${erro.mensagem}.`,
+    acao: definicao.acao,
+    trecho: erro.trecho ?? null,
+  }));
+}
+
 // Atualizado na tarefa 6 da fase 2a: a fase agora existe nos dois lados, mas não os dois AQUI. A
 // etapa 1 (build/validar.mjs, lerERodarEstatica/validarCarga) já detecta fase 2 pela mesma regra de
 // presença que montar/entrada.js usa — é o que faz `aula-usp build` parar de recusar um deck com
@@ -101,7 +120,7 @@ export async function construir({ raiz, caminhoDaAula, destino }) {
   // O mesmo contrato que construirHtml já leu por conta própria (ele não o devolve): a leitura dobrada
   // é dois usos do mesmo arquivo-fonte, não duas implementações de um cálculo — sem risco de divergir.
   const contrato = JSON.parse(await readFile(new URL('contrato/contrato.json', raiz), 'utf8'));
-  const { html, doc, fontes, errosDeTex, errosDeCodigo, errosDeGrafico } = await construirHtml({ raiz, caminhoDaAula, embutirFontes });
+  const { html, doc, fontes, errosDeTex, errosDeCodigo, errosDeGrafico, errosDeDiagrama } = await construirHtml({ raiz, caminhoDaAula, embutirFontes });
 
   // As regras de saída (spec 9.2) rodam sobre o próprio HTML final: `bytes` é o tamanho do arquivo que
   // de fato será gravado. Cobertura é dependente de contexto (revisão final do 5b, I1): as famílias do
@@ -111,6 +130,7 @@ export async function construir({ raiz, caminhoDaAula, destino }) {
     ...achadosDeTex(contrato, doc, errosDeTex),
     ...achadosDeCodigo(contrato, errosDeCodigo),
     ...achadosDeGrafico(contrato, errosDeGrafico),
+    ...achadosDeDiagrama(contrato, errosDeDiagrama),
     ...validar(doc, {
       contrato,
       regras: REGRAS_DE_SAIDA,

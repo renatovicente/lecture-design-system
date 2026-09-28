@@ -1,9 +1,11 @@
 // Carrega, no Node, o que o grupo de carga precisa saber (spec 9.3, etapa 1): KaTeX compila o TeX do
-// fonte, o disco responde pelas imagens, e os registros de demo são procurados no texto dos scripts.
+// fonte, o Graphviz compila o DOT dos diagramas, o disco responde pelas imagens, e os registros de
+// demo são procurados no texto dos scripts.
 import { existsSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { compilarTex, segmentosDeTex, textosComTex } from '../componentes/tex.js';
 import { caminhosDeCsv } from '../componentes/csv.js';
+import { criarDesenhista, compilarDiagramas } from '../componentes/diagramas.js';
 
 // AulaUSP.demo('nome', { … }) — o nome mora numa string, então o passo 1 (achar a chamada e ler o
 // nome) roda sobre o texto original. Aspas simples ou duplas; o nome no padrão de data-demo do
@@ -162,8 +164,31 @@ export function csvsDoDisco(doc, pastaDaAula) {
   }));
 }
 
-export function carregarNoNode(doc, { pastaDaAula, katex }) {
+// O Graphviz em WASM, uma instância por processo: o WASM compila uma vez, e a etapa 1
+// (build/validar.mjs) e a etapa 3 (build/embutir.mjs) do mesmo `aula-usp build` a reusam. import()
+// dinâmico, e não estático, pela regra de bin/: quem só lê uma aula sem diagrama não paga o carregamento.
+let graphvizCarregado;
+export function carregarGraphviz() {
+  graphvizCarregado ??= import('@hpcc-js/wasm-graphviz').then(({ Graphviz }) => Graphviz.load());
+  return graphvizCarregado;
+}
+
+// Os diagramas do fonte, compilados pelo Graphviz (spec 9.3: "KaTeX e Graphviz rodam no Node"), pela
+// mesma função que o navegador usa (componentes/diagramas.js:compilarDiagramas) — erro com a
+// mensagem do Graphviz para recursos.dot, contagem de nós para recursos.diagrama-grande. O Graphviz
+// chega por parâmetro, já carregado: Graphviz.load() é assíncrono e esta função não é, e quem o
+// carrega (build/validar.mjs) só paga os 819 kB do WASM quando a aula tem diagrama. Aula com
+// diagrama e sem Graphviz é erro de quem chama, não uma aula sem achados: sem esta guarda, as duas
+// regras ficariam mudas e o diagrama sairia vazio, calado.
+export function diagramasDoFonte(doc, graphviz) {
+  if (!doc.querySelector('figure.diagrama')) return [];
+  if (!graphviz) throw new Error('carregarNoNode: a aula tem figure.diagrama e ninguém passou o Graphviz');
+  return compilarDiagramas(doc.body, { desenhista: criarDesenhista({ graphviz }) });
+}
+
+export function carregarNoNode(doc, { pastaDaAula, katex, graphviz }) {
   return {
+    diagramas: diagramasDoFonte(doc, graphviz),
     tex: texInvalido(doc, katex),
     imagens: imagensDoDisco(doc, pastaDaAula),
     demos: demosDosScripts(doc),

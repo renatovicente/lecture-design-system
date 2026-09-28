@@ -230,7 +230,7 @@
     "recursos.linguagem":        { "severidade": "erro",  "grupo": "estatica", "fase": 1, "acao": "Use em data-lang uma destas linguagens: python, r, sql, javascript, bash, json, latex." },
     "recursos.csv":              { "severidade": "erro",  "grupo": "carga",    "fase": 2, "acao": "Confira o caminho do CSV em data/." },
     "recursos.grafico":          { "severidade": "erro",  "grupo": "estatica", "fase": 2, "acao": "Corrija o JSON do gráfico." },
-    "recursos.dot":              { "severidade": "erro",  "grupo": "carga",    "fase": 2, "acao": "Corrija o DOT do diagrama; enquanto o Aula USP não desenhar diagramas, use uma figura com img ou svg." },
+    "recursos.dot":              { "severidade": "erro",  "grupo": "carga",    "fase": 2, "acao": "Corrija o DOT do diagrama." },
     "recursos.diagrama-grande":  { "severidade": "aviso", "grupo": "carga",    "fase": 2, "acao": "Simplifique o diagrama para até 15 nós." },
     "saida.referencia-externa":  { "severidade": "erro",  "grupo": "saida",    "fase": 1, "acao": "Embuta o recurso no HTML final." },
     "saida.tamanho":             { "severidade": "aviso", "grupo": "saida",    "fase": 1, "acao": "Reduza as imagens ou divida a aula." },

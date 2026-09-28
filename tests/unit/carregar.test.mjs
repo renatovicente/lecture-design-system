@@ -190,3 +190,25 @@ test('carregarNoNode junta os três: tex, imagens e demos', () => {
   assert.deepEqual([...recursos.imagens.entries()], [['existe.png', true], ['sumiu.png', false]]);
   assert.deepEqual([...recursos.demos.entries()], [['contador', { capturar: false }]]);
 });
+
+// Fase 2b: o Graphviz chega por parâmetro, como o KaTeX. Aula sem diagrama não precisa dele (e
+// build/validar.mjs nem o carrega); aula com diagrama e sem Graphviz é defeito de quem chama, e tem
+// de lançar — calado, recursos.dot e recursos.diagrama-grande não teriam o que ler e o diagrama
+// sairia vazio sem achado nenhum.
+test('carregarNoNode compila os diagramas com o Graphviz que recebe, e recusa aula com diagrama sem ele', async () => {
+  const { carregarGraphviz } = await import('../../build/carregar.mjs');
+  const pasta = pastaTemporaria();
+  const semDiagrama = parseHTML('<!DOCTYPE html><html><body><p>Nada.</p></body></html>').document;
+  assert.deepEqual(carregarNoNode(semDiagrama, { pastaDaAula: pasta, katex }).diagramas, []);
+  const comDiagrama = () => parseHTML(`<!DOCTYPE html><html><body>
+    <figure class="diagrama"><script type="text/vnd.graphviz">digraph { a -> b -> c }</script></figure>
+    <figure class="diagrama"><script type="text/vnd.graphviz">digraph { a -> }</script></figure>
+  </body></html>`).document;
+  assert.throws(() => carregarNoNode(comDiagrama(), { pastaDaAula: pasta, katex }), /ninguém passou o Graphviz/);
+  const documento = comDiagrama();
+  const { diagramas } = carregarNoNode(documento, { pastaDaAula: pasta, katex, graphviz: await carregarGraphviz() });
+  const figuras = [...documento.querySelectorAll('figure')];
+  assert.deepEqual(diagramas.map(({ figura, nos, mensagem }) => [figuras.indexOf(figura), nos, Boolean(mensagem)]),
+    [[0, 3, false], [1, undefined, true]]);
+  assert.equal(await carregarGraphviz(), await carregarGraphviz(), 'uma instância por processo');
+});

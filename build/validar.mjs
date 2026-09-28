@@ -12,7 +12,7 @@ import { REGRAS_ESTATICAS, REGRAS_DE_CARGA } from '../validador/regras/index.js'
 // Puro, não build/cobertura.mjs: é o mesmo módulo que o navegador carrega (spec 3.5). Este arquivo
 // só faz a leitura de disco de validador/cobertura.json; expandi-la em Set é trabalho de lerCobertura.
 import { lerCobertura } from '../validador/cobertura.js';
-import { carregarNoNode } from './carregar.mjs';
+import { carregarNoNode, carregarGraphviz } from './carregar.mjs';
 
 export const RAIZ_SISTEMA = fileURLToPath(new URL('..', import.meta.url));
 
@@ -92,7 +92,10 @@ export async function lerERodarEstatica(alvo, { regras = REGRAS_ESTATICAS, raizD
   // carregarNoNode (build/carregar.mjs:texInvalido) depende disso já ter acontecido.
   const achadosEstatica = validar(doc, { contrato, regras, grupo: 'estatica', unidades, cobertura, fase });
   const { default: katex } = await import('katex');
-  const recursos = carregarNoNode(doc, { pastaDaAula: dirname(caminho), katex });
+  // O Graphviz só quando a aula tem diagrama: são 819 kB de WASM para compilar, e Graphviz.load() é
+  // assíncrono — por isso carrega aqui, e carregarNoNode (síncrona) o recebe pronto, como o KaTeX.
+  const graphviz = doc.querySelector('figure.diagrama') ? await carregarGraphviz() : undefined;
+  const recursos = carregarNoNode(doc, { pastaDaAula: dirname(caminho), katex, graphviz });
   return { caminho, contrato, doc, recursos, achadosEstatica, fase };
 }
 

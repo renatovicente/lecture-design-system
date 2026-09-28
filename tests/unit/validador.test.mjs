@@ -5,6 +5,7 @@ import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { parseHTML } from 'linkedom';
 import katex from 'katex';
+import { Graphviz } from '@hpcc-js/wasm-graphviz';
 import { validar, linhaDe, contar, cabecalhoDe, slidesDoFonte, faseDaAula } from '../../validador/validar.js';
 import { regras as estrutura } from '../../validador/regras/estrutura.js';
 import { lerCobertura } from '../../validador/cobertura.js';
@@ -445,11 +446,14 @@ const DE_SAIDA = new Map(saida.map((regra) => [regra.nome, regra]));
 // e recursos.demo-sem-estatico têm um img/existe.png de verdade ao lado do bom.html e do ruim.html:
 // uma fixture que não pode acusar nada não prova nada). Roda como o build roda: normaliza antes de
 // texInvalido, senão TeX partido por uma referência de caractere passaria batido (validar.js:28).
+// O Graphviz, como build/validar.mjs o carrega: uma vez, e só porque há fixture de diagrama
+// (recursos.dot e recursos.diagrama-grande) — carregarNoNode recusa aula com diagrama sem ele.
+const graphviz = await Graphviz.load();
 function rodarComCarga(nome, arquivo) {
   const { document } = parseHTML(readFileSync(new URL(`${nome}/${arquivo}`, FIXTURES), 'utf8'));
   document.body.normalize();
   const pastaDaAula = fileURLToPath(new URL(`${nome}/`, FIXTURES));
-  const recursos = carregarNoNode(document, { pastaDaAula, katex });
+  const recursos = carregarNoNode(document, { pastaDaAula, katex, graphviz });
   // A mesma fase que contrato.regras[nome] declara — nunca 1 fixo: uma regra de carga de fase 2
   // (recursos.csv) rodando sob fase 1 (o default de validar()) seria descartada antes de aplicar()
   // rodar, e ruim.html nunca acusaria nada, por um motivo que não tem a ver com a regra em si.
@@ -528,11 +532,11 @@ const REGISTROS_POR_GRUPO = new Map([
 
 // Exceção nomeada, no molde do que valeu para matematica.simbolo-fora-do-tex enquanto essa regra
 // esperou pelo marco 5: uma regra que está no contrato e ainda não tem código só passa por aqui se
-// alguém a escrever nesta lista. A única de hoje é `recursos.diagrama-grande` (fase 2, spec 7.2):
-// contar nós exige o DOT compilado, e isso é da fase 2b. `recursos.dot` saiu desta lista na correção
-// final da 2a: ela existe, e recusa todo diagrama enquanto nada desenha DOT (validador/regras/carga.js).
-// Continua vazia para fase 1: não sobra nada adiado ali.
-const ADIADAS_DE_PROPOSITO = ['recursos.diagrama-grande'];
+// alguém a escrever nesta lista. Vazia desde a fase 2b: `recursos.diagrama-grande`, a última que
+// esperava (contar nós exige o DOT compilado), saiu dela com o Graphviz. A lista fica, vazia, porque
+// é o lugar onde uma regra adiada DE PROPÓSITO teria de ser escrita — e o teste de baixo continua
+// conferindo contrato e código nos dois sentidos.
+const ADIADAS_DE_PROPOSITO = [];
 
 // A maior fase que o próprio contrato declara — nunca um "2" digitado: se uma fase 3 aparecer um
 // dia, esta conta já a inclui sozinha, e "ensine a guarda a fase" (Tarefa 4, Passo 3) continua
@@ -554,7 +558,7 @@ test('todo grupo de regras do contrato (até a fase mais alta que ele declara) t
 // invisível dos dois lados: nem recursos.grafico/recursos.csv (implementadas aqui) entravam na
 // primeira comparação, nem um recursos.dot/recursos.diagrama-grande órfão (no contrato, sem código)
 // seria acusado. Ensinar `doContrato` a FASE_MAXIMA (em vez de relaxar a segunda linha) faz os dois
-// lados voltarem a se conferir — e é por isso que ADIADAS_DE_PROPOSITO, acima, deixou de estar vazia.
+// lados voltarem a se conferir.
 test('contrato e código concordam nos dois sentidos, em todos os grupos até a fase mais alta', () => {
   for (const grupo of gruposConhecidos) {
     const registro = REGISTROS_POR_GRUPO.get(grupo);
@@ -573,4 +577,14 @@ test('contrato e código concordam nos dois sentidos, em todos os grupos até a 
       `regras de ${grupo} implementadas que não existem no contrato`,
     );
   }
+});
+
+// Fase 2b: todas as regras do contrato implementadas — a contagem é derivada do contrato e dos
+// registros, nunca digitada. Diz o mesmo que a guarda de mão dupla acima com ADIADAS_DE_PROPOSITO
+// vazia, mas sem depender de a lista continuar vazia: uma regra adiada de novo cai aqui também.
+test('toda regra do contrato, de todas as fases, está implementada', () => {
+  const implementadas = new Set([...REGISTROS_POR_GRUPO.values()].flatMap((registro) => [...registro.keys()]));
+  const doContrato = Object.keys(contrato.regras);
+  assert.deepEqual(doContrato.filter((nome) => !implementadas.has(nome)), []);
+  assert.equal(implementadas.size, doContrato.length);
 });

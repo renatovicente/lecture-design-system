@@ -382,22 +382,41 @@ const comFiguras = (...figuras) => BOA.replace('<section data-layout="encerramen
   + '<section data-layout="encerramento">');
 const SEM_CHROME = { ...process.env, CHROME_PATH: '/caminho/que/nao/existe/de-verdade' };
 
-// Critical 1 da revisão final da 2a. Medido antes do conserto: nas duas aulas abaixo, `validar` e
-// `build --sem-pdf` saíam com 0 e 0 erros, e o HTML construído levava só o <script> do DOT. O
-// critério do coordenador: nenhum figure.diagrama sai de validar nem de build com 0 erros enquanto
-// nada o desenha, em nenhuma combinação com gráfico. Sem Chrome de propósito: o erro é da etapa 1.
-test('figure.diagrama não sai de validar nem de build com 0 erros, sozinho ou ao lado de um gráfico', () => {
+// Critical 1 da revisão final da 2a: um figure.diagrama saía de validar e de build com 0 erros e a
+// figura vazia. Na 2a, a saída foi recusar todo diagrama; desde a 2b, o exemplo literal da spec 7.2
+// sai de validar e de build com 0 erros E com o SVG no HTML construído — sozinho ou ao lado de um
+// gráfico —, e um DOT que o Graphviz não compila para a etapa 1 com a mensagem dele. Sem Chrome de
+// propósito: as duas coisas são da etapa 1 e da 3, no Node.
+const DIAGRAMA_QUEBRADO = `<figure class="diagrama"><script type="text/vnd.graphviz">digraph {
+  entrada -> ;
+}</script></figure>`;
+
+test('o exemplo literal de diagrama da spec 7.2 sai de validar e de build com 0 erros e com o SVG desenhado, sozinho ou ao lado de um gráfico', () => {
   for (const [nome, html] of [['só diagrama', comFiguras(DIAGRAMA_7_2)], ['gráfico e diagrama', comFiguras(GRAFICO_INLINE, DIAGRAMA_7_2)]]) {
     const pasta = aulaTemporaria(html);
     const validacao = spawnSync('node', [CLI, 'validar', pasta, '--json'], { encoding: 'utf8', env: SEM_CHROME });
-    assert.equal(validacao.status, 1, `${nome}: validar deveria sair com 1\n${validacao.stdout}${validacao.stderr}`);
-    const achados = JSON.parse(validacao.stdout).filter((achado) => achado.severidade === 'erro');
-    assert.deepEqual(achados.map((achado) => achado.regra), ['recursos.dot'], nome);
-    assert.match(achados[0].mensagem, /diagrama ainda não está disponível/, nome);
+    assert.equal(validacao.status, 0, `${nome}\n${validacao.stdout}${validacao.stderr}`);
+    assert.deepEqual(JSON.parse(validacao.stdout).filter((achado) => achado.severidade === 'erro'), [], nome);
     const construcao = spawnSync('node', [CLI, 'build', pasta, '--sem-pdf'], { encoding: 'utf8', env: SEM_CHROME });
-    assert.equal(construcao.status, 1, `${nome}: build deveria sair com 1\n${construcao.stdout}${construcao.stderr}`);
-    assert.match(construcao.stdout, /recursos\.dot · diagrama ainda não está disponível/, nome);
+    assert.equal(construcao.status, 0, `${nome}\n${construcao.stdout}${construcao.stderr}`);
+    const construido = readFileSync(join(pasta, 'dist', `${basename(pasta)}.html`), 'utf8');
+    const figura = construido.match(/<figure class="diagrama">[\s\S]*?<\/figure>/)[0];
+    // O DOT desenhado de verdade: os três nós, o de foco em amarelo — não um SVG vazio.
+    assert.equal(figura.match(/<g class="no( foco)?">/g).length, 3, nome);
+    assert.match(figura, /<g class="no foco"><rect [^>]*fill="#FCB421"[^>]*>(<\/rect>)?<text [^>]*>oculta<\/text>/, nome);
   }
+});
+
+test('DOT que o Graphviz não compila para validar e build na etapa 1, com a mensagem dele e o slide', () => {
+  const pasta = aulaTemporaria(comFiguras(GRAFICO_INLINE, DIAGRAMA_QUEBRADO));
+  const validacao = spawnSync('node', [CLI, 'validar', pasta, '--json'], { encoding: 'utf8', env: SEM_CHROME });
+  assert.equal(validacao.status, 1, validacao.stdout + validacao.stderr);
+  const erros = JSON.parse(validacao.stdout).filter((achado) => achado.severidade === 'erro');
+  assert.deepEqual(erros.map((achado) => [achado.regra, achado.id]), [['recursos.dot', 'f1']]);
+  assert.match(erros[0].mensagem, /syntax error in line 2 near ';'/);
+  const construcao = spawnSync('node', [CLI, 'build', pasta, '--sem-pdf'], { encoding: 'utf8', env: SEM_CHROME });
+  assert.equal(construcao.status, 1, construcao.stdout + construcao.stderr);
+  assert.match(construcao.stdout, /recursos\.dot · diagrama que não desenha: o Graphviz não compila o DOT: syntax error in line 2/);
 });
 
 // Critical 2 da revisão final da 2a: o exemplo literal da spec 7.2 aponta para "data/erro.csv".

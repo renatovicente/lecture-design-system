@@ -79,22 +79,48 @@ test('a demo sem registro não acusa também falta de estático: um erro, um don
   assert.deepEqual(achados.map((achado) => achado.regra), ['recursos.demo-sem-registro']);
 });
 
-// Critical 1 da revisão final da 2a: faseDaAula põe na fase 2 uma aula com figure.diagrama, e isso
-// abre a forma do diagrama para estrutura.* e vocabulario.* — mas nada desenha DOT ainda. Sem
-// recursos.dot, o diagrama passava por validar e build com 0 erros e a figura saía vazia. A regra
-// acusa todo diagrama, sem depender de recursos carregados (não há o que carregar), com gráfico na
-// mesma aula ou sem.
-test('recursos.dot recusa todo figure.diagrama na fase 2 e diz que diagrama ainda não está disponível', () => {
-  const html = `${CABECA}
+// Critical 1 da revisão final da 2a: faseDaAula põe na fase 2 uma aula com figure.diagrama, e sem
+// uma regra que o recuse o diagrama passava por validar e build com 0 erros e a figura saía vazia. Na
+// 2a a regra recusava TODO diagrama; desde a 2b, quem desenha é o Graphviz, e recursos.dot acusa o
+// que ele não compila, com a mensagem dele e o slide de cada figura (o elemento que carregarNoNode e
+// montar/entrada.js entregam em recursos.diagramas).
+const DIAGRAMAS = `${CABECA}
 <section data-layout="capa"><h1>Capa</h1></section>
-<section data-layout="figura" id="rede"><h2>Rede</h2><figure class="diagrama"><script type="text/vnd.graphviz">digraph { a -> b; }</script></figure><aside class="notas">N.</aside></section>
-<section data-layout="figura" id="erro"><h2>Erro</h2><figure class="grafico"><script type="application/json">{"tipo":"linha","dados":{"a":[1,2],"b":[1,2]},"x":"a","y":["b"]}</script></figure><aside class="notas">N.</aside></section>
+<section data-layout="figura" id="bom"><h2>Bom</h2><figure class="diagrama"><script type="text/vnd.graphviz">digraph { a -> b; }</script></figure><aside class="notas">N.</aside></section>
+<section data-layout="figura" id="ruim"><h2>Ruim</h2><figure class="diagrama"><script type="text/vnd.graphviz">digraph { a -> }</script></figure><aside class="notas">N.</aside></section>
+<section data-layout="figura" id="grande"><h2>Grande</h2><figure class="diagrama"><script type="text/vnd.graphviz">…</script></figure><aside class="notas">N.</aside></section>
 <section data-layout="encerramento"><h2>Fim</h2><ol class="sintese"><li>Um.</li></ol></section>
 </body></html>`;
-  for (const recursos of [undefined, {}]) {
-    const { document } = parseHTML(html);
+
+test('recursos.dot e recursos.diagrama-grande leem recursos.diagramas: erro com a mensagem do Graphviz, aviso acima do limite do contrato', () => {
+  const { document } = parseHTML(DIAGRAMAS);
+  const [bom, ruim, grande] = document.querySelectorAll('figure.diagrama');
+  const limite = contrato.limites['diagrama.nos'];
+  const recursos = { diagramas: [
+    { figura: bom, trecho: 'digraph { a -> b; }', nos: 2 },
+    { figura: ruim, trecho: 'digraph { a -> }', mensagem: "o Graphviz não compila o DOT: syntax error in line 1 near '}'" },
+    { figura: grande, trecho: '…', nos: limite + 1 },
+  ] };
+  const achados = validar(document, { contrato, regras, grupo: 'carga', recursos, fase: 2 });
+  assert.deepEqual(achados.map((achado) => [achado.regra, achado.slide, achado.id, achado.severidade]),
+    [['recursos.dot', 3, 'ruim', 'erro'], ['recursos.diagrama-grande', 4, 'grande', 'aviso']]);
+  assert.equal(achados[0].mensagem, "diagrama que não desenha: o Graphviz não compila o DOT: syntax error in line 1 near '}'.");
+  assert.equal(achados[0].acao, 'Corrija o DOT do diagrama.');
+  assert.equal(achados[1].mensagem, `diagrama com ${limite + 1} nós; o limite é ${limite}.`);
+});
+
+test('recursos.diagrama-grande: exatamente o limite não avisa, um a mais avisa', () => {
+  const limite = contrato.limites['diagrama.nos'];
+  for (const [nos, esperado] of [[limite, 0], [limite + 1, 1]]) {
+    const { document } = parseHTML(DIAGRAMAS);
+    const recursos = { diagramas: [{ figura: document.querySelector('figure.diagrama'), trecho: '…', nos }] };
     const achados = validar(document, { contrato, regras, grupo: 'carga', recursos, fase: 2 });
-    assert.deepEqual(achados.map((achado) => [achado.regra, achado.slide, achado.severidade]), [['recursos.dot', 2, 'erro']]);
-    assert.match(achados[0].mensagem, /diagrama ainda não está disponível/);
+    assert.equal(achados.length, esperado, `${nos} nós`);
   }
+});
+
+test('as duas regras de diagrama são de fase 2: sob a fase 1 não rodam, nem com recursos', () => {
+  const { document } = parseHTML(DIAGRAMAS);
+  const recursos = { diagramas: [{ figura: document.querySelector('figure.diagrama'), trecho: 'x', mensagem: 'm' }] };
+  assert.deepEqual(validar(document, { contrato, regras, grupo: 'carga', recursos, fase: 1 }), []);
 });

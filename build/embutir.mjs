@@ -11,6 +11,8 @@ import { renderizarTex } from '../componentes/tex.js';
 import { criarDestacador, renderizarCodigo } from '../componentes/codigo.js';
 import { criarDesenhista, desenharGraficos } from '../componentes/graficos.js';
 import { caminhosDeCsv, colunasDosCsvs } from '../componentes/csv.js';
+import { criarDesenhista as criarDesenhistaDeDiagramas, desenharDiagramas } from '../componentes/diagramas.js';
+import { carregarGraphviz } from './carregar.mjs';
 
 // Sem 'fontes': estilos/fontes.css é o @font-face de DESENVOLVIMENTO (URL relativa a assets/fontes/,
 // servida por build/servir.mjs). embutirFontes (tarefa 2 do marco 5b) já devolve o @font-face de
@@ -22,6 +24,7 @@ import { caminhosDeCsv, colunasDosCsvs } from '../componentes/csv.js';
 // console, e o título deixa de sair em Geist, contra o fato 7.
 const ESTILOS = ['tokens', 'base', 'layouts', 'componentes', 'motor', 'impressao'];
 const SELETOR_GRAFICO = 'figure.grafico';
+const SELETOR_DIAGRAMA = 'figure.diagrama';
 
 const TIPOS = { '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.webp': 'image/webp', '.gif': 'image/gif' };
 
@@ -100,6 +103,18 @@ async function prerenderizarGraficos(document, pastaDaAula) {
   return desenharGraficos(document.body, { desenhista, dados: await dadosDosCsvs(document, pastaDaAula) });
 }
 
+// Diagramas (spec 3.5, fase 2), no mesmo padrão de prerenderizarGraficos: a mesma regra de presença
+// de montar/entrada.js (SELETOR_DIAGRAMA), o mesmo módulo (componentes/diagramas.js) e o mesmo
+// Graphviz em WASM que o satélite aula-usp-diagramas.js leva ao navegador — é isso que faz o layout
+// sair igual nos dois modos (tests/integracao/visual.test.mjs). carregarGraphviz é o mesmo carregador
+// da etapa 1 (build/carregar.mjs): uma instância por processo. Devolve o relatório de
+// desenharDiagramas; os erros vão a validacao.json por achadosDeDiagrama (build/construir.mjs).
+async function prerenderizarDiagramas(document) {
+  if (!document.querySelector(SELETOR_DIAGRAMA)) return [];
+  const desenhista = criarDesenhistaDeDiagramas({ graphviz: await carregarGraphviz() });
+  return desenharDiagramas(document.body, { desenhista });
+}
+
 // O arranque do HTML construído. Duas partes, e a ordem entre elas é o motivo de o marco 5a existir:
 // a fila de AulaUSP.demo é instalada de forma SÍNCRONA, aqui, porque o <script> inline do autor roda
 // durante o parsing e chama AulaUSP.demo antes de qualquer evento. O resto espera o DOMContentLoaded.
@@ -159,6 +174,7 @@ export async function construirHtml({ raiz, caminhoDaAula, embutirFontes }) {
   const errosDeTex = renderizarTex(document.body, { katex });
   const errosDeCodigo = await prerenderizarCodigo(document, contrato);
   const errosDeGrafico = await prerenderizarGraficos(document, new URL('.', caminhoDaAula));
+  const errosDeDiagrama = (await prerenderizarDiagramas(document)).filter((relato) => relato.mensagem !== undefined);
 
   // Etapa 4. As fontes só agora: embutirFontes precisa do documento COM o TeX já renderizado, para
   // saber quais famílias do KaTeX a aula usa (spec 3.3: "só as que a aula usa").
@@ -180,5 +196,5 @@ export async function construirHtml({ raiz, caminhoDaAula, embutirFontes }) {
   motor.after(arranque);
 
   const html = `<!DOCTYPE html>\n${document.documentElement.outerHTML}\n`;
-  return { html, resumo, doc: document, fontes, errosDeTex, errosDeCodigo, errosDeGrafico };
+  return { html, resumo, doc: document, fontes, errosDeTex, errosDeCodigo, errosDeGrafico, errosDeDiagrama };
 }
