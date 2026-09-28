@@ -71,16 +71,38 @@ export const regras = [
     },
   },
   {
+    // Spec 9.2: "demo sem img.estatico e sem capturar(); na fase 2, só no modo navegador, porque o
+    // build captura". O eixo que decide é o modo, e não a fase sozinha — três casos:
+    //   - fase 1, qualquer modo: acusa, como sempre (ninguém fotografa a demo);
+    //   - fase 2, navegador: acusa — o PDF impresso pelo navegador não passa pelo build;
+    //   - fase 2, build: se cala, porque build/captura.mjs fotografa EXATAMENTE estas demos
+    //     (demoSemImagem, acima, é a mesma função lá) — e só se cala enquanto a captura cobre o caso.
+    //     A demo que a captura não conseguiu fotografar chega em `falhasDeCaptura` (elemento do fonte →
+    //     motivo; build/build.mjs a preenche depois da etapa 5, e com "sem Chrome" quando a etapa 5
+    //     não rodou), e a regra volta a acusar, com o motivo. Na etapa 1, antes da captura, o mapa
+    //     não existe e nada é dito; quem diz é a segunda passada, depois dela.
+    // O padrão de `modo` em validar() é o navegador: quem não o passa continua acusando.
     nome: 'recursos.demo-sem-estatico',
-    *aplicar({ slides, recursos }) {
+    *aplicar({ slides, recursos, contrato, fase, modo, falhasDeCaptura }) {
       if (!recursos?.demos) return;
+      const { acaoNavegador, acaoCaptura } = contrato.regras['recursos.demo-sem-estatico'];
+      const buildCaptura = fase >= 2 && modo === 'build';
       for (const secao of slides) {
         for (const demo of secao.querySelectorAll('div.demo[data-demo]')) {
           const nome = demo.getAttribute('data-demo');
           const registro = recursos.demos.get(nome);
           if (!registro) continue; // sem registro já é recursos.demo-sem-registro
           if (!demoSemImagem(demo, registro)) continue;
-          yield { ...onde(slides, secao), mensagem: `demo "${nome}" sem img.estatico e sem capturar(): o PDF sai vazio.`, trecho: trechoDe(demo) };
+          const lugar = { ...onde(slides, secao), trecho: trechoDe(demo) };
+          if (buildCaptura) {
+            const motivo = falhasDeCaptura?.get(demo);
+            if (motivo === undefined) continue;
+            yield { ...lugar, mensagem: `demo "${nome}" sem img.estatico e sem capturar(), e a captura do build falhou: ${motivo}.`, acao: acaoCaptura };
+          } else if (fase >= 2) {
+            yield { ...lugar, mensagem: `demo "${nome}" sem img.estatico e sem capturar(): impresso pelo navegador, o PDF sai sem ela.`, acao: acaoNavegador };
+          } else {
+            yield { ...lugar, mensagem: `demo "${nome}" sem img.estatico e sem capturar(): o PDF sai vazio.` };
+          }
         }
       }
     },

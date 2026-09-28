@@ -61,7 +61,11 @@ export function tabelaDeRegras(contrato, { fase = 1 } = {}) {
     // que não são a de texto HTML. O autor que lê a tabela precisa das três.
     .map(([nome, regra]) => `| \`${nome}\` | ${regra.severidade} | ${regra.acao}`
       + `${regra.acaoSvg ? ` Em texto de SVG: ${minuscula(regra.acaoSvg)}` : ''}`
-      + `${regra.acaoSvgAltura ? ` Se a figura encolheu pela altura: ${minuscula(regra.acaoSvgAltura)}` : ''} |`);
+      + `${regra.acaoSvgAltura ? ` Se a figura encolheu pela altura: ${minuscula(regra.acaoSvgAltura)}` : ''}`
+      // acaoNavegador e acaoCaptura (recursos.demo-sem-estatico, fase 2c): numa aula de fase 2 a
+      // regra acusa no navegador e se cala no build, que fotografa a demo — salvo quando a foto falha.
+      + `${regra.acaoNavegador ? ` Numa aula de fase 2, no navegador: ${minuscula(regra.acaoNavegador)}` : ''}`
+      + `${regra.acaoCaptura ? ` Se a captura do build falhou: ${minuscula(regra.acaoCaptura)}` : ''} |`);
   return ['| regra | severidade | como corrigir |', '|---|---|---|', ...linhas].join('\n');
 }
 

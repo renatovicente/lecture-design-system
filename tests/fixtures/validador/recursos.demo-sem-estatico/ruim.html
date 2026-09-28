@@ -1,6 +1,9 @@
 <!DOCTYPE html><html lang="pt-BR"><head>
 <meta name="unidade" content="ime"><meta name="disciplina" content="Teste"><meta name="aula" content="1">
 <meta name="data" content="2026-09-17"><meta name="professor" content="Prof.">
+<!-- Este par descreve UM dos três casos da regra: a fase 1 (esta aula não tem marca de fase 2), em
+     qualquer modo. Os outros dois — fase 2 no navegador (acusa) e fase 2 no build (cala, porque o
+     build fotografa) — estão em tests/unit/carga.test.mjs. -->
 </head><body>
 <section data-layout="demo" id="a"><h2>D</h2><div class="demo" data-demo="contador"></div></section>
 <script>AulaUSP.demo('contador', { montar() {} });</script>

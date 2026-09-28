@@ -266,7 +266,9 @@ export async function iniciar({ base, resolver = (nome) => nome, estilo, dados =
     const semFolha = !new URLSearchParams(location.search).has('folha');
     const achados = [
       ...estaticos,
-      ...validar(fonte, { contrato, regras: REGRAS_DE_CARGA, grupo: 'carga', recursos, fase }),
+      // modo navegador (spec 9.2): aqui ninguém fotografa a demo sem imagem própria — o PDF que sai
+      // desta página é o do "Salvar como PDF" —, então recursos.demo-sem-estatico acusa também na fase 2.
+      ...validar(fonte, { contrato, regras: REGRAS_DE_CARGA, grupo: 'carga', recursos, fase, modo: 'navegador' }),
       // Só mede composição aqui quando o motor vai rodar de verdade: com ?folha, quem mede é o próprio
       // chamador (build/composicao.mjs ou tests/integracao/composicao.test.mjs), sobre a página já
       // carregada — medir aqui de novo seria a mesma conta cara duas vezes por execução (revisão final

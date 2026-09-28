@@ -64,13 +64,21 @@ export function faseDaAula(doc, contrato) {
   return slides.some((secao) => seletores.some((seletor) => secao.querySelector(seletor))) ? 2 : 1;
 }
 
-export function validar(doc, { contrato, regras, grupo, fase = 1, ...dados }) {
+// Os dois modos da spec 3 (3.2 e 3.3). O padrão é o navegador: é o comportamento de antes de o
+// modo existir, e quem não o passa não muda de comportamento.
+export const MODOS = ['navegador', 'build'];
+
+export function validar(doc, { contrato, regras, grupo, fase = 1, modo = 'navegador', ...dados }) {
+  if (!MODOS.includes(modo)) throw new Error(`validar: modo desconhecido "${modo}" (use ${MODOS.join(' ou ')})`);
   doc.body.normalize(); // o linkedom parte o texto em cada entidade; sem juntar, o TeX do fonte não é achado
   const slides = slidesDoFonte(doc.body);
   // O que vier além do que o motor conhece vai para as regras: é assim que o marco 4c injeta cobertura
   // de glifos e imagens carregadas sem mexer aqui. fase também vai: uma regra que só existe a partir
   // da fase 2 (ou que tem entradas do contrato marcadas fase:2) precisa saber qual fase está rodando.
-  const contexto = { doc, slides, contrato, fase, ...dados };
+  // modo também (fase 2c): uma regra cujo veredito depende de o build estar ou não por trás — hoje só
+  // recursos.demo-sem-estatico, que na fase 2 se cala no build porque o build fotografa a demo
+  // (spec 9.2) — lê o modo daqui, e não de "que recursos vieram".
+  const contexto = { doc, slides, contrato, fase, modo, ...dados };
   const achados = [];
   regras.forEach((regra, ordem) => {
     const definicao = contrato.regras[regra.nome];

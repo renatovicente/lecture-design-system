@@ -8,7 +8,7 @@ import { basename, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseHTML } from 'linkedom';
 import { validar, contar } from '../validador/validar.js';
-import { REGRAS_DE_SAIDA } from '../validador/regras/index.js';
+import { REGRAS_DE_SAIDA, REGRAS_DE_CARGA } from '../validador/regras/index.js';
 import { paginasEsperadas } from '../motor/impressao.js';
 import { lerERodarEstatica, validarCarga } from './validar.mjs';
 import { construir } from './construir.mjs';
@@ -31,6 +31,17 @@ const SO_PDF_PAGINAS = REGRAS_DE_SAIDA.filter((regra) => regra.nome === 'saida.p
 // medido o tamanho dele: saida.tamanho é a única das três regras do HTML que a foto pode mudar (a
 // imagem entra como data:, então não há referência externa nova, e o alt é texto do sistema).
 const SO_TAMANHO = REGRAS_DE_SAIDA.filter((regra) => regra.nome === 'saida.tamanho');
+
+// A segunda passada de recursos.demo-sem-estatico, depois da etapa 5: na fase 2 a regra se cala no
+// build porque a captura cobre as demos sem imagem própria (validador/regras/carga.js), e é aqui que
+// ela volta a acusar cada demo que a captura NÃO cobriu, com o motivo. Só esta regra: as outras de
+// carga já rodaram na etapa 1, e rodá-las de novo duplicaria os achados delas.
+const SO_DEMO_SEM_ESTATICO = REGRAS_DE_CARGA.filter((regra) => regra.nome === 'recursos.demo-sem-estatico');
+function achadosDeCaptura({ docDaFonte, contrato, recursos, fase, alvos, falhas }) {
+  const falhasDeCaptura = new Map(alvos.filter(({ indice }) => falhas.has(indice)).map(({ indice, elemento }) => [elemento, falhas.get(indice)]));
+  if (falhasDeCaptura.size === 0) return [];
+  return validar(docDaFonte, { contrato, regras: SO_DEMO_SEM_ESTATICO, grupo: 'carga', recursos, fase, modo: 'build', falhasDeCaptura });
+}
 
 const nomesDe = (alvos) => alvos.map(({ nome }) => `"${nome}"`).join(', ');
 
@@ -146,6 +157,8 @@ export async function build({ raiz, caminhoDaAula, destino, semPdf = false, nave
     const semCaptura = alvos.length > 0 ? `; sem a captura, ficam sem imagem para impressão as demos ${nomesDe(alvos)}` : '';
     const avisoSemChrome = `composição pulada, sem Chrome: ${semChrome}${semCaptura}`;
     progresso(`etapa 5/7 — aviso: ${avisoSemChrome}; pulando as etapas 5 e 6`);
+    const semFoto = new Map(alvos.map(({ indice }) => [indice, 'sem Chrome, a etapa 5 não rodou']));
+    achados = [...achados, ...achadosDeCaptura({ docDaFonte, contrato, recursos, fase, alvos, falhas: semFoto })];
     await gravarValidacao(destino, achados);
     return { codigo: contar(achados).erros > 0 ? 1 : 0, achados, avisoSemChrome };
   }
@@ -180,6 +193,7 @@ export async function build({ raiz, caminhoDaAula, destino, semPdf = false, nave
       for (const { indice, nome } of alvos) {
         if (falhas.has(indice)) progresso(`etapa 5/7 — aviso: a demo "${nome}" não foi capturada: ${falhas.get(indice)}`);
       }
+      achados = [...achados, ...achadosDeCaptura({ docDaFonte, contrato, recursos, fase, alvos, falhas })];
       if (imagens.size > 0) {
         html = embutirCapturas(html, imagens);
         await writeFile(caminhoDoHtml, html, 'utf8');
@@ -187,8 +201,8 @@ export async function build({ raiz, caminhoDaAula, destino, semPdf = false, nave
           ...achados.filter((achado) => achado.regra !== 'saida.tamanho'),
           ...validar(docDaFonte, { contrato, regras: SO_TAMANHO, grupo: 'saida', bytes: Buffer.byteLength(html) }),
         ];
-        await gravarValidacao(destino, achados);
       }
+      await gravarValidacao(destino, achados);
       progresso(`etapa 5/7 — ${imagens.size} de ${alvos.length} demo(s) capturada(s) em ${((performance.now() - inicio) / 1000).toFixed(1)} s`);
     }
 

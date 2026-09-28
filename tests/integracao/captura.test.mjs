@@ -90,6 +90,10 @@ test('fase 2: a demo sem imagem própria sai fotografada no HTML e desenhada na 
   // antialiasing de uma versão do Chrome — e ainda assim muito acima de uma foto em branco, que dá 0.
   assert.ok(imagem.naoBrancos > 2000, `a foto da demo tem só ${imagem.naoBrancos} pixels não brancos`);
   assert.ok(r.linhas.some((linha) => /1 de 1 demo\(s\) capturada\(s\)/.test(linha)), r.linhas.join('\n'));
+  // Fotografada, a demo não é mais aviso: recursos.demo-sem-estatico se cala no build da fase 2.
+  assert.deepEqual(r.achados.filter((a) => a.regra === 'recursos.demo-sem-estatico'), []);
+  const gravados = JSON.parse(await readFile(join(r.destino, 'validacao.json'), 'utf8'));
+  assert.deepEqual(gravados, r.achados);
 });
 
 // O "antes": a mesma aula sem a marca de fase 2 é de fase 1, e a fase 1 não captura — a página da
@@ -119,6 +123,16 @@ test('a captura que falha diz qual demo e por quê, e o build segue até o PDF',
   assert.match(avisos[2], /demo "fantasma" não foi capturada: a demo não está registrada na página construída/);
   const html = await readFile(join(r.destino, 'aula.html'), 'utf8');
   assert.equal(parseHTML(html).document.querySelectorAll('img.estatico').length, 0, 'nenhuma foto falsa entrou no HTML');
+  // E não só no stderr: cada falha vira recursos.demo-sem-estatico em achados e em validacao.json,
+  // com o slide, a demo e o motivo — o erro devolvido é lido até o fim (o defeito da 2a era o
+  // contrário: errosDeGrafico devolvido e nunca lido).
+  const doAviso = r.achados.filter((a) => a.regra === 'recursos.demo-sem-estatico');
+  assert.deepEqual(doAviso.map((a) => [a.id, a.severidade]), [['vazia', 'aviso'], ['quebrada', 'aviso'], ['fantasma', 'aviso']]);
+  assert.match(doAviso[0].mensagem, /^demo "vazia" sem img\.estatico e sem capturar\(\), e a captura do build falhou: a demo não desenhou nada/);
+  assert.match(doAviso[1].mensagem, /^demo "quebrada" .* falhou: erro na página ao montar e iniciar: .*iniciar quebrou/);
+  assert.match(doAviso[2].mensagem, /^demo "fantasma" .* falhou: a demo não está registrada na página construída/);
+  const gravados = JSON.parse(await readFile(join(r.destino, 'validacao.json'), 'utf8'));
+  assert.deepEqual(gravados, r.achados);
 });
 
 test('sem Chrome: o aviso diz quais demos ficam sem imagem', async () => {
@@ -133,4 +147,6 @@ test('sem Chrome: o aviso diz quais demos ficam sem imagem', async () => {
   }
   assert.equal(r.codigo, 0);
   assert.match(r.avisoSemChrome, /composição pulada, sem Chrome: .*; sem a captura, ficam sem imagem para impressão as demos "contador"$/);
+  const doAviso = r.achados.filter((a) => a.regra === 'recursos.demo-sem-estatico');
+  assert.deepEqual(doAviso.map((a) => a.mensagem), ['demo "contador" sem img.estatico e sem capturar(), e a captura do build falhou: sem Chrome, a etapa 5 não rodou.']);
 });

@@ -105,7 +105,7 @@ A tabela sai de `contrato/contrato.json` por `npm run guia` — do mesmo arquivo
 | `matematica.simbolo-fora-do-tex` | erro | Escreva o símbolo em TeX: \( \to \), \( \alpha \), \( \leq \). |
 | `matematica.tex-invalido` | erro | Corrija o TeX no trecho indicado. |
 | `recursos.alt` | erro | Descreva a imagem no atributo alt. |
-| `recursos.demo-sem-estatico` | aviso | Acrescente img.estatico à demo ou implemente capturar(). |
+| `recursos.demo-sem-estatico` | aviso | Acrescente img.estatico à demo ou implemente capturar(). Numa aula de fase 2, no navegador: gere o PDF com aula-usp build, que fotografa a demo, ou acrescente img.estatico à demo ou implemente capturar(). Se a captura do build falhou: corrija a demo para que ela desenhe na div.demo ao iniciar, ou acrescente img.estatico à demo ou implemente capturar(). |
 | `recursos.demo-sem-registro` | erro | Registre a demo com AulaUSP.demo('<nome>', { … }). |
 | `recursos.imagem` | erro | Confira o caminho da imagem em img/. |
 | `recursos.imagem-externa` | aviso | Guarde a imagem em img/, com autorização do autor para baixá-la. |
