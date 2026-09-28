@@ -221,6 +221,7 @@ export const tokens = {
     "quadradoAberturaMax": 160,
     "calhaAbertura": 24,
     "quadradoCapa": 24,
+    "folgaRoteiroCapa": 8,
     "numeroProporcao": 0.55,
     "faixaBlocoNDeM": 220
   },

@@ -85,6 +85,7 @@
     "quadradoAberturaMax": { "$type": "dimension", "$value": { "value": 160, "unit": "px" } },
     "calhaAbertura":       { "$type": "dimension", "$value": { "value": 24, "unit": "px" } },
     "quadradoCapa":        { "$type": "dimension", "$value": { "value": 24, "unit": "px" } },
+    "folgaRoteiroCapa":    { "$type": "dimension", "$value": { "value": 8, "unit": "px" }, "$description": "folga entre a base do roteiro da capa e a base da zona de conteúdo: absorve o arredondamento entre ambientes (o artifact do claude.ai acusou 1 px de transbordo onde o Chrome local media 0,2)" },
     "numeroProporcao":     { "$type": "number", "$value": 0.55, "$description": "altura do número do bloco atual em relação ao lado do quadrado" },
     "faixaBlocoNDeM":      { "$type": "dimension", "$value": { "value": 220, "unit": "px" } }
   },

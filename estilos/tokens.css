@@ -114,6 +114,7 @@
   --mapa-quadrado-abertura-max: 160px;
   --mapa-calha-abertura: 24px;
   --mapa-quadrado-capa: 24px;
+  --mapa-folga-roteiro-capa: 8px;
   --mapa-numero-proporcao: 0.55;
   --mapa-faixa-bloco-n-de-m: 220px;
   --marca-usp-altura: 56px;

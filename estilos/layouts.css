@@ -183,10 +183,17 @@
 
 .roteiro {
   margin-top: auto;
+  margin-bottom: var(--mapa-folga-roteiro-capa);
 }
 
 .roteiro > li {
   width: var(--lado);
+}
+
+/* inline-block: a caixa do nome passa a ter a altura da linha (14 × 1,2), e não a da área de conteúdo
+   da fonte (18 px na Geist Mono), que descia 0,2 px abaixo do <li> e da zona de conteúdo. */
+.roteiro .nome-curto {
+  display: inline-block;
 }
 
 .roteiro .quadrado {

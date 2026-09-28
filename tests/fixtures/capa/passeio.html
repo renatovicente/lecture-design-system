@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<!-- A aula da primeira rodada de aceite no claude.ai (fase 3), sem o embrulho do artifact: o painel
+     do artifact acusou composicao.transbordo de 1 px nos três nomes curtos do roteiro da capa, onde
+     o Chrome local media 0,2 px. Guarda da folga do roteiro: tests/integracao/layouts.test.mjs. -->
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Passeio aleatório e difusão</title>
+<meta name="unidade" content="ifusp">
+<meta name="disciplina" content="Física Estatística">
+<meta name="aula" content="1">
+<meta name="data" content="2026-09-28">
+<meta name="professor" content="Prof. Renato Vicente">
+<script src="https://cdn.jsdelivr.net/npm/aula-usp@1.0.0/dist/aula-usp.js"
+        integrity="sha384-D/Oa+E1CM0ksBEmfguDXlegI5XxkVeih6ksRu7OmRfxb/VcuTunxE1FrvInBI07i" crossorigin="anonymous"></script>
+</head>
+<body>
+
+<section data-layout="capa">
+  <h1>Passeio aleatório<br><span class="sinal">e difusão</span></h1>
+</section>
+
+<section data-layout="abertura" id="passeio">
+  <h2>O passeio</h2>
+  <p class="pergunta">Onde para quem dá \(N\) passos ao acaso a partir da origem?</p>
+</section>
+
+<section data-layout="conteudo" id="um-passo">
+  <h2>Cada passo é uma moeda:<br><span class="sinal">esquerda ou direita.</span></h2>
+  <p class="lide">O caminhante anda \(a\) para um lado ou para o outro, com a mesma chance e sem memória.</p>
+  <p>Depois de \(N\) passos, a posição é a soma dos deslocamentos:</p>
+  \[ x_N = s_1 + s_2 + \cdots + s_N, \qquad s_i = \pm a. \]
+  <aside class="destaque" data-rotulo="Definição">Passeio aleatório: uma soma de passos independentes, todos sorteados da mesma distribuição.</aside>
+  <aside class="notas">Pôr um aluno de pé na frente da sala e jogar uma moeda a cada passo. Três ou quatro passos bastam para a turma ver que ninguém sabe onde ele vai parar, e que a pergunta boa não é "onde", e sim "quão longe, em média".</aside>
+</section>
+
+<section data-layout="conteudo" id="media-e-quadrado">
+  <h2>A média não sai do lugar;<br><span class="sinal">o quadrado cresce com o tempo.</span></h2>
+  <ol class="passos">
+    <li>Um passo tem média zero: \( \langle s_i \rangle = \tfrac12 a - \tfrac12 a = 0 \), e então \( \langle x_N \rangle = 0 \).</li>
+    <li data-passo>Eleve ao quadrado: \( x_N^2 = \sum_i s_i^2 + \sum_{i \neq j} s_i s_j \). Os termos cruzados têm média zero, pois os passos são independentes.</li>
+    <li data-passo>Cada \( s_i^2 = a^2 \), e sobra \( \langle x_N^2 \rangle = N a^2 \).</li>
+  </ol>
+  <aside class="destaque" data-rotulo="Resultado" data-passo>A distância típica é \( a\sqrt{N} \): cresce com a raiz do número de passos.</aside>
+  <aside class="notas">Revelar um passo por vez. Antes de revelar o segundo, perguntar à turma quanto vale a média de \( s_i s_j \) quando \( i \neq j \): a independência é a hipótese que carrega a conta inteira. No fim, comparar com quem anda em linha reta, que chega a \( aN \).</aside>
+</section>
+
+<section data-layout="abertura" id="difusao">
+  <h2>Difusão</h2>
+  <p class="pergunta">Como muitos caminhantes juntos viram uma nuvem que se espalha?</p>
+</section>
+
+<section data-layout="conteudo" id="equacao-de-difusao" data-pdf="passos">
+  <h2>Do passo do caminhante<br><span class="sinal">à equação de difusão.</span></h2>
+  <p class="lide">Seguimos \(P(x,t)\), a chance de achar o caminhante em \(x\), com um passo \(a\) a cada intervalo \(\tau\).</p>
+  \[ \begin{array}{l}
+    P(x, t+\tau) = \tfrac12 P(x-a, t) + \tfrac12 P(x+a, t) \\[4pt]
+    \passo{1}{P + \tau\,\partial_t P \approx P + \tfrac{a^2}{2}\,\partial_x^2 P} \\[4pt]
+    \passo{2}{\partial_t P = D\,\partial_x^2 P, \qquad D = \dfrac{a^2}{2\tau}}
+  \end{array} \]
+  <p data-passo="1">Expanda em Taylor: o tempo até primeira ordem, o espaço até a segunda. Os termos em \(a\) se cancelam.</p>
+  <p data-passo="3">No limite \(a, \tau \to 0\) com \(D\) fixo, o passeio vira a equação de difusão.</p>
+  <aside class="notas">A primeira linha é só a regra do passeio escrita para a probabilidade: para estar em \(x\) agora, o caminhante estava em \(x-a\) ou em \(x+a\) um passo antes. Revelar a expansão e perguntar por que o termo de primeira ordem em \(a\) some: é a simetria esquerda e direita. Se houvesse viés, sobraria um termo de arraste.</aside>
+</section>
+
+<section data-layout="conteudo" id="gaussiana">
+  <h2>A nuvem é uma gaussiana<br><span class="sinal">que se alarga com o tempo.</span></h2>
+  <p class="lide">Partindo de um ponto na origem, a solução é uma gaussiana cuja largura cresce com \( \sqrt{t} \).</p>
+  \[ P(x,t) = \frac{1}{\sqrt{4\pi D t}}\; e^{-x^2/4Dt} \]
+  <aside class="destaque" data-rotulo="Resultado">\( \langle x^2 \rangle = 2Dt \). Com \( t = N\tau \), é o mesmo \( N a^2 \) do passeio.</aside>
+  <aside class="notas">Conferir por substituição direta que a gaussiana resolve a equação é um bom exercício de casa. Em sala, o que importa é fechar o círculo: a variância da nuvem é a do passeio, e a constante de difusão é só a tradução das escalas microscópicas \(a\) e \(\tau\).</aside>
+</section>
+
+<section data-layout="figura" id="nuvem">
+  <h2>A mesma área, cada vez mais espalhada</h2>
+  <figure class="grafico">
+    <script type="application/json">
+    {"tipo":"linha","dados":{"x":[-12.0,-11.5,-11.0,-10.5,-10.0,-9.5,-9.0,-8.5,-8.0,-7.5,-7.0,-6.5,-6.0,-5.5,-5.0,-4.5,-4.0,-3.5,-3.0,-2.5,-2.0,-1.5,-1.0,-0.5,0.0],"t = 1":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0001,0.0005,0.0018,0.0052,0.0132,0.0297,0.0591,0.1038,0.1607,0.2197,0.265,0.2821],"t = 4":[0.0,0.0,0.0001,0.0001,0.0003,0.0005,0.0009,0.0015,0.0026,0.0042,0.0066,0.0101,0.0149,0.0213,0.0296,0.0398,0.0519,0.0656,0.0804,0.0954,0.1098,0.1225,0.1325,0.1389,0.141],"t = 16":[0.0074,0.0089,0.0106,0.0126,0.0148,0.0172,0.0199,0.0228,0.0259,0.0293,0.0328,0.0364,0.0402,0.044,0.0477,0.0514,0.0549,0.0582,0.0613,0.064,0.0663,0.0681,0.0694,0.0702,0.0705]},"x":"x","y":["t = 1","t = 4","t = 16"],"foco":"t = 16","eixos":{"x":"posição x"}}
+    </script>
+    <figcaption>Metade esquerda de \( P(x,t) \), com \( D = 1 \), em três instantes; a outra é simétrica. Quadruplicar o tempo dobra a largura.</figcaption>
+  </figure>
+  <aside class="notas">Mostrar que o pico cai pela metade quando o tempo quadruplica, enquanto a largura dobra: a área sob cada curva é sempre um, porque nenhum caminhante some.</aside>
+</section>
+
+<section data-layout="abertura" id="pratica">
+  <h2>Na prática</h2>
+  <p class="pergunta">Como conferir a lei da raiz quadrada com uma simulação?</p>
+</section>
+
+<section data-layout="conteudo" id="simulacao">
+  <h2>Mil caminhantes<br><span class="sinal">em poucas linhas de NumPy.</span></h2>
+  <p class="lide">Sorteamos todos os passos de uma vez e acumulamos a soma ao longo do tempo.</p>
+<pre data-lang="python" data-linhas="5-7">
+import numpy as np
+
+rng = np.random.default_rng(0)
+M, N = 1000, 400              # caminhantes, passos
+passos = rng.choice([-1, 1], size=(M, N))
+x = np.cumsum(passos, axis=1)  # posição de cada um
+msd = (x**2).mean(axis=0)      # média sobre caminhantes
+
+print(msd[[99, 199, 399]])     # perto de 100, 200, 400
+</pre>
+  <aside class="notas">Cada linha da matriz é um caminhante; cada coluna, um instante. A soma acumulada ao longo das colunas é o passeio, e a média do quadrado ao longo das linhas é o \( \langle x_N^2 \rangle \) da conta. Rodar ao vivo e trocar a semente: os números mexem na segunda casa, a reta não.</aside>
+</section>
+
+<section data-layout="figura" id="resultado">
+  <h2>O quadrado médio cresce em linha reta</h2>
+  <figure class="grafico">
+    <script type="application/json">
+    {"tipo":"dispersao","dados":{"passos":[20,40,60,80,100,120,140,160,180,200,220,240,260,280,300,320,340,360,380,400],"simulação":[20.3,41.3,62.0,80.6,100.6,123.6,141.4,160.5,181.7,199.5,230.1,250.9,264.1,282.0,304.4,315.3,335.6,354.3,376.6,397.4]},"x":"passos","y":["simulação"],"eixos":{"x":"número de passos N","y":"deslocamento quadrático médio"}}
+    </script>
+    <figcaption>Mil caminhantes com passo \( a = 1 \), a cada 20 passos. Os pontos seguem \( \langle x_N^2 \rangle = N \) sem nenhum ajuste.</figcaption>
+  </figure>
+  <aside class="notas">Mostrar nos eixos que a inclinação é um: é a previsão da conta do primeiro bloco, sem parâmetro livre. O afastamento dos pontos diminui com mais caminhantes, como \( 1/\sqrt{M} \), e isso já é assunto da próxima aula.</aside>
+</section>
+
+<section data-layout="conteudo" id="exercicio">
+  <h2>Por que se mexe o café<br><span class="sinal">em vez de esperar.</span></h2>
+  <div class="exercicio">
+    <div class="enunciado">
+      <p>Uma molécula de açúcar na água tem \( D \approx 5 \times 10^{-10}\,\mathrm{m^2/s} \). Quanto tempo ela leva, tipicamente, para se afastar 1 cm?</p>
+    </div>
+    <div class="resposta" data-passo>
+      <p>\( t \approx x^2/2D = 10^{-4}/10^{-9}\,\mathrm{s} = 10^5\,\mathrm{s} \): mais de um dia.</p>
+    </div>
+  </div>
+  <aside class="notas">Pedir o palpite antes da conta: quase todo mundo chuta segundos. A mesma conta para 1 micrômetro dá um milissegundo, e é por isso que dentro de uma célula a difusão basta e numa xícara não. Mexer o café troca o transporte difusivo pelo da convecção.</aside>
+</section>
+
+<section data-layout="encerramento">
+  <h2>O que fica</h2>
+  <ol class="sintese">
+    <li>A média do passeio é zero, mas a distância típica cresce como \( \sqrt{N} \).</li>
+    <li>No limite contínuo, o passeio vira a difusão, com \( D = a^2/2\tau \).</li>
+    <li>O tempo para difundir cresce com o quadrado da distância: \( t \sim x^2/2D \).</li>
+  </ol>
+  <p class="proxima">Próxima aula: a distribuição do passeio e o teorema central do limite.</p>
+</section>
+
+</body>
+</html>

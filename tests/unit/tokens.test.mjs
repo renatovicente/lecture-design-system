@@ -73,8 +73,10 @@ test('grid, zonas, espaços, réguas e mínimos (4.3 e 4.4)', () => {
   assert.deepEqual(s.contraste, { azulTextoMinimo: 32, amareloLinhaMinima: 4 });
   assert.deepEqual(s.mapa, {
     quadradoCabecalho: 16, espacoCabecalho: 8, quadradoAberturaMax: 160, calhaAbertura: 24,
-    quadradoCapa: 24, numeroProporcao: 0.55, faixaBlocoNDeM: 220,
+    quadradoCapa: 24, folgaRoteiroCapa: 8, numeroProporcao: 0.55, faixaBlocoNDeM: 220,
   });
+  // A folga do roteiro da capa (spec 5.4, 1.0.1) é um passo da escala de espaço.
+  assert.ok(Object.values(s.espaco).includes(s.mapa.folgaRoteiroCapa));
   assert.deepEqual(s.marca, { uspAltura: 56 });
 });
 

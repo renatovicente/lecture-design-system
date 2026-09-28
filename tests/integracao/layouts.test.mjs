@@ -5,6 +5,7 @@ import { mkdir, readFile, readdir, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { RAIZ, iniciarChrome, servirPasta, abrirAula, perto, TINTA, AZUL, AMARELO, TRANSPARENTE } from './utilitarios.mjs';
+import { tokens } from '../../tokens/tokens.js';
 
 const SAIDA = fileURLToPath(new URL('saida/', import.meta.url));
 const lerJson = async (caminho) => JSON.parse(await readFile(new URL(caminho, RAIZ), 'utf8'));
@@ -130,11 +131,11 @@ test('grades de colunas com as larguras do grid de 12 colunas', async () => {
   }
 });
 
-test('capa: título em y = 96, roteiro até y = 520 no passo da fileira, logo do IME com base em 680 e proteção livre', async () => {
+test('capa: título em y = 96, roteiro até y = 520 menos a folga, no passo da fileira, logo do IME com base em 680 e proteção livre', async () => {
   const { pagina } = await especime('index.html');
   perto((await caixa(pagina, 'capa', 'h1')).y, 96, 'topo do h1');
   const roteiro = await caixa(pagina, 'capa', '.roteiro');
-  perto(roteiro.base, 520, 'base do roteiro');
+  perto(roteiro.base, tokens.zona.capaConteudoBase - tokens.mapa.folgaRoteiroCapa, 'base do roteiro');
   const quadrados = await caixas(pagina, 'capa', '.roteiro .quadrado');
   assert.deepEqual(quadrados.map((q) => [Math.round(q.x), q.largura, q.altura]), [[64, 24, 24], [248, 24, 24], [432, 24, 24]]);
   const [logo, ...outros] = await caixas(pagina, 'capa', '.faixa-de-marca img');
@@ -145,6 +146,35 @@ test('capa: título em y = 96, roteiro até y = 520 no passo da fileira, logo do
   const conteudo = await caixas(pagina, 'capa', ':scope > .area > *');
   const baseDoConteudo = Math.max(...conteudo.map((c) => c.base));
   assert.ok(logo.y - unidades.ime.protecao >= baseDoConteudo, `proteção do IME invadida: ${logo.y} - ${unidades.ime.protecao} < ${baseDoConteudo}`);
+});
+
+// Correção de 1 px (1.0.1): na primeira rodada de aceite no claude.ai, o painel do artifact acusou
+// composicao.transbordo de 1 px nos três nomes curtos do roteiro da capa. No Chrome local, a mesma aula
+// media -0,2 px de folga: a caixa do <span> inline (a área de conteúdo da Geist Mono, 18 px) descia
+// abaixo do <li> (a linha, 14 × 1,2 = 16,8 px), e a base do <li> coincidia com a da zona. A tolerância
+// da regra (FOLGA, 0,5 px) segurava aqui e não lá. Propriedade, não igualdade: a distância entre a base
+// do nome curto mais baixo e a base da zona é, no mínimo, o token — no espécime inteiro e na aula do
+// aceite (tests/fixtures/capa/passeio.html). Inversões medidas: sem a margem do roteiro, 0 px; sem o
+// inline-block do nome, 7,8 px — as duas abaixo do token de 8.
+test('capa: a folga entre o roteiro e a base da zona é, no mínimo, mapa.folgaRoteiroCapa', async () => {
+  const fixturas = await servirPasta('tests/fixtures/capa/');
+  try {
+    const decks = (await readdir(new URL('especime/', RAIZ))).filter((nome) => nome.endsWith('.html')).sort()
+      .map((nome) => [`${servidor.endereco}/${nome}`, nome]);
+    decks.push([`${fixturas.endereco}/passeio.html`, 'tests/fixtures/capa/passeio.html']);
+    for (const [endereco, nome] of decks) {
+      const { pagina } = await abrirAula(navegador, `${endereco}?folha`);
+      const folga = await pagina.evaluate(() => {
+        const capa = document.querySelector('.slide[data-layout="capa"]');
+        const base = Math.max(...[...capa.querySelectorAll('.roteiro .nome-curto')].map((nome) => nome.getBoundingClientRect().bottom));
+        return capa.querySelector(':scope > .area').getBoundingClientRect().bottom - base;
+      });
+      await pagina.close();
+      assert.ok(folga >= tokens.mapa.folgaRoteiroCapa, `${nome}: folga de ${folga} px entre o roteiro e a base da zona (mín. ${tokens.mapa.folgaRoteiroCapa})`);
+    }
+  } finally {
+    await fixturas.fechar();
+  }
 });
 
 test('abertura: fileira a partir de y = 96, atual em amarelo com número a 55 %, título com base em 652 e "Bloco N de M" à direita', async () => {
