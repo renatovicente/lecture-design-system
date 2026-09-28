@@ -25,9 +25,9 @@ A CLI vive em `bin/aula-usp.mjs`. Sem `npm link`, chame por `node bin/aula-usp.m
 
 Códigos de saída (spec 8.1): 0 sem erros, avisos permitidos; 1 com erros de validação; 2 com falha de ambiente. Cada comando aceita **só as suas** flags: `--json` em `build` ou `--porta` em `validar` saem com o uso e código 2, como uma flag inexistente — melhor recusar que ignorar em silêncio.
 
-Os seis comandos da spec 8.1 existem. Das cinco metas do contrato, `novo` preenche duas: as outras três ficam com o texto de exemplo do modelo, porque um `professor` inventado seria pior que um lugar visivelmente vazio.
+Os seis comandos da spec 8.1 existem. Das seis metas do contrato, `novo` preenche duas: `disciplina`, `aula` e `professor` ficam com o texto de exemplo do modelo, porque um `professor` inventado seria pior que um lugar visivelmente vazio, e `video` (opcional, de fase 2) não entra no modelo. Desde a 1.0.1, só `unidade`, `data` e `professor` são obrigatórias.
 
-`aula-usp pacotes` reescreve a tag nas **três** pastas da spec 8.1: `modelos/`, `especime/` e `exemplos/`. O espécime é servido cru por `dist.test.mjs` e `visual.test.mjs` — um servidor que **não** reescreve nada, e é ele que prova que a tag escrita pelo autor chega ao navegador como está. Com a CDN ainda sem publicar (fase 3), quem responde por ela é `rotearCdn` (`tests/integracao/utilitarios.mjs`): o **Chrome** intercepta a rota e devolve os bytes de `dist/`. O servidor continua burro. Dois ganhos que a tag relativa não dava: o `integrity` conferido por um navegador de verdade (dois bytes a mais em `aula-usp.js` e o Chrome recusa o script) e a cadeia de scripts secundários resolvida pela base da CDN (9 pedidos em `codigo.html`). O espécime não vai dentro de nenhum pacote; o modelo e o exemplo vão.
+`aula-usp pacotes` reescreve a tag nas **três** pastas da spec 8.1: `modelos/`, `especime/` e `exemplos/`. O espécime é servido cru por `dist.test.mjs` e `visual.test.mjs` — um servidor que **não** reescreve nada, e é ele que prova que a tag escrita pelo autor chega ao navegador como está. A 1.0.0 está publicada, e a CDN foi conferida de verdade uma vez (13 de 13 hashes, 0 erros em 5 decks num Chrome com a CDN real) — mas os testes continuam **offline, de propósito**: quem responde pela CDN neles é `rotearCdn` (`tests/integracao/utilitarios.mjs`), o **Chrome** intercepta a rota e devolve os bytes de `dist/` desta árvore, que é o que está sob teste (a versão publicada é outra, e uma suíte que dependesse da rede não diria nada sobre o código que você acabou de mudar). O servidor continua burro. Dois ganhos que a tag relativa não dava: o `integrity` conferido por um navegador de verdade (dois bytes a mais em `aula-usp.js` e o Chrome recusa o script) e a cadeia de scripts secundários resolvida pela base da CDN (9 pedidos em `codigo.html`). O modelo e as duas aulas-exemplo vão dentro dos pacotes, e o espécime inteiro também, desde o pacote autossuficiente: três dos quatro pacotes levam `especime/` com todos os decks (`tests/unit/pacotes.test.mjs`).
 
 Scripts de `package.json`: `npm test`, `npm run test:integracao`, `npm run servir`, `npm run tokens`, `npm run fontes:css`, `npm run mplstyle`, `npm run fontes`, `npm run marcas`. `aula-usp dist` não tem script npm. **`npm run fontes` e `npm run marcas` baixam da rede** e só rodam com autorização do autor (spec 8.3) — os dois já rodaram na fase 1 e seus resultados estão no repositório.
 
@@ -48,7 +48,7 @@ Os de integração são pesados — abrem Chrome, constroem decks, comparam pixe
 node --test tests/integracao/composicao.test.mjs
 ```
 
-Uma distinção que confunde: **"falta de Chrome não é falha" é regra da CLI**, não dos testes. `validar` e `build` degradam sozinhos — pulam composição e PDF, emitem aviso no stderr e terminam com 0 se não houver erros (spec 8.1). Os testes de integração não têm essa tolerância: chamam `chromium.launch()` direto (`tests/integracao/utilitarios.mjs:35`) e falham sem Chrome. Os dois arquivos de `tests/unit/` que sobem Chrome — `validar-cli.test.mjs` e `novo.test.mjs`, os dois por `validarArquivo` — seguem a regra da CLI e **pulam anunciando**: medido, `CHROME_PATH` inexistente dá 602 passam e 2 pulados, e nenhum pulo é mudo.
+Uma distinção que confunde: **"falta de Chrome não é falha" é regra da CLI**, não dos testes. `validar` e `build` degradam sozinhos — pulam composição e PDF, emitem aviso no stderr e terminam com 0 se não houver erros (spec 8.1). Os testes de integração não têm essa tolerância: chamam `chromium.launch()` direto (`tests/integracao/utilitarios.mjs:35`) e falham sem Chrome. Os dois arquivos de `tests/unit/` que sobem Chrome — `validar-cli.test.mjs` e `novo.test.mjs`, os dois por `validarArquivo` — seguem a regra da CLI e **pulam anunciando**: medido, `CHROME_PATH` inexistente dá 633 passam e 2 pulados (medido na 1.0.1), e nenhum pulo é mudo.
 
 ## `dist/` é rastreado, e os testes comparam byte a byte
 
@@ -56,8 +56,8 @@ Uma distinção que confunde: **"falta de Chrome não é falha" é regra da CLI*
 
 Quem gera é `aula-usp dist`. Dois testes unitários impedem que um `dist/` velho engane qualquer teste que o leia:
 
-- `tests/unit/bundle.test.mjs:115` — `dist/manifesto.json` commitado contra o regenerado, campo a campo;
-- `tests/unit/bundle.test.mjs:135` — os **bytes** de cada arquivo em disco contra os que `empacotar()` acabou de gerar, com a mensagem "rode `aula-usp dist` de novo".
+- `tests/unit/bundle.test.mjs:116` — `dist/manifesto.json` commitado contra o regenerado, campo a campo;
+- `tests/unit/bundle.test.mjs:136` — os **bytes** de cada arquivo em disco contra os que `empacotar()` acabou de gerar, com a mensagem "rode `aula-usp dist` de novo".
 
 Isso não é zelo: doze arquivos de teste leem `dist/` (medido na fase 2b: os que citam um caminho dentro de `dist/`), entre eles `tests/integracao/dist.test.mjs`, que monta o espécime pelo pacote num Chrome de verdade. Sem a guarda de bytes, um `dist/` de uma geração atrás validaria código-fonte que ninguém mais tem.
 
@@ -67,12 +67,12 @@ Consequência prática: **mexeu no empacotador (`build/bundle.mjs`), nos pontos 
 
 | gerado | por | guarda |
 |---|---|---|
-| `estilos/tokens.css`, `tokens/tokens.js` | `npm run tokens` | `tests/unit/tokens.test.mjs:93` |
+| `estilos/tokens.css`, `tokens/tokens.js` | `npm run tokens` | `tests/unit/tokens.test.mjs:124` |
 | `estilos/fontes.css` | `npm run fontes:css` | `tests/unit/fontes-css.test.mjs:24` |
 | `validador/cobertura.json` | `aula-usp dist` | `tests/unit/cobertura.test.mjs:74` |
-| `dist/` (13 scripts + manifesto) | `aula-usp dist` | `tests/unit/bundle.test.mjs:115` e `:135`, e as duas de propriedade em `:195` e `:218` |
-| `guia/10-estrutura.md`, `20-layouts.md`, `30-componentes.md` e `60-validador.md`, só entre `<!-- gerado:… -->` e `<!-- /gerado -->` | `npm run guia` | `tests/unit/guia.test.mjs:28` |
-| `pacotes/` (os quatro da spec 10.2, 49 arquivos) e a tag do runtime em `modelos/` e `exemplos/` | `aula-usp pacotes` | `tests/unit/pacotes.test.mjs:58` |
+| `dist/` (13 scripts + manifesto) | `aula-usp dist` | `tests/unit/bundle.test.mjs:116` e `:136`, e as duas de propriedade em `:197` e `:220` |
+| `guia/10-estrutura.md`, `20-layouts.md`, `30-componentes.md` e `60-validador.md`, só entre `<!-- gerado:… -->` e `<!-- /gerado -->` | `npm run guia` | `tests/unit/guia.test.mjs:34` |
+| `pacotes/` (os quatro da spec 10.2, 52 arquivos) e a tag do runtime em `modelos/` e `exemplos/` | `aula-usp pacotes` | `tests/unit/pacotes.test.mjs:58` |
 | `assets/aula-usp.mplstyle` | `npm run mplstyle` | `tests/unit/mplstyle.test.mjs` — regerar-e-comparar, mais a propriedade (as três cores do ciclo são as de `tokens.cor.tinta/azul/cinza`, sem `#`). O Aula USP não consome este arquivo, e não há Python no projeto (spec 8.2) para carregá-lo de verdade num matplotlib — a cobertura dele é textual porque a ferramenta que o lê não está no projeto |
 
 Todos são rastreados no git e trazem, quando o formato permite, o cabeçalho "Gerado por … Não editar à mão". Editar um à mão quebra a guarda, e a correção é sempre a mesma: edite a **fonte** e regere.
@@ -113,7 +113,7 @@ Em `bin/` vale uma regra própria, escrita no topo do arquivo: nada que leia dis
 
 ## O contrato é dado, não código
 
-`contrato/contrato.json` (versão 1) carrega os 7 layouts, os blocos de corpo, as grades, os papéis tipográficos, o vocabulário de HTML e SVG, o TeX permitido, as 7 linguagens de código, 34 chaves de limite e 64 regras — 60 da fase 1 e 4 da fase 2 (`recursos.grafico`, `recursos.csv`, `recursos.dot` e `recursos.diagrama-grande`), **todas implementadas desde a fase 2b**; `tests/unit/validador.test.mjs` confere isso com a contagem tirada do contrato, não digitada.
+`contrato/contrato.json` (versão 1) carrega os 7 layouts, os blocos de corpo, as grades, os papéis tipográficos, o vocabulário de HTML e SVG, o TeX permitido, as 7 linguagens de código, 34 chaves de limite e 65 regras — 60 da fase 1 e 5 da fase 2 (`recursos.grafico`, `recursos.csv`, `recursos.dot`, `recursos.diagrama-grande` e, desde a 1.0.1, `composicao.canto-video`), **todas implementadas**; `tests/unit/validador.test.mjs` confere isso com a contagem tirada do contrato, não digitada.
 
 O código **executa** o contrato; não o repete. Isso vale **inclusive para limiares**: `saida.megabytes: 10` mora no contrato, não em `validador/regras/saida.js`; as regras de limite leem `contrato.limites[chave]` e só sabem contar. Um número mágico no código que já existe no contrato é defeito — mudar um limite tem que ser editar um número em JSON.
 
@@ -128,12 +128,14 @@ Número que **não** vem do contrato — porque é da spec — entra como consta
 
 1. A entrada em `contrato.regras` — `severidade`, `grupo`, `fase`, `acao` — e o número em `contrato.limites`, se houver.
 2. A implementação em `validador/regras/<grupo>.js`, registrada em `validador/regras/index.js`.
-3. Para regra **estática**, um par `bom.html` / `ruim.html` em `tests/fixtures/validador/<nome-da-regra>/`. `tests/unit/validador.test.mjs` gera um teste por pasta de fixture e exige que toda estática implementada tenha a sua. Hoje são 60 pastas, uma por regra que tem fixture, com seis prefixos: `limites` (20), `estrutura` (13), `recursos` (10), `vocabulario` (8), `composicao` (5) e `matematica` (4). O prefixo é o nome da regra, não o grupo do contrato — as quatro regras de carga da fase 1 se chamam `recursos.*` e `matematica.*`.
+3. Para regra **estática**, um par `bom.html` / `ruim.html` em `tests/fixtures/validador/<nome-da-regra>/`. `tests/unit/validador.test.mjs` gera um teste por pasta de fixture e exige que toda estática implementada tenha a sua. Hoje são 61 pastas, uma por regra que tem fixture, com seis prefixos: `limites` (20), `estrutura` (13), `recursos` (10), `vocabulario` (8), `composicao` (6) e `matematica` (4). O prefixo é o nome da regra, não o grupo do contrato — as quatro regras de carga da fase 1 se chamam `recursos.*` e `matematica.*`.
 4. Carga, composição e saída não se provam por fixture de linkedom: as de carga precisam de recursos de verdade, as de composição só existem dentro do Chrome (`tests/integracao/composicao.test.mjs`), e as quatro `saida.*` medem o artefato construído — por isso são as únicas quatro regras de fase 1 sem pasta de fixture.
+
+Quem roda o grupo de composição tem de passar a fase — `build/composicao.mjs` a calcula na página com `faseDaAula`, como `montar/entrada.js`. Até a 1.0.1 toda regra de composição era de fase 1, o default de `validar()` bastava, e a CLI rodava o grupo na fase 1 fixa: `composicao.canto-video`, a primeira de fase 2, teria ficado muda no terminal e só o painel a veria.
 
 A ordem dos grupos não é detalhe: composição mede o documento montado **antes** de o motor iniciar, porque depois disso todo slide que não é o atual mede 0×0 e o transbordo deixa de existir para o validador.
 
-Dois eixos chegam a toda regra pelo contexto de `validar()`: `fase`, que `faseDaAula` decide por presença de qualquer marca de fase 2 do contrato (`seletoresDeFase2`, em `validador/validar.js` — derivada do contrato, sem lista em código), e `modo` (`'navegador'`, o padrão, ou `'build'`, que todo o lado Node passa). Hoje só `recursos.demo-sem-estatico` lê o modo, e **só** o modo: ela se cala no build, em qualquer `fase` — a fase da aula só libera o vocabulário marcado fase 2 no contrato, e a captura vale para todo build —, porque `build/captura.mjs` fotografa exatamente as demos que ela acusaria — as duas pontas chamam `demoSemImagem` (`validador/regras/carga.js`), e `tests/unit/captura.test.mjs` fica vermelho se uma delas passar a decidir sozinha. A foto que falha volta à regra por `falhasDeCaptura` (`build/build.mjs`, depois da etapa 5): calar uma regra no build só vale enquanto quem a substitui falha alto.
+Dois eixos chegam a toda regra pelo contexto de `validar()`: `fase`, que `faseDaAula` decide por presença de qualquer marca de fase 2 do contrato (`seletoresDeFase2`, em `validador/validar.js` — derivada do contrato, sem lista em código; as metas de fase 2, como `video`, são procuradas no `<head>`, e só elas), e `modo` (`'navegador'`, o padrão, ou `'build'`, que todo o lado Node passa). Hoje só `recursos.demo-sem-estatico` lê o modo, e **só** o modo: ela se cala no build, em qualquer `fase` — a fase da aula só libera o vocabulário marcado fase 2 no contrato, e a captura vale para todo build —, porque `build/captura.mjs` fotografa exatamente as demos que ela acusaria — as duas pontas chamam `demoSemImagem` (`validador/regras/carga.js`), e `tests/unit/captura.test.mjs` fica vermelho se uma delas passar a decidir sozinha. A foto que falha volta à regra por `falhasDeCaptura` (`build/build.mjs`, depois da etapa 5): calar uma regra no build só vale enquanto quem a substitui falha alto.
 
 ## Português
 

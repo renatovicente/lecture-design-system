@@ -16,7 +16,8 @@ Feito para o IME-USP e o IFUSP, com a identidade visual da USP.
 | Motor | navegação, passos revelados, notas do apresentador, visão geral, ajuda, janela do apresentador, impressão |
 | Componentes | campos, exercício, listas, tabela, figura, código com destaque (Shiki), matemática (KaTeX, com `\passo`) |
 | Recursos visuais | gráficos (`linha`, `barras`, `dispersao`, `histograma`), diagramas em DOT desenhados pelo Graphviz, controles de demo, e a foto automática das demos no PDF |
-| Validador | as **64 regras do contrato, todas implementadas**: 48 estáticas, 7 de carga, 5 de composição e 4 de saída |
+| Validador | as **65 regras do contrato, todas implementadas**: 48 estáticas, 7 de carga, 6 de composição e 4 de saída |
+| Canto do vídeo | com `<meta name="video" content="canto">` (1.0.1), o canto inferior direito, 334 × 188 px, fica reservado ao vídeo do ministrante que o OBS, o Zoom ou o Meet sobrepõem: o cromo recua, e `composicao.canto-video` acusa o conteúdo que entrar lá |
 | CLI | os **6 comandos** da spec 8.1 |
 | Guia e pacotes | 16 arquivos de guia do autor e 4 pacotes montados a partir deles, para Claude, GPT e um repositório de disciplina |
 
@@ -43,7 +44,7 @@ Num clone deste repositório, `npm link` põe `aula-usp` no PATH.
 aula-usp novo <pasta> --unidade ime
 ```
 
-Copia `modelos/aula/` para uma pasta nova, preenchendo as duas metas que o comando sabe: `unidade`, da opção, e `data`, de hoje. As outras três — `disciplina`, `aula` e `professor` — ficam com o texto de exemplo do modelo, de propósito: um valor inventado para `professor` seria pior que um lugar visivelmente vazio. A unidade tem de ser uma chave de `assets/marcas/unidades.json` — com outra, o comando sai dizendo quais existem —, e uma pasta que já tenha conteúdo não é sobrescrita.
+Copia `modelos/aula/` para uma pasta nova, preenchendo as duas metas que o comando sabe: `unidade`, da opção, e `data`, de hoje. As outras três — `disciplina`, `aula` e `professor` — ficam com o texto de exemplo do modelo (as duas primeiras são opcionais desde a 1.0.1: apagadas, a capa e o rodapé ficam sem a linha da disciplina), de propósito: um valor inventado para `professor` seria pior que um lugar visivelmente vazio. A unidade tem de ser uma chave de `assets/marcas/unidades.json` — com outra, o comando sai dizendo quais existem —, e uma pasta que já tenha conteúdo não é sobrescrita.
 
 ```bash
 aula-usp servir <pasta> [--porta 8765]
@@ -94,7 +95,7 @@ Os testes de integração abrem o Chrome e são pesados; rode **um arquivo por v
 node --test tests/integracao/composicao.test.mjs
 ```
 
-Para ver o sistema funcionando, sirva o espécime — os seis decks que exercitam todos os layouts e componentes:
+Para ver o sistema funcionando, sirva o espécime — os sete decks que exercitam todos os layouts e componentes, um deles com o canto do vídeo:
 
 ```bash
 npm run servir -- especime
@@ -103,7 +104,7 @@ npm run servir -- especime
 ## Como está organizado
 
 ```
-contrato/contrato.json   o contrato como DADO: layouts, vocabulário, papéis, 34 limites e as 64 regras
+contrato/contrato.json   o contrato como DADO: layouts, vocabulário, papéis, 34 limites e as 65 regras
 tokens/                  fonte única dos tokens (DTCG); estilos/tokens.css é gerado daqui
 estilos/                 base, layouts, componentes, motor, impressão
 montar/                  transforma o fonte do autor no slide montado
@@ -116,7 +117,7 @@ guia/                    o guia do autor, 16 arquivos, com as fontes dos pacotes
 pacotes/                 os 4 pacotes para agentes, 49 arquivos, gerados por `aula-usp pacotes`
 modelos/aula/            o esqueleto que `aula-usp novo` copia
 exemplos/                as aulas-exemplo: descida do gradiente, e regressão linear com gráfico, diagrama e demo
-especime/                seis decks que exercitam tudo
+especime/                sete decks que exercitam tudo
 tests/                   unit/, integracao/, fixtures/ e o roteiro de aceite
 docs/superpowers/        a spec, os planos de cada marco e as revisões finais
 ```
@@ -127,7 +128,7 @@ Sete artefatos são **gerados e versionados**, cada um com uma guarda que falha 
 
 ### O contrato é dado, não código
 
-As 64 regras vivem em `contrato/contrato.json` com severidade, grupo, fase e o texto da ação — 60 da fase 1 e 4 da fase 2. O código executa o contrato; não o restata. Mudar um limite é editar um número em JSON, e há testes que falham se o código e o contrato discordarem.
+As 65 regras vivem em `contrato/contrato.json` com severidade, grupo, fase e o texto da ação — 60 da fase 1 e 5 da fase 2. O código executa o contrato; não o restata. Mudar um limite é editar um número em JSON, e há testes que falham se o código e o contrato discordarem.
 
 ### As regras rodam em quatro grupos
 
@@ -135,7 +136,7 @@ As 64 regras vivem em `contrato/contrato.json` com severidade, grupo, fase e o t
 |---|---|---|---|
 | estáticas | o fonte do autor | antes de montar | 48 |
 | carga | o fonte, depois de bibliotecas, imagens, scripts, CSV e DOT carregarem | depois do `load` | 7 |
-| composição | o documento montado e renderizado | medido no Chrome, antes do motor iniciar | 5 |
+| composição | o documento montado e renderizado | medido no Chrome, antes do motor iniciar | 6 |
 | saída | o HTML e o PDF finais | dentro do `build`, sobre o que foi escrito em `<pasta>/dist/` | 4 |
 
 A ordem do grupo de composição não é detalhe: depois que o motor inicia, todo slide que não é o atual mede 0×0, e o transbordo deixaria de existir para o validador. Há testes que falham se alguém mover essa chamada.
