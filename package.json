@@ -2,6 +2,19 @@
   "name": "aula-usp",
   "version": "0.1.0",
   "description": "Design system de aulas em HTML para a USP, usado com Claude e GPT.",
+  "keywords": [
+    "aula",
+    "slides",
+    "usp",
+    "katex"
+  ],
+  "license": "MIT",
+  "author": "Renato Vicente",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/renatovicente/lecture-design-system.git"
+  },
+  "homepage": "https://github.com/renatovicente/lecture-design-system#readme",
   "type": "module",
   "files": [
     "bin/",

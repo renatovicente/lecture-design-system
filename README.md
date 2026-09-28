@@ -32,6 +32,19 @@ Quatro coisas, e nenhuma delas é detalhe de acabamento.
 
 **O aceite.** `tests/aceite/roteiro.md` fixa o pedido, os ambientes e o critério — zero erros em até três rodadas mais a revisão visual do autor — e traz os resultados da fase 1, rodada em 2026-09-21: **Claude Code e Codex CLI passaram os dois**, cada um com apenas o pacote da skill. As aulas que produziram estão em `tests/aceite/aulas/`. A tabela da fase 3 continua vazia, e depende da publicação.
 
+## Instalar
+
+Quando o pacote estiver publicado no npm (fase 3b; hoje ainda não está), a CLI se instala de um destes dois jeitos:
+
+```bash
+npm install -g aula-usp
+npx aula-usp novo minha-aula --unidade ime
+```
+
+O pacote leva a CLI, o runtime de `dist/`, o modelo, a aula-exemplo e o guia do autor, e só as dependências de produção. A tag do runtime vem pronta no modelo: `aula-usp novo` a copia como está, com a versão e o `integrity` do pacote instalado.
+
+`aula-usp dist` e `aula-usp pacotes` são manutenção do sistema e só rodam num clone deste repositório: no pacote instalado os dois recusam com saída 2 e dizem isso.
+
 ## Os comandos
 
 Antes da publicação, `npm link` põe `aula-usp` no PATH.
@@ -167,4 +180,4 @@ Não há CI: quem roda os testes antes de commitar é quem commita.
 
 ## Licença
 
-As fontes em `assets/fontes/` são de terceiros e vêm com as licenças OFL em `assets/fontes/licencas/`. As marcas da USP e das unidades seguem as regras de identidade visual da universidade.
+O código é MIT (`LICENSE`). A licença não cobre as marcas de `assets/marcas/`, que pertencem à USP e às unidades e seguem as regras de identidade visual de cada instituição, nem as fontes de `assets/fontes/`, que seguem a SIL OFL, com os textos em `assets/fontes/licencas/`.

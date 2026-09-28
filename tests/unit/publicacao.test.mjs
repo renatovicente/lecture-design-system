@@ -48,10 +48,16 @@ test('o package.json é publicável: sem private, com files, license e repositor
   assert.ok(pacote.repository, 'falta repository');
 });
 
+// A única citação cuja AUSÊNCIA no tarball é o que o código procura: `exigirRepositorio`, em
+// bin/aula-usp.mjs, olha se especime/ existe para saber se está num clone ou no pacote instalado.
+// A exceção é pelo caminho exato: um arquivo DENTRO de especime/ citado por um módulo do fecho é
+// outro caminho e continua caindo. O que ela deixa passar é uma segunda citação à própria pasta.
+const AUSENCIA_PROCURADA = new Set(['especime/']);
+
 test('todo arquivo e pasta que a CLI importa ou lê por caminho relativo ao módulo está no tarball', () => {
   const tarball = arquivosDoTarball();
   const caminhos = [...tarball];
-  const faltam = fechoDeImports('bin/aula-usp.mjs').filter((caminho) => caminho.endsWith('/')
+  const faltam = fechoDeImports('bin/aula-usp.mjs').filter((caminho) => !AUSENCIA_PROCURADA.has(caminho)).filter((caminho) => caminho.endsWith('/')
     ? !caminhos.some((arquivo) => arquivo.startsWith(caminho))
     : !tarball.has(caminho));
   assert.deepEqual(faltam, []);

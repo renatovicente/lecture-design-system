@@ -102,3 +102,16 @@ test('instalado, servir responde com a aula e o runtime local', async () => {
     rmSync(dir, { recursive: true, force: true });
   }
 });
+
+test('instalado, dist e pacotes recusam com código 2 e dizem que são do repositório', () => {
+  const { dir, pacote } = instalar();
+  try {
+    for (const comando of ['dist', 'pacotes']) {
+      const r = cli(pacote, comando);
+      assert.equal(r.status, 2, comando);
+      assert.match(r.stderr, /comando de manutenção do sistema/, comando);
+    }
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});

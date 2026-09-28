@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // CLI do Aula USP (spec 8.1). Com `novo`, os seis comandos da spec estão implementados.
-import { cpSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { basename, resolve, join, dirname } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 // build/servir.mjs, build/validar.mjs, build/bundle.mjs e build/cobertura.mjs só são importados
@@ -241,8 +241,22 @@ async function buildComando(argumentos) {
   process.exitCode = codigo;
 }
 
+// `dist` e `pacotes` são manutenção do sistema (spec 8.1): precisam do repositório — especime/, que
+// `pacotes` lê, e as devDependencies, como o esbuild de build/bundle.mjs —, e o pacote do npm não leva
+// nenhum dos dois (package.json, "files"). Sem esta conferência, no pacote instalado os dois saíam
+// com 2 e uma mensagem crua ("Cannot find package 'esbuild'", "ENOENT … especime/") que não diz ao
+// autor o que fazer. Roda ANTES de qualquer import() do comando: é a ausência de uma dependência
+// desses imports que ela antecipa. `existsSync` dentro da função não fere a regra do topo do arquivo,
+// que é sobre ler disco no escopo do módulo.
+function exigirRepositorio(comando) {
+  if (!existsSync(new URL('../especime/', import.meta.url))) {
+    sair(`aula-usp ${comando} é comando de manutenção do sistema: rode-o num clone do repositório, não no pacote instalado.`);
+  }
+}
+
 async function distComando(argumentos) {
   if (argumentos.length > 0) sair(USO); // dist não recebe alvo: gera sempre o do próprio sistema
+  exigirRepositorio('dist');
   const raiz = new URL('../', import.meta.url);
   try {
     const [{ empacotar }, { escreverCobertura }] = await Promise.all([
@@ -264,6 +278,7 @@ async function distComando(argumentos) {
 
 async function pacotesComando(argumentos) {
   if (argumentos.length > 0) sair(USO); // como `dist`: não recebe alvo, gera sempre o do sistema
+  exigirRepositorio('pacotes');
   const raiz = new URL('../', import.meta.url);
   let gerarPacotes;
   try {
