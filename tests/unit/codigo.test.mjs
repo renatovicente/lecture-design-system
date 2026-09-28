@@ -59,6 +59,22 @@ test('o destacador cobre as linguagens do contrato: palavras-chave em negrito, o
   }
 });
 
+// O teste de cima só cai quando a CPU está disputada (medido na fase 3a: 3 de 8 rodadas sob carga, 0
+// de 10 com a máquina ociosa), então ele sozinho não segura a correção. Este olha a causa direto: o
+// destacador pede ao Shiki a tokenização sem o limite de tempo por linha, cujo padrão é 500 ms.
+test('o destacador não depende do relógio: pede ao Shiki tokenização sem limite de tempo', () => {
+  const pedidos = [];
+  const espiao = criarDestacador({
+    createShikiPrimitive: () => ({}),
+    codeToTokensBase: (_primitivo, _codigo, opcoes) => { pedidos.push(opcoes); return []; },
+    createJavaScriptRegexEngine: () => ({}),
+    gramaticas: { python },
+  });
+  espiao.linhas('x = 1', 'python');
+  assert.equal(pedidos.length, 1);
+  assert.equal(pedidos[0].tokenizeTimeLimit, 0);
+});
+
 test('etiqueta de JSDoc é negrito dentro de um comentário, e continua comentário', () => {
   const pedacos = destacador.linhas('/**\n * @param {number} w peso\n */\nfunction f(w) { return w; }', 'javascript').flat();
   const doTipo = (tipo) => pedacos.filter((pedaco) => pedaco.tipo === tipo).map((pedaco) => pedaco.texto.trim());

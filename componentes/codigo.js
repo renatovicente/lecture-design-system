@@ -55,7 +55,16 @@ export function criarDestacador({ createShikiPrimitive, codeToTokensBase, create
   });
   return {
     linguagens: new Set(Object.keys(gramaticas)),
-    linhas: (codigo, linguagem) => codeToTokensBase(primitivo, codigo, { lang: linguagem, theme: TEMA.name })
+    // tokenizeTimeLimit: 0 desliga o relógio do Shiki. O padrão é 500 ms por LINHA, e ao estourar ele
+    // para de tokenizar e devolve o resto da linha sem estilo — o destaque passava a depender da
+    // velocidade da máquina. Medido na fase 3a: a primeira linha de JavaScript, a frio, leva ~110 ms
+    // numa máquina ociosa e 560–660 ms com a CPU disputada, e nessa condição o teste do destacador
+    // (tests/unit/codigo.test.mjs) caiu em 3 de 8 rodadas, sempre em javascript, com as palavras-chave
+    // ou o comentário do fim da linha faltando. O mesmo corte valia para o build e para um projetor
+    // lento. O que o relógio protege é linha longa demais; aqui o validador já acusa bloco acima de
+    // 16 linhas e linha acima de 64 colunas (limites codigo.linhas e codigo.colunas), e as gramáticas
+    // são as sete fixas do pacote.
+    linhas: (codigo, linguagem) => codeToTokensBase(primitivo, codigo, { lang: linguagem, theme: TEMA.name, tokenizeTimeLimit: 0 })
       .map((linha) => linha.map((token) => ({
         texto: token.content,
         // A cor vem antes do peso: uma etiqueta de JSDoc é negrito dentro de um comentário, e continua comentário.
