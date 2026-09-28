@@ -207,3 +207,38 @@ test('sem Chrome: o aviso diz quais demos ficam sem imagem', async () => {
   const doAviso = r.achados.filter((a) => a.regra === 'recursos.demo-sem-estatico');
   assert.deepEqual(doAviso.map((a) => a.mensagem), ['demo "contador" sem img.estatico e sem capturar(), e a captura do build falhou: sem Chrome, a etapa 5 não rodou.']);
 });
+
+// O aceite da fase 2, na letra da spec 12: "testes verdes e essa aula validada, com uma demo sem
+// imagem própria capturada no PDF" — "essa aula" é exemplos/regressao-linear/ (spec 10.3: "usa
+// gráfico, diagrama e demo"). As três coisas são conferidas no fonte, e não supostas: sem elas a
+// aula poderia validar e fotografar sem ser a aula que a spec pede. A foto é medida como imagem da
+// página, pela mesma razão do primeiro teste: o quadro de substituição também pinta a página.
+const PAGINA_DA_DEMO_DO_EXEMPLO = 6; // a sétima seção; nenhum slide da aula tem data-pdf="passos"
+
+test('aceite da fase 2: exemplos/regressao-linear valida limpo e sai com a demo fotografada no PDF', async () => {
+  const caminho = new URL('exemplos/regressao-linear/index.html', RAIZ);
+  const fonte = parseHTML(await readFile(caminho, 'utf8')).document;
+  assert.equal(faseDaAula(fonte, contrato), 2);
+  assert.ok(fonte.querySelector('section figure.grafico'), 'a aula-exemplo não tem gráfico');
+  assert.ok(fonte.querySelector('section figure.diagrama'), 'a aula-exemplo não tem diagrama');
+  const demos = [...fonte.querySelectorAll('section div.demo')];
+  assert.equal(demos.length, 1);
+  assert.equal(demos[0].querySelector('img.estatico'), null, 'a demo da aula-exemplo tem de ficar sem imagem própria');
+  assert.equal(fonte.querySelector('[data-pdf="passos"]'), null, 'com passos no PDF, a página da demo muda');
+  const secoes = [...fonte.querySelectorAll('body > section')];
+  assert.equal(secoes.indexOf(demos[0].closest('section')), PAGINA_DA_DEMO_DO_EXEMPLO);
+
+  const r = await construir(caminho);
+  assert.equal(r.codigo, 0, JSON.stringify(r.achados));
+  assert.deepEqual(r.achados, [], 'a aula-exemplo tem de validar em zero erros e zero avisos');
+  assert.ok(r.linhas.some((linha) => /1 de 1 demo\(s\) capturada\(s\)/.test(linha)), r.linhas.join('\n'));
+  const [imagem, ...outras] = await imagensDaPagina(
+    await readFile(join(r.destino, 'regressao-linear.pdf')),
+    PAGINA_DA_DEMO_DO_EXEMPLO,
+  );
+  assert.ok(imagem, 'a página da demo não desenha imagem nenhuma');
+  assert.deepEqual(outras, []);
+  console.log(`# regressao-linear: foto da demo ${imagem.largura} × ${imagem.altura}, ${imagem.naoBrancos} pixels não brancos`);
+  assert.equal(imagem.largura, 2304, 'a foto não é a div.demo inteira (1152 px de palco, a 2 pixels por px)');
+  assert.ok(imagem.naoBrancos > 2000, `a foto da demo tem só ${imagem.naoBrancos} pixels não brancos`);
+});
