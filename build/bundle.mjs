@@ -138,7 +138,8 @@ export default katex;
   //    WASM embutido no próprio dist/index.js (medido: sem arquivo .wasm à parte, sem fetch do WASM),
   //    então o satélite não embute de novo (spec 7.2: "se o pacote do Graphviz não o embutir, o
   //    bundle do Aula USP embute") — e nenhum pedido de rede sai dele, o que
-  //    tests/integracao/dist.test.mjs prova no Chrome. Só `Graphviz` é exportado: é a única coisa que
+  //    tests/integracao/diagramas.test.mjs prova no Chrome (o pacote de dist/ aberto, os pedidos e as
+  //    chamadas de fetch contados). Só `Graphviz` é exportado: é a única coisa que
   //    montar/entrada.js pede, e componentes/diagramas.js recebe a instância já carregada.
   guardar('aula-usp-diagramas.js', await esbuild.build({ ...COMUM, absWorkingDir: dir,
     stdin: { contents: "export { Graphviz } from '@hpcc-js/wasm-graphviz';", resolveDir: dir, loader: 'js' }, format: 'esm' }), { satelite: true });

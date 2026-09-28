@@ -7,9 +7,10 @@ import { empacotar } from '../../build/bundle.mjs';
 
 const RAIZ = new URL('../../', import.meta.url);
 
-test('empacotar produz os quatro scripts da spec 3.5 e uma gramática por linguagem do contrato', async () => {
+test('empacotar produz os seis scripts da spec 3.5 e uma gramática por linguagem do contrato', async () => {
   const arquivos = await empacotar({ raiz: RAIZ, escrever: false });
-  for (const nome of ['aula-usp.js', 'aula-usp-motor.js', 'aula-usp-tex.js', 'aula-usp-codigo.js']) {
+  const SCRIPTS_DA_SPEC = ['aula-usp.js', 'aula-usp-motor.js', 'aula-usp-tex.js', 'aula-usp-codigo.js', 'aula-usp-graficos.js', 'aula-usp-diagramas.js'];
+  for (const nome of SCRIPTS_DA_SPEC) {
     assert.ok(arquivos.has(nome), `faltou ${nome}`);
     assert.ok(arquivos.get(nome).bytes > 1000, `${nome} saiu vazio demais`);
   }
@@ -190,8 +191,9 @@ async function satelitesQueDistSabePedir() {
 // contrato, como as sete gramáticas entraram, herdam a âncora de contrato.test.mjs — e é lá que a
 // omissão de um deles tem de doer. `aula-usp-graficos.js` (Tarefa 3) confirma a previsão: literal em
 // D3_DO_GRAFICO ? 'aula-usp-graficos.js' de montar/dist.js, caminho independente, sem precisar de
-// nenhuma âncora emprestada. `aula-usp-diagramas.js` (fase 2b, ainda não implementado) decide sozinho
-// quando chegar.
+// nenhuma âncora emprestada. `aula-usp-diagramas.js` (fase 2b) entrou do mesmo jeito: o literal
+// '@hpcc-js/wasm-graphviz' → 'aula-usp-diagramas.js' no resolver de montar/dist.js — caminho
+// independente também (medido na 2b: sem a marca `satelite`, esta guarda fica vermelha).
 test('todo satélite tem o seu integrity embutido em aula-usp.js, e nada além deles', async () => {
   const saidas = await empacotar({ raiz: RAIZ, escrever: false });
   const doEmpacotador = new Set([...saidas].filter(([, saida]) => saida.satelite).map(([nome]) => nome));
