@@ -1,4 +1,4 @@
-/* Blocos de corpo (spec 7.1): campos, exercício, listas, tabela, figura e texto em linha, em px lógicos do palco. */
+/* Blocos de corpo (spec 7.1) e controles de demo (spec 7.2): campos, exercício, listas, tabela, figura, texto em linha e controles, em px lógicos do palco. */
 
 /* ---------- campos e exercício ---------- */
 
@@ -268,5 +268,97 @@
 /* Sobre amarelo, só tinta (spec 4.2): na linha marcada, comentário e número deixam o cinza. */
 .area pre .marcada .comentario,
 .area pre[data-numeros] .marcada::before {
+  color: var(--cor-tinta);
+}
+
+/* ---------- controles de demo (spec 7.2, fase 2) ---------- */
+
+/* Criados pela demo com AulaUSP.controles (componentes/controles.js), dentro da sua div.demo. Todas
+   as medidas e cores vêm dos tokens. Os 20 px da spec 7.2 são o tamanho do papel de código
+   (--tipo-codigo-tamanho): o do texto do botão, em Geist, e o da leitura, em Geist Mono.
+   RETANGULAR E QUADRADO SÃO DECISÃO DE COMPOSIÇÃO, não descuido: o sistema inteiro não tem canto
+   arredondado (spec 7.1: "sem borda, sombra ou raio"; os quadrados do mapa, os marcadores de lista),
+   e o cursor do controle deslizante é um quadrado de 16 px em tinta, como os do mapa. Não "conserte"
+   para o redondo do navegador. */
+
+.demo :is(button.controle, input.controle, output.leitura) {
+  vertical-align: middle;
+}
+
+.demo :is(button.controle, input.controle, output.leitura) + :is(button.controle, input.controle, output.leitura) {
+  margin-left: var(--espaco-2);
+}
+
+.demo button.controle {
+  appearance: none;
+  margin: 0;
+  padding: var(--espaco-1) var(--espaco-3);
+  border: var(--regua-normal) solid var(--cor-tinta);
+  border-radius: 0;
+  background: var(--cor-papel);
+  color: var(--cor-tinta);
+  font-family: var(--fonte-sans);
+  font-size: var(--tipo-codigo-tamanho);
+  font-weight: var(--tipo-leitura-peso-enfase);
+  line-height: var(--tipo-rotulo-entrelinha);
+  cursor: pointer;
+}
+
+/* Ativo: campo tinta, texto papel (spec 7.2) — a classe e o aria-pressed andam juntos (controles.js). */
+.demo button.controle.ativo {
+  background: var(--cor-tinta);
+  color: var(--cor-papel);
+}
+
+/* O trilho de 2 px em linha e o cursor quadrado de 16 px em tinta (spec 7.2) só saem assim pelos
+   pseudo-elementos de cada motor de navegador; sem eles, o Chrome desenha o trilho e o cursor
+   redondo dele. A largura é a de quatro colunas do grid (368 px). */
+.demo input.controle[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: calc(4 * var(--palco-coluna) + 3 * var(--palco-calha));
+  height: var(--espaco-2);
+  margin: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.demo input.controle[type="range"]::-webkit-slider-runnable-track {
+  height: var(--regua-normal);
+  border: 0;
+  border-radius: 0;
+  background: var(--cor-linha);
+}
+
+.demo input.controle[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: var(--espaco-2);
+  height: var(--espaco-2);
+  margin-top: calc((var(--regua-normal) - var(--espaco-2)) / 2);
+  border: 0;
+  border-radius: 0;
+  background: var(--cor-tinta);
+}
+
+.demo input.controle[type="range"]::-moz-range-track {
+  height: var(--regua-normal);
+  border: 0;
+  border-radius: 0;
+  background: var(--cor-linha);
+}
+
+.demo input.controle[type="range"]::-moz-range-thumb {
+  width: var(--espaco-2);
+  height: var(--espaco-2);
+  border: 0;
+  border-radius: 0;
+  background: var(--cor-tinta);
+}
+
+.demo output.leitura {
+  font-family: var(--tipo-codigo-familia);
+  font-size: var(--tipo-codigo-tamanho);
+  font-variant-numeric: tabular-nums;
   color: var(--cor-tinta);
 }

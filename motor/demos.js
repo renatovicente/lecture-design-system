@@ -1,4 +1,5 @@
 // Demos (spec 6.7): registro por nome e ciclo de vida montar/iniciar/parar, preso à navegação.
+import { criarControles } from '../componentes/controles.js';
 
 export function criarDemos({ api, console: registro }) {
   const definicoes = new Map();
@@ -68,7 +69,13 @@ export function criarDemos({ api, console: registro }) {
   };
 }
 
+// Os controles (spec 7.2, fase 2) entram aqui, junto com o registro, e não em outro ponto de
+// instalação: é por este caminho que os dois modos passam — montar/entrada.js no navegador e o
+// arranque do HTML construído (build/embutir.mjs) —, e é antes de qualquer montar() de demo, que é
+// quando uma demo os usa. componentes/controles.js só cria e formata elementos; o ciclo de vida
+// continua todo aqui.
 export function instalarDemos(motor, api) {
+  api.controles = criarControles(motor.doc);
   const demos = criarDemos({ api, console: motor.janela.console });
   motor.aoMudar((estado, anterior) => {
     if (anterior && anterior.indice === estado.indice) return;

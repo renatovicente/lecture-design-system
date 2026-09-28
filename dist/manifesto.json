@@ -2,8 +2,8 @@
   "versao": "0.1.0",
   "arquivos": {
     "aula-usp-motor.js": {
-      "bytes": 20512,
-      "integrity": "sha384-B0lzngJnZI4YHEGAkvFCE/+i+mnyQ0jDC9ByY0Q5/FjnJ34XnLxZhh+TepyVxGWd"
+      "bytes": 21635,
+      "integrity": "sha384-XX+sXx9Ox/XSVuPk/94h5H/G5Ut6z6NpYAuFh8Huvyw7PVY+SfkLRI+6tJIuF73N"
     },
     "aula-usp-tex.js": {
       "bytes": 637702,
@@ -50,8 +50,8 @@
       "integrity": "sha384-NzUKBVrIE2qrjNYJCJoBiGfIjzDc52imnD5EyTqY/DD4BbHLORq5xAGUDJtX92VS"
     },
     "aula-usp.js": {
-      "bytes": 646268,
-      "integrity": "sha384-9D2mYNKqKRBzluDaYuhROy+xPgh9/2o6BTcEdHsC1g1ftf77eY62zzeJXwAprTq+"
+      "bytes": 650519,
+      "integrity": "sha384-UvnTFmjzrrC4k32BIBVRW2s76hnuV8sTpdhLguqsP2QsniAFwarD9V/Y8HxutZ66"
     }
   }
 }
