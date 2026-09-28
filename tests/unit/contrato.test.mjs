@@ -233,6 +233,8 @@ test('papéis usam os mínimos dos tokens e têm as exceções da spec (4.3)', (
   assert.ok(contrato.papeis.rotulo.seletores.includes('svg tspan'));
   // E a ação do achado de texto de SVG vem do contrato, uma frase como as outras.
   assert.match(contrato.regras['composicao.tamanho-minimo'].acaoSvg, /^\S.*\.$/);
+  // I1 da revisão final da 2b: a figura que encolheu pela ALTURA tem outra saída, também do contrato.
+  assert.match(contrato.regras['composicao.tamanho-minimo'].acaoSvgAltura, /^\S.*\.$/);
 });
 
 test('precedência de papéis e p.fonte só em legenda, não em leitura (F6)', () => {

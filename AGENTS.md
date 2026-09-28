@@ -46,7 +46,7 @@ Os de integração são pesados — abrem Chrome, constroem decks, comparam pixe
 node --test tests/integracao/composicao.test.mjs
 ```
 
-Uma distinção que confunde: **"falta de Chrome não é falha" é regra da CLI**, não dos testes. `validar` e `build` degradam sozinhos — pulam composição e PDF, emitem aviso no stderr e terminam com 0 se não houver erros (spec 8.1). Os testes de integração não têm essa tolerância: chamam `chromium.launch()` direto (`tests/integracao/utilitarios.mjs:35`) e falham sem Chrome. Os dois arquivos de `tests/unit/` que sobem Chrome — `validar-cli.test.mjs` e `novo.test.mjs`, os dois por `validarArquivo` — seguem a regra da CLI e **pulam anunciando**: medido, `CHROME_PATH` inexistente dá 558 passam e 2 pulados, e nenhum pulo é mudo.
+Uma distinção que confunde: **"falta de Chrome não é falha" é regra da CLI**, não dos testes. `validar` e `build` degradam sozinhos — pulam composição e PDF, emitem aviso no stderr e terminam com 0 se não houver erros (spec 8.1). Os testes de integração não têm essa tolerância: chamam `chromium.launch()` direto (`tests/integracao/utilitarios.mjs:35`) e falham sem Chrome. Os dois arquivos de `tests/unit/` que sobem Chrome — `validar-cli.test.mjs` e `novo.test.mjs`, os dois por `validarArquivo` — seguem a regra da CLI e **pulam anunciando**: medido, `CHROME_PATH` inexistente dá 586 passam e 2 pulados, e nenhum pulo é mudo.
 
 ## `dist/` é rastreado, e os testes comparam byte a byte
 

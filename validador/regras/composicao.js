@@ -119,6 +119,29 @@ function descreverMedida({ declarado, escala, tamanho }) {
   return `${decimal(umaCasa(tamanho))} px no palco (${decimal(declarado)} px no SVG, que a figura escala por ${decimal(Math.round(escala * 1000) / 1000)})`;
 }
 
+// Um SVG encolhe por uma de duas razões, e a saída de cada uma é outra (I1 da revisão final da 2b):
+//   - a figura é mais ESTREITA que ele (max-width: 100%): o svg ocupa toda a largura que tem, e o que
+//     resolve é dar largura — uma coluna mais larga, o layout figura;
+//   - no layout figura, ele é mais ALTO que o espaço que sobra embaixo do título (flex e min-height: 0
+//     em estilos/componentes.css): o svg encolhe pela altura, a largura cai junto, e sobra largura ao
+//     lado — medido, uma cadeia de dez nós de cima para baixo saía com 62 px de largura numa figura de
+//     1152. Mandar esse autor para "uma coluna mais larga ou o layout figura" é mandar para onde ele já
+//     está.
+// A segunda se reconhece assim: o svg ficou mais estreito que o contêiner (sobrou largura, então não
+// foi ela que limitou) e mais baixo que a altura que ele pede — a do atributo height, quando é um
+// comprimento; sem ele (um SVG só com viewBox), qualquer altura conta como encolhida, porque a largura
+// natural de um SVG assim é a do contêiner, e só a altura o faria sair mais estreito. A tolerância é a
+// FOLGA de sempre.
+function limitadoPelaAltura(svg, slide) {
+  const escala = escalaDoPalco(slide);
+  const caixa = svg.getBoundingClientRect();
+  const conteiner = svg.parentElement?.getBoundingClientRect();
+  if (!conteiner || caixa.width / escala >= conteiner.width / escala - FOLGA) return false;
+  const altura = svg.height?.baseVal;
+  if (!altura || altura.unitType === altura.SVG_LENGTHTYPE_PERCENTAGE) return true;
+  return caixa.height / escala < altura.value - FOLGA;
+}
+
 function caixaValida(caixa) {
   return caixa.width > 0 && caixa.height > 0;
 }
@@ -232,9 +255,10 @@ export const regras = [
   {
     nome: 'composicao.tamanho-minimo',
     *aplicar({ slides, contrato, janela }) {
-      // Para texto de SVG a saída não é cortar texto, é dar largura à figura: a ação vem do contrato
-      // (acaoSvg), como a de todo achado, e não de uma frase escrita aqui.
-      const { acaoSvg } = contrato.regras['composicao.tamanho-minimo'];
+      // Para texto de SVG a saída não é cortar texto, é dar largura à figura — ou, quando foi a altura
+      // que a encolheu (limitadoPelaAltura), empilhar menos na vertical: as duas ações vêm do contrato
+      // (acaoSvg e acaoSvgAltura), como a de todo achado, e não de uma frase escrita aqui.
+      const { acaoSvg, acaoSvgAltura } = contrato.regras['composicao.tamanho-minimo'];
       for (const slide of slides) {
         const figuras = new Map();
         for (const elemento of elementosMedidos(slide)) {
@@ -264,16 +288,21 @@ export const regras = [
           // gráfico e texto de 14, dá 640 px; spec 7.2). Arredondada a uma casa antes de subir para o
           // inteiro, a mesma precisão das medidas de tamanho: 368 × 14 / (14 × 0,575) é 640 na conta
           // e 640,0000000000001 no ponto flutuante, que Math.ceil sozinho levaria a 641.
+          // Pela altura, a mesma conta, na dimensão que limitou.
           const svg = elemento.closest('svg');
-          const largura = svg.getBoundingClientRect().width / escalaDoPalco(slide);
-          const precisa = Math.ceil(umaCasa(largura * papel.minimo / menor.tamanho));
+          const pelaAltura = limitadoPelaAltura(svg, slide);
+          const caixa = svg.getBoundingClientRect();
+          const medida = (pelaAltura ? caixa.height : caixa.width) / escalaDoPalco(slide);
+          const precisa = Math.ceil(umaCasa(medida * papel.minimo / menor.tamanho));
+          const dimensao = pelaAltura
+            ? `a figura encolheu pela altura: tem ${Math.round(medida)} px de altura no palco, e precisaria de ${precisa}, que o slide não tem`
+            : `a figura tem ${Math.round(medida)} px de largura no palco e precisaria de ${precisa}`;
           yield {
             ...onde(slides, slide),
             mensagem: `texto de SVG em ${descreverMedida(menor)}, abaixo do mínimo de ${papel.minimo} px do papel ${papel.nome} `
-              + `(${abaixo} ${abaixo === 1 ? 'texto' : 'textos'} abaixo do mínimo nesta figura); `
-              + `a figura tem ${Math.round(largura)} px de largura no palco e precisaria de ${precisa}.`,
+              + `(${abaixo} ${abaixo === 1 ? 'texto' : 'textos'} abaixo do mínimo nesta figura); ${dimensao}.`,
             trecho: trechoDe(figura),
-            acao: acaoSvg,
+            acao: pelaAltura ? acaoSvgAltura : acaoSvg,
           };
         }
       }

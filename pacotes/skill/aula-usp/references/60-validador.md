@@ -64,7 +64,7 @@ A tabela sai de `contrato/contrato.json` por `npm run guia` — do mesmo arquivo
 |---|---|---|
 | `composicao.azul-pequeno` | erro | Use azul só em texto a partir de 32 px. |
 | `composicao.linhas-titulo` | erro | Encurte o título para caber em duas linhas. |
-| `composicao.tamanho-minimo` | erro | Corte conteúdo em vez de reduzir o texto. Em texto de SVG: ponha a figura numa coluna mais larga ou no layout figura; num SVG seu, aumente também o font-size. |
+| `composicao.tamanho-minimo` | erro | Corte conteúdo em vez de reduzir o texto. Em texto de SVG: ponha a figura numa coluna mais larga ou no layout figura; num SVG seu, aumente também o font-size. Se a figura encolheu pela altura: empilhe menos na vertical: num diagrama, deixe a direção da esquerda para a direita (rankdir=LR, o padrão), use menos níveis ou divida-o em dois; num SVG seu, faça o viewBox mais largo que alto ou aumente o font-size. |
 | `composicao.texto-no-amarelo` | erro | Use só tinta sobre amarelo. |
 | `composicao.transbordo` | erro | Reduza o conteúdo do slide ou divida-o em dois. |
 | `estrutura.blocos` | aviso | Organize a aula em 2 a 8 blocos, cada um aberto por data-layout="abertura". |

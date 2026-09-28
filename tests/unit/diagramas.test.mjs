@@ -5,7 +5,7 @@ import { parseHTML } from 'linkedom';
 import { Graphviz } from '@hpcc-js/wasm-graphviz';
 import { tokens } from '../../tokens/tokens.js';
 import {
-  criarDesenhista, compilarDiagramas, desenharDiagramas, comPadroes, CLASSES_DO_DOT, CLASSES_DO_SVG,
+  criarDesenhista, compilarDiagramas, desenharDiagramas, comPadroes, atributosRecusados, CLASSES_DO_DOT, CLASSES_DO_SVG,
 } from '../../componentes/diagramas.js';
 
 const contrato = JSON.parse(readFileSync(new URL('../../contrato/contrato.json', import.meta.url), 'utf8'));
@@ -81,6 +81,67 @@ test('o estilo é imposto depois: forma, cor e espessura escritas no DOT não pa
   assert.deepEqual(cores.filter((cor) => !permitidas.has(cor)), [], 'toda cor do SVG está em contrato.svg.cores');
   assert.deepEqual([...raiz.querySelectorAll('[stroke-width]')].map((el) => el.getAttribute('stroke-width')).filter((v) => v !== '2'), []);
   assert.equal(raiz.querySelectorAll('g.aresta polygon').length, 1, 'a seta é sempre o triângulo simples, uma por aresta dirigida');
+});
+
+// I2 da revisão final da 2b: o que, descartado, desenharia OUTRA COISA é recusado, lido do grafo
+// compilado. Cada caso, sozinho, lança com o atributo e o lugar na mensagem; o DOT sem ele desenha.
+const RECUSADOS = [
+  ['style=invis num nó', 'digraph { a [style=invis]; a -> b }', /style=invis no nó "a"/],
+  ['style=invis numa aresta, junto de outro estilo', 'digraph { a -> b [style="dashed,invis"] }', /style=invis na aresta "a → b"/],
+  ['style=invis num agrupamento', 'digraph { subgraph cluster_0 { style=invis; a } }', /style=invis no subgrafo "cluster_0"/],
+  ['shape=record', 'digraph { a [shape=record label="{x|y|z}"] }', /shape=record no nó "a"/],
+  ['shape=Mrecord', 'digraph { node [shape=Mrecord]; a }', /shape=Mrecord no nó "a"/],
+  ['rótulo HTML', 'digraph { a [label=<<b>x</b>>] }', /rótulo HTML \(label=<…>\) no nó "a"/],
+  ['rótulo HTML malformado', 'digraph { a [label=<<b>x>] }', /rótulo HTML \(label=<…>\) no nó "a"/],
+  ['rótulo HTML numa aresta', 'digraph { a -> b [label=<<i>y</i>>] }', /rótulo HTML \(label=<…>\) na aresta "a → b"/],
+  ['headlabel', 'digraph { a -> b [headlabel="h"] }', /headlabel na aresta "a → b"/],
+  ['taillabel', 'digraph { a -> b [taillabel="t"] }', /taillabel na aresta "a → b"/],
+  ['xlabel', 'digraph { a [xlabel="x"] }', /xlabel no nó "a"/],
+  ['label no grafo', 'digraph { label="Título"; a }', /label no grafo: .*figcaption/],
+  ['label num subgrafo que não é agrupamento', 'digraph { subgraph s { label="S"; a } }', /label no subgrafo "s"/],
+  ['fontsize num nó', 'digraph { a [fontsize=10] }', /fontsize=10 no nó "a"/],
+  ['fontname herdado de node [...]', 'digraph { node [fontname="Times"]; a }', /fontname=Times no nó "a"/],
+  ['fixedsize', 'digraph { a [fixedsize=true] }', /fixedsize=true no nó "a"/],
+  ['width', 'digraph { a [width=0.3] }', /width=0.3 no nó "a"/],
+  ['height', 'digraph { a [height=2] }', /height=2 no nó "a"/],
+  ['margin num nó', 'digraph { a [margin=0] }', /margin=0 no nó "a"/],
+  ['fontsize numa aresta', 'digraph { a -> b [label="r" fontsize=8] }', /fontsize=8 na aresta "a → b"/],
+  ['fontsize no grafo', 'digraph { fontsize=30; a }', /fontsize=30 no grafo/],
+  ['margin no grafo', 'digraph { graph [margin=1]; a }', /margin=1 no grafo/],
+  ['class na raiz', 'digraph { class="foco"; a }', /classe "foco" no grafo/],
+  ['class num subgrafo que não é agrupamento', 'digraph { subgraph s { class="foco"; a } }', /classe "foco" no subgrafo "s"/],
+  ['dois grafos no mesmo bloco', 'digraph { a } digraph { b }', /texto depois do \} que fecha o grafo/],
+];
+
+for (const [caso, dot, mensagem] of RECUSADOS) {
+  test(`recusado: ${caso}`, () => {
+    assert.throws(() => desenhista.desenhar(dot), mensagem);
+  });
+}
+
+test('o que é descartado de propósito — cor, espessura, seta, forma, estilo que não é invis — não é recusado', () => {
+  const dot = 'digraph { rankdir=TB; bgcolor=gray; node [shape=ellipse color=red style="filled,rounded" fillcolor=green penwidth=5 fontcolor=blue]; '
+    + 'edge [color=red penwidth=7 arrowhead=diamond arrowsize=2 style=dashed fontcolor=red]; '
+    + 'subgraph cluster_0 { label="grupo"; color=blue; a } a -> b [label="rótulo"]; c [shape=circle]; }';
+  assert.deepEqual(atributosRecusados(graphviz, dot), []);
+  assert.equal(desenhista.desenhar(dot).nos, 3);
+  // O ; depois do } não é um segundo grafo.
+  assert.deepEqual(atributosRecusados(graphviz, 'digraph { a };\n'), []);
+});
+
+test('várias recusas no mesmo DOT saem juntas, e a herança de um subgrafo não repete a do grafo', () => {
+  const recusas = atributosRecusados(graphviz, 'digraph { fontsize=10; subgraph cluster_a { a [style=invis] } a -> b [xlabel="x"] }');
+  assert.deepEqual(recusas.map((r) => r.split(':')[0]), ['fontsize=10 no grafo', 'style=invis no nó "a"', 'xlabel na aresta "a → b"']);
+});
+
+test('rankdir=LR é o padrão do sistema, e um rankdir escrito pelo autor vence', () => {
+  const largura = (svg) => Number(svgDe(svg).getAttribute('width'));
+  const altura = (svg) => Number(svgDe(svg).getAttribute('height'));
+  const padrao = desenhista.desenhar('digraph { a -> b -> c -> d }').svg;
+  const doAutor = desenhista.desenhar('digraph { rankdir=TB; a -> b -> c -> d }').svg;
+  assert.ok(largura(padrao) > altura(padrao), `padrão: ${largura(padrao)} × ${altura(padrao)}`);
+  assert.ok(altura(doAutor) > largura(doAutor), `TB do autor: ${largura(doAutor)} × ${altura(doAutor)}`);
+  assert.match(comPadroes('digraph { a }'), /^digraph \{ graph \[rankdir=LR /);
 });
 
 test('os nós contados são os do resultado compilado: "a -> b -> c" declara três nós sem listá-los', () => {

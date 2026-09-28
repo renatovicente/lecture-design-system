@@ -5,7 +5,10 @@
 //      Graphviz em WASM estima a largura por Helvetica, e é aqui que se vê se a Geist cabe;
 //   2. o diagrama largo encolhe com a figura, e composicao.tamanho-minimo o vê abaixo de 14 px;
 //   3. o pacote de dist/ desenha com o satélite, e nenhum pedido de rede sai dele: o WASM está dentro
-//      do script (spec 7.2).
+//      do script (spec 7.2);
+//   4. o diagrama ALTO no layout figura: com a direção padrão do sistema (rankdir=LR) a cadeia de dez
+//      nós não encolhe abaixo do mínimo; com rankdir=TB escrito pelo autor, encolhe pela altura, e
+//      composicao.tamanho-minimo diz isso — com a ação da altura, não a da largura.
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import {
@@ -13,6 +16,9 @@ import {
   TINTA, AZUL, AMARELO, PAPEL,
 } from './utilitarios.mjs';
 import { validarArquivo } from '../../build/validar.mjs';
+import { readFileSync } from 'node:fs';
+
+const contrato = JSON.parse(readFileSync(new URL('../../contrato/contrato.json', import.meta.url), 'utf8'));
 
 const PASTA = 'tests/fixtures/diagramas';
 const MINIMO_DO_PALCO = 14; // spec 4.3: o mínimo de texto de SVG no palco (papel rótulo)
@@ -136,4 +142,23 @@ test('o pacote de dist/ desenha o diagrama com o satélite, e nenhum pedido de r
   assert.equal(estado.titulo, 'Validador Aula USP: 1 erro, 0 avisos');
   const semFavicon = pedidos.filter((pedido) => !pedido.endsWith('/favicon.ico'));
   assert.deepEqual(semFavicon, [url, `${cru.endereco}/dist/aula-usp.js`, `${cru.endereco}/dist/aula-usp-diagramas.js`]);
+});
+
+// I1 da revisão final da 2b. Medido antes da correção, com o padrão do Graphviz (de cima para baixo):
+// a cadeia a -> … -> j saía a 13,3 px no palco (escala 0,665) no layout figura, com 62 px de largura
+// numa figura de 1152, e a mensagem mandava pôr a figura "numa coluna mais larga ou no layout figura".
+test('diagrama alto no layout figura: a direção padrão (LR) não encolhe abaixo do mínimo; rankdir=TB encolhe pela altura e o achado diz isso', async (t) => {
+  const { pagina, erros } = await abrirAula(navegador, `${dev.endereco}/alto.html?folha`, { largura: 1920, altura: 1080 });
+  t.after(() => pagina.close());
+  assert.deepEqual(erros, [], erros.join('\n'));
+  const tamanho = Object.fromEntries((await medirDiagramas(pagina)).map((m) => [m.id, m.tamanho]));
+  assert.ok(tamanho['cadeia-padrao'] >= MINIMO_DO_PALCO, `cadeia-padrao: ${tamanho['cadeia-padrao']} px`);
+  assert.ok(tamanho['cadeia-vertical'] < MINIMO_DO_PALCO, `cadeia-vertical: ${tamanho['cadeia-vertical']} px`);
+
+  const { achados } = await validarArquivo(`${PASTA}/alto.html`);
+  assert.deepEqual(achados.map(({ regra, id }) => [regra, id]), [['composicao.tamanho-minimo', 'cadeia-vertical']]);
+  const [achado] = achados;
+  assert.match(achado.mensagem, /a figura encolheu pela altura: tem \d+ px de altura no palco, e precisaria de \d+/);
+  assert.doesNotMatch(achado.mensagem, /de largura/);
+  assert.equal(achado.acao, contrato.regras['composicao.tamanho-minimo'].acaoSvgAltura);
 });

@@ -414,6 +414,8 @@ test('DOT que o Graphviz não compila para validar e build na etapa 1, com a men
   const erros = JSON.parse(validacao.stdout).filter((achado) => achado.severidade === 'erro');
   assert.deepEqual(erros.map((achado) => [achado.regra, achado.id]), [['recursos.dot', 'f1']]);
   assert.match(erros[0].mensagem, /syntax error in line 2 near ';'/);
+  // M6 da revisão final da 2b: o trecho é a linha citada, com o número — não o DOT juntado numa linha.
+  assert.equal(erros[0].trecho, 'linha 2: entrada -> ;');
   const construcao = spawnSync('node', [CLI, 'build', pasta, '--sem-pdf'], { encoding: 'utf8', env: SEM_CHROME });
   assert.equal(construcao.status, 1, construcao.stdout + construcao.stderr);
   assert.match(construcao.stdout, /recursos\.dot · diagrama que não desenha: o Graphviz não compila o DOT: syntax error in line 2/);

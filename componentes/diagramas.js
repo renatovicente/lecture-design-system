@@ -15,9 +15,13 @@ const SVG_NS = 'http://www.w3.org/2000/svg';
 const { tinta, azul, cinza, linha: corDaLinha, amarelo, papel } = tokens.cor;
 const FAMILIA = tokens.fonte.sans.join(', ');
 // 20 — spec 7.2: "texto Geist 20 px". Em unidades do viewBox; o SVG sai com width/height iguais ao
-// viewBox (1 unidade = 1 px no tamanho natural), e só encolhe quando a figura é mais estreita que o
-// diagrama (max-width: 100% em estilos/componentes.css). Quem garante o mínimo do palco (spec 4.3) é
-// composicao.tamanho-minimo, que mede o texto de SVG no tamanho em que ele aparece.
+// viewBox (1 unidade = 1 px no tamanho natural), e encolhe por uma de duas razões: a figura é mais
+// estreita que o diagrama (max-width: 100% em estilos/componentes.css), ou, no layout figura, o
+// diagrama é mais alto que o espaço que sobra embaixo do título (o svg encolhe pela altura: flex e
+// min-height: 0, no mesmo arquivo) e a largura cai junto, na proporção do viewBox. É por isso que o
+// padrão do sistema é rankdir=LR (PADROES, abaixo). Quem garante o mínimo do palco (spec 4.3) é
+// composicao.tamanho-minimo, que mede o texto de SVG no tamanho em que ele aparece, e diz qual das
+// duas razões encolheu a figura.
 const TAMANHO_TEXTO = tokens.minimo.codigo;
 const ESPESSURA = tokens.regua.normal; // 2 — spec 7.2: "contorno de 2 px", "setas simples de 2 px"
 // Folga em volta do desenho, em unidades do viewBox: a mesma que o SVG do próprio Graphviz usa (pad
@@ -40,13 +44,18 @@ export const CLASSES_DO_SVG = Object.freeze(['no', 'aresta', 'agrupamento', ...C
 // Os atributos que o sistema põe NA FRENTE do DOT do autor, para que o layout já saiba o tamanho do
 // que vai ser desenhado: um nó dimensionado para Times 14 não comporta Geist 20. É geometria, não
 // estilo — o estilo é imposto de novo, e por inteiro, ao escrever o SVG. Por virem antes do corpo do
-// autor, um `node [fontsize=…]` escrito por ele vale sobre estes (é a regra do DOT); a cor, a
-// espessura e a forma, não: essas nunca são lidas do DOT.
+// autor, o que ele escrever vale sobre estes (é a regra do DOT) — e por isso fonte, tamanho e margem
+// escritos por ele são recusados (atributosRecusados, abaixo): o texto é desenhado a 20 de qualquer
+// jeito, e a caixa sairia medida para outro texto. A cor, a espessura e a forma nunca são lidas.
+// rankdir=LR (spec 7.2): o padrão do Graphviz é de cima para baixo, e o palco é 16:9 — uma cadeia de
+// dez nós de cima para baixo, no layout figura, encolhe pela altura até 13,3 px no palco (medido na
+// revisão final da 2b); da esquerda para a direita, sai a 20. Vem aqui, antes do corpo, para que um
+// `rankdir` escrito pelo autor vença.
 // fontname Helvetica: o Graphviz em WASM não tem as fontes do sistema, e estima a largura do texto
 // por tabelas embutidas de Times, Helvetica e Courier. Helvetica é a mais próxima da Geist das três;
 // a largura de verdade da Geist é medida no Chrome (tests/integracao/diagramas.test.mjs: o texto de
 // todo nó cabe dentro do retângulo dele).
-const PADROES = `graph [fontname="Helvetica" fontsize=${TAMANHO_TEXTO}]; `
+const PADROES = `graph [rankdir=LR fontname="Helvetica" fontsize=${TAMANHO_TEXTO}]; `
   + `node [shape=box fontname="Helvetica" fontsize=${TAMANHO_TEXTO} margin="0.2,0.1"]; `
   + `edge [fontname="Helvetica" fontsize=${TAMANHO_TEXTO}]; `;
 
@@ -68,9 +77,10 @@ function arredondar(valor) {
   return Math.round(valor * 100) / 100;
 }
 
-// O índice do `{` que abre o corpo do grafo: o primeiro fora de string ("…"), de ID HTML (<…>) e de
-// comentário (/* */, //, e # no início de linha). `digraph "a{b" {` tem um { no nome, e não é ele.
-function aberturaDoCorpo(dot) {
+// Percorre o DOT e chama `visitar(c, i)` em cada caractere que conta — fora de string ("…"), de ID
+// HTML (<…>) e de comentário (/* */, //, e # no início de linha) —; para quando visitar devolve true.
+// `digraph "a{b" {` tem um { no nome, e não é ele que abre o corpo.
+function varrer(dot, visitar) {
   let i = 0;
   while (i < dot.length) {
     const c = dot[i];
@@ -91,13 +101,44 @@ function aberturaDoCorpo(dot) {
     } else if (dot.startsWith('//', i) || (c === '#' && (i === 0 || dot[i - 1] === '\n'))) {
       const fim = dot.indexOf('\n', i);
       i = fim < 0 ? dot.length : fim + 1;
-    } else if (c === '{') {
-      return i;
     } else {
+      if (visitar(c, i)) return;
       i += 1;
     }
   }
-  return -1;
+}
+
+// O índice do `{` que abre o corpo do grafo, ou -1.
+function aberturaDoCorpo(dot) {
+  let abertura = -1;
+  varrer(dot, (c, i) => {
+    if (c === '{') abertura = i;
+    return abertura >= 0;
+  });
+  return abertura;
+}
+
+// Há algo além de espaço e `;` depois do `}` que fecha o primeiro grafo? O Graphviz lê o primeiro
+// grafo do texto e ignora o resto, calado: `digraph {a} digraph {b}` desenha só `a`. É a única
+// recusa que não se lê do resultado compilado — ele não tem o segundo grafo para mostrar —, e por
+// isso lê o texto com o mesmo varredor que acha onde inserir os padrões.
+function temAlemDoPrimeiroGrafo(dot) {
+  let profundidade = 0;
+  let fechou = false;
+  let alem = false;
+  varrer(dot, (c) => {
+    if (fechou) {
+      alem = !/[\s;]/.test(c);
+      return alem;
+    }
+    if (c === '{') profundidade += 1;
+    else if (c === '}') {
+      profundidade -= 1;
+      fechou = profundidade === 0;
+    }
+    return false;
+  });
+  return alem;
 }
 
 // Sem `{` nenhum, o DOT vai como está: não é um grafo, e o erro de sintaxe que o Graphviz der é o
@@ -123,6 +164,117 @@ function conferirClasses(objeto, permitidas, oQue) {
       throw new Error(`classe "${classe}" ${oQue}: o DOT aceita ${aceitas} ali (spec 7.2)`);
     }
   }
+}
+
+// O que o DOT pode pedir e o sistema não desenha (I2 da revisão final da 2b). Há duas espécies:
+//   - DESCARTADO, em silêncio e de propósito: cor, espessura, forma de seta e `shape` (menos record) —
+//     é o estilo imposto pela spec 7.2, e o desenho sai certo sem eles;
+//   - RECUSADO, com recursos.dot: o que, descartado, desenharia OUTRA COISA — o invisível visível, o
+//     registro sem as divisões, o rótulo HTML sem o negrito e fora do lugar, um rótulo que some, o
+//     texto de 20 numa caixa medida para outro tamanho, uma classe que não vai a lugar nenhum, o
+//     segundo grafo do bloco.
+// A leitura é do grafo COMPILADO, não do texto: o Graphviz lê o DOT do autor sem os padrões do
+// sistema e sem layout (motor nop), e devolve cada nó, aresta, grafo e subgrafo com os atributos
+// que o autor declarou, herdados de `node [...]`/`edge [...]` inclusive (saída dot_json). Sem os
+// padrões, fonte e margem que aparecem ali são dele.
+const GEOMETRIA_DO_TEXTO = Object.freeze(['fontsize', 'fontname', 'fixedsize', 'width', 'height', 'margin']);
+const ROTULOS_QUE_NAO_SAEM = Object.freeze(['headlabel', 'taillabel', 'xlabel']);
+const RECORD = Object.freeze(['record', 'Mrecord']);
+
+// O JSON não distingue `label=<…>` (HTML) de `label="…"`: os dois chegam como o mesmo texto. A saída
+// canon distingue — é o próprio Graphviz reescrevendo o grafo compilado, com o HTML entre < >. Devolve
+// o conteúdo de cada rótulo HTML, para achar no JSON os objetos que o têm.
+function rotulosHtml(canonico) {
+  const conteudos = new Set();
+  let i = 0;
+  while (i < canonico.length) {
+    const c = canonico[i];
+    if (c === '"') {
+      i += 1;
+      while (i < canonico.length && canonico[i] !== '"') i += canonico[i] === '\\' ? 2 : 1;
+      i += 1;
+    } else if (c === '<' && /=\s*$/.test(canonico.slice(Math.max(0, i - 4), i))) {
+      const inicio = i + 1;
+      let profundidade = 0;
+      do {
+        if (canonico[i] === '<') profundidade += 1;
+        else if (canonico[i] === '>') profundidade -= 1;
+        i += 1;
+      } while (i < canonico.length && profundidade > 0);
+      conteudos.add(canonico.slice(inicio, i - 1));
+    } else {
+      i += 1;
+    }
+  }
+  return conteudos;
+}
+
+// Devolve a lista de recusas, cada uma com o atributo, onde está, por que e o que fazer; vazia
+// quando o DOT só pede o que o sistema desenha.
+export function atributosRecusados(graphviz, dot) {
+  const recusas = [];
+  if (temAlemDoPrimeiroGrafo(dot)) {
+    recusas.push('o bloco tem texto depois do } que fecha o grafo — um segundo grafo, que o Graphviz ignora sem aviso; '
+      + 'ponha um diagrama por figure.diagrama');
+  }
+  const grafo = JSON.parse(graphviz.layout(dot, 'dot_json', 'nop'));
+  const html = rotulosHtml(graphviz.layout(dot, 'canon', 'nop'));
+  const objetos = grafo.objects ?? [];
+  const quantosSubgrafos = grafo._subgraph_cnt ?? 0;
+  const nos = objetos.slice(quantosSubgrafos);
+  const porGvid = new Map(objetos.map((objeto) => [objeto._gvid, objeto]));
+  // Um subgrafo herda os atributos do pai no dot_json; recusar a herança repetiria a recusa do pai.
+  const pai = new Map();
+  for (const sub of objetos.slice(0, quantosSubgrafos)) {
+    for (const filho of sub.subgraphs ?? []) pai.set(filho, sub);
+  }
+  const declarado = (objeto, chave, dono) => {
+    const valor = objeto[chave];
+    if (valor === undefined || valor === '') return undefined;
+    return dono && dono[chave] === valor ? undefined : valor;
+  };
+
+  const conferir = (objeto, onde, tipo, dono) => {
+    const valor = (chave) => declarado(objeto, chave, dono);
+    if (String(valor('style') ?? '').split(/[\s,]+/).includes('invis')) {
+      recusas.push(`style=invis ${onde}: o sistema desenha tudo o que está no DOT, e o invisível sairia visível; tire-o do DOT`);
+    }
+    if (tipo === 'no' && RECORD.includes(valor('shape'))) {
+      recusas.push(`shape=${valor('shape')} ${onde}: o nó sai um retângulo só, sem as divisões do registro; use um nó por campo`);
+    }
+    const rotulo = valor('label');
+    if (rotulo !== undefined && html.has(rotulo)) {
+      recusas.push(`rótulo HTML (label=<…>) ${onde}: negrito, itálico, tabela e troca de fonte não são desenhados, e o texto sai fora do lugar; escreva o rótulo entre aspas`);
+    } else if (rotulo !== undefined && (tipo === 'grafo' || (tipo === 'subgrafo' && !String(objeto.name).startsWith('cluster')))) {
+      recusas.push(tipo === 'grafo'
+        ? `label ${onde}: o título do grafo não é desenhado; ponha o texto na figcaption`
+        : `label ${onde}: só um agrupamento (subgraph cluster_…) desenha o seu rótulo; renomeie o subgrafo para cluster_… ou tire o label`);
+    }
+    for (const chave of ROTULOS_QUE_NAO_SAEM) {
+      if (valor(chave) !== undefined) recusas.push(`${chave} ${onde}: esse rótulo não é desenhado; ponha o texto no label da aresta`);
+    }
+    for (const chave of GEOMETRIA_DO_TEXTO) {
+      if (valor(chave) !== undefined) {
+        recusas.push(`${chave}=${valor(chave)} ${onde}: o texto sai sempre em Geist 20, e o sistema mede cada caixa para ele; `
+          + 'com outro tamanho, fonte ou margem, caixa e texto se desencontram; tire o atributo');
+      }
+    }
+    if (tipo === 'grafo' || tipo === 'subgrafo') {
+      for (const classe of classesDe({ class: valor('class') })) {
+        recusas.push(`classe "${classe}" ${onde}: o DOT aceita "foco" só num nó e "ativo" só numa aresta (spec 7.2)`);
+      }
+    }
+  };
+
+  conferir(grafo, 'no grafo', 'grafo');
+  for (const sub of objetos.slice(0, quantosSubgrafos)) {
+    conferir(sub, `no subgrafo "${sub.name}"`, 'subgrafo', pai.get(sub._gvid) ?? grafo);
+  }
+  for (const no of nos) conferir(no, `no nó "${no.name}"`, 'no');
+  for (const aresta of grafo.edges ?? []) {
+    conferir(aresta, `na aresta "${porGvid.get(aresta.tail)?.name} → ${porGvid.get(aresta.head)?.name}"`, 'aresta');
+  }
+  return recusas;
 }
 
 // "e,x,y p0 p1 p2 p3 …": o ponto depois de `e,` é a PONTA da seta na cabeça, o de `s,` a da cauda,
@@ -243,6 +395,8 @@ export function criarDesenhista({ graphviz }) {
       } catch (erro) {
         throw new Error(`o Graphviz não compila o DOT: ${mensagemDoGraphviz(erro)}`);
       }
+      const recusas = atributosRecusados(graphviz, dot);
+      if (recusas.length > 0) throw new Error(recusas.join('; '));
       return montarSvg(JSON.parse(json));
     },
   };

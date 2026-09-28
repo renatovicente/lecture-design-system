@@ -215,7 +215,7 @@
     "limites.metadado":          { "severidade": "erro",  "grupo": "estatica", "fase": 1, "acao": "Encurte o metadado ao tamanho previsto." },
     "composicao.transbordo":     { "severidade": "erro",  "grupo": "composicao", "fase": 1, "acao": "Reduza o conteúdo do slide ou divida-o em dois." },
     "composicao.linhas-titulo":  { "severidade": "erro",  "grupo": "composicao", "fase": 1, "acao": "Encurte o título para caber em duas linhas." },
-    "composicao.tamanho-minimo": { "severidade": "erro",  "grupo": "composicao", "fase": 1, "acao": "Corte conteúdo em vez de reduzir o texto.", "acaoSvg": "Ponha a figura numa coluna mais larga ou no layout figura; num SVG seu, aumente também o font-size." },
+    "composicao.tamanho-minimo": { "severidade": "erro",  "grupo": "composicao", "fase": 1, "acao": "Corte conteúdo em vez de reduzir o texto.", "acaoSvg": "Ponha a figura numa coluna mais larga ou no layout figura; num SVG seu, aumente também o font-size.", "acaoSvgAltura": "Empilhe menos na vertical: num diagrama, deixe a direção da esquerda para a direita (rankdir=LR, o padrão), use menos níveis ou divida-o em dois; num SVG seu, faça o viewBox mais largo que alto ou aumente o font-size." },
     "composicao.azul-pequeno":   { "severidade": "erro",  "grupo": "composicao", "fase": 1, "acao": "Use azul só em texto a partir de 32 px." },
     "composicao.texto-no-amarelo": { "severidade": "erro", "grupo": "composicao", "fase": 1, "acao": "Use só tinta sobre amarelo." },
     "matematica.tex-invalido":   { "severidade": "erro",  "grupo": "carga",    "fase": 1, "acao": "Corrija o TeX no trecho indicado." },

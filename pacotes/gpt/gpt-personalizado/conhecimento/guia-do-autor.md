@@ -97,7 +97,7 @@ Uma aula é um arquivo HTML: um `<head>` com os metadados e a tag do runtime, e 
 <meta name="data" content="2026-03-02">
 <meta name="professor" content="Prof. Nome Sobrenome">
 <script src="https://cdn.jsdelivr.net/npm/aula-usp@0.1.0/dist/aula-usp.js"
-        integrity="sha384-7kDcvJJ6gs2NrgS6i2tldYz6HbkxNkBU8HSMfC4SBdsKI5vu/oGXpwjJ9sGOb4VW" crossorigin="anonymous"></script>
+        integrity="sha384-vQQj/wFckHeMwh92GO5cVJpimK6U5DDJLaZbaf/YWgIwSSzA8dMtn8Y7e75ZkU9N" crossorigin="anonymous"></script>
 </head>
 <body>
 
@@ -1115,9 +1115,16 @@ Do espécime: `especime/index.html#figura`. O vocabulário de SVG do contrato es
 Duas coisas que surpreendem quem desenha um gráfico à mão, as duas medidas:
 
 - **o texto dentro do SVG conta no orçamento de palavras.** Rótulo de eixo, nome de série, valor anotado: num slide de `conteudo`, tudo isso entra em `limites.palavras-corpo`, e dentro de uma coluna, também em `limites.palavras-coluna`. Um gráfico muito anotado estoura o orçamento sem uma frase de prosa sequer. No layout `figura`, que não tem orçamento de corpo, a conta não corre.
-- **o texto dentro do SVG é medido no tamanho em que aparece no palco**, contra o mínimo de rótulo, 14 px. O SVG escala com a largura da figura: um `font-size="14"` num `viewBox` mais largo que a coluna sai menor que 14 e é `composicao.tamanho-minimo`. O achado é um por figura, com a menor medida e a largura que a figura precisaria. O azul vale do mesmo jeito: texto de SVG em azul abaixo de 32 px no palco é `composicao.azul-pequeno`, mesmo com `font-size="32"` no fonte.
+- **o texto dentro do SVG é medido no tamanho em que aparece no palco**, contra o mínimo de rótulo, 14 px. O SVG escala com a largura da figura: um `font-size="14"` num `viewBox` mais largo que a coluna sai menor que 14 e é `composicao.tamanho-minimo`. No layout `figura`, ele escala também com a altura que sobra embaixo do título: um `viewBox` mais alto que largo encolhe por ela, e aí o que resolve não é largura, é empilhar menos. O achado é um por figura, com a menor medida e a dimensão — largura ou altura — que a figura precisaria. O azul vale do mesmo jeito: texto de SVG em azul abaixo de 32 px no palco é `composicao.azul-pequeno`, mesmo com `font-size="32"` no fonte.
 
-**Um diagrama** é `figure.diagrama` com o grafo em DOT dentro de `<script type="text/vnd.graphviz">`, e `figcaption` opcional. O Graphviz decide as posições; o sistema impõe o estilo: nós retangulares com contorno de 2 px em tinta, texto Geist 20, setas de 2 px, `class="foco"` num nó em campo amarelo e `class="ativo"` numa aresta em azul — cor, forma ou espessura escritas no DOT não passam, e outra classe é erro. DOT que não compila é `recursos.dot`, com a mensagem do Graphviz; mais de 15 nós é `recursos.diagrama-grande`. O texto de 20 também é medido no palco: um diagrama mais largo que a figura encolhe com ela, e numa coluna estreita cai abaixo de 14. Do espécime: `especime/componentes.html#diagrama-rede`.
+**Um diagrama** é `figure.diagrama` com o grafo em DOT dentro de `<script type="text/vnd.graphviz">`, e `figcaption` opcional. O Graphviz decide as posições; o sistema impõe o estilo: nós retangulares com contorno de 2 px em tinta, texto Geist 20, setas de 2 px, `class="foco"` num nó em campo amarelo e `class="ativo"` numa aresta em azul. A direção padrão é da esquerda para a direita (`rankdir=LR`), porque o palco é mais largo que alto; um `rankdir` seu vence. DOT que não compila é `recursos.dot`, com a mensagem do Graphviz e a linha que ela cita; mais de 15 nós é `recursos.diagrama-grande`.
+
+O que você escreve no DOT e o sistema não segue tem dois destinos:
+
+- **descartado, sem aviso**, porque o desenho sai certo sem ele: cor (`color`, `fillcolor`, `fontcolor`, `bgcolor`), espessura (`penwidth`), forma e tamanho de seta (`arrowhead`, `arrowtail`, `arrowsize`), `shape` que não seja `record`, e `style` que não seja `invis`;
+- **recusado, com `recursos.dot`**, porque descartado desenharia outra coisa: `style=invis` (sairia visível), `shape=record` e `Mrecord` (sairiam sem as divisões), rótulo HTML `label=<…>` (sem negrito e fora do lugar), `headlabel`, `taillabel` e `xlabel` (sumiriam), `label` no grafo (o título vai na `figcaption`) ou num subgrafo que não é `cluster_…`, `fontsize`, `fontname`, `fixedsize`, `width`, `height` e `margin` (o texto é sempre 20, e a caixa seria medida para outro), classe fora de `foco` num nó e `ativo` numa aresta, e mais de um grafo no mesmo bloco (só o primeiro seria desenhado).
+
+O texto de 20 também é medido no palco. Um diagrama mais largo que a figura encolhe com ela, e numa coluna estreita cai abaixo de 14; um diagrama mais alto que o espaço embaixo do título encolhe pela altura no layout `figura` — medido, uma cadeia de dez nós de cima para baixo sai com 13,3 px, e da esquerda para a direita, com 20. Do espécime: `especime/componentes.html#diagrama-rede`.
 
 ## O que a fase 2 vai trazer
 
@@ -1196,7 +1203,7 @@ A tabela sai de `contrato/contrato.json` por `npm run guia` — do mesmo arquivo
 |---|---|---|
 | `composicao.azul-pequeno` | erro | Use azul só em texto a partir de 32 px. |
 | `composicao.linhas-titulo` | erro | Encurte o título para caber em duas linhas. |
-| `composicao.tamanho-minimo` | erro | Corte conteúdo em vez de reduzir o texto. Em texto de SVG: ponha a figura numa coluna mais larga ou no layout figura; num SVG seu, aumente também o font-size. |
+| `composicao.tamanho-minimo` | erro | Corte conteúdo em vez de reduzir o texto. Em texto de SVG: ponha a figura numa coluna mais larga ou no layout figura; num SVG seu, aumente também o font-size. Se a figura encolheu pela altura: empilhe menos na vertical: num diagrama, deixe a direção da esquerda para a direita (rankdir=LR, o padrão), use menos níveis ou divida-o em dois; num SVG seu, faça o viewBox mais largo que alto ou aumente o font-size. |
 | `composicao.texto-no-amarelo` | erro | Use só tinta sobre amarelo. |
 | `composicao.transbordo` | erro | Reduza o conteúdo do slide ou divida-o em dois. |
 | `estrutura.blocos` | aviso | Organize a aula em 2 a 8 blocos, cada um aberto por data-layout="abertura". |
@@ -1604,7 +1611,7 @@ E há uma segunda ressalva, que vale para o arquivo inteiro: **o que se afirma a
 | downloads de outros tipos de arquivo | você não baixa o `.html` de dentro do artifact; veja abaixo |
 | WASM carregado à parte | nenhuma — o WASM do Graphviz vem dentro do script de diagramas |
 
-As duas primeiras linhas explicam decisões que, de fora, pareceriam exageradas. **O CSS, as fontes e as marcas viajam dentro do próprio `aula-usp.js`**, como dados embutidos, em vez de virem de arquivos ao lado: um `<link>` para uma folha de estilo não sobreviveria aqui. E o runtime é **dividido por recurso** — um script para o núcleo, um para a matemática, um para o código —, carregados só quando a aula os usa, porque um único arquivo com tudo dentro seria pesado para carregar numa CDN a cada abertura. Os tamanhos dos três são medidos por um teste de integração do repositório, com metas registradas: isso não é hábito, é a mitigação de um risco declarado.
+As duas primeiras linhas explicam decisões que, de fora, pareceriam exageradas. **O CSS, as fontes e as marcas viajam dentro do próprio `aula-usp.js`**, como dados embutidos, em vez de virem de arquivos ao lado: um `<link>` para uma folha de estilo não sobreviveria aqui. E o runtime é **dividido por recurso** — um script para o núcleo e um para cada recurso: a matemática, o código, os gráficos e os diagramas —, e os de recurso só são carregados quando a aula os usa, porque um único arquivo com tudo dentro seria pesado para carregar numa CDN a cada abertura. São seis scripts ao todo, contando o que a aula construída leva no lugar do núcleo; um teste de integração do repositório mede o tamanho de todos e confere os do núcleo e dos quatro recursos contra metas registradas: isso não é hábito, é a mitigação de um risco declarado.
 
 **A terceira linha é a que muda o seu dia.** Salvar o HTML da aula em disco é o que você precisa para projetar e para distribuir, e é exatamente o que um artifact tende a não deixar fazer de dentro. A saída é pedir o arquivo pela conversa, e não pelo artifact:
 
@@ -1612,7 +1619,7 @@ As duas primeiras linhas explicam decisões que, de fora, pareceriam exageradas.
 
 Você copia o bloco, cola num editor de texto e salva com extensão `.html`. É o mesmo caminho do ChatGPT sem download (**A aula pelo ChatGPT**), e o resultado é idêntico ao que o artifact mostra — é o mesmo arquivo.
 
-**A quarta linha é dos diagramas.** O gerador de diagramas usa o Graphviz compilado em WASM, e o WASM viaja dentro do próprio script de diagramas, sem arquivo à parte. Esta é a única linha da tabela que foi medida, e não só assumida: um script com o Graphviz inteiro dentro compilou e desenhou num artifact de verdade antes de os diagramas entrarem no sistema, e o plano B da especificação — outro motor de layout, só no navegador — não foi preciso (**Gráficos, diagramas e demos**).
+**A quarta linha é dos diagramas.** O gerador de diagramas usa o Graphviz compilado em WASM, e o WASM viaja dentro do próprio script de diagramas, sem arquivo à parte. O que se mediu, num artifact de verdade e antes de os diagramas entrarem no sistema, foi exatamente isto: um script com o pacote do Graphviz inteiro, o WASM embutido nele, compilou esse WASM e desenhou um grafo de três nós. Não se mediu um WASM carregado à parte — o sistema não carrega nenhum —, nem o script de diagramas que o sistema gera hoje, que é o mesmo pacote reempacotado. Por isso o plano B da especificação — outro motor de layout, só no navegador — não foi preciso (**Gráficos, diagramas e demos**).
 
 ## O que o projeto assume que um artifact *pode* bloquear
 

@@ -170,7 +170,7 @@ Famílias: Geist (400, 600 e itálico 400), Geist Mono (400, 600 e 700) e Open S
 | rótulo | rótulos do cromo, `data-rotulo`, "Bloco N de M" no cabeçalho, rodapé, contador | Geist Mono | 14 / 1,2, caixa alta | 700 no rótulo, 400 no rodapé; +0,16em |
 | rótulo grande | "Bloco N de M" na abertura | Geist Mono | 20 / 1,2, caixa alta | 700; +0,16em |
 
-Tamanhos mínimos, verificados por `composicao.tamanho-minimo` pelo papel de cada elemento, como declarado em `contrato.json`: 24 px para leitura, 20 px para código, 18 px para legendas e 14 px para rótulos. Texto dentro de SVG (`text` e `tspan`) segue o mínimo de rótulo, 14 px — o mínimo, não o papel inteiro: a família é a da seção 5.5 —, medido no tamanho em que aparece no palco, isto é, o `font-size` do SVG vezes a escala com que a figura o desenha: o SVG escala com a largura da coluna, e um 14 do `viewBox` pode sair com 8 px numa coluna estreita. O achado é um por figura, com a menor medida. Ficam fora da verificação:
+Tamanhos mínimos, verificados por `composicao.tamanho-minimo` pelo papel de cada elemento, como declarado em `contrato.json`: 24 px para leitura, 20 px para código, 18 px para legendas e 14 px para rótulos. Texto dentro de SVG (`text` e `tspan`) segue o mínimo de rótulo, 14 px — o mínimo, não o papel inteiro: a família é a da seção 5.5 —, medido no tamanho em que aparece no palco, isto é, o `font-size` do SVG vezes a escala com que a figura o desenha: o SVG escala com a largura da coluna, e um 14 do `viewBox` pode sair com 8 px numa coluna estreita; no layout `figura`, escala também com a altura que sobra embaixo do título, e uma figura mais alta que larga encolhe por ela. O achado é um por figura, com a menor medida, e diz qual das duas dimensões encolheu a figura. Ficam fora da verificação:
 
 - o interior das equações do KaTeX (índices, frações e símbolos seguem as regras de tamanho do TeX);
 - `sub` e `sup` em texto, que o sistema define com 0,8em;
@@ -563,6 +563,7 @@ O destaque de código usa o Shiki (núcleo, motor de expressões regulares em Ja
 ```
 
 - O layout é do Graphviz (`@hpcc-js/wasm-graphviz`); o estilo é imposto depois: nós retangulares com contorno de 2 px em `tinta`, texto Geist 20 px, setas simples de 2 px; `class="foco"` num nó vira campo `amarelo`, e `class="ativo"` numa aresta vira `azul`.
+- A direção padrão é `rankdir=LR`, da esquerda para a direita, porque o palco é 16:9; um `rankdir` escrito pelo autor vence.
 - Até 15 nós; acima disso, aviso.
 - O WASM tem de ir dentro do script; se o pacote do Graphviz não o embutir, o bundle do Aula USP embute.
 
@@ -655,7 +656,7 @@ Cada mensagem traz severidade, número e `id` do slide, regra, problema e ação
 | `recursos.linguagem` | erro | `data-lang` fora da lista da seção 7.1 |
 | `recursos.csv` | erro | CSV de gráfico ausente (fase 2) |
 | `recursos.grafico` | erro | JSON de gráfico inválido (fase 2) |
-| `recursos.dot` | erro | DOT que não compila, ou com classe fora de `foco` num nó e `ativo` numa aresta (fase 2) |
+| `recursos.dot` | erro | DOT que não compila, ou que pede o que o sistema desenharia de outro jeito: classe fora de `foco` num nó e `ativo` numa aresta, `style=invis`, `shape=record` ou `Mrecord`, rótulo HTML, `headlabel`, `taillabel`, `xlabel`, `label` no grafo ou num subgrafo que não é agrupamento, `fontsize`, `fontname`, `fixedsize`, `width`, `height` ou `margin`, e mais de um grafo no mesmo bloco (fase 2) |
 | `recursos.diagrama-grande` | aviso | diagrama com mais de 15 nós (fase 2) |
 | `saida.referencia-externa` | erro | recurso carregado de fora do HTML final (`src`, `href` de folha de estilo, `url()`); links `<a href="https://…">` não contam |
 | `saida.tamanho` | aviso | HTML final acima de 10 MB |

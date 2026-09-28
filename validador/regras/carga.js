@@ -8,6 +8,13 @@
 // (montar/entrada.js:buscarCsvs), os dois com os caminhos de componentes/csv.js:caminhosDeCsv.
 import { onde, trechoDe, encurtar } from '../validar.js';
 
+// A linha que a mensagem do Graphviz cita, com o número dela; sem citação, o DOT encurtado.
+function trechoDoDot(trecho, mensagem) {
+  const citada = /\bline (\d+)\b/.exec(mensagem)?.[1];
+  const linha = citada === undefined ? undefined : trecho.split('\n')[Number(citada) - 1];
+  return linha === undefined ? encurtar(trecho) : `linha ${citada}: ${encurtar(linha.trim())}`;
+}
+
 export const regras = [
   {
     nome: 'matematica.tex-invalido',
@@ -102,8 +109,16 @@ export const regras = [
     // build (build/carregar.mjs:diagramasDoFonte), e o do satélite no navegador (montar/entrada.js) —,
     // os dois pela mesma função, componentes/diagramas.js:compilarDiagramas. A mensagem é a do
     // Graphviz, com a linha do DOT, como matematica.tex-invalido traz a do KaTeX: é ela que torna o
-    // erro corrigível. Também cai aqui a classe fora do vocabulário do DOT (só `foco` em nó, só
-    // `ativo` em aresta, spec 7.2): o diagrama sairia desenhado sem o que o autor pediu.
+    // erro corrigível. Também cai aqui o que o DOT pede e o sistema não desenha sem desenhar outra
+    // coisa (componentes/diagramas.js:atributosRecusados, lido do grafo compilado): classe fora de
+    // `foco` num nó e `ativo` numa aresta, style=invis, shape=record, rótulo HTML, headlabel,
+    // taillabel, xlabel, label no grafo ou num subgrafo que não é agrupamento, fonte, tamanho e margem
+    // (fontsize, fontname, fixedsize, width, height, margin), e mais de um grafo no bloco.
+    // O trecho: quando o Graphviz cita uma linha ("syntax error in line 2 near …"), é ESSA linha do
+    // DOT, com o número — encurtar() junta o texto numa linha só, e o "line 2" deixava de apontar para
+    // nada que o autor visse (M6 da revisão final da 2b). A linha é contada no mesmo texto que foi
+    // compilado: o trecho é o conteúdo do script sem os espaços das pontas, e os padrões do sistema
+    // entram sem quebra de linha (componentes/diagramas.js:comPadroes).
     nome: 'recursos.dot',
     *aplicar({ slides, recursos }) {
       for (const diagrama of recursos?.diagramas ?? []) {
@@ -112,7 +127,7 @@ export const regras = [
         yield {
           ...(secao ? onde(slides, secao) : {}),
           mensagem: `diagrama que não desenha: ${diagrama.mensagem}.`,
-          trecho: encurtar(diagrama.trecho ?? ''),
+          trecho: trechoDoDot(diagrama.trecho ?? '', diagrama.mensagem),
         };
       }
     },

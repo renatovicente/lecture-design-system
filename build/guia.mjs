@@ -50,13 +50,18 @@ export function tabelaDeLayouts(contrato) {
   return ['| layout | conteúdo, na ordem | cromo automático |', '|---|---|---|', ...linhas].join('\n');
 }
 
+const minuscula = (frase) => `${frase[0].toLowerCase()}${frase.slice(1)}`;
+
 export function tabelaDeRegras(contrato, { fase = 1 } = {}) {
   const linhas = Object.entries(contrato.regras)
     .filter(([, regra]) => regra.fase === fase)
     .sort(([a], [b]) => a.localeCompare(b, 'pt-BR'))
-    // acaoSvg: a ação que a regra põe no achado de texto de SVG (composicao.tamanho-minimo), que não
-    // é a mesma de texto HTML — o autor que lê a tabela precisa das duas.
-    .map(([nome, regra]) => `| \`${nome}\` | ${regra.severidade} | ${regra.acao}${regra.acaoSvg ? ` Em texto de SVG: ${regra.acaoSvg[0].toLowerCase()}${regra.acaoSvg.slice(1)}` : ''} |`);
+    // acaoSvg e acaoSvgAltura: as ações que a regra põe no achado de texto de SVG
+    // (composicao.tamanho-minimo) — a da figura estreita e a da figura que encolheu pela altura —,
+    // que não são a de texto HTML. O autor que lê a tabela precisa das três.
+    .map(([nome, regra]) => `| \`${nome}\` | ${regra.severidade} | ${regra.acao}`
+      + `${regra.acaoSvg ? ` Em texto de SVG: ${minuscula(regra.acaoSvg)}` : ''}`
+      + `${regra.acaoSvgAltura ? ` Se a figura encolheu pela altura: ${minuscula(regra.acaoSvgAltura)}` : ''} |`);
   return ['| regra | severidade | como corrigir |', '|---|---|---|', ...linhas].join('\n');
 }
 
