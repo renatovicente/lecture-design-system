@@ -655,7 +655,7 @@ Cada mensagem traz severidade, número e `id` do slide, regra, problema e ação
 | `recursos.linguagem` | erro | `data-lang` fora da lista da seção 7.1 |
 | `recursos.csv` | erro | CSV de gráfico ausente (fase 2) |
 | `recursos.grafico` | erro | JSON de gráfico inválido (fase 2) |
-| `recursos.dot` | erro | DOT que não compila (fase 2) |
+| `recursos.dot` | erro | DOT que não compila, ou com classe fora de `foco` num nó e `ativo` numa aresta (fase 2) |
 | `recursos.diagrama-grande` | aviso | diagrama com mais de 15 nós (fase 2) |
 | `saida.referencia-externa` | erro | recurso carregado de fora do HTML final (`src`, `href` de folha de estilo, `url()`); links `<a href="https://…">` não contam |
 | `saida.tamanho` | aviso | HTML final acima de 10 MB |
@@ -669,7 +669,7 @@ As regras de fase 2 entram no validador com os recursos correspondentes; todas a
 | grupo | sobre | navegador | build |
 |---|---|---|---|
 | estáticas: `estrutura`, `vocabulario`, `limites`, `matematica.comando-proibido`, `matematica.simbolo-fora-do-tex`, `matematica.cifrao-suspeito`, `recursos.alt`, `recursos.imagem-externa`, `recursos.linguagem`, `recursos.grafico` | o fonte, sem cromo e sem HTML renderizado | passo 3 da seção 3.2, sobre a cópia do corpo | etapa 1 da seção 3.3 |
-| de carga: `matematica.tex-invalido`, `recursos.imagem`, `recursos.demo-sem-registro`, `recursos.demo-sem-estatico`, `recursos.csv`, `recursos.dot` | o fonte, depois de carregar bibliotecas, imagens e scripts | passo 6, depois do `load` | etapa 1: KaTeX e Graphviz rodam no Node, arquivos são checados no disco, e registros de demo são procurados no texto dos scripts (`AulaUSP.demo('<nome>'`) |
+| de carga: `matematica.tex-invalido`, `recursos.imagem`, `recursos.demo-sem-registro`, `recursos.demo-sem-estatico`, `recursos.csv`, `recursos.dot`, `recursos.diagrama-grande` | o fonte, depois de carregar bibliotecas, imagens e scripts | passo 6, depois do `load` | etapa 1: KaTeX e Graphviz rodam no Node, arquivos são checados no disco, e registros de demo são procurados no texto dos scripts (`AulaUSP.demo('<nome>'`) |
 | composição: `composicao.*` | o documento montado e renderizado, no estado final | passo 6, depois de `montar`, da renderização e de `document.fonts.ready` | etapa 5, no Chrome headless |
 | saída: `saida.*` | o HTML e o PDF finais | não roda | etapas 4 a 7 |
 

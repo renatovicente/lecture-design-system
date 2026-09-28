@@ -311,7 +311,7 @@ Três avisos de leitura:
 | `codigo.colunas` | no máximo 64 colunas | cada `pre` |
 | `tabela.linhasDeDados` | no máximo 8 linhas de dados | cada `table` |
 | `tabela.colunas` | no máximo 6 colunas | cada `table` |
-| `diagrama.nos` | no máximo 15 nós | cada `figure.diagrama` (fase 2: erro hoje) |
+| `diagrama.nos` | no máximo 15 nós | cada `figure.diagrama` |
 | `grafico.series` | no máximo 3 séries | cada `figure.grafico` |
 | `saida.megabytes` | no máximo 10 megabytes | o arquivo que `aula-usp build` escreve |
 <!-- /gerado -->
@@ -994,7 +994,7 @@ Um trecho que precise de mais de uma linha não é `code` no meio da frase: é u
 
 # Gráficos, diagramas e demos
 
-Três nomes num arquivo só, com estados diferentes: **a demo interativa e o gráfico (`figure.grafico`) funcionam hoje; o diagrama e os controles do sistema ainda não existem, e o validador os recusa com erro.** O gráfico tem exemplo no layout `figura`, em **Layouts**; o capítulo completo sobre ele ainda vai ser escrito.
+Três nomes num arquivo só, com estados diferentes: **a demo interativa, o gráfico (`figure.grafico`) e o diagrama (`figure.diagrama`) funcionam hoje; os controles do sistema ainda não existem, e o validador os recusa com erro.** O gráfico tem exemplo no layout `figura`, em **Layouts**, e o diagrama, logo abaixo; o capítulo completo sobre os dois ainda vai ser escrito.
 
 Este arquivo diz o que você pode usar agora, mostra a forma da demo, e depois diz o que a fase 2 vai trazer, sem mostrar marcação de coisa que não roda. Documentar como pronto o que não existe é pior do que não documentar.
 
@@ -1006,7 +1006,7 @@ Este arquivo diz o que você pode usar agora, mostra a forma da demo, e depois d
 | figura em SVG escrito à mão, dentro de `figure` | funciona (**Componentes**) |
 | imagem de arquivo em `img/`, ou URI `data:` | funciona (**Componentes**) |
 | `figure.grafico` com a especificação do gráfico em JSON | funciona (**Layouts**, layout `figura`) |
-| `figure.diagrama` com o grafo em DOT | fase 2: erro hoje |
+| `figure.diagrama` com o grafo em DOT | funciona (abaixo) |
 | controles do sistema, como `button.controle` | fase 2: erro hoje |
 | captura automática da demo no build (`data-captura-ms`) | fase 2: erro hoje |
 
@@ -1117,17 +1117,16 @@ Duas coisas que surpreendem quem desenha um gráfico à mão, as duas medidas:
 - **o texto dentro do SVG conta no orçamento de palavras.** Rótulo de eixo, nome de série, valor anotado: num slide de `conteudo`, tudo isso entra em `limites.palavras-corpo`, e dentro de uma coluna, também em `limites.palavras-coluna`. Um gráfico muito anotado estoura o orçamento sem uma frase de prosa sequer. No layout `figura`, que não tem orçamento de corpo, a conta não corre.
 - **o texto dentro do SVG é medido no tamanho em que aparece no palco**, contra o mínimo de rótulo, 14 px. O SVG escala com a largura da figura: um `font-size="14"` num `viewBox` mais largo que a coluna sai menor que 14 e é `composicao.tamanho-minimo`. O achado é um por figura, com a menor medida e a largura que a figura precisaria. O azul vale do mesmo jeito: texto de SVG em azul abaixo de 32 px no palco é `composicao.azul-pequeno`, mesmo com `font-size="32"` no fonte.
 
-**Um diagrama hoje** é o mesmo caso: SVG escrito à mão, com as caixas e as setas de que você precisa, ou uma imagem exportada de outra ferramenta.
+**Um diagrama** é `figure.diagrama` com o grafo em DOT dentro de `<script type="text/vnd.graphviz">`, e `figcaption` opcional. O Graphviz decide as posições; o sistema impõe o estilo: nós retangulares com contorno de 2 px em tinta, texto Geist 20, setas de 2 px, `class="foco"` num nó em campo amarelo e `class="ativo"` numa aresta em azul — cor, forma ou espessura escritas no DOT não passam, e outra classe é erro. DOT que não compila é `recursos.dot`, com a mensagem do Graphviz; mais de 15 nós é `recursos.diagrama-grande`. O texto de 20 também é medido no palco: um diagrama mais largo que a figura encolhe com ela, e numa coluna estreita cai abaixo de 14. Do espécime: `especime/componentes.html#diagrama-rede`.
 
 ## O que a fase 2 vai trazer
 
 Nada nesta seção funciona hoje. Ela está aqui para você saber o que não vale a pena improvisar e o que virá pronto.
 
-- **`figure.diagrama`**, com o grafo em DOT, com o layout do Graphviz e o estilo imposto depois pelo sistema.
 - **Os controles**, para as demos não terem de criar botão e cursor na mão, e saírem iguais em todas as aulas.
 - **A captura automática**, que fotografa a demo no build e dispensa a `img.estatico` escrita à mão.
 
-Escrever qualquer um deles hoje não é ficar um passo à frente: é ganhar erro. Um `figure.diagrama` é recusado por `recursos.dot`, com a mensagem "diagrama ainda não está disponível": nada desenha o DOT ainda, e a figura sairia vazia.
+Escrever qualquer um deles hoje não é ficar um passo à frente: é ganhar erro.
 
 <!-- guia/60-validador.md -->
 
@@ -1603,7 +1602,7 @@ E há uma segunda ressalva, que vale para o arquivo inteiro: **o que se afirma a
 | folhas de estilo externas, fora do Google Fonts | nenhuma — o sistema nunca usou uma |
 | scripts de fora das CDNs permitidas (jsDelivr, no caminho `/npm/`) | nenhuma — é de lá que o runtime vem |
 | downloads de outros tipos de arquivo | você não baixa o `.html` de dentro do artifact; veja abaixo |
-| WASM carregado à parte | nenhuma hoje; é assunto da fase 2 |
+| WASM carregado à parte | nenhuma — o WASM do Graphviz vem dentro do script de diagramas |
 
 As duas primeiras linhas explicam decisões que, de fora, pareceriam exageradas. **O CSS, as fontes e as marcas viajam dentro do próprio `aula-usp.js`**, como dados embutidos, em vez de virem de arquivos ao lado: um `<link>` para uma folha de estilo não sobreviveria aqui. E o runtime é **dividido por recurso** — um script para o núcleo, um para a matemática, um para o código —, carregados só quando a aula os usa, porque um único arquivo com tudo dentro seria pesado para carregar numa CDN a cada abertura. Os tamanhos dos três são medidos por um teste de integração do repositório, com metas registradas: isso não é hábito, é a mitigação de um risco declarado.
 
@@ -1613,7 +1612,7 @@ As duas primeiras linhas explicam decisões que, de fora, pareceriam exageradas.
 
 Você copia o bloco, cola num editor de texto e salva com extensão `.html`. É o mesmo caminho do ChatGPT sem download (**A aula pelo ChatGPT**), e o resultado é idêntico ao que o artifact mostra — é o mesmo arquivo.
 
-**A quarta linha é da fase 2.** O gerador de diagramas usa o Graphviz compilado em WASM, e se a política de segurança do artifact impedir compilá-lo, o plano é trocar, só no modo navegador, por um layout em JavaScript puro com o mesmo estilo visual, mantendo o Graphviz no build. Hoje isso não afeta ninguém: a fase 1 não tem WASM, e diagrama ainda não existe (**Gráficos, diagramas e demos**).
+**A quarta linha é dos diagramas.** O gerador de diagramas usa o Graphviz compilado em WASM, e o WASM viaja dentro do próprio script de diagramas, sem arquivo à parte. Esta é a única linha da tabela que foi medida, e não só assumida: um script com o Graphviz inteiro dentro compilou e desenhou num artifact de verdade antes de os diagramas entrarem no sistema, e o plano B da especificação — outro motor de layout, só no navegador — não foi preciso (**Gráficos, diagramas e demos**).
 
 ## O que o projeto assume que um artifact *pode* bloquear
 

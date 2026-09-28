@@ -216,7 +216,7 @@ const ONDE = {
   codigo: 'cada `pre`',
   tabela: 'cada `table`',
   grafico: 'cada `figure.grafico`',
-  diagrama: 'cada `figure.diagrama` (fase 2: erro hoje)',
+  diagrama: 'cada `figure.diagrama`',
   saida: 'o arquivo que `aula-usp build` escreve',
 };
 

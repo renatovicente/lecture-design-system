@@ -17,7 +17,7 @@ E há uma segunda ressalva, que vale para o arquivo inteiro: **o que se afirma a
 | folhas de estilo externas, fora do Google Fonts | nenhuma — o sistema nunca usou uma |
 | scripts de fora das CDNs permitidas (jsDelivr, no caminho `/npm/`) | nenhuma — é de lá que o runtime vem |
 | downloads de outros tipos de arquivo | você não baixa o `.html` de dentro do artifact; veja abaixo |
-| WASM carregado à parte | nenhuma hoje; é assunto da fase 2 |
+| WASM carregado à parte | nenhuma — o WASM do Graphviz vem dentro do script de diagramas |
 
 As duas primeiras linhas explicam decisões que, de fora, pareceriam exageradas. **O CSS, as fontes e as marcas viajam dentro do próprio `aula-usp.js`**, como dados embutidos, em vez de virem de arquivos ao lado: um `<link>` para uma folha de estilo não sobreviveria aqui. E o runtime é **dividido por recurso** — um script para o núcleo, um para a matemática, um para o código —, carregados só quando a aula os usa, porque um único arquivo com tudo dentro seria pesado para carregar numa CDN a cada abertura. Os tamanhos dos três são medidos por um teste de integração do repositório, com metas registradas: isso não é hábito, é a mitigação de um risco declarado.
 
@@ -27,7 +27,7 @@ As duas primeiras linhas explicam decisões que, de fora, pareceriam exageradas.
 
 Você copia o bloco, cola num editor de texto e salva com extensão `.html`. É o mesmo caminho do ChatGPT sem download (`73-chatgpt.md`), e o resultado é idêntico ao que o artifact mostra — é o mesmo arquivo.
 
-**A quarta linha é da fase 2.** O gerador de diagramas usa o Graphviz compilado em WASM, e se a política de segurança do artifact impedir compilá-lo, o plano é trocar, só no modo navegador, por um layout em JavaScript puro com o mesmo estilo visual, mantendo o Graphviz no build. Hoje isso não afeta ninguém: a fase 1 não tem WASM, e diagrama ainda não existe (`50-graficos-diagramas-demos.md`).
+**A quarta linha é dos diagramas.** O gerador de diagramas usa o Graphviz compilado em WASM, e o WASM viaja dentro do próprio script de diagramas, sem arquivo à parte. Esta é a única linha da tabela que foi medida, e não só assumida: um script com o Graphviz inteiro dentro compilou e desenhou num artifact de verdade antes de os diagramas entrarem no sistema, e o plano B da especificação — outro motor de layout, só no navegador — não foi preciso (`50-graficos-diagramas-demos.md`).
 
 ## O que o projeto assume que um artifact *pode* bloquear
 

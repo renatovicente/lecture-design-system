@@ -1,6 +1,6 @@
 # Gráficos, diagramas e demos
 
-Três nomes num arquivo só, com estados diferentes: **a demo interativa e o gráfico (`figure.grafico`) funcionam hoje; o diagrama e os controles do sistema ainda não existem, e o validador os recusa com erro.** O gráfico tem exemplo no layout `figura`, em `20-layouts.md`; o capítulo completo sobre ele ainda vai ser escrito.
+Três nomes num arquivo só, com estados diferentes: **a demo interativa, o gráfico (`figure.grafico`) e o diagrama (`figure.diagrama`) funcionam hoje; os controles do sistema ainda não existem, e o validador os recusa com erro.** O gráfico tem exemplo no layout `figura`, em `20-layouts.md`, e o diagrama, logo abaixo; o capítulo completo sobre os dois ainda vai ser escrito.
 
 Este arquivo diz o que você pode usar agora, mostra a forma da demo, e depois diz o que a fase 2 vai trazer, sem mostrar marcação de coisa que não roda. Documentar como pronto o que não existe é pior do que não documentar.
 
@@ -12,7 +12,7 @@ Este arquivo diz o que você pode usar agora, mostra a forma da demo, e depois d
 | figura em SVG escrito à mão, dentro de `figure` | funciona (`30-componentes.md`) |
 | imagem de arquivo em `img/`, ou URI `data:` | funciona (`30-componentes.md`) |
 | `figure.grafico` com a especificação do gráfico em JSON | funciona (`20-layouts.md`, layout `figura`) |
-| `figure.diagrama` com o grafo em DOT | fase 2: erro hoje |
+| `figure.diagrama` com o grafo em DOT | funciona (abaixo) |
 | controles do sistema, como `button.controle` | fase 2: erro hoje |
 | captura automática da demo no build (`data-captura-ms`) | fase 2: erro hoje |
 
@@ -123,14 +123,13 @@ Duas coisas que surpreendem quem desenha um gráfico à mão, as duas medidas:
 - **o texto dentro do SVG conta no orçamento de palavras.** Rótulo de eixo, nome de série, valor anotado: num slide de `conteudo`, tudo isso entra em `limites.palavras-corpo`, e dentro de uma coluna, também em `limites.palavras-coluna`. Um gráfico muito anotado estoura o orçamento sem uma frase de prosa sequer. No layout `figura`, que não tem orçamento de corpo, a conta não corre.
 - **o texto dentro do SVG é medido no tamanho em que aparece no palco**, contra o mínimo de rótulo, 14 px. O SVG escala com a largura da figura: um `font-size="14"` num `viewBox` mais largo que a coluna sai menor que 14 e é `composicao.tamanho-minimo`. O achado é um por figura, com a menor medida e a largura que a figura precisaria. O azul vale do mesmo jeito: texto de SVG em azul abaixo de 32 px no palco é `composicao.azul-pequeno`, mesmo com `font-size="32"` no fonte.
 
-**Um diagrama hoje** é o mesmo caso: SVG escrito à mão, com as caixas e as setas de que você precisa, ou uma imagem exportada de outra ferramenta.
+**Um diagrama** é `figure.diagrama` com o grafo em DOT dentro de `<script type="text/vnd.graphviz">`, e `figcaption` opcional. O Graphviz decide as posições; o sistema impõe o estilo: nós retangulares com contorno de 2 px em tinta, texto Geist 20, setas de 2 px, `class="foco"` num nó em campo amarelo e `class="ativo"` numa aresta em azul — cor, forma ou espessura escritas no DOT não passam, e outra classe é erro. DOT que não compila é `recursos.dot`, com a mensagem do Graphviz; mais de 15 nós é `recursos.diagrama-grande`. O texto de 20 também é medido no palco: um diagrama mais largo que a figura encolhe com ela, e numa coluna estreita cai abaixo de 14. Do espécime: `especime/componentes.html#diagrama-rede`.
 
 ## O que a fase 2 vai trazer
 
 Nada nesta seção funciona hoje. Ela está aqui para você saber o que não vale a pena improvisar e o que virá pronto.
 
-- **`figure.diagrama`**, com o grafo em DOT, com o layout do Graphviz e o estilo imposto depois pelo sistema.
 - **Os controles**, para as demos não terem de criar botão e cursor na mão, e saírem iguais em todas as aulas.
 - **A captura automática**, que fotografa a demo no build e dispensa a `img.estatico` escrita à mão.
 
-Escrever qualquer um deles hoje não é ficar um passo à frente: é ganhar erro. Um `figure.diagrama` é recusado por `recursos.dot`, com a mensagem "diagrama ainda não está disponível": nada desenha o DOT ainda, e a figura sairia vazia.
+Escrever qualquer um deles hoje não é ficar um passo à frente: é ganhar erro.
