@@ -18,8 +18,13 @@ import { renderizarTex } from '../componentes/tex.js';
 import { pontosDoArquivo, pontosDaFaixa } from './cobertura.mjs';
 import { gerarFontesCss } from './fontes-css.mjs';
 
-const CAMINHO_CSS_KATEX = 'node_modules/katex/dist/katex.min.css';
-const PASTA_FONTES_KATEX = 'node_modules/katex/dist/fonts/';
+// Resolvidos como o Node resolve o `import katex` acima, e não montados sobre a raiz do sistema: no
+// pacote instalado por `npx` ou por `npm install` num projeto, o npm iça o katex para o node_modules
+// de quem instalou, AO LADO de aula-usp, e `<raiz>/node_modules/katex/` não existe. Medido na fase 3a:
+// com o caminho montado, `build` de uma aula com TeX saía com 2 nesse arranjo (ENOENT em
+// katex.min.css); tests/integracao/instalacao.test.mjs monta o pacote assim.
+const CSS_KATEX = new URL(import.meta.resolve('katex/dist/katex.min.css'));
+const PASTA_FONTES_KATEX = new URL('fonts/', CSS_KATEX);
 
 // As regras de katex.css que decidem font-family por classe (medido: são as ÚNICAS — uma varredura
 // do arquivo inteiro por "font-family:" fora dos @font-face não encontra mais nenhuma). Fora daqui,
@@ -142,10 +147,9 @@ function familiaDoArquivoKatex(arquivoComExtensao) {
 // reserva das famílias incluídas) vira url() vazio — o Chrome pula essa entrada de src sem pedir rede,
 // e a família some da CSS por trás de um @font-face que nunca resolve, o que é diferente de omiti-la:
 // as regras de classe de katex.css continuam batendo com os 12 nomes de font-family que elas esperam.
-async function cssEFontesDoKatex(raiz, familias) {
+async function cssEFontesDoKatex(familias) {
   if (familias.length === 0) return { css: '', caminhos: [] };
-  const bruta = await readFile(new URL(CAMINHO_CSS_KATEX, raiz), 'utf8');
-  const pastaFontes = new URL(PASTA_FONTES_KATEX, raiz);
+  const bruta = await readFile(CSS_KATEX, 'utf8');
   const incluidas = new Set(familias);
   const arquivosParaEmbutir = [...new Set(
     [...bruta.matchAll(/url\(fonts\/([^)]+\.woff2)\)/g)]
@@ -153,11 +157,11 @@ async function cssEFontesDoKatex(raiz, familias) {
       .filter((arquivo) => incluidas.has(familiaDoArquivoKatex(arquivo))),
   )];
   const dataUris = new Map(await Promise.all(arquivosParaEmbutir.map(async (arquivo) =>
-    [arquivo, await comoDataUriDeFonte(new URL(arquivo, pastaFontes))])));
+    [arquivo, await comoDataUriDeFonte(new URL(arquivo, PASTA_FONTES_KATEX))])));
   const css = bruta.replace(/url\(fonts\/([^)]+)\)/g, (_match, arquivo) => (
     dataUris.has(arquivo) ? `url(${dataUris.get(arquivo)})` : 'url()'
   ));
-  return { css, caminhos: arquivosParaEmbutir.map((arquivo) => new URL(arquivo, pastaFontes)) };
+  return { css, caminhos: arquivosParaEmbutir.map((arquivo) => new URL(arquivo, PASTA_FONTES_KATEX)) };
 }
 
 // Revisão final do 5b, I1: saida.glifo-ausente tratava a cobertura como uma coisa só (a união crua
@@ -188,7 +192,7 @@ export async function embutirFontes({ raiz, doc }) {
   const familias = familiasDoKatexUsadas(doc);
   const [sistema, doKatex] = await Promise.all([
     cssEFontesDoSistema(raiz),
-    cssEFontesDoKatex(raiz, familias),
+    cssEFontesDoKatex(familias),
   ]);
   const [coberturaSistema, coberturaKatex] = await Promise.all([
     coberturaDoSistema(sistema.arquivos),

@@ -591,7 +591,7 @@ Instalação: antes da publicação (fases 1 e 2), `npm link` no repositório do
 
 ### 8.2. Dependências
 
-Node 20 ou superior. Pacotes: `katex`, `shiki`, `linkedom`, `playwright-core` (usa o Google Chrome instalado, pelo canal `chrome`, ou o executável indicado em `CHROME_PATH`, sem baixar navegador) e `pdf-lib` (metadados do PDF). Desenvolvimento: `esbuild`, `fontkit` (leitura do `cmap` dos woff2 em `aula-usp dist`), `pixelmatch` e `pngjs`. Fase 2: `d3-array`, `d3-scale`, `d3-shape` e `@hpcc-js/wasm-graphviz`. Não há Python.
+Node 20 ou superior. Pacotes: `katex`, `shiki`, `linkedom`, `playwright-core` (usa o Google Chrome instalado, pelo canal `chrome`, ou o executável indicado em `CHROME_PATH`, sem baixar navegador), `pdf-lib` (metadados do PDF) e `fontkit` (leitura do `cmap` dos woff2: em `aula-usp dist` e, desde o marco 5b, na etapa 4 de `aula-usp build`, que mede a cobertura das fontes embutidas). Desenvolvimento: `esbuild`, `pixelmatch` e `pngjs`. Fase 2: `d3-array`, `d3-scale`, `d3-shape` e `@hpcc-js/wasm-graphviz`. Não há Python.
 
 ### 8.3. Fontes e marcas
 
