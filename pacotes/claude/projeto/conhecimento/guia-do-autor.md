@@ -562,16 +562,14 @@ Extraído de `especime/componentes.html`.
 #### `demo`
 
 ```html
-<section data-layout="demo" id="demo">
-  <h2>Uma demo ocupa o resto do slide</h2>
-  <div class="demo" data-demo="contador" data-opcoes='{"passo": 5}'>
-    <img class="estatico" alt="Imagem estática da demo" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='9'%3E%3Crect width='16' height='9' fill='%23D9D9D9'/%3E%3C/svg%3E">
-  </div>
-  <aside class="notas">Clicar no botão da demo uma vez antes de falar. No PDF, o que sai é a imagem estática.</aside>
+<section data-layout="demo" id="demo-controles">
+  <h2>Controles do sistema, fotografados pelo build</h2>
+  <div class="demo" data-demo="soma" data-opcoes='{"passo": 3}' data-captura-ms="500"></div>
+  <aside class="notas">A demo não tem img.estatico nem capturar(): no build, o Chrome a fotografa meio segundo depois de iniciar, e é essa foto que sai no PDF.</aside>
 </section>
 ```
 
-Extraído de `especime/index.html`.
+Extraído de `especime/componentes.html`.
 
 #### `encerramento`
 

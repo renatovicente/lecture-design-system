@@ -1,6 +1,7 @@
 // Blocos de corpo no Chrome, sobre especime/componentes.html servido por `aula-usp servir` (spec 4.3, 7.1 e 11.2).
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
+import { PNG } from 'pngjs';
 import { iniciarChrome, servirPasta, abrirAula, classesForaDoContrato, perto, TINTA, PAPEL, AMARELO, LINHA, TRANSPARENTE } from './utilitarios.mjs';
 
 let servidor;
@@ -20,10 +21,10 @@ after(async () => {
 // Uma página em modo folha serve aos testes de geometria: nela os passos aparecem revelados.
 const folha = () => (folhaAberta ??= abrirAula(navegador, `${servidor.endereco}/componentes.html?folha`));
 
-test('espécime de componentes: 19 slides montados sem erros, e toda classe do documento está no contrato', async () => {
+test('espécime de componentes: 21 slides montados sem erros, e toda classe do documento está no contrato', async () => {
   const { pagina, erros } = await folha();
   const slides = await pagina.evaluate(() => document.querySelectorAll('section.slide').length);
-  assert.equal(slides, 19);
+  assert.equal(slides, 21);
   assert.deepEqual(erros, []);
   assert.deepEqual(await classesForaDoContrato(pagina), []);
 });
@@ -264,4 +265,65 @@ test('figuras extremas: cada mídia cabe pela dimensão que a limita, sem distor
   perto(porId['sem-legenda'].base, 652, 'sem legenda, a imagem vai até a base da zona');
   perto(porId['svg-alto'].baseDaLegenda, 652, 'o SVG alto é limitado pela altura');
   perto(porId['svg-minusculo'].baseDaLegenda, 652, 'o SVG de viewBox minúsculo é ampliado até a zona');
+});
+
+// Controles de demo (spec 7.2, fase 2): criados pela demo "soma" com AulaUSP.controles quando o motor
+// entra no slide — por isso aqui é a aula com o motor, no endereço do slide, e não a folha, em que
+// nenhuma demo é montada. O que se mede é o que a spec escreve: retangular com contorno de 2 px e
+// Geist 600 20 px; ativo em campo tinta com texto papel; trilho de 2 px em linha e cursor quadrado de
+// 16 px em tinta; leitura em Geist Mono 20 px. Viewport do tamanho do palco, para a escala ser 1.
+test('controles de demo: as medidas e cores da spec 7.2, e as classes deles estão no contrato', async (t) => {
+  const { pagina, erros } = await abrirAula(navegador, `${servidor.endereco}/componentes.html#demo-controles`, { largura: 1280, altura: 720 });
+  t.after(() => pagina.close());
+  const medida = await pagina.evaluate(() => {
+    const demo = document.querySelector('#demo-controles div.demo');
+    const [dobrar, somar] = demo.querySelectorAll('button.controle');
+    const leitura = demo.querySelector('output.leitura');
+    const botao = (elemento) => {
+      const e = getComputedStyle(elemento);
+      return {
+        classe: elemento.className,
+        pressionado: elemento.getAttribute('aria-pressed'),
+        borda: `${e.borderTopWidth} ${e.borderTopStyle} ${e.borderTopColor}`,
+        raio: e.borderTopLeftRadius,
+        fonte: `${e.fontWeight} ${e.fontSize} ${e.fontFamily.split(',')[0]}`,
+        fundo: e.backgroundColor,
+        cor: e.color,
+      };
+    };
+    const l = getComputedStyle(leitura);
+    return {
+      dobrar: botao(dobrar),
+      somar: botao(somar),
+      leitura: `${l.fontSize} ${l.fontFamily.split(',')[0]} ${leitura.textContent}`,
+    };
+  });
+  assert.deepEqual(erros, []);
+  // iniciar() da demo liga "dobrar": o estado ativo, com a classe e o aria-pressed juntos.
+  assert.deepEqual(medida.dobrar, {
+    classe: 'controle ativo', pressionado: 'true', borda: `2px solid ${TINTA}`, raio: '0px', fonte: '600 20px Geist', fundo: TINTA, cor: PAPEL,
+  });
+  assert.deepEqual(medida.somar, {
+    classe: 'controle', pressionado: 'false', borda: `2px solid ${TINTA}`, raio: '0px', fonte: '600 20px Geist', fundo: PAPEL, cor: TINTA,
+  });
+  assert.equal(medida.leitura, '20px "Geist Mono" 0');
+  assert.deepEqual(await classesForaDoContrato(pagina), []);
+  // O trilho e o cursor são pseudo-elementos (::-webkit-slider-*), e getComputedStyle não os lê —
+  // medido: devolve o estilo do próprio input. Então se medem os pixels: o cursor é o retângulo de
+  // pixels tinta, e o trilho, as linhas de pixels em `linha` que atravessam o controle.
+  const png = PNG.sync.read(await pagina.locator('#demo-controles input.controle').screenshot());
+  const cor = (x, y) => { const k = (y * png.width + x) * 4; return `rgb(${png.data[k]}, ${png.data[k + 1]}, ${png.data[k + 2]})`; };
+  const tinta = { x: [], y: [] };
+  const linhasDoTrilho = new Set();
+  for (let y = 0; y < png.height; y += 1) {
+    let emLinha = 0;
+    for (let x = 0; x < png.width; x += 1) {
+      if (cor(x, y) === TINTA) { tinta.x.push(x); tinta.y.push(y); }
+      if (cor(x, y) === LINHA) emLinha += 1;
+    }
+    if (emLinha > png.width / 2) linhasDoTrilho.add(y);
+  }
+  const lado = (valores) => Math.max(...valores) - Math.min(...valores) + 1;
+  assert.deepEqual([lado(tinta.x), lado(tinta.y), tinta.x.length], [16, 16, 256], 'cursor: um quadrado cheio de 16 px em tinta');
+  assert.equal(linhasDoTrilho.size, 2, 'trilho: 2 px em linha');
 });

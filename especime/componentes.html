@@ -212,6 +212,17 @@
   <aside class="notas">O DOT descreve o grafo; o Graphviz decide as posições, e o sistema impõe o estilo depois, igual no navegador e no build.</aside>
 </section>
 
+<section data-layout="abertura" id="demos">
+  <h2>Demos</h2>
+  <p class="pergunta">Como uma demo sem imagem própria chega ao PDF?</p>
+</section>
+
+<section data-layout="demo" id="demo-controles">
+  <h2>Controles do sistema, fotografados pelo build</h2>
+  <div class="demo" data-demo="soma" data-opcoes='{"passo": 3}' data-captura-ms="500"></div>
+  <aside class="notas">A demo não tem img.estatico nem capturar(): no build, o Chrome a fotografa meio segundo depois de iniciar, e é essa foto que sai no PDF.</aside>
+</section>
+
 <section data-layout="encerramento">
   <h2>O que fica</h2>
   <ol class="sintese">
@@ -221,6 +232,23 @@
   </ol>
   <p class="proxima">Próximo marco: matemática e código com destaque.</p>
 </section>
+
+<script>
+AulaUSP.demo('soma', {
+  montar(raiz, opcoes) {
+    const { botao, alternar, deslizante, leitura, escrever } = AulaUSP.controles;
+    this.total = 0;
+    this.passo = opcoes.passo ?? 1;
+    this.dobro = botao(raiz, 'dobrar', () => alternar(this.dobro));
+    this.passos = deslizante(raiz, { min: 1, max: 10, valor: this.passo, rotulo: 'passo' }, (valor) => { this.passo = valor; });
+    botao(raiz, 'somar', () => escrever(this.saida, (this.total += this.passo * (this.dobro.classList.contains('ativo') ? 2 : 1))));
+    this.saida = leitura(raiz, this.total);
+  },
+  iniciar() {
+    AulaUSP.controles.alternar(this.dobro, true);
+  },
+});
+</script>
 
 </body>
 </html>
