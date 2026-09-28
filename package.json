@@ -2,8 +2,26 @@
   "name": "aula-usp",
   "version": "0.1.0",
   "description": "Design system de aulas em HTML para a USP, usado com Claude e GPT.",
-  "private": true,
   "type": "module",
+  "files": [
+    "bin/",
+    "build/",
+    "montar/",
+    "motor/",
+    "componentes/",
+    "validador/",
+    "contrato/",
+    "tokens/",
+    "estilos/",
+    "assets/",
+    "dist/",
+    "modelos/",
+    "exemplos/",
+    "guia/",
+    "README.md",
+    "!exemplos/*/dist/",
+    "!modelos/*/dist/"
+  ],
   "engines": {
     "node": ">=20.6"
   },
