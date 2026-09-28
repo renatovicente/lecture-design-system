@@ -14,6 +14,7 @@ import { lerERodarEstatica, validarCarga } from './validar.mjs';
 import { construir } from './construir.mjs';
 import { medirComposicao, abrirChrome } from './composicao.mjs';
 import { gerarPdf as gerarPdfPadrao } from './pdf.mjs';
+import { alvosDeCaptura, capturarDemos, embutirCapturas } from './captura.mjs';
 
 // Quem roda quais das quatro regras de saída (spec 9.2), e por quê — decisão do controlador do
 // plano (ledger da tarefa 3, "ruling 1"), registrada aqui porque sem a razão a divisão parece
@@ -26,6 +27,12 @@ import { gerarPdf as gerarPdfPadrao } from './pdf.mjs';
 // contexto, ela não acusa nada — validador/regras/saida.js). Separar por artefato dá um dono por
 // pergunta: a etapa 7 fica só com a única pergunta que ela tem condição de responder.
 const SO_PDF_PAGINAS = REGRAS_DE_SAIDA.filter((regra) => regra.nome === 'saida.pdf-paginas');
+// A captura (etapa 5, fase 2) regrava o <slug>.html com as fotos dentro, depois de construir() já ter
+// medido o tamanho dele: saida.tamanho é a única das três regras do HTML que a foto pode mudar (a
+// imagem entra como data:, então não há referência externa nova, e o alt é texto do sistema).
+const SO_TAMANHO = REGRAS_DE_SAIDA.filter((regra) => regra.nome === 'saida.tamanho');
+
+const nomesDe = (alvos) => alvos.map(({ nome }) => `"${nome}"`).join(', ');
 
 function gravarValidacao(destino, achados) {
   return writeFile(join(destino, 'validacao.json'), `${JSON.stringify(achados, null, 2)}\n`, 'utf8');
@@ -95,7 +102,8 @@ export async function build({ raiz, caminhoDaAula, destino, semPdf = false, nave
   // código de saída e lista de ARQUIVOS, nunca a lista completa de achados quando havia aviso e
   // sucesso ao mesmo tempo.)
   progresso('etapa 2-4/7 — montando, pré-renderizando e embutindo');
-  const { html, achados: achadosDoConstruir, caminhoDoHtml } = await construir({ raiz, caminhoDaAula, destino });
+  const { html: htmlConstruido, achados: achadosDoConstruir, caminhoDoHtml } = await construir({ raiz, caminhoDaAula, destino });
+  let html = htmlConstruido;
   let achados = [...achadosIniciais, ...achadosDoConstruir];
   // I3 da revisão final: construir() acabou de gravar um validacao.json com só OS achados dele, e a
   // lista completa só era gravada nos finais, três etapas adiante — entre um e outro havia uma
@@ -128,8 +136,15 @@ export async function build({ raiz, caminhoDaAula, destino, semPdf = false, nave
   // (aviso, código 0 se não houver erro) sai por aqui, pulando as etapas 5 e 6.
   progresso('etapa 5/7 — abrindo o Chrome e medindo composição');
   const { achados: achadosDeComposicao, motivo: semChrome } = await medirComposicao(caminhoDaFonte, { contrato });
+  // As demos que a etapa 5 vai fotografar (build/captura.mjs): só na fase 2 (spec 6.7: "na fase 2, o
+  // build passa a capturar a imagem sozinho"), e só as que não trazem imagem própria. A fase é a
+  // mesma que a etapa 1 decidiu para esta aula (validador/validar.js:faseDaAula).
+  const alvos = fase >= 2 ? alvosDeCaptura(docDaFonte, recursos) : [];
   if (achadosDeComposicao === null) {
-    const avisoSemChrome = `composição pulada, sem Chrome: ${semChrome}`;
+    // Plano da 2c, tarefa 3, passo 3: sem Chrome a captura some junto com a etapa 5, e o aviso diz
+    // quais demos ficam sem imagem — "sem Chrome" sozinho não conta isso ao autor.
+    const semCaptura = alvos.length > 0 ? `; sem a captura, ficam sem imagem para impressão as demos ${nomesDe(alvos)}` : '';
+    const avisoSemChrome = `composição pulada, sem Chrome: ${semChrome}${semCaptura}`;
     progresso(`etapa 5/7 — aviso: ${avisoSemChrome}; pulando as etapas 5 e 6`);
     await gravarValidacao(destino, achados);
     return { codigo: contar(achados).erros > 0 ? 1 : 0, achados, avisoSemChrome };
@@ -145,34 +160,61 @@ export async function build({ raiz, caminhoDaAula, destino, semPdf = false, nave
   }
   progresso('etapa 5/7 — composição sem erro');
 
-  if (semPdf) {
-    // --sem-pdf (spec 8.1): o autor pediu para pular o PDF. Não é um dos quatro finais da spec 3.3
-    // (esses são sobre ERROS e sobre a ausência do Chrome, não sobre uma escolha do autor), mas o
-    // formato de saída é o mesmo do final "sem Chrome" — html e validacao.json, sem regravar nada
-    // que dependa do PDF — pela mesma razão: sem PDF, saida.pdf-paginas não tem o que comparar.
-    progresso('--sem-pdf — pulando as etapas 6 e 7');
-    await gravarValidacao(destino, achados);
-    return { codigo: contar(achados).erros > 0 ? 1 : 0, achados };
-  }
-
-  // Etapa 6 (spec 3.3 e 8.4): chama AulaUSP.prepararImpressao() na página e gera o PDF. gerarPdf
-  // (tarefa 1) não abre navegador próprio — abre-se um aqui, só para esta etapa: medirComposicao já
-  // fechou o dela (build/composicao.mjs sempre fecha o que abre), e abrirChrome (a mesma função,
-  // exportada de lá) respeita o mesmo CHROME_PATH. Quando o teste passa um navegador próprio
-  // (parâmetro não documentado, comentário acima da função), ele não é fechado aqui — de quem abriu
-  // é a responsabilidade de fechar.
-  progresso('etapa 6/7 — gerando o PDF');
-  const navegador = navegadorExterno ?? await abrirChrome();
+  // Um Chrome para a captura e o PDF, aberto quando o primeiro dos dois precisa dele. A composição,
+  // logo acima, já fechou o dela (build/composicao.mjs sempre fecha o que abre) — e mede o FONTE,
+  // enquanto a captura e o PDF abrem o HTML construído; o mesmo navegador serve às duas últimas.
+  // Quando o teste passa um navegador próprio (parâmetro não documentado, comentário acima da
+  // função), ele não é fechado aqui — de quem abriu é a responsabilidade de fechar.
+  let navegador = navegadorExterno ?? null;
+  const chrome = async () => (navegador ??= await abrirChrome());
   let paginas;
   try {
-    const gerado = await gerarPdf({ caminhoDoHtml, navegador, metadados: metadadosDaAula(docDaFonte) });
+    // Etapa 5, segunda metade (spec 3.3: "na fase 2, também captura a imagem estática das demos que
+    // não têm imagem própria"). Uma demo que não sai na foto nunca é silêncio: cada falha sai aqui,
+    // com o nome da demo e o motivo, e a demo fica como estava — sem imagem, com o quadro "Demo
+    // interativa" no PDF (motor/impressao.js).
+    if (alvos.length > 0) {
+      progresso(`etapa 5/7 — capturando ${alvos.length === 1 ? 'a demo' : `as ${alvos.length} demos`} sem imagem própria: ${nomesDe(alvos)}`);
+      const inicio = performance.now();
+      const { imagens, falhas } = await capturarDemos({ navegador: await chrome(), caminhoDoHtml, alvos });
+      for (const { indice, nome } of alvos) {
+        if (falhas.has(indice)) progresso(`etapa 5/7 — aviso: a demo "${nome}" não foi capturada: ${falhas.get(indice)}`);
+      }
+      if (imagens.size > 0) {
+        html = embutirCapturas(html, imagens);
+        await writeFile(caminhoDoHtml, html, 'utf8');
+        achados = [
+          ...achados.filter((achado) => achado.regra !== 'saida.tamanho'),
+          ...validar(docDaFonte, { contrato, regras: SO_TAMANHO, grupo: 'saida', bytes: Buffer.byteLength(html) }),
+        ];
+        await gravarValidacao(destino, achados);
+      }
+      progresso(`etapa 5/7 — ${imagens.size} de ${alvos.length} demo(s) capturada(s) em ${((performance.now() - inicio) / 1000).toFixed(1)} s`);
+    }
+
+    if (semPdf) {
+      // --sem-pdf (spec 8.1): o autor pediu para pular o PDF. Não é um dos quatro finais da spec 3.3
+      // (esses são sobre ERROS e sobre a ausência do Chrome, não sobre uma escolha do autor), mas o
+      // formato de saída é o mesmo do final "sem Chrome" — html e validacao.json, sem regravar nada
+      // que dependa do PDF — pela mesma razão: sem PDF, saida.pdf-paginas não tem o que comparar.
+      // A captura acima roda mesmo assim: ela é da etapa 5, e a foto serve também a quem imprime o
+      // HTML pelo navegador.
+      progresso('--sem-pdf — pulando as etapas 6 e 7');
+      await gravarValidacao(destino, achados);
+      return { codigo: contar(achados).erros > 0 ? 1 : 0, achados };
+    }
+
+    // Etapa 6 (spec 3.3 e 8.4): chama AulaUSP.prepararImpressao() na página e gera o PDF, do
+    // <slug>.html — já com as fotos da captura dentro, quando houve alguma.
+    progresso('etapa 6/7 — gerando o PDF');
+    const gerado = await gerarPdf({ caminhoDoHtml, navegador: await chrome(), metadados: metadadosDaAula(docDaFonte) });
     paginas = gerado.paginas;
     // M4 da revisão final: o nome do PDF vem do HTML que construir() acabou de gravar, não de uma
     // segunda cópia do cálculo de `<slug>` (que era o que havia aqui, idêntica à de construir.mjs —
     // e as duas tinham de mudar juntas na correção do I7 para não divergirem).
     await writeFile(join(destino, `${basename(caminhoDoHtml, '.html')}.pdf`), gerado.bytes);
   } finally {
-    if (!navegadorExterno) await navegador.close();
+    if (navegador && !navegadorExterno) await navegador.close();
   }
   progresso(`etapa 6/7 — PDF gerado, ${paginas} página(s)`);
 

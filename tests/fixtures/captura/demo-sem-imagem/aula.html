@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Fixture da captura: demo sem imagem própria</title>
+<meta name="unidade" content="ime">
+<meta name="disciplina" content="Fixture da captura">
+<meta name="aula" content="1">
+<meta name="data" content="2026-09-28">
+<meta name="professor" content="Prof. Renato Vicente">
+<script src="../../../../dist/aula-usp.js"></script>
+</head>
+<body>
+
+<section data-layout="capa">
+  <h1>Demo sem imagem</h1>
+</section>
+
+<section data-layout="abertura" id="um">
+  <h2>Captura</h2>
+</section>
+
+<section data-layout="demo" id="contador">
+  <h2>Uma demo que só o build fotografa</h2>
+  <div class="demo" data-demo="contador" data-captura-ms="200"></div>
+  <aside class="notas">Sem img.estatico e sem capturar(): no PDF, o que sai é a foto que o build tirou.</aside>
+</section>
+
+<section data-layout="abertura" id="dois">
+  <h2>Fim</h2>
+</section>
+
+<section data-layout="encerramento">
+  <h2>Fim</h2>
+  <ol class="sintese">
+    <li>A demo sai no PDF sem imagem escrita à mão.</li>
+  </ol>
+</section>
+
+<script>
+AulaUSP.demo('contador', {
+  montar(raiz) {
+    const { botao, alternar, deslizante, leitura, escrever } = AulaUSP.controles;
+    this.valor = 0;
+    this.saida = leitura(raiz, 0);
+    alternar(botao(raiz, 'somar', () => escrever(this.saida, ++this.valor)), true);
+    deslizante(raiz, { min: 0, max: 10, valor: 3, rotulo: 'passo' });
+  },
+  iniciar() {
+    AulaUSP.controles.escrever(this.saida, 42);
+  },
+});
+</script>
+
+</body>
+</html>

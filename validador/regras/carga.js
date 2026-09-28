@@ -15,6 +15,14 @@ function trechoDoDot(trecho, mensagem) {
   return linha === undefined ? encurtar(trecho) : `linha ${citada}: ${encurtar(linha.trim())}`;
 }
 
+// A demo que não traz imagem própria para o PDF: sem img.estatico e sem capturar() (spec 6.7). Uma
+// função só, exportada, porque são dois os lados que precisam da MESMA resposta:
+// recursos.demo-sem-estatico, abaixo, acusa exatamente estas demos, e build/captura.mjs fotografa
+// exatamente estas — a regra só pode se calar no build porque a captura cobre este mesmo conjunto.
+export function demoSemImagem(demo, registro) {
+  return !demo.querySelector('img.estatico') && !registro?.capturar;
+}
+
 export const regras = [
   {
     nome: 'matematica.tex-invalido',
@@ -71,7 +79,7 @@ export const regras = [
           const nome = demo.getAttribute('data-demo');
           const registro = recursos.demos.get(nome);
           if (!registro) continue; // sem registro já é recursos.demo-sem-registro
-          if (demo.querySelector('img.estatico') || registro.capturar) continue;
+          if (!demoSemImagem(demo, registro)) continue;
           yield { ...onde(slides, secao), mensagem: `demo "${nome}" sem img.estatico e sem capturar(): o PDF sai vazio.`, trecho: trechoDe(demo) };
         }
       }
