@@ -134,20 +134,50 @@ function preenchimentoDaSerie(cor, tracejada) {
 // regra estática não tem quando `dados` é um caminho de CSV; aí este throw é a defesa, e o erro dele
 // chega ao autor pelo build (build/construir.mjs:achadosDeGrafico).
 //
-// `limitesRedondos` (spec 7.2): só `linha` e `dispersao` passam true — .nice() do d3-scale estica o
-// domínio até a marca redonda mais próxima dos dois lados, para nenhum ponto cair exatamente em cima
-// do eixo e para a régua terminar num número que se lê bem. Não se aplica a "barras" (já parte de 0,
-// por construção) nem a "histograma" (as classes têm de bater com [minimo, maximo] dos dados — esticar
-// o domínio deslocaria a primeira/última barra da borda do eixo). Funciona em linear e em log (d3-scale
-// dá .nice() nos dois); chamado depois de domain()/range(), porque é o par [domínio, contagem de ticks]
-// que .nice() lê para escolher a marca redonda.
-function criarEscala({ escalaLinear, escalaLog }, tipoDeEscala, dominio, alcance, limitesRedondos = false) {
+// FOLGA_DOMINIO (achado do PDF renderizado, página 4 da aula-exemplo, revisão do coordenador): 5% da
+// amplitude de cada lado, somada AO DOMÍNIO BRUTO, antes de .nice() entrar em cena. Sozinho, .nice()
+// só estica um domínio até a marca redonda mais próxima — e não faz nada quando o domínio bruto JÁ é
+// redondo (comentário do brief original: "nice não pode encolher", mas também não abre folga onde
+// não falta arredondar). Era exatamente o caso do eixo x da aula-exemplo: horas vai de 1 a 10, os dois
+// já múltiplos de si mesmos numa escala de passo 1/2, .nice() não mexia em nada, e o primeiro ponto
+// (1; 3,2) saía bem em cima da linha do eixo y. A folga aditiva evita isso ANTES de .nice() ver o
+// domínio, então mesmo um domínio bruto já redondo sai com folga.
+const FOLGA_DOMINIO = 0.05;
+
+// Só serve a domínios [mínimo, máximo] de escala linear (ver o comentário sobre `folga` em
+// criarEscala, abaixo, sobre por que log fica de fora).
+function comFolga([minimo, maximo], fator = FOLGA_DOMINIO) {
+  const folga = (maximo - minimo) * fator;
+  return [minimo - folga, maximo + folga];
+}
+
+// `nice` (spec 7.2): só `linha` e `dispersao` passam true — .nice() do d3-scale estica o domínio até
+// a marca redonda mais próxima dos dois lados, para a régua terminar num número que se lê bem. Não se
+// aplica a "barras" (já parte de 0, por construção) nem a "histograma" (as classes têm de bater com
+// [minimo, maximo] dos dados — esticar o domínio deslocaria a primeira/última barra da borda do
+// eixo). Funciona em linear e em log (d3-scale dá .nice() nos dois); chamado depois de
+// domain()/range(), porque é o par [domínio, contagem de ticks] que .nice() lê para escolher a marca
+// redonda. Medido contra .nice(5) (para casar com o .ticks(5) do desenho, abaixo): com os dados reais
+// da aula, .nice(5) fica MAIS largo do que .nice() sem argumento — y sai [2, 9] em vez de [2,5; 9], x
+// [0, 12] em vez de [0, 11] —, sem ganho de legibilidade que justifique a folga extra; por isso
+// `.nice()` continua sem contagem.
+//
+// `folga` (achado do PDF, comentário de FOLGA_DOMINIO acima): só `dispersao` passa true nos DOIS
+// eixos — o eixo x de "linha" fica nos dados (é o convencional para série no tempo: a curva começa e
+// termina exatamente onde os dados começam e terminam). Só vale em escala linear: em log, .nice()
+// já arredonda para a década mais próxima (1, 10, 100, …), que é uma folga muito maior que 5% quando
+// o domínio bruto não cai exatamente numa década — e quando cai (ex.: [1, 100] já redondo), nenhuma
+// folga aditiva neste regime evitaria o ponto no extremo tocar o eixo; esse caso residual de log fica
+// registrado no teste 'dispersao: escala log sem folga aditiva…', que mede o que sobra em vez de
+// fingir que .nice() sozinho sempre resolve.
+function criarEscala({ escalaLinear, escalaLog }, tipoDeEscala, dominio, alcance, { nice = false, folga = false } = {}) {
   if (tipoDeEscala === 'log' && dominio.some((valor) => valor <= 0)) {
     throw new Error(`escala log exige valores maiores que zero no domínio; recebido [${dominio.join(', ')}]`);
   }
+  const dominioComFolga = folga && tipoDeEscala !== 'log' ? comFolga(dominio) : dominio;
   const fabrica = tipoDeEscala === 'log' ? escalaLog : escalaLinear;
-  const escala = fabrica().domain(dominio).range(alcance);
-  return limitesRedondos ? escala.nice() : escala;
+  const escala = fabrica().domain(dominioComFolga).range(alcance);
+  return nice ? escala.nice() : escala;
 }
 
 function desenharGrade(escalaY) {
@@ -251,8 +281,10 @@ function montarLinha(biblioteca, especificacao, colunas) {
   const { x: nomeX, y: series, foco, eixos = {}, escalas = {}, faixas } = especificacao;
   const valoresX = colunas[nomeX];
   const todosOsY = series.flatMap((nome) => colunas[nome]);
-  const escalaX = criarEscala(biblioteca, escalas.x, biblioteca.extensao(valoresX), [AREA.x0, AREA.x1], true);
-  const escalaY = criarEscala(biblioteca, escalas.y, biblioteca.extensao(todosOsY), [AREA.y1, AREA.y0], true);
+  // x fica nos dados (sem folga): é o convencional para série no tempo — a curva começa e termina
+  // exatamente onde os dados começam e terminam; só o eixo y ganha folga além do .nice().
+  const escalaX = criarEscala(biblioteca, escalas.x, biblioteca.extensao(valoresX), [AREA.x0, AREA.x1], { nice: true });
+  const escalaY = criarEscala(biblioteca, escalas.y, biblioteca.extensao(todosOsY), [AREA.y1, AREA.y0], { nice: true, folga: true });
   const gerador = biblioteca.linha()
     .x((ponto) => arredondar(escalaX(ponto.x)))
     .y((ponto) => arredondar(escalaY(ponto.y)));
@@ -289,8 +321,11 @@ function montarDispersao(biblioteca, especificacao, colunas) {
   const RAIO = 4;
   const valoresX = colunas[nomeX];
   const todosOsY = series.flatMap((nome) => colunas[nome]);
-  const escalaX = criarEscala(biblioteca, escalas.x, biblioteca.extensao(valoresX), [AREA.x0, AREA.x1], true);
-  const escalaY = criarEscala(biblioteca, escalas.y, biblioteca.extensao(todosOsY), [AREA.y1, AREA.y0], true);
+  // os dois eixos ganham folga: uma nuvem de pontos não tem a mesma leitura "começa/termina nos
+  // dados" que "linha" tem, e sem folga no x o ponto de menor/maior x cai em cima do eixo y (achado
+  // do PDF renderizado — ver o comentário de FOLGA_DOMINIO em criarEscala).
+  const escalaX = criarEscala(biblioteca, escalas.x, biblioteca.extensao(valoresX), [AREA.x0, AREA.x1], { nice: true, folga: true });
+  const escalaY = criarEscala(biblioteca, escalas.y, biblioteca.extensao(todosOsY), [AREA.y1, AREA.y0], { nice: true, folga: true });
   const geradorDeLinha = biblioteca.linha()
     .x((ponto) => arredondar(escalaX(ponto.x)))
     .y((ponto) => arredondar(escalaY(ponto.y)));

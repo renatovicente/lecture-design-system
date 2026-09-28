@@ -16,17 +16,20 @@ const svgDe = (svgString) => parseHTML(`<!DOCTYPE html><html><body>${svgString}<
 // Snapshots (Passo 4, spec 11.1): capturados de uma execução já conferida à mão, número a número,
 // contra a spec 7.2 (ver o relatório da Tarefa 2). Complementam as asserções de propriedade abaixo —
 // não as substituem: um snapshot sozinho fica verde com a cor errada no dia em que for regravado.
-// Regravado três vezes desde a rodada 1: (1) rodada 2 — o texto das marcas de eixo y passa a vir de
+// Regravado quatro vezes desde a rodada 1: (1) rodada 2 — o texto das marcas de eixo y passa a vir de
 // escalaY.tickFormat(5), não de formatarNumero — o "1" da última marca vira "1.0" (tickFormat mantém
 // as mesmas casas decimais em toda a régua, para as marcas lerem como uma sequência, não números
 // soltos); (2) rodada 3 — paraPtBr troca o separador decimal de ponto para vírgula ("1.0" → "1,0"),
 // porque o sistema é em português e tickFormat escreve no padrão dos EUA; (3) Tarefa 3 (gráfico com
-// reta e limites redondos) — escalaX/escalaY de "linha" passam por .nice(): o domínio de y, extensão
-// crua [0,25; 1,1], vira [0,2; 1,1] (o mínimo ganha folga para baixo; o máximo já era redondo, e
-// .nice() não encolhe), deslocando toda grade e marca de y (0,2/0,4/0,6/0,8/1,0 em vez de
-// 0,25/0,44/0,64/0,84/1,03); o ponto mais alto da série "teste" (y=1,1) deixa de coincidir com o topo
-// da área útil do gráfico — era esse o ponto em cima do limite que a Tarefa 3 resolve.
-const SNAPSHOT_LINHA ="<svg viewBox=\"0 0 640 360\" xmlns=\"http://www.w3.org/2000/svg\" font-family=\"Geist Mono, ui-monospace, monospace\"><line class=\"grade\" x1=\"56\" x2=\"492\" y1=\"316\" y2=\"316\" stroke=\"#D9D9D9\" stroke-width=\"1\"></line><line class=\"grade\" x1=\"56\" x2=\"492\" y1=\"249.33\" y2=\"249.33\" stroke=\"#D9D9D9\" stroke-width=\"1\"></line><line class=\"grade\" x1=\"56\" x2=\"492\" y1=\"182.67\" y2=\"182.67\" stroke=\"#D9D9D9\" stroke-width=\"1\"></line><line class=\"grade\" x1=\"56\" x2=\"492\" y1=\"116\" y2=\"116\" stroke=\"#D9D9D9\" stroke-width=\"1\"></line><line class=\"grade\" x1=\"56\" x2=\"492\" y1=\"49.33\" y2=\"49.33\" stroke=\"#D9D9D9\" stroke-width=\"1\"></line><g class=\"faixa\"><rect x=\"165\" y=\"16\" width=\"218\" height=\"300\" fill=\"#FCB421\"></rect><text x=\"274\" y=\"30\" fill=\"#0A0A0A\" font-family=\"Geist Mono, ui-monospace, monospace\" font-size=\"14\" text-anchor=\"middle\">platô</text></g><g class=\"serie\" data-serie=\"treino\" data-cor=\"tinta\"><path d=\"M56,49.33L165,182.67L274,249.33L383,282.67L492,299.33\" fill=\"none\" stroke=\"#0A0A0A\" stroke-width=\"2\"></path><line class=\"serie-traco\" x1=\"500\" y1=\"299.33\" x2=\"516\" y2=\"299.33\" stroke=\"#0A0A0A\" stroke-width=\"2\"></line><text class=\"serie-rotulo\" x=\"522\" y=\"299.33\" fill=\"#0A0A0A\" font-family=\"Geist Mono, ui-monospace, monospace\" font-size=\"14\" dominant-baseline=\"middle\">treino</text></g><g class=\"serie\" data-serie=\"teste\" data-cor=\"azul\"><path d=\"M56,16L165,149.33L274,199.33L383,216L492,222.67\" fill=\"none\" stroke=\"#1094AB\" stroke-width=\"2\"></path><line class=\"serie-traco\" x1=\"500\" y1=\"222.67\" x2=\"516\" y2=\"222.67\" stroke=\"#1094AB\" stroke-width=\"2\"></line><text class=\"serie-rotulo\" x=\"522\" y=\"222.67\" fill=\"#0A0A0A\" font-family=\"Geist Mono, ui-monospace, monospace\" font-size=\"14\" dominant-baseline=\"middle\">teste</text></g><line class=\"eixo eixo-x\" x1=\"56\" y1=\"316\" x2=\"492\" y2=\"316\" stroke=\"#0A0A0A\" stroke-width=\"2\"></line><line class=\"eixo eixo-y\" x1=\"56\" y1=\"16\" x2=\"56\" y2=\"316\" stroke=\"#0A0A0A\" stroke-width=\"2\"></line><text class=\"eixo-titulo\" x=\"274\" y=\"354\" fill=\"#666666\" font-family=\"Geist Mono, ui-monospace, monospace\" font-size=\"14\" text-anchor=\"middle\">época</text><text class=\"eixo-titulo\" x=\"14\" y=\"166\" fill=\"#666666\" font-family=\"Geist Mono, ui-monospace, monospace\" font-size=\"14\" text-anchor=\"middle\" transform=\"rotate(-90 14 166)\">erro</text><text class=\"marca\" x=\"56\" y=\"336\" fill=\"#666666\" font-family=\"Geist Mono, ui-monospace, monospace\" font-size=\"14\" text-anchor=\"middle\">0</text><text class=\"marca\" x=\"165\" y=\"336\" fill=\"#666666\" font-family=\"Geist Mono, ui-monospace, monospace\" font-size=\"14\" text-anchor=\"middle\">1</text><text class=\"marca\" x=\"274\" y=\"336\" fill=\"#666666\" font-family=\"Geist Mono, ui-monospace, monospace\" font-size=\"14\" text-anchor=\"middle\">2</text><text class=\"marca\" x=\"383\" y=\"336\" fill=\"#666666\" font-family=\"Geist Mono, ui-monospace, monospace\" font-size=\"14\" text-anchor=\"middle\">3</text><text class=\"marca\" x=\"492\" y=\"336\" fill=\"#666666\" font-family=\"Geist Mono, ui-monospace, monospace\" font-size=\"14\" text-anchor=\"middle\">4</text><text class=\"marca\" x=\"48\" y=\"316\" fill=\"#666666\" font-family=\"Geist Mono, ui-monospace, monospace\" font-size=\"14\" text-anchor=\"end\" dominant-baseline=\"middle\">0,2</text><text class=\"marca\" x=\"48\" y=\"249.33\" fill=\"#666666\" font-family=\"Geist Mono, ui-monospace, monospace\" font-size=\"14\" text-anchor=\"end\" dominant-baseline=\"middle\">0,4</text><text class=\"marca\" x=\"48\" y=\"182.67\" fill=\"#666666\" font-family=\"Geist Mono, ui-monospace, monospace\" font-size=\"14\" text-anchor=\"end\" dominant-baseline=\"middle\">0,6</text><text class=\"marca\" x=\"48\" y=\"116\" fill=\"#666666\" font-family=\"Geist Mono, ui-monospace, monospace\" font-size=\"14\" text-anchor=\"end\" dominant-baseline=\"middle\">0,8</text><text class=\"marca\" x=\"48\" y=\"49.33\" fill=\"#666666\" font-family=\"Geist Mono, ui-monospace, monospace\" font-size=\"14\" text-anchor=\"end\" dominant-baseline=\"middle\">1,0</text></svg>";
+// reta e limites redondos) — escalaY de "linha" passa por .nice(): o domínio de y, extensão crua
+// [0,25; 1,1], vira [0,2; 1,1]; (4) achado do PDF renderizado (revisão do coordenador) — .nice()
+// sozinho não abre folga quando o domínio já é redondo dos dois lados, e o y de "linha" ganha folga
+// ADITIVA de 5% antes do .nice() (só em y; o x de "linha" continua nos dados, sem folga — é
+// convencional para série no tempo). O domínio de y vai de [0,25; 1,1] com folga para [0,2075; 1,1425],
+// e o .nice() arredonda para [0,2; 1,2] — a régua ganha uma marca a mais no topo (1,2) que a rodada
+// anterior não tinha, e o ponto mais alto da série "teste" (y=1,1) fica ainda mais longe do topo da
+// área útil.
+const SNAPSHOT_LINHA ="<svg viewBox=\"0 0 640 360\" xmlns=\"http://www.w3.org/2000/svg\" font-family=\"Geist Mono, ui-monospace, monospace\"><line class=\"grade\" x1=\"56\" x2=\"492\" y1=\"316\" y2=\"316\" stroke=\"#D9D9D9\" stroke-width=\"1\"></line><line class=\"grade\" x1=\"56\" x2=\"492\" y1=\"256\" y2=\"256\" stroke=\"#D9D9D9\" stroke-width=\"1\"></line><line class=\"grade\" x1=\"56\" x2=\"492\" y1=\"196\" y2=\"196\" stroke=\"#D9D9D9\" stroke-width=\"1\"></line><line class=\"grade\" x1=\"56\" x2=\"492\" y1=\"136\" y2=\"136\" stroke=\"#D9D9D9\" stroke-width=\"1\"></line><line class=\"grade\" x1=\"56\" x2=\"492\" y1=\"76\" y2=\"76\" stroke=\"#D9D9D9\" stroke-width=\"1\"></line><line class=\"grade\" x1=\"56\" x2=\"492\" y1=\"16\" y2=\"16\" stroke=\"#D9D9D9\" stroke-width=\"1\"></line><g class=\"faixa\"><rect x=\"165\" y=\"16\" width=\"218\" height=\"300\" fill=\"#FCB421\"></rect><text x=\"274\" y=\"30\" fill=\"#0A0A0A\" font-family=\"Geist Mono, ui-monospace, monospace\" font-size=\"14\" text-anchor=\"middle\">platô</text></g><g class=\"serie\" data-serie=\"treino\" data-cor=\"tinta\"><path d=\"M56,76L165,196L274,256L383,286L492,301\" fill=\"none\" stroke=\"#0A0A0A\" stroke-width=\"2\"></path><line class=\"serie-traco\" x1=\"500\" y1=\"301\" x2=\"516\" y2=\"301\" stroke=\"#0A0A0A\" stroke-width=\"2\"></line><text class=\"serie-rotulo\" x=\"522\" y=\"301\" fill=\"#0A0A0A\" font-family=\"Geist Mono, ui-monospace, monospace\" font-size=\"14\" dominant-baseline=\"middle\">treino</text></g><g class=\"serie\" data-serie=\"teste\" data-cor=\"azul\"><path d=\"M56,46L165,166L274,211L383,226L492,232\" fill=\"none\" stroke=\"#1094AB\" stroke-width=\"2\"></path><line class=\"serie-traco\" x1=\"500\" y1=\"232\" x2=\"516\" y2=\"232\" stroke=\"#1094AB\" stroke-width=\"2\"></line><text class=\"serie-rotulo\" x=\"522\" y=\"232\" fill=\"#0A0A0A\" font-family=\"Geist Mono, ui-monospace, monospace\" font-size=\"14\" dominant-baseline=\"middle\">teste</text></g><line class=\"eixo eixo-x\" x1=\"56\" y1=\"316\" x2=\"492\" y2=\"316\" stroke=\"#0A0A0A\" stroke-width=\"2\"></line><line class=\"eixo eixo-y\" x1=\"56\" y1=\"16\" x2=\"56\" y2=\"316\" stroke=\"#0A0A0A\" stroke-width=\"2\"></line><text class=\"eixo-titulo\" x=\"274\" y=\"354\" fill=\"#666666\" font-family=\"Geist Mono, ui-monospace, monospace\" font-size=\"14\" text-anchor=\"middle\">época</text><text class=\"eixo-titulo\" x=\"14\" y=\"166\" fill=\"#666666\" font-family=\"Geist Mono, ui-monospace, monospace\" font-size=\"14\" text-anchor=\"middle\" transform=\"rotate(-90 14 166)\">erro</text><text class=\"marca\" x=\"56\" y=\"336\" fill=\"#666666\" font-family=\"Geist Mono, ui-monospace, monospace\" font-size=\"14\" text-anchor=\"middle\">0</text><text class=\"marca\" x=\"165\" y=\"336\" fill=\"#666666\" font-family=\"Geist Mono, ui-monospace, monospace\" font-size=\"14\" text-anchor=\"middle\">1</text><text class=\"marca\" x=\"274\" y=\"336\" fill=\"#666666\" font-family=\"Geist Mono, ui-monospace, monospace\" font-size=\"14\" text-anchor=\"middle\">2</text><text class=\"marca\" x=\"383\" y=\"336\" fill=\"#666666\" font-family=\"Geist Mono, ui-monospace, monospace\" font-size=\"14\" text-anchor=\"middle\">3</text><text class=\"marca\" x=\"492\" y=\"336\" fill=\"#666666\" font-family=\"Geist Mono, ui-monospace, monospace\" font-size=\"14\" text-anchor=\"middle\">4</text><text class=\"marca\" x=\"48\" y=\"316\" fill=\"#666666\" font-family=\"Geist Mono, ui-monospace, monospace\" font-size=\"14\" text-anchor=\"end\" dominant-baseline=\"middle\">0,2</text><text class=\"marca\" x=\"48\" y=\"256\" fill=\"#666666\" font-family=\"Geist Mono, ui-monospace, monospace\" font-size=\"14\" text-anchor=\"end\" dominant-baseline=\"middle\">0,4</text><text class=\"marca\" x=\"48\" y=\"196\" fill=\"#666666\" font-family=\"Geist Mono, ui-monospace, monospace\" font-size=\"14\" text-anchor=\"end\" dominant-baseline=\"middle\">0,6</text><text class=\"marca\" x=\"48\" y=\"136\" fill=\"#666666\" font-family=\"Geist Mono, ui-monospace, monospace\" font-size=\"14\" text-anchor=\"end\" dominant-baseline=\"middle\">0,8</text><text class=\"marca\" x=\"48\" y=\"76\" fill=\"#666666\" font-family=\"Geist Mono, ui-monospace, monospace\" font-size=\"14\" text-anchor=\"end\" dominant-baseline=\"middle\">1,0</text><text class=\"marca\" x=\"48\" y=\"16\" fill=\"#666666\" font-family=\"Geist Mono, ui-monospace, monospace\" font-size=\"14\" text-anchor=\"end\" dominant-baseline=\"middle\">1,2</text></svg>";
 // Regravado quatro vezes desde a Tarefa 2: (1) Critical 1 (limites exatos); (2) decisão do
 // coordenador (rótulo na ponta); (3) rodada 2 — as bordas de classe passam por formatarPasso (não
 // mais formatarNumero), que deriva a precisão do passo real entre elas (larguraClasse=0.2125 → 1
@@ -326,6 +329,25 @@ test('escala log com domínio inteiramente positivo continua funcionando normalm
   assert.doesNotThrow(() => desenhista.desenharSvg(especificacao, especificacao.dados));
 });
 
+// CASO RESIDUAL, medido a pedido do coordenador (revisão do PDF): em escala log, `criarEscala` NÃO
+// soma folga aditiva (comentário de `folga` acima) — só `.nice()`, que em log arredonda para a década
+// mais próxima (1, 10, 100, …). Quando o domínio bruto já cai exatamente numa década dos dois lados —
+// como aqui, x de 1 a 100 —, `.nice()` não tem o que arredondar, e o ponto no extremo (x=1) cai
+// exatamente sobre a linha do eixo y. Diferente do caso linear (onde a folga aditiva sempre abre
+// alguma distância antes do `.nice()` entrar), não há folga alguma no lado log a evitar isto: uma
+// folga MULTIPLICATIVA (percentual do próprio valor, não da amplitude linear) resolveria, mas está
+// fora do escopo desta tarefa — decisão do coordenador foi "sem folga aditiva; só nice()" para log, e
+// este teste registra o que sobra dessa decisão, em vez de fingir que o caso está coberto.
+test('CASO RESIDUAL: em escala log, um domínio já na década (x de 1 a 100) ainda encosta o ponto extremo no eixo y — sem folga aditiva em log, só .nice()', () => {
+  const especificacao = { tipo: 'dispersao', x: 'x', y: ['y'], eixos: {}, escalas: { x: 'log' } };
+  const colunas = { x: [1, 10, 100], y: [5, 6, 7] };
+  const svg = svgDe(desenhista.desenharSvg(especificacao, colunas));
+  const eixoY = svg.querySelector('.eixo-y');
+  const circulos = [...svg.querySelectorAll('circle')];
+  const primeiroCx = circulos[0].getAttribute('cx');
+  assert.equal(primeiroCx, eixoY.getAttribute('x1'), 'o ponto x=1 cai exatamente sobre a linha do eixo y — caso residual, não corrigido nesta tarefa');
+});
+
 test('barras: três séries na cor certa; as marcas do eixo x são as categorias, não números', () => {
   const especificacao = { tipo: 'barras', x: 'grupo', y: ['a', 'b', 'c'], foco: 'b', eixos: { x: 'grupo', y: 'valor' } };
   const colunas = { grupo: ['x', 'y', 'z'], a: [3, 5, 2], b: [4, 2, 6], c: [1, 3, 4] };
@@ -433,13 +455,16 @@ test('dispersao sem "linhas": nenhum path — um circle por ponto, como antes de
   assert.equal(serie.querySelector('path'), null);
 });
 
-// Tarefa 3 do brief: eixos de "linha" e "dispersao" ganham .nice() — o domínio para de ser a extensão
-// crua dos dados, e o primeiro/último ponto deixam de cair exatamente sobre a borda do gráfico. Medido
-// com os dados de verdade da aula-exemplo (y de 3,2 a 8,6, exemplos/regressao-linear/index.html#dispersao):
-// sem nice, o ponto de menor nota (3,2) cairia exatamente sobre a linha do eixo x — o próprio defeito
-// que este brief resolve. A asserção compara a posição (cy) do ponto extremo com a posição (y1) do
-// próprio eixo desenhado, em vez de reimplementar a conta da escala — é a MESMA fonte que o SVG usa.
-test('dispersao: nice() dá folga ao domínio de y (dados da aula, notas de 3,2 a 8,6) — nenhum cy cai sobre a linha do eixo x', () => {
+// Tarefa 3 do brief, ACHADO DO PDF RENDERIZADO (revisão do coordenador, página 4 da aula-exemplo): o
+// primeiro teste desta tarefa media só y/cy, e ficou verde com o ponto (1; 3,2) em cima do eixo Y —
+// porque o x da aula (horas: 1 a 10) já é um domínio "redondo" (múltiplos de 1), e .nice() sozinho não
+// abre folga nenhuma quando não há nada para arredondar. A correção: os dois eixos de "dispersao"
+// ganham FOLGA_DOMINIO (5% aditivo) ANTES do .nice(). Medido com os dados de verdade da aula-exemplo
+// (exemplos/regressao-linear/index.html#dispersao — horas de 1 a 10, nota de 3,2 a 8,6): x com folga
+// [0,55; 10,45] arredonda para [0; 11]; y com folga [2,93; 8,87] arredonda para [2,5; 9]. A asserção
+// compara cx/cy com a posição (x1/y1) dos próprios eixos desenhados, em vez de reimplementar a conta
+// da escala — é a MESMA fonte que o SVG usa.
+test('dispersao: folga + nice() dá folga aos DOIS eixos (dados da aula, horas de 1 a 10 e notas de 3,2 a 8,6) — nenhum cx cai sobre o eixo y, nenhum cy cai sobre o eixo x', () => {
   const especificacao = { tipo: 'dispersao', x: 'horas', y: ['nota'], eixos: { x: 'horas de estudo', y: 'nota' } };
   const colunas = { horas: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], nota: [3.2, 4.1, 4.3, 5.4, 5.2, 6.3, 6.1, 7.2, 7.1, 8.6] };
   const svg = svgDe(desenhista.desenharSvg(especificacao, colunas));
@@ -448,14 +473,36 @@ test('dispersao: nice() dá folga ao domínio de y (dados da aula, notas de 3,2 
   const circulos = [...svg.querySelectorAll('circle')];
   assert.ok(circulos.length > 0);
   for (const circulo of circulos) {
-    assert.notEqual(circulo.getAttribute('cy'), eixoX.getAttribute('y1'), 'nenhum ponto cai sobre a linha do eixo x (a menor nota, 3,2, não é mais o mínimo do domínio)');
+    assert.notEqual(circulo.getAttribute('cy'), eixoX.getAttribute('y1'), 'nenhum ponto cai sobre a linha do eixo x (a menor nota, 3,2, não é mais o mínimo do domínio de y)');
+    assert.notEqual(circulo.getAttribute('cx'), eixoY.getAttribute('x1'), 'nenhum ponto cai sobre a linha do eixo y (a menor hora, 1, não é mais o mínimo do domínio de x)');
   }
-  // o ponto de maior nota (8,6) também ganha folga para cima: não encosta no topo da área útil
-  // (a mesma linha y0 que a margem superior usa — desenharEixos não desenha essa borda, então
-  // comparamos com y1 da linha eixo-y, que vai de AREA.y0 a AREA.y1: y1 é a base, e "topo" é o y2).
+  // o ponto de maior nota (8,6) e o de maior hora (10) também ganham folga para o lado oposto: não
+  // encostam no topo/direita da área útil (a mesma margem que AREA.y0/AREA.x1 usam — desenharEixos não
+  // desenha essas duas bordas, então comparamos com o outro extremo dos próprios eixos desenhados:
+  // y2/x2 da linha eixo-y vai até AREA.y0, o topo; x2 da linha eixo-x vai até AREA.x1, a direita).
   const topoDaArea = Number(eixoY.getAttribute('y1'));
+  const direitaDaArea = Number(eixoX.getAttribute('x2'));
   const cyMinimo = Math.min(...circulos.map((c) => Number(c.getAttribute('cy'))));
-  assert.ok(cyMinimo > topoDaArea, 'o ponto mais alto (menor cy) fica abaixo do topo da área — folga também no máximo do domínio');
+  const cxMaximo = Math.max(...circulos.map((c) => Number(c.getAttribute('cx'))));
+  assert.ok(cyMinimo > topoDaArea, 'o ponto mais alto (menor cy) fica abaixo do topo da área — folga também no máximo do domínio de y');
+  assert.ok(cxMaximo < direitaDaArea, 'o ponto mais à direita (maior cx) fica antes da borda direita da área — folga também no máximo do domínio de x');
+});
+
+// Domínios medidos (achado do PDF, ver o teste acima): sem folga aditiva, .nice() sozinho reproduz o
+// domínio BRUTO de x sem mexer em nada — scaleLinear().domain([1,10]).nice() continua [1, 10], porque
+// os dois extremos já caem em marcas redondas — e é exatamente esse silêncio que o achado do
+// coordenador expôs. Com FOLGA_DOMINIO (5%) somada ANTES do .nice(): x=[1,10] com folga vira
+// [0,55; 10,45], niced para [0, 11]; y=[3,2; 8,6] com folga vira [2,93; 8,87], niced para [2,5; 9].
+// Este teste fixa os dois domínios medidos, para uma futura mudança em FOLGA_DOMINIO ou em qual eixo
+// recebe folga cair aqui primeiro.
+test('dispersao: os domínios medidos com os dados da aula são x=[0,11] e y=[2,5;9] — grade e marcas batem com eles', () => {
+  const especificacao = { tipo: 'dispersao', x: 'horas', y: ['nota'], eixos: { x: 'horas de estudo', y: 'nota' } };
+  const colunas = { horas: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], nota: [3.2, 4.1, 4.3, 5.4, 5.2, 6.3, 6.1, 7.2, 7.1, 8.6] };
+  const svg = svgDe(desenhista.desenharSvg(especificacao, colunas));
+  const marcasX = [...svg.querySelectorAll('.marca')].filter((t) => t.getAttribute('text-anchor') === 'middle').map((t) => t.textContent);
+  const marcasY = [...svg.querySelectorAll('.marca')].filter((t) => t.getAttribute('text-anchor') === 'end').map((t) => t.textContent);
+  assert.deepEqual(marcasX, ['0', '2', '4', '6', '8', '10'], 'x niced com folga: domínio [0, 11], .ticks(5) escolhe passo 2');
+  assert.deepEqual(marcasY, ['3', '4', '5', '6', '7', '8', '9'], 'y niced com folga: domínio [2,5; 9], .ticks(5) escolhe passo 1 (as marcas ficam dentro do domínio, não em 2,5)');
 });
 
 test('histograma: 4 classes de largura igual, contagem certa (4, 2, 0, 2 — conferido à mão), com rótulo na ponta (decisão do coordenador, reverte a exceção da Tarefa 2)', () => {
