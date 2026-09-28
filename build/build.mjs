@@ -27,14 +27,14 @@ import { alvosDeCaptura, capturarDemos, embutirCapturas } from './captura.mjs';
 // contexto, ela não acusa nada — validador/regras/saida.js). Separar por artefato dá um dono por
 // pergunta: a etapa 7 fica só com a única pergunta que ela tem condição de responder.
 const SO_PDF_PAGINAS = REGRAS_DE_SAIDA.filter((regra) => regra.nome === 'saida.pdf-paginas');
-// A captura (etapa 5, fase 2) regrava o <slug>.html com as fotos dentro, depois de construir() já ter
+// A captura (etapa 5) regrava o <slug>.html com as fotos dentro, depois de construir() já ter
 // medido o tamanho dele: saida.tamanho é a única das três regras do HTML que a foto pode mudar (a
 // imagem entra como data:, então não há referência externa nova, e o alt é texto do sistema).
 const SO_TAMANHO = REGRAS_DE_SAIDA.filter((regra) => regra.nome === 'saida.tamanho');
 
-// A segunda passada de recursos.demo-sem-estatico, depois da etapa 5: na fase 2 a regra se cala no
-// build porque a captura cobre as demos sem imagem própria (validador/regras/carga.js), e é aqui que
-// ela volta a acusar cada demo que a captura NÃO cobriu, com o motivo. Só esta regra: as outras de
+// A segunda passada de recursos.demo-sem-estatico, depois da etapa 5: a regra se cala no build
+// porque a captura cobre as demos sem imagem própria (validador/regras/carga.js), e é aqui que ela
+// volta a acusar cada demo que a captura NÃO cobriu, com o motivo. Só esta regra: as outras de
 // carga já rodaram na etapa 1, e rodá-las de novo duplicaria os achados delas.
 const SO_DEMO_SEM_ESTATICO = REGRAS_DE_CARGA.filter((regra) => regra.nome === 'recursos.demo-sem-estatico');
 function achadosDeCaptura({ docDaFonte, contrato, recursos, fase, alvos, falhas }) {
@@ -147,10 +147,11 @@ export async function build({ raiz, caminhoDaAula, destino, semPdf = false, nave
   // (aviso, código 0 se não houver erro) sai por aqui, pulando as etapas 5 e 6.
   progresso('etapa 5/7 — abrindo o Chrome e medindo composição');
   const { achados: achadosDeComposicao, motivo: semChrome } = await medirComposicao(caminhoDaFonte, { contrato });
-  // As demos que a etapa 5 vai fotografar (build/captura.mjs): só na fase 2 (spec 6.7: "na fase 2, o
-  // build passa a capturar a imagem sozinho"), e só as que não trazem imagem própria. A fase é a
-  // mesma que a etapa 1 decidiu para esta aula (validador/validar.js:faseDaAula).
-  const alvos = fase >= 2 ? alvosDeCaptura(docDaFonte, recursos) : [];
+  // As demos que a etapa 5 vai fotografar (build/captura.mjs): toda demo sem imagem própria, em
+  // TODO build. A "fase 2" da spec 3.3 (etapa 5), 6.7, 7.2 e 9.2 é a do projeto, e ela foi entregue;
+  // a fase que faseDaAula decide para ESTA aula só libera o vocabulário marcado fase 2 no contrato, e
+  // não decide se a demo sai no PDF. data-captura-ms é só o tempo de espera (spec 7.2).
+  const alvos = alvosDeCaptura(docDaFonte, recursos);
   if (achadosDeComposicao === null) {
     // Plano da 2c, tarefa 3, passo 3: sem Chrome a captura some junto com a etapa 5, e o aviso diz
     // quais demos ficam sem imagem — "sem Chrome" sozinho não conta isso ao autor.
@@ -166,8 +167,13 @@ export async function build({ raiz, caminhoDaAula, destino, semPdf = false, nave
   if (contar(achadosDeComposicao).erros > 0) {
     // Segundo final: "com erros de composição na etapa 5, o build grava <slug>.html e
     // validacao.json, não gera PDF e termina com código 1." O <slug>.html já está no disco (etapa
-    // 2-4); só falta regravar validacao.json com o achado novo, e nunca chamar gerarPdf.
-    progresso('etapa 5/7 — erro de composição; não gera PDF');
+    // 2-4); só falta regravar validacao.json com o achado novo, e nunca chamar gerarPdf. A captura
+    // não roda aqui — e, como no caminho sem Chrome, cada demo que ficou sem foto é nomeada, com o
+    // motivo, em vez de sumir calada atrás do erro de composição.
+    const semCaptura = alvos.length > 0 ? `; ficam sem foto as demos ${nomesDe(alvos)}` : '';
+    progresso(`etapa 5/7 — erro de composição; não gera PDF${semCaptura}`);
+    const semFoto = new Map(alvos.map(({ indice }) => [indice, 'a composição tem erro; a etapa 5 não fotografou']));
+    achados = [...achados, ...achadosDeCaptura({ docDaFonte, contrato, recursos, fase, alvos, falhas: semFoto })];
     await gravarValidacao(destino, achados);
     return { codigo: 1, achados };
   }
@@ -183,7 +189,7 @@ export async function build({ raiz, caminhoDaAula, destino, semPdf = false, nave
   let paginas;
   try {
     // Etapa 5, segunda metade (spec 3.3: "na fase 2, também captura a imagem estática das demos que
-    // não têm imagem própria"). Uma demo que não sai na foto nunca é silêncio: cada falha sai aqui,
+    // não têm imagem própria" — a fase 2 do projeto; vale para toda aula). Uma demo que não sai na foto nunca é silêncio: cada falha sai aqui,
     // com o nome da demo e o motivo, e a demo fica como estava — sem imagem, com o quadro "Demo
     // interativa" no PDF (motor/impressao.js).
     if (alvos.length > 0) {

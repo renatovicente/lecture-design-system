@@ -104,7 +104,7 @@ export async function lerERodarEstatica(alvo, { regras = REGRAS_ESTATICAS, raizD
 // `fase` é obrigatória, e sem default: é a que lerERodarEstatica calculou para esta aula, e um
 // default silencioso faria o grupo de carga rodar numa fase diferente da do grupo estático.
 // modo: 'build' sempre — este é o lado Node, o do terminal (spec 3.3), e é o build que fotografa as
-// demos sem imagem própria na fase 2. Vale também para `aula-usp validar`, que é a pré-estreia do
+// demos sem imagem própria, em toda aula. Vale também para `aula-usp validar`, que é a pré-estreia do
 // build: recursos.demo-sem-estatico não acusa ali uma demo que o build vai fotografar; se a foto
 // falhar, quem diz é o build (build/build.mjs, depois da etapa 5).
 export function validarCarga(doc, { contrato, recursos, fase, falhasDeCaptura }) {

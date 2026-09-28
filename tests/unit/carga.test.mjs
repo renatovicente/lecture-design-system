@@ -79,10 +79,13 @@ test('a demo sem registro não acusa também falta de estático: um erro, um don
   assert.deepEqual(achados.map((achado) => achado.regra), ['recursos.demo-sem-registro']);
 });
 
-// recursos.demo-sem-estatico muda de EIXO na fase 2 (spec 9.2: "na fase 2, só no modo navegador,
-// porque o build captura"). Três casos, um teste cada; a mesma aula nos três, com a demo "nua" (sem
-// img.estatico e sem capturar()) no slide 5. A inversão que importa é o caso 2: rodado contra uma
-// regra que ignora o modo (calada sempre na fase 2), ele fica vermelho — medido.
+// recursos.demo-sem-estatico tem um eixo só, o de MODO (spec 9.2: "na fase 2, só no modo navegador,
+// porque o build captura" — a fase 2 do projeto, entregue: todo build fotografa toda demo sem imagem
+// própria, e a fase que faseDaAula decide para a aula não entra nesta regra). A mesma aula nos
+// casos, com a demo "nua" (sem img.estatico e sem capturar()) no slide 5, e cada caso rodado nas
+// duas fases: o resultado tem de ser o mesmo. As inversões que importam, medidas: a regra calada no
+// build só com fase >= 2 (o desenho de antes da revisão final da 2c) deixa o caso 2 vermelho na
+// fase 1; e a regra calada também no navegador deixa o caso 1 vermelho.
 function semEstatico(opcoes) {
   const { document } = parseHTML(AULA);
   const achados = validar(document, { contrato, regras, grupo: 'carga', recursos: COMPLETO(document), ...opcoes })
@@ -90,33 +93,35 @@ function semEstatico(opcoes) {
   return { achados, document };
 }
 
-test('demo-sem-estatico, caso 1 — fase 1: acusa nos dois modos, com a ação de sempre', () => {
-  for (const modo of ['navegador', 'build']) {
-    const { achados } = semEstatico({ fase: 1, modo });
-    assert.deepEqual(achados.map((achado) => [achado.slide, achado.id]), [[5, 'nua']], modo);
-    assert.equal(achados[0].mensagem, 'demo "nua" sem img.estatico e sem capturar(): o PDF sai vazio.');
-    assert.equal(achados[0].acao, contrato.regras['recursos.demo-sem-estatico'].acao);
+test('demo-sem-estatico, caso 1 — navegador: acusa em qualquer fase, e aponta o build', () => {
+  for (const fase of [1, 2]) {
+    const { achados } = semEstatico({ fase, modo: 'navegador' });
+    assert.deepEqual(achados.map((achado) => [achado.slide, achado.id, achado.severidade]), [[5, 'nua', 'aviso']], `fase ${fase}`);
+    assert.equal(achados[0].mensagem, 'demo "nua" sem img.estatico e sem capturar(): impresso pelo navegador, o PDF sai sem ela.');
+    assert.equal(achados[0].acao, contrato.regras['recursos.demo-sem-estatico'].acaoNavegador);
+    // Quem não passa o modo fica no navegador: o padrão não cala ninguém.
+    assert.deepEqual(semEstatico({ fase }).achados, achados);
   }
 });
 
-test('demo-sem-estatico, caso 2 — fase 2 no navegador: continua acusando, e aponta o build', () => {
-  const { achados } = semEstatico({ fase: 2, modo: 'navegador' });
-  assert.deepEqual(achados.map((achado) => [achado.slide, achado.id, achado.severidade]), [[5, 'nua', 'aviso']]);
-  assert.equal(achados[0].mensagem, 'demo "nua" sem img.estatico e sem capturar(): impresso pelo navegador, o PDF sai sem ela.');
-  assert.equal(achados[0].acao, contrato.regras['recursos.demo-sem-estatico'].acaoNavegador);
-  // Quem não passa o modo fica no navegador: o padrão não cala ninguém.
-  assert.deepEqual(semEstatico({ fase: 2 }).achados, achados);
+test('demo-sem-estatico, caso 2 — build: cala em qualquer fase, porque o build fotografa; e volta a acusar a foto que falhou', () => {
+  for (const fase of [1, 2]) {
+    assert.deepEqual(semEstatico({ fase, modo: 'build' }).achados, [], `fase ${fase}`);
+    const { document } = parseHTML(AULA);
+    const falhasDeCaptura = new Map([[document.querySelector('#nua div.demo'), 'a demo não desenhou nada']]);
+    const achados = validar(document, { contrato, regras, grupo: 'carga', recursos: COMPLETO(document), fase, modo: 'build', falhasDeCaptura })
+      .filter((achado) => achado.regra === 'recursos.demo-sem-estatico');
+    assert.deepEqual(achados.map((achado) => [achado.slide, achado.id, achado.severidade]), [[5, 'nua', 'aviso']], `fase ${fase}`);
+    assert.equal(achados[0].mensagem, 'demo "nua" sem img.estatico e sem capturar(), e a captura do build falhou: a demo não desenhou nada.');
+    assert.equal(achados[0].acao, contrato.regras['recursos.demo-sem-estatico'].acaoCaptura);
+  }
 });
 
-test('demo-sem-estatico, caso 3 — fase 2 no build: cala, porque o build fotografa; e volta a acusar a foto que falhou', () => {
-  assert.deepEqual(semEstatico({ fase: 2, modo: 'build' }).achados, []);
-  const { document } = parseHTML(AULA);
-  const falhasDeCaptura = new Map([[document.querySelector('#nua div.demo'), 'a demo não desenhou nada']]);
-  const achados = validar(document, { contrato, regras, grupo: 'carga', recursos: COMPLETO(document), fase: 2, modo: 'build', falhasDeCaptura })
-    .filter((achado) => achado.regra === 'recursos.demo-sem-estatico');
-  assert.deepEqual(achados.map((achado) => [achado.slide, achado.id, achado.severidade]), [[5, 'nua', 'aviso']]);
-  assert.equal(achados[0].mensagem, 'demo "nua" sem img.estatico e sem capturar(), e a captura do build falhou: a demo não desenhou nada.');
-  assert.equal(achados[0].acao, contrato.regras['recursos.demo-sem-estatico'].acaoCaptura);
+// A ação geral da regra não manda mais escrever data-captura-ms "para o build fotografá-la": o build
+// fotografa sem ele, e data-captura-ms é só o tempo de espera (spec 7.2).
+test('demo-sem-estatico: nenhuma ação da regra condiciona a captura a data-captura-ms', () => {
+  const regra = contrato.regras['recursos.demo-sem-estatico'];
+  for (const chave of ['acao', 'acaoNavegador', 'acaoCaptura']) assert.doesNotMatch(regra[chave], /data-captura-ms/, chave);
 });
 
 test('validar recusa um modo que não é da spec, em vez de cair calado num padrão', () => {

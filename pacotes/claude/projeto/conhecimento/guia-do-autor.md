@@ -97,7 +97,7 @@ Uma aula é um arquivo HTML: um `<head>` com os metadados e a tag do runtime, e 
 <meta name="data" content="2026-03-02">
 <meta name="professor" content="Prof. Nome Sobrenome">
 <script src="https://cdn.jsdelivr.net/npm/aula-usp@0.1.0/dist/aula-usp.js"
-        integrity="sha384-pSjnr5OYmw57AjhAMPRo67m7G1OCXPfvqJN4TSfAa4gpzFudSk7WmfI96bCyP0JR" crossorigin="anonymous"></script>
+        integrity="sha384-UmEX/pG2X2fZu1LVC/bxJOb1d4qP0lEv7/FDnxg95QD+4bC5DqHFjeD9eE/hXzY+" crossorigin="anonymous"></script>
 </head>
 <body>
 
@@ -462,7 +462,7 @@ A tabela sai de `contrato/contrato.json` por `npm run guia`, e é do mesmo contr
 
 **`figura`** dá à figura a zona de conteúdo inteira, com a legenda embaixo. O título é opcional, porque muitas vezes a legenda já diz o que é. Uma figura por slide: para figura ao lado de texto, o layout é `conteudo` com colunas.
 
-**`demo`** dá a mesma área a uma demo interativa, que você conduz ao vivo. É uma demo por slide, e a imagem estática dentro dela é o que sai no PDF — sem ela, `recursos.demo-sem-estatico` avisa (**Gráficos, diagramas e demos**).
+**`demo`** dá a mesma área a uma demo interativa, que você conduz ao vivo. É uma demo por slide, e a imagem estática dentro dela é o que sai no PDF: a que você escreve, ou, sem ela, a foto que o `aula-usp build` tira da demo — é o caso do exemplo abaixo. Impressa pelo navegador, a demo sem imagem escrita sai sem nada, e `recursos.demo-sem-estatico` avisa (**Gráficos, diagramas e demos**).
 
 **`encerramento`** fecha a aula com a síntese — os pontos que o aluno leva — e, opcionalmente, o anúncio da próxima. O cabeçalho volta com todos os blocos marcados como vistos, e a faixa de marca toma o lugar do rodapé.
 
@@ -992,7 +992,7 @@ Um trecho que precise de mais de uma linha não é `code` no meio da frase: é u
 
 # Gráficos, diagramas e demos
 
-Três nomes num arquivo só: **a demo interativa, os controles do sistema, o gráfico (`figure.grafico`) e o diagrama (`figure.diagrama`) funcionam hoje, e o build fotografa sozinho a demo sem imagem própria numa aula de fase 2.** O gráfico tem exemplo no layout `figura`, em **Layouts**, e o diagrama, logo abaixo; o capítulo completo sobre os dois ainda vai ser escrito.
+Três nomes num arquivo só: **a demo interativa (com os controles do sistema), o gráfico (`figure.grafico`) e o diagrama (`figure.diagrama`) funcionam hoje, e o build fotografa sozinho toda demo sem imagem própria.** O gráfico tem exemplo no layout `figura`, em **Layouts**, e o diagrama, logo abaixo; o capítulo completo sobre os dois ainda vai ser escrito.
 
 Este arquivo diz o que você pode usar agora e mostra a forma da demo, dos controles e da captura. Documentar como pronto o que não existe é pior do que não documentar.
 
@@ -1006,7 +1006,7 @@ Este arquivo diz o que você pode usar agora e mostra a forma da demo, dos contr
 | `figure.grafico` com a especificação do gráfico em JSON | funciona (**Layouts**, layout `figura`) |
 | `figure.diagrama` com o grafo em DOT | funciona (abaixo) |
 | controles do sistema (`AulaUSP.controles`), criados pela demo | funciona (abaixo) |
-| captura automática da demo no build (`data-captura-ms`) | funciona numa aula de fase 2 (abaixo) |
+| captura automática da demo no build (`data-captura-ms` dá o tempo) | funciona em toda aula (abaixo) |
 
 Quem decide isso não é esta tabela: é `contrato/contrato.json`, onde as entradas de fase 2 estão marcadas, e é dele que o validador lê. A tabela de vocabulário de **A estrutura de uma aula** é gerada **da fase 1**, e é por isso que nenhuma das linhas de fase 2 acima aparece lá — se um dia aparecerem, é porque passaram a valer.
 
@@ -1083,12 +1083,12 @@ Há uma quarta, `capturar()`, que não é do ciclo de vida: ela é chamada na ho
 
 O PDF é papel: nada nele é interativo. O que sai no lugar da demo, em ordem:
 
-1. **a `img.estatico`, se houver.** É a forma recomendada, e a que o espécime usa: você escolhe o instante que representa a demo.
+1. **a `img.estatico`, se houver.** É a forma recomendada quando a aula também vai ser impressa pelo navegador: você escolhe o instante que representa a demo, e o PDF sai com ela pelos dois caminhos. É a forma da demo de `especime/index.html`.
 2. **o resultado de `capturar()`**, se o registro definir essa função. Ela devolve um canvas ou um URI de imagem, e é útil quando o quadro que importa depende do que aconteceu na sala.
-3. **a foto que o build tira**, numa aula de fase 2 gerada com `aula-usp build` (abaixo);
+3. **a foto que o build tira**, em toda aula gerada com `aula-usp build` (abaixo). É a forma do exemplo do layout `demo` em **Layouts**: sem escrever imagem nenhuma, o PDF do build sai com a demo — o do navegador, não;
 4. **um aviso**, se não houver nada disso: um bloco com "Demo interativa: abra o HTML", no idioma da aula.
 
-`recursos.demo-sem-estatico` é o aviso que aparece no caso 4 — ele acusa antes de você descobrir o buraco no PDF. Numa aula de fase 2 ele não aparece no `aula-usp build` nem no `aula-usp validar`, porque o build fotografa a demo, e volta a aparecer, com o motivo, se a foto falhar; no navegador ele continua, porque o "Salvar como PDF" do navegador não passa pelo build. E `recursos.demo-sem-registro` é erro: uma `div.demo` cujo `data-demo` não tem registro correspondente não tem como funcionar em lugar nenhum.
+`recursos.demo-sem-estatico` é o aviso que aparece no caso 4 — ele acusa antes de você descobrir o buraco no PDF. Ele não aparece no `aula-usp build` nem no `aula-usp validar`, porque o build fotografa a demo, e volta a aparecer, com o motivo, se a foto falhar; no navegador ele continua, porque o "Salvar como PDF" do navegador não passa pelo build. E `recursos.demo-sem-registro` é erro: uma `div.demo` cujo `data-demo` não tem registro correspondente não tem como funcionar em lugar nenhum.
 
 ## Um gráfico hoje
 
@@ -1158,7 +1158,7 @@ AulaUSP.demo('soma', {
 </script>
 ```
 
-**A captura.** Numa aula de fase 2, `aula-usp build` abre o HTML construído, vai até o slide de cada demo sem `img.estatico` e sem `capturar()`, espera `data-captura-ms` milissegundos depois de `iniciar()` (3000, se você não escrever) e fotografa a `div.demo`; a foto entra no HTML como `img.estatico` e é ela que sai no PDF. Uma aula é de fase 2 quando usa alguma marca de fase 2 do contrato: gráfico, diagrama ou o próprio `data-captura-ms` — numa aula sem nenhuma, escreva `data-captura-ms` na `div.demo` para ela ser fotografada. Se a foto falhar — a demo não desenhou nada, lançou erro, ou não se registrou na página —, o build diz qual demo e por quê, e ela sai no PDF como no caso 4.
+**A captura.** Em toda aula, `aula-usp build` abre o HTML construído, vai até o slide de cada demo sem `img.estatico` e sem `capturar()`, cada uma numa página só dela, espera `data-captura-ms` milissegundos depois de `iniciar()` (3000, se você não escrever) e fotografa a `div.demo`; a foto entra no HTML como `img.estatico` e é ela que sai no PDF. `data-captura-ms` só muda a espera: escreva-o quando a demo fica pronta antes (o build termina mais cedo) ou depois dos 3 s. Se a foto falhar — a demo não desenhou nada, lançou erro, ou não se registrou na página —, o build diz qual demo e por quê, e ela sai no PDF como no caso 4.
 
 <!-- guia/60-validador.md -->
 
@@ -1269,7 +1269,7 @@ A tabela sai de `contrato/contrato.json` por `npm run guia` — do mesmo arquivo
 | `matematica.simbolo-fora-do-tex` | erro | Escreva o símbolo em TeX: \( \to \), \( \alpha \), \( \leq \). |
 | `matematica.tex-invalido` | erro | Corrija o TeX no trecho indicado. |
 | `recursos.alt` | erro | Descreva a imagem no atributo alt. |
-| `recursos.demo-sem-estatico` | aviso | Acrescente img.estatico à demo, implemente capturar() ou escreva data-captura-ms na div.demo, para o build fotografá-la. Numa aula de fase 2, no navegador: gere o PDF com aula-usp build, que fotografa a demo, ou acrescente img.estatico à demo ou implemente capturar(). Se a captura do build falhou: corrija a demo para que ela desenhe na div.demo ao iniciar, ou acrescente img.estatico à demo ou implemente capturar(). |
+| `recursos.demo-sem-estatico` | aviso | Acrescente img.estatico à demo ou implemente capturar(). No navegador: gere o PDF com aula-usp build, que fotografa a demo, ou acrescente img.estatico à demo ou implemente capturar(). Se a captura do build falhou: corrija a demo para que ela desenhe na div.demo ao iniciar, ou acrescente img.estatico à demo ou implemente capturar(). |
 | `recursos.demo-sem-registro` | erro | Registre a demo com AulaUSP.demo('<nome>', { … }). |
 | `recursos.imagem` | erro | Confira o caminho da imagem em img/. |
 | `recursos.imagem-externa` | aviso | Guarde a imagem em img/, com autorização do autor para baixá-la. |

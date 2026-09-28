@@ -299,12 +299,13 @@ test('controles de demo: as medidas e cores da spec 7.2, e as classes deles est�
     };
   });
   assert.deepEqual(erros, []);
-  // iniciar() da demo liga "dobrar": o estado ativo, com a classe e o aria-pressed juntos.
+  // iniciar() da demo liga "dobrar": o estado ativo, com a classe e o aria-pressed juntos. "somar",
+  // botão de ação que nunca passa por alternar(), não tem aria-pressed nenhum.
   assert.deepEqual(medida.dobrar, {
     classe: 'controle ativo', pressionado: 'true', borda: `2px solid ${TINTA}`, raio: '0px', fonte: '600 20px Geist', fundo: TINTA, cor: PAPEL,
   });
   assert.deepEqual(medida.somar, {
-    classe: 'controle', pressionado: 'false', borda: `2px solid ${TINTA}`, raio: '0px', fonte: '600 20px Geist', fundo: PAPEL, cor: TINTA,
+    classe: 'controle', pressionado: null, borda: `2px solid ${TINTA}`, raio: '0px', fonte: '600 20px Geist', fundo: PAPEL, cor: TINTA,
   });
   assert.equal(medida.leitura, '20px "Geist Mono" 0');
   assert.deepEqual(await classesForaDoContrato(pagina), []);

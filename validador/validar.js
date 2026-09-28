@@ -51,8 +51,9 @@ export function seletoresDeFase2(contrato) {
 
 // A fase de validação de uma aula, decidida por presença: fase 2 quando algum slide do fonte usa
 // alguma das marcas de fase 2 do contrato (seletoresDeFase2, acima), fase 1 quando não usa nenhuma.
-// É o único lugar com essa regra — build/validar.mjs (a CLI), montar/entrada.js (o navegador) e
-// build/build.mjs (a captura das demos, spec 7.2) chamam esta função. Só dentro das section: é lá
+// É o único lugar com essa regra — build/validar.mjs (a CLI) e montar/entrada.js (o navegador) chamam
+// esta função. Ela decide o VOCABULÁRIO e nada mais: a captura das demos (spec 7.2) vale para todo
+// build, e recursos.demo-sem-estatico decide pelo modo, não pela fase (revisão final da 2c, C1). Só dentro das section: é lá
 // que o vocabulário vale, e um <script type="module"> no <head> não é marca de fase nenhuma.
 // Sem nenhuma dessas marcas, fase 2 e fase 1 acusam exatamente os mesmos erros, então nenhum deck de
 // fase 1 muda de comportamento por causa disto. Fase 2 aqui quer dizer "o vocabulário da fase 2 vale

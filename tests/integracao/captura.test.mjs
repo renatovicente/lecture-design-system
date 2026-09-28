@@ -1,4 +1,4 @@
-// A captura automática no build (spec 7.2 e 3.3 etapa 5, fase 2), medida no PDF — o critério de aceite
+// A captura automática no build (spec 7.2 e 3.3 etapa 5, em toda aula), medida no PDF — o critério de aceite
 // da fase 2 que é desta parte (spec 12: "com uma demo sem imagem própria capturada no PDF"). O que se
 // afirma é o que a página do PDF DESENHA — os pixels da imagem que ela traz —, e não que o arquivo
 // existe: um PDF com o quadro "Demo interativa" no lugar da demo também existe e também tem a página.
@@ -13,8 +13,10 @@ import { parseHTML } from 'linkedom';
 import { PDFDocument, PDFName, PDFRawStream } from 'pdf-lib';
 import { iniciarChrome } from './utilitarios.mjs';
 import { build } from '../../build/build.mjs';
+import { faseDaAula } from '../../validador/validar.js';
 
 const RAIZ = new URL('../../', import.meta.url);
+const contrato = JSON.parse(await readFile(new URL('contrato/contrato.json', RAIZ), 'utf8'));
 const fixture = (nome) => new URL(`../fixtures/captura/${nome}/aula.html`, import.meta.url);
 const pastaTemporaria = () => mkdtemp(join(tmpdir(), 'captura-'));
 
@@ -90,24 +92,59 @@ test('fase 2: a demo sem imagem própria sai fotografada no HTML e desenhada na 
   // antialiasing de uma versão do Chrome — e ainda assim muito acima de uma foto em branco, que dá 0.
   assert.ok(imagem.naoBrancos > 2000, `a foto da demo tem só ${imagem.naoBrancos} pixels não brancos`);
   assert.ok(r.linhas.some((linha) => /1 de 1 demo\(s\) capturada\(s\)/.test(linha)), r.linhas.join('\n'));
-  // Fotografada, a demo não é mais aviso: recursos.demo-sem-estatico se cala no build da fase 2.
+  // Fotografada, a demo não é mais aviso: recursos.demo-sem-estatico se cala no build.
   assert.deepEqual(r.achados.filter((a) => a.regra === 'recursos.demo-sem-estatico'), []);
   const gravados = JSON.parse(await readFile(join(r.destino, 'validacao.json'), 'utf8'));
   assert.deepEqual(gravados, r.achados);
 });
 
-// O "antes": a mesma aula sem a marca de fase 2 é de fase 1, e a fase 1 não captura — a página da
-// demo sai sem imagem nenhuma (o quadro "Demo interativa" é texto), e o aviso da fase 1 continua.
-test('fase 1: a mesma demo não é fotografada, e a página do PDF não traz imagem', async () => {
+// A captura não depende da fase da aula (revisão final da 2c, C1): a "fase 2" da spec 3.3, 6.7, 7.2
+// e 9.2 é a do projeto. A mesma aula sem data-captura-ms não tem marca de fase 2 nenhuma — faseDaAula
+// a põe na fase 1 — e a demo sai fotografada do mesmo jeito, esperando o padrão da spec (3000 ms).
+// Inversão medida: com a condição de fase de volta em build/build.mjs, este teste fica vermelho (a
+// página da demo sai sem imagem, o quadro "Demo interativa" no lugar).
+test('fase 1: a mesma demo, sem data-captura-ms, também é fotografada e desenhada no PDF', async () => {
   const fonte = (await readFile(fixture('demo-sem-imagem'), 'utf8')).replace(' data-captura-ms="200"', '');
+  assert.equal(faseDaAula(parseHTML(fonte).document, contrato), 1, 'a aula do teste tem de ser de fase 1');
   const pasta = await pastaTemporaria();
   const caminho = join(pasta, 'aula.html');
   await writeFile(caminho, fonte, 'utf8');
   const r = await construir(pathToFileURL(caminho));
   assert.equal(r.codigo, 0, JSON.stringify(r.achados));
-  assert.deepEqual(await imagensDaPagina(await readFile(join(r.destino, 'aula.pdf')), PAGINA_DA_DEMO), []);
-  assert.ok(!r.linhas.some((linha) => linha.includes('capturando')), r.linhas.join('\n'));
-  assert.deepEqual(r.achados.filter((a) => a.regra === 'recursos.demo-sem-estatico').map((a) => a.id), ['contador']);
+  const [imagem, ...outras] = await imagensDaPagina(await readFile(join(r.destino, 'aula.pdf')), PAGINA_DA_DEMO);
+  assert.deepEqual(outras, []);
+  assert.deepEqual([imagem.largura, imagem.altura], [2304, 954]);
+  assert.ok(imagem.naoBrancos > 2000, `a foto da demo tem só ${imagem.naoBrancos} pixels não brancos`);
+  assert.ok(r.linhas.some((linha) => /1 de 1 demo\(s\) capturada\(s\)/.test(linha)), r.linhas.join('\n'));
+  assert.deepEqual(r.achados.filter((a) => a.regra === 'recursos.demo-sem-estatico'), []);
+});
+
+// Revisão final da 2c, I1: o erro de uma demo não pode ser atribuído a outra. "ruidosa" desenha e
+// deixa um setTimeout vivo que lança 400 ms depois de iniciar(); "boa" é limpa. Cada demo é
+// fotografada na sua própria página (build/captura.mjs). Dois casos:
+//   - ruidosa espera 100 ms: o erro dela cai DEPOIS da sua espera — as duas saem fotografadas, e a
+//     boa não herda nada. Inversão medida: com uma página só para as duas (o desenho de antes), a
+//     boa é recusada com "Cannot read properties of null" e este caso fica vermelho;
+//   - ruidosa espera 600 ms: o erro dela cai DURANTE a sua espera — ela é quem falha, e a boa sai.
+test('o erro de uma demo é dela: a limpa é fotografada, e a ruidosa só falha pelo que lança na própria espera', async () => {
+  const original = await readFile(fixture('demo-ruidosa'), 'utf8');
+  const casos = [
+    { ms: 100, capturadas: 2, falhas: [] },
+    { ms: 600, capturadas: 1, falhas: [['ruidosa', /erro na página ao montar e iniciar: .*null/]] },
+  ];
+  for (const { ms, capturadas, falhas } of casos) {
+    const pasta = await pastaTemporaria();
+    const caminho = join(pasta, 'aula.html');
+    await writeFile(caminho, original.replace('data-demo="ruidosa" data-captura-ms="100"', `data-demo="ruidosa" data-captura-ms="${ms}"`), 'utf8');
+    const r = await construir(pathToFileURL(caminho));
+    assert.equal(r.codigo, 0, JSON.stringify(r.achados));
+    const doAviso = r.achados.filter((a) => a.regra === 'recursos.demo-sem-estatico');
+    assert.deepEqual(doAviso.map((a) => a.id), falhas.map(([id]) => id), `ruidosa com ${ms} ms: ${r.linhas.join('\n')}`);
+    for (const [k, [, motivo]] of falhas.entries()) assert.match(doAviso[k].mensagem, motivo);
+    const html = parseHTML(await readFile(join(r.destino, 'aula.html'), 'utf8')).document;
+    assert.ok(html.querySelector('section#boa div.demo > img.estatico'), `ruidosa com ${ms} ms: a demo limpa saiu sem foto`);
+    assert.equal(html.querySelectorAll('img.estatico').length, capturadas, `ruidosa com ${ms} ms`);
+  }
 });
 
 // Plano da 2c, tarefa 3, passo 2: "falhar alto, que é o ponto". Cada demo que não sai na foto é
@@ -131,6 +168,26 @@ test('a captura que falha diz qual demo e por quê, e o build segue até o PDF',
   assert.match(doAviso[0].mensagem, /^demo "vazia" sem img\.estatico e sem capturar\(\), e a captura do build falhou: a demo não desenhou nada/);
   assert.match(doAviso[1].mensagem, /^demo "quebrada" .* falhou: erro na página ao montar e iniciar: .*iniciar quebrou/);
   assert.match(doAviso[2].mensagem, /^demo "fantasma" .* falhou: a demo não está registrada na página construída/);
+  const gravados = JSON.parse(await readFile(join(r.destino, 'validacao.json'), 'utf8'));
+  assert.deepEqual(gravados, r.achados);
+});
+
+// Revisão final da 2c, M1: com erro de composição a etapa 5 não fotografa — e, como no caminho sem
+// Chrome, a demo que ficou sem foto é nomeada, com o motivo, e não some calada atrás do erro.
+test('erro de composição: a captura não roda, e o aviso diz quais demos ficaram sem foto', async () => {
+  const alto = `<p>Alto.${'<br>'.repeat(50)}</p>`;
+  const fonte = (await readFile(fixture('demo-sem-imagem'), 'utf8'))
+    .replace('<section data-layout="abertura" id="dois">\n  <h2>Fim</h2>', `<section data-layout="conteudo" id="dois">\n  <h2>Fim</h2>\n  ${alto}\n  <aside class="notas">N.</aside>`);
+  const pasta = await pastaTemporaria();
+  const caminho = join(pasta, 'aula.html');
+  await writeFile(caminho, fonte, 'utf8');
+  const r = await construir(pathToFileURL(caminho));
+  assert.equal(r.codigo, 1);
+  assert.ok(r.achados.some((a) => a.regra === 'composicao.transbordo'), JSON.stringify(r.achados));
+  assert.ok(!r.linhas.some((linha) => linha.includes('capturando')), r.linhas.join('\n'));
+  assert.ok(r.linhas.some((linha) => /erro de composição; não gera PDF; ficam sem foto as demos "contador"$/.test(linha)), r.linhas.join('\n'));
+  const doAviso = r.achados.filter((a) => a.regra === 'recursos.demo-sem-estatico');
+  assert.deepEqual(doAviso.map((a) => a.mensagem), ['demo "contador" sem img.estatico e sem capturar(), e a captura do build falhou: a composição tem erro; a etapa 5 não fotografou.']);
   const gravados = JSON.parse(await readFile(join(r.destino, 'validacao.json'), 'utf8'));
   assert.deepEqual(gravados, r.achados);
 });

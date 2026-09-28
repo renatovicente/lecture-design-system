@@ -21,13 +21,15 @@ function pagina(lang = 'pt-BR') {
   return { document: janela.document, Event: janela.Event, raiz: janela.document.querySelector('div.demo') };
 }
 
-test('botao cria button.controle type="button", fora de ativo, e chama quem clica', () => {
+// Sem aria-pressed: um botão de ação ("somar") não é de alternância para o leitor de tela; só
+// alternar() põe o atributo (revisão final da 2c, M2).
+test('botao cria button.controle type="button", fora de ativo e sem aria-pressed, e chama quem clica', () => {
   const { document, raiz, Event } = pagina();
   const cliques = [];
   const botao = criarControles(document).botao(raiz, 'somar', () => cliques.push('clique'));
   assert.equal(botao.parentNode, raiz);
   assert.equal(botao.nodeName, 'BUTTON');
-  assert.deepEqual(atributos(botao), { class: 'controle', type: 'button', 'aria-pressed': 'false' });
+  assert.deepEqual(atributos(botao), { class: 'controle', type: 'button' });
   assert.equal(botao.textContent, 'somar');
   botao.dispatchEvent(new Event('click'));
   assert.deepEqual(cliques, ['clique']);

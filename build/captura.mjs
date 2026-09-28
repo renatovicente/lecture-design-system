@@ -1,4 +1,4 @@
-// Captura automática das demos (spec 7.2 e 3.3, etapa 5, fase 2): "para demos sem img.estatico e sem
+// Captura automática das demos (spec 7.2 e 3.3, etapa 5; em todo build): "para demos sem img.estatico e sem
 // capturar(), o Chrome headless fotografa a div.demo depois de iniciar() e de data-captura-ms (padrão
 // 3000 ms)". Node puro: fala com a página só pelo Chrome, nunca importando código dela.
 //
@@ -76,10 +76,27 @@ const UMA_COR_SO = async (uri) => {
 // Abre o HTML construído, navega até cada demo-alvo, espera e fotografa a div.demo. Nunca lança por
 // causa de uma demo: cada uma sai em `imagens` (índice → URI data:) ou em `falhas` (índice → motivo),
 // e quem chama decide o que dizer. Lança só se a página inteira não sobe.
+//
+// UMA PÁGINA POR DEMO. Com uma página só para todas, o que uma demo deixa vivo — um setTimeout
+// disparado no iniciar(), um requestAnimationFrame sem parar() — continua rodando quando o motor sai
+// do slide dela, e o erro que ele lança cai na espera da demo SEGUINTE e é atribuído a ela. Medido
+// (revisão final da 2c): a demo "ruidosa" lança 400 ms depois de iniciar() e espera 100 ms; a "boa",
+// limpa, espera 1000 ms — com uma página, a ruidosa saía fotografada e a boa recusada com o erro da
+// outra. Página nova por demo: o que uma deixa vivo morre com a página dela. Custa abrir e montar o
+// HTML de novo a cada demo (~0,8 s, medido); é o preço de o motivo de uma falha ser da demo certa.
+// O slide inicial é a capa, que não admite demo: na página nova, nenhuma demo roda antes da alvo.
 export async function capturarDemos({ navegador, caminhoDoHtml, alvos }) {
   const imagens = new Map();
   const falhas = new Map();
-  if (alvos.length === 0) return { imagens, falhas };
+  for (const { indice, nome, ms } of alvos) {
+    const falha = await capturarUma({ navegador, caminhoDoHtml, indice, nome, ms, imagens });
+    if (falha) falhas.set(indice, falha);
+  }
+  return { imagens, falhas };
+}
+
+// Uma demo, na sua própria página. Devolve o motivo da falha, ou nada (e a foto em `imagens`).
+async function capturarUma({ navegador, caminhoDoHtml, indice, nome, ms, imagens }) {
   // 1280 × 720 com escala 1 no palco: a div.demo sai no tamanho em que o PDF a desenha. Fator 2 de
   // pixel: a mesma nitidez que o texto vetorial do PDF tem ao lado dela, num projetor ou impressa.
   const pagina = await navegador.newPage({ viewport: { width: 1280, height: 720 }, deviceScaleFactor: 2 });
@@ -92,47 +109,32 @@ export async function capturarDemos({ navegador, caminhoDoHtml, alvos }) {
     const estado = await pagina.evaluate(() => document.body.dataset.montado);
     if (estado !== 'sim') throw new Error(`a montagem terminou em "${estado}"`);
     await pagina.evaluate(() => document.fonts.ready);
-    for (const { indice, nome, ms } of alvos) {
-      const falhar = (motivo) => falhas.set(indice, motivo);
-      try {
-        const preparo = await pagina.evaluate(PREPARAR, { seletor: SELETOR, indice, nome });
-        if (preparo.motivo) {
-          falhar(preparo.motivo);
-          continue;
-        }
-        erros.length = 0;
-        // Com todos os passos revelados (lerEndereco limita o número ao que o slide tem): uma demo
-        // que é passo sairia invisível na foto.
-        await pagina.evaluate((id) => { location.hash = `#${id}/9999`; }, preparo.id);
-        await pagina.waitForFunction((id) => document.getElementById(id)?.classList.contains('ativo'), preparo.id, { timeout: TETO_DA_NAVEGACAO_MS });
-        await pagina.waitForTimeout(ms);
-        // motor/demos.js não deixa o erro de uma demo derrubar a aula: ele vai para o console com o
-        // nome dela e a etapa. Aqui ele vira falha — foto de uma demo quebrada não é a demo.
-        const doErro = erros.find((texto) => texto.includes(`"${nome}"`) || !texto.startsWith('Aula USP:'));
-        if (doErro) {
-          falhar(`erro na página ao montar e iniciar: ${doErro.split('\n')[0]}`);
-          continue;
-        }
-        const alvo = pagina.locator(SELETOR).nth(indice);
-        const caixa = await alvo.boundingBox();
-        if (!caixa || caixa.width < 1 || caixa.height < 1) {
-          falhar('a div.demo não tem tamanho na página (0 × 0 px)');
-          continue;
-        }
-        const uri = `data:image/png;base64,${(await alvo.screenshot({ type: 'png' })).toString('base64')}`;
-        if (await pagina.evaluate(UMA_COR_SO, uri)) {
-          falhar(`a demo não desenhou nada na div.demo em ${ms} ms (a foto é de uma cor só)`);
-          continue;
-        }
-        imagens.set(indice, uri);
-      } catch (erro) {
-        falhar(erro.message.split('\n')[0]);
-      }
+    try {
+      const preparo = await pagina.evaluate(PREPARAR, { seletor: SELETOR, indice, nome });
+      if (preparo.motivo) return preparo.motivo;
+      erros.length = 0;
+      // Com todos os passos revelados (lerEndereco limita o número ao que o slide tem): uma demo
+      // que é passo sairia invisível na foto.
+      await pagina.evaluate((id) => { location.hash = `#${id}/9999`; }, preparo.id);
+      await pagina.waitForFunction((id) => document.getElementById(id)?.classList.contains('ativo'), preparo.id, { timeout: TETO_DA_NAVEGACAO_MS });
+      await pagina.waitForTimeout(ms);
+      // motor/demos.js não deixa o erro de uma demo derrubar a aula: ele vai para o console com o
+      // nome dela e a etapa. Aqui ele vira falha — foto de uma demo quebrada não é a demo.
+      const doErro = erros.find((texto) => texto.includes(`"${nome}"`) || !texto.startsWith('Aula USP:'));
+      if (doErro) return `erro na página ao montar e iniciar: ${doErro.split('\n')[0]}`;
+      const alvo = pagina.locator(SELETOR).nth(indice);
+      const caixa = await alvo.boundingBox();
+      if (!caixa || caixa.width < 1 || caixa.height < 1) return 'a div.demo não tem tamanho na página (0 × 0 px)';
+      const uri = `data:image/png;base64,${(await alvo.screenshot({ type: 'png' })).toString('base64')}`;
+      if (await pagina.evaluate(UMA_COR_SO, uri)) return `a demo não desenhou nada na div.demo em ${ms} ms (a foto é de uma cor só)`;
+      imagens.set(indice, uri);
+      return undefined;
+    } catch (erro) {
+      return erro.message.split('\n')[0];
     }
   } finally {
     await pagina.close();
   }
-  return { imagens, falhas };
 }
 
 // Põe cada foto no HTML construído como img.estatico, primeiro filho da sua div.demo — o lugar que

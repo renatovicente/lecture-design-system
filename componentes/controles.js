@@ -23,19 +23,21 @@ export function criarControles(doc) {
   // O idioma da aula (spec 6.8): "0,5" em pt-BR e "0.5" em en.
   const idioma = () => doc.documentElement.getAttribute('lang') || 'pt-BR';
 
-  // button.controle (spec 7.2). type="button" para nunca submeter nada, dentro ou fora de form.
+  // button.controle (spec 7.2). type="button" para nunca submeter nada, dentro ou fora de form. Sem
+  // aria-pressed: um botão de ação comum ("somar") não é de alternância, e com o atributo o leitor
+  // de tela o anunciaria como um. Quem faz dele um botão de alternância é alternar(), abaixo.
   function botao(raiz, texto, aoClicar) {
     const novo = elemento(doc, 'button', CLASSE_CONTROLE, texto);
     novo.setAttribute('type', 'button');
-    novo.setAttribute('aria-pressed', 'false');
     if (aoClicar) novo.addEventListener('click', (evento) => aoClicar(evento));
     raiz.append(novo);
     return novo;
   }
 
   // O estado ativo do botão (spec 7.2: "ativo em campo tinta com texto papel"): a classe, que o CSS
-  // pinta, e aria-pressed, que o leitor de tela anuncia — os dois sempre juntos. Sem `ativo`,
-  // inverte. Devolve o estado novo.
+  // pinta, e aria-pressed, que o leitor de tela anuncia — os dois sempre juntos, e só aqui: o botão
+  // que passa por alternar() é de alternância, e o que nunca passa, de ação. Sem `ativo`, inverte.
+  // Devolve o estado novo.
   function alternar(alvo, ativo = !alvo.classList.contains(CLASSE_ATIVO)) {
     alvo.classList.toggle(CLASSE_ATIVO, ativo);
     alvo.setAttribute('aria-pressed', String(ativo));
