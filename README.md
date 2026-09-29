@@ -74,7 +74,7 @@ aula-usp validar minha-aula
 
 `servir` abre a aula no navegador: salve o arquivo e recarregue. `validar` lista erros e avisos com o slide, a regra e o que fazer, e sai com 0 quando não há erros.
 
-Com a aula válida, `aula-usp avaliar minha-aula` aconselha sobre a qualidade dos slides, pelas boas práticas de Naegle (2021) e da UCSD, sem mudar nada.
+Com a aula válida, `aula-usp avaliar minha-aula` aconselha sobre a qualidade dos slides, sem mudar nada (veja "Avaliar a qualidade", abaixo).
 
 **5. Apresente.** No navegador:
 
@@ -128,6 +128,73 @@ A capa e o encerramento trazem a assinatura da USP e um segundo logo, escolhido 
    - `altura`, `protecao` e `alturaMinima`, em px, tirados do manual de identidade visual quando houver.
 3. Registre a origem e as medidas em `assets/marcas/README.md`. Acrescente o logo ao `import` de `montar/dist.js`, que embute os logos no runtime, e à lista de `tests/unit/marcas.test.mjs`. Um logo que não seja preto precisa de exceção nomeada na spec 4.5.
 4. Rode `aula-usp dist`, `aula-usp pacotes`, `npm test` e `npm run test:integracao`, e publique uma versão nova. A tag das aulas aponta para uma versão exata da CDN, então o logo só aparece para quem usar essa versão ou uma posterior.
+
+## Skills para agentes
+
+Uma skill é uma pasta com um `SKILL.md`: instruções que o agente carrega sozinho quando o pedido combina com a descrição dela. O Aula USP traz duas, em `pacotes/skill/`, e cada uma leva dentro tudo o que cita: guia, contrato, exemplos e rubrica. Ela funciona sem este repositório.
+
+| skill | para quê | quando o agente a usa |
+|---|---|---|
+| `aula-usp` | escrever aulas e slides no Aula USP: o arquivo HTML, os layouts, a matemática, o código e as figuras, e corrigir os achados do validador até dar 0 erros | "faça uma aula sobre…", "escreva um slide de abertura…", "corrija os erros do validador" |
+| `aula-usp-avaliar` | julgar a qualidade de uma aula pronta ou de um slide pela rubrica de Naegle e da UCSD, com o relatório em `avaliacao.md`, sem editar a aula | "avalie esta aula", "o slide 5 está bom?", "revise a qualidade dos slides" |
+
+Duas outras estão especificadas e virão nas próximas versões: `aula-usp-corrigir`, para corrigir um slide específico sem tocar no resto, e `aula-usp-gerar`, para montar a aula a partir de artigos, apresentações e um roteiro em markdown.
+
+**Como usar no Claude Code:**
+
+1. Instale a CLI:
+
+   ```bash
+   npm install -g aula-usp
+   ```
+
+   As skills chamam `aula-usp validar`, `build` e `avaliar`.
+2. Copie as skills para onde o Claude Code as carrega. Pode ser a pasta do projeto, `.claude/skills/`, ou todas as suas pastas, `~/.claude/skills/`:
+
+   ```bash
+   mkdir -p ~/.claude/skills
+   cp -R pacotes/skill/aula-usp pacotes/skill/aula-usp-avaliar ~/.claude/skills/
+   ```
+
+   As pastas não vão no pacote do npm, que leva a CLI, o runtime, o modelo, os exemplos e o guia, mas não os pacotes para agentes. Elas estão no repositório público: `git clone https://github.com/renatovicente/lecture-design-system` e copie de `lecture-design-system/pacotes/skill/`.
+3. Abra o Claude Code na pasta de trabalho e peça em português, por exemplo: "Faça uma aula de 12 slides sobre passeio aleatório para a graduação, unidade ifusp." Depois: "Avalie a aula em passeio/ para 50 minutos." Não precisa chamar a skill pelo nome: a descrição dela basta para o agente escolher.
+
+**No Codex CLI:** use a mesma pasta `pacotes/skill/aula-usp/`, carregada da forma que a sua versão do Codex aceita skills ou instruções de projeto. O aceite da fase 1 rodou assim, e a forma de carregar é registrada em `tests/aceite/roteiro.md`.
+
+**Sem terminal:** o claude.ai e o ChatGPT não carregam skills. Para eles existem os pacotes `pacotes/claude/projeto/` (instruções e arquivos de um Projeto) e `pacotes/gpt/gpt-personalizado/` (instruções e conhecimento de um GPT personalizado). Os dois já têm os modos de escrever e de avaliar.
+
+## Avaliar a qualidade
+
+Validar diz se a aula **está certa**; avaliar diz se ela **está boa**. A avaliação segue duas fontes: as dez regras de K. M. Naegle, "Ten simple rules for effective presentation slides" (*PLOS Comput Biol*, 2021), citadas como N1 a N10, e as recomendações de design de apresentação da UC San Diego (U). Quando as duas discordam, Naegle decide o alerta, e a UCSD, mais estrita, só dá conselho. A rubrica inteira é dado, em `avaliador/rubrica.json`.
+
+**O que se mede,** com `aula-usp avaliar`:
+
+| critério | o que acusa | nível |
+|---|---|---|
+| `titulo-rotulo` (N3) | título que é rótulo ("Resultados", "Introdução") e não afirma a conclusão | alerta |
+| `elementos` (N7) | mais de 6 blocos no slide | alerta |
+| `so-texto` (N6) | mais da metade dos slides de conteúdo, figura e demo sem figura, gráfico, diagrama, demo, fórmula ou código | alerta |
+| `tempo` (N2) | com `--minutos N`, mais slides do que cabem a cerca de 1 minuto cada | alerta |
+| `palavras-slide` (N4, N7) | mais de 60 palavras no corpo | conselho |
+| `itens` (U) | lista com mais de 4 itens | conselho |
+| `revelacao` (U) | lista com mais de 3 itens sem revelação passo a passo | conselho |
+| `paineis` (N6) | mais de uma figura no slide | conselho |
+| `credito` (N5) | imagem ou gráfico com dados sem linha de fonte nem legenda que diga a origem | conselho |
+
+**O que se julga,** olhando cada slide: a skill `aula-usp-avaliar` faz isso a partir das fotos de `--fotos`. Ela pergunta se o slide:
+- tem uma ideia só (N1);
+- tem um título que afirma a conclusão que o corpo sustenta (N3);
+- tem só o essencial (N4);
+- tem um gráfico que leva a mensagem (N6);
+- passa a mensagem a quem se distraiu (N8);
+- repete no texto o que a imagem já diz (U);
+- tem imagem decorativa (U);
+- flui a partir do slide anterior (N9).
+
+**Como usar:**
+- **No terminal:** rode `aula-usp avaliar minha-aula --minutos 50`. Ele nunca dá erro nem bloqueia o `build`, e uma aula com erro de validação não é avaliada.
+- **Com o Claude Code ou o Codex:** instale o pacote `pacotes/skill/aula-usp-avaliar/` e peça "avalie a aula em minha-aula". A skill junta o que se mede e o que se julga em `minha-aula/avaliacao.md`, com uma tabela por slide (critério, nível, evidência e sugestão), e não edita a aula.
+- **No claude.ai e no ChatGPT:** as instruções dos pacotes `claude/projeto` e `gpt/gpt-personalizado` têm um modo "avaliar". Sem terminal, o agente mede à mão pela mesma rubrica.
 
 ## Instalar
 
@@ -279,10 +346,10 @@ O vocabulário é fechado de propósito: o validador recusa elemento, classe ou 
 
 Este arquivo é a porta de entrada, e para de propósito aqui. Quem chega vai para um de dois lugares:
 
-- **escrever aulas** — `guia/`, o guia do autor: layouts, componentes, matemática e código, gráficos, diagramas e demos, o que o validador cobra, e um arquivo por fluxo de trabalho (terminal, chat, artifact do Claude, GPT personalizado). Para trabalhar com um agente, os quatro pacotes prontos estão em `pacotes/`;
+- **escrever aulas** — `guia/`, o guia do autor: layouts, componentes, matemática e código, gráficos, diagramas e demos, o que o validador cobra, e um arquivo por fluxo de trabalho (terminal, chat, artifact do Claude, GPT personalizado). Para trabalhar com um agente, os pacotes prontos estão em `pacotes/`, inclusive a skill de avaliar;
 - **desenvolver o sistema** — `AGENTS.md`, que é onde estão a fronteira do Node, as guardas dos artefatos gerados, como se acrescenta uma regra e o que este projeto já aprendeu errando.
 
-A spec é a autoridade sobre os dois: `docs/superpowers/specs/2026-09-14-aula-usp-design.md`.
+A spec é a autoridade sobre os dois: `docs/superpowers/specs/2026-09-14-aula-usp-design.md`, e, para avaliar, corrigir e gerar aulas, `docs/superpowers/specs/2026-09-28-aula-usp-skills-design.md`.
 
 ## Processo
 
