@@ -21,7 +21,7 @@ aula-usp build   <pasta>        # o HTML autocontido e o PDF, em <pasta>/dist/
 
 Códigos de saída: 0 sem erros, e avisos são permitidos; 1 com erros de validação; 2 quando não deu para rodar. Num script, teste o código, não procure palavra na saída. `aula-usp validar <pasta> --json` devolve a mesma lista em objetos, um por achado.
 
-**Antes de escrever qualquer coisa, confira que `aula-usp` responde no terminal.** Se não responder, trabalhe no modo navegador — escreva o HTML, entregue ao professor e peça a ele a lista do painel do validador (tecla **V**) — e diga a ele como instalar a CLI: `npm install` e `npm link` no repositório do Aula USP. `npm install -g aula-usp` ainda não funciona, porque o pacote não está publicado no npm.
+**Antes de escrever qualquer coisa, confira que `aula-usp` responde no terminal.** Se não responder, trabalhe no modo navegador — escreva o HTML, entregue ao professor e peça a ele a lista do painel do validador (tecla **V**) — e diga a ele como instalar a CLI: `npm install -g aula-usp` (Node 20.6 ou mais novo).
 
 Sem Chrome instalado, `validar` e `build` não falham: pulam as regras de composição — e, no `build`, também o PDF —, avisam no stderr e terminam com 0 se não houver outro erro. Isso é uma degradação, não uma aprovação: "zero erros" sem Chrome não cobre o que só a página desenhada revela.
 

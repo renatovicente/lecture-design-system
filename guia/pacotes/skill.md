@@ -23,7 +23,7 @@ aula-usp
 
 **Se respondeu** com a lista de comandos (`novo`, `servir`, `validar`, `build`, `avaliar`, `slide`, `roteiro`, `dist`, `pacotes`), você está no **modo terminal**: siga `references/70-fluxo-terminal.md`. É o modo completo — validação com os quatro grupos de regras e PDF gerado pelo sistema.
 
-**Se não respondeu** — comando não encontrado, ou não há terminal —, você está no **modo navegador**: siga `references/71-fluxo-chat.md`. Escreva o HTML com a tag do runtime, entregue o arquivo ao autor, e peça a ele a lista do painel do validador (tecla V, botão "Copiar para o chat") para corrigir. Diga ao autor, uma vez, o que ele ganha instalando a CLI — validação completa, inclusive das regras de composição, e o PDF conferido pelo sistema — e como se instala hoje: `npm install` e `npm link` no repositório do Aula USP. `npm install -g aula-usp` ainda não funciona, porque o pacote não está publicado no npm.
+**Se não respondeu** — comando não encontrado, ou não há terminal —, você está no **modo navegador**: siga `references/71-fluxo-chat.md`. Escreva o HTML com a tag do runtime, entregue o arquivo ao autor, e peça a ele a lista do painel do validador (tecla V, botão "Copiar para o chat") para corrigir. Diga ao autor, uma vez, o que ele ganha instalando a CLI — validação completa, inclusive das regras de composição, e o PDF conferido pelo sistema — e como se instala: `npm install -g aula-usp` (Node 20.6 ou mais novo).
 
 Não invente o ambiente: rode o comando e leia a resposta.
 

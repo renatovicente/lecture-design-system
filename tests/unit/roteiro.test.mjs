@@ -550,15 +550,15 @@ test('determinismo: a mesma entrada dá os mesmos bytes, e gerarAula não mexe n
 test('lerRoteiro devolve a forma da interface: metas, capa, slides e erros', () => {
   const roteiro = lerRoteiro(readFileSync(join(EXEMPLO, 'roteiro.md'), 'utf8'));
   assert.deepEqual(roteiro.metas, {
-    unidade: 'ifusp', disciplina: 'Física Estatística', aula: '3', data: '2026-10-05', professor: 'Prof. Renato Vicente', video: 'canto',
+    unidade: 'ifusp', disciplina: 'Física Estatística', aula: '3', data: '2026-10-05', professor: 'Prof. Renato Vicente',
   });
-  assert.deepEqual(roteiro.capa, { titulo: 'Passeio aleatório', segunda: 'e difusão', linha: 10 });
+  assert.deepEqual(roteiro.capa, { titulo: 'Passeio aleatório', segunda: 'e difusão', linha: 9 });
   assert.deepEqual(roteiro.slides.map(({ layout, titulo, segunda, id, curto, linha }) => ({ layout, titulo, segunda, id, curto, linha })), [
-    { layout: 'abertura', titulo: 'O passeio', segunda: undefined, id: 'passeio', curto: 'O passeio', linha: 12 },
-    { layout: 'conteudo', titulo: 'A variância cresce', segunda: 'linearmente com o tempo', id: 'variancia', curto: undefined, linha: 15 },
-    { layout: 'figura', titulo: 'A nuvem se espalha', segunda: 'como raiz de t', id: 'nuvem', curto: undefined, linha: 23 },
-    { layout: 'encerramento', titulo: 'O que fica', segunda: undefined, id: undefined, curto: undefined, linha: 27 },
+    { layout: 'abertura', titulo: 'O passeio', segunda: undefined, id: 'passeio', curto: 'O passeio', linha: 11 },
+    { layout: 'conteudo', titulo: 'A variância cresce', segunda: 'linearmente com o tempo', id: 'variancia', curto: undefined, linha: 14 },
+    { layout: 'figura', titulo: 'A nuvem se espalha', segunda: 'como raiz de t', id: 'nuvem', curto: undefined, linha: 22 },
+    { layout: 'encerramento', titulo: 'O que fica', segunda: undefined, id: undefined, curto: undefined, linha: 26 },
   ]);
-  assert.deepEqual(roteiro.slides[1].notas, [{ texto: 'Pedir a um aluno que ande jogando uma moeda.', linha: 20 }]);
+  assert.deepEqual(roteiro.slides[1].notas, [{ texto: 'Pedir a um aluno que ande jogando uma moeda.', linha: 19 }]);
   assert.deepEqual(roteiro.erros, []);
 });

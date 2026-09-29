@@ -6,17 +6,13 @@ Os outros três fluxos estão em `71-fluxo-chat.md`, `72-artifact-claude.md` e `
 
 ## Instalar a CLI
 
-**Hoje a CLI se instala a partir do repositório do sistema**, com `npm link` (spec 8.1):
+A CLI se instala pelo npm (spec 8.1). Node 20.6 ou mais novo:
 
 ```bash
-cd caminho/para/lecture-design-system
-npm install
-npm link
+npm install -g aula-usp
 ```
 
-`npm install` traz as dependências; `npm link` põe `aula-usp` no seu PATH. Node 20.6 ou mais novo.
-
-**`npm install -g aula-usp` ainda não funciona.** O pacote não está publicado no npm, e publicá-lo é da fase 3 do projeto: até lá não há o que instalar por esse caminho. Quando houver, é esta seção que muda.
+Sem instalar nada global, `npx aula-usp <comando>` faz o mesmo. Quem trabalha num clone do repositório do sistema pode usar `npm install` e `npm link` dentro dele, que põe no PATH a versão do clone.
 
 Confira que respondeu, chamando a CLI sem comando nenhum:
 
@@ -29,19 +25,22 @@ Ela imprime o uso e termina com código 2:
 ```
 uso: aula-usp novo <pasta> --unidade ime
        aula-usp servir <pasta> [--porta 8765]
-       aula-usp validar <pasta> [--json]
+       aula-usp validar <pasta> [--slide <id|n>] [--json]
        aula-usp build <pasta> [--sem-pdf]
+       aula-usp avaliar <pasta> [--slide <id|n>] [--minutos N] [--fotos <dir>] [--json]
+       aula-usp slide <pasta> <id|n> [--substituir <arquivo> [--dividir] [--forcar]]
+       aula-usp roteiro <arquivo.md> <pasta> [--substituir]
        aula-usp dist
        aula-usp pacotes
 ```
 
-Se em vez disso vier "comando não encontrado", não insista no `npm link`: chame o arquivo pelo caminho, que faz exatamente o mesmo.
+Se em vez disso vier "comando não encontrado", o diretório global do npm não está no seu PATH: use `npx aula-usp`, ou, num clone do sistema, chame o arquivo pelo caminho, que faz exatamente o mesmo.
 
 ```bash
 node caminho/para/lecture-design-system/bin/aula-usp.mjs validar minha-aula
 ```
 
-Dos seis comandos, quatro são seus — `novo`, `validar`, `servir` e `build`, nesta ordem, e as quatro seções seguintes são eles. `aula-usp dist` e `aula-usp pacotes` são manutenção do sistema, e quem escreve aula não tem motivo para chamá-los.
+Os quatro do dia a dia são `novo`, `validar`, `servir` e `build`, nesta ordem, e as quatro seções seguintes são eles. `avaliar`, `slide` e `roteiro` avaliam, corrigem e geram aulas, e estão em `80-avaliar-corrigir-gerar.md`. `aula-usp dist` e `aula-usp pacotes` são manutenção do sistema: só rodam num clone do repositório, e quem escreve aula não tem motivo para chamá-los.
 
 ## `aula-usp novo` — começar uma aula
 
@@ -61,7 +60,7 @@ O comando não sobrescreve pasta que já tenha conteúdo, e recusa uma unidade q
 
 O que ele cria é o esqueleto de `10-estrutura.md`, com capa, duas aberturas, dois slides de conteúdo e encerramento. Troque o conteúdo, preencha as metas que faltam e acrescente seções.
 
-Uma observação sobre a tag do `<script>` que veio no esqueleto: ela aponta para a CDN, com a versão exata e a soma de integridade — é a forma que o `aula-usp pacotes` escreve. Esse endereço ainda não resolve, porque o pacote não está publicado (fase 3), e **não faz diferença neste fluxo**, porque `aula-usp servir` troca a tag pelo runtime local e `aula-usp build` a troca pelo motor embutido. Os dois a reconhecem pelo `src` terminado em `/aula-usp.js`, não pelo endereço. O que não funciona, até a publicação, é abrir o arquivo criado direto no navegador com dois cliques: para ver a aula, use `servir`.
+Uma observação sobre a tag do `<script>` que veio no esqueleto: ela aponta para a CDN, com a versão exata e a soma de integridade — é a forma que o `aula-usp pacotes` escreve. O endereço resolve, porque o pacote está publicado no npm e o jsDelivr o serve. Mesmo assim, **ele não faz diferença neste fluxo**, porque `aula-usp servir` troca a tag pelo runtime local, e `aula-usp build`, pelo motor embutido. Os dois a reconhecem pelo `src` terminado em `/aula-usp.js`, não pelo endereço. Abrir o arquivo direto no navegador, com dois cliques, também funciona, carregando o runtime da CDN; para escrever, prefira `servir`, que não depende de internet.
 
 ## O ciclo
 

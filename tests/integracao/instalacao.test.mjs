@@ -131,15 +131,13 @@ test('instalado, servir responde com a aula e o runtime local', async () => {
 // `aula-usp roteiro` no pacote instalado (plano do gerar, Tarefa 4): o parser mora em montar/, o
 // comando em build/, e a tag do runtime sai de modelos/aula/index.html — os três têm de viajar no
 // tarball. O roteiro é o exemplo da spec 2026-09-28, 6.1, que não viaja (tests/ fica fora do `files`),
-// e por isso é copiado daqui; SEM a meta `video: canto`, pela razão medida na Tarefa 2 e presa em
-// tests/integracao/roteiro.test.mjs: com ela, o slide #variancia entra no canto do vídeo.
+// e por isso é copiado daqui.
 test('instalado, roteiro converte o exemplo da spec 6.1 numa aula válida, com a tag do modelo instalado', () => {
   const { dir, pacote } = instalar();
   try {
     const fonte = join(dir, 'fonte');
     cpSync(join(RAIZ, 'tests/fixtures/roteiro/exemplo-spec'), fonte, { recursive: true });
     const roteiro = join(fonte, 'roteiro.md');
-    writeFileSync(roteiro, readFileSync(roteiro, 'utf8').replace('video: canto\n', ''));
     const aula = join(dir, 'aula-do-roteiro');
     const r = cli(pacote, 'roteiro', roteiro, aula);
     assert.equal(r.status, 0, r.stdout + r.stderr);

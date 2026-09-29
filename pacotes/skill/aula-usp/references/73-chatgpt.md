@@ -4,7 +4,7 @@ Aqui a aula chega como **arquivo**. Você conversa, o modelo escreve o HTML, voc
 
 O que este tem de próprio é o começo e o fim: como dar o guia ao modelo, e como tirar dele o arquivo inteiro sem perder um pedaço no caminho.
 
-Como os outros dois fluxos de navegador, ele depende da tag do runtime apontando para o pacote publicado, e a publicação é da fase 3 do projeto (`71-fluxo-chat.md`). O aceite em ChatGPT está marcado para essa fase.
+Como os outros dois fluxos de navegador, ele depende da tag do runtime apontando para o pacote publicado, e o pacote está publicado no npm (`71-fluxo-chat.md`). O aceite em ChatGPT ainda não foi feito: o que este arquivo diz sobre o GPT é desenho, não relato de teste.
 
 ## O GPT personalizado
 

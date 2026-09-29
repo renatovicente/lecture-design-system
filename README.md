@@ -229,7 +229,6 @@ disciplina: Física Estatística
 aula: 3
 data: 2026-10-05
 professor: Prof. Renato Vicente
-video: canto
 ---
 
 # Passeio aleatório | e difusão
@@ -261,7 +260,7 @@ aula-usp roteiro roteiro.md passeio
 
 O comando escreve `passeio/index.html`, copia `img/nuvem.png` para `passeio/img/` e roda `aula-usp validar`. A conversão é determinística: o mesmo roteiro dá sempre os mesmos bytes. Um erro de roteiro sai com a linha, sem escrever nada. O que o roteiro não exprime — demos, exercícios — se escreve depois no HTML. A sintaxe completa, com um roteiro inteiro que valida limpo, está em `guia/80-avaliar-corrigir-gerar.md`, na seção "Gerar a partir de um roteiro e de fontes".
 
-Neste exemplo, que é o da spec, a meta `video: canto` reserva o canto do vídeo, e o validador acusa que o destaque e a fonte do slide `#variancia` entram nele: é o validador fazendo o trabalho dele. Tire a meta, ou passe um bloco para outro slide, e a aula valida limpa.
+Com `video: canto` no cabeçalho, o roteiro reserva o canto do vídeo, e o validador passa a cobrar que o corpo de cada slide termine antes dele. No exemplo acima, o slide `#variancia` não cabe com o canto ligado: o destaque e a fonte entram nele, e é preciso passar um bloco para outro slide.
 
 A skill `aula-usp-gerar` escreve o roteiro por você, a partir de artigos e de apresentações antigas, e o mostra antes de gerar a aula (veja "Skills para agentes", acima).
 

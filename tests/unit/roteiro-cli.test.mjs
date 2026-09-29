@@ -23,17 +23,13 @@ function rodar(...argumentos) {
 }
 
 // Uma cópia do exemplo da spec numa pasta temporária, e o caminho de uma pasta de aula que não existe.
-//
-// SEM a meta `video: canto`, de propósito: com ela, e com Chrome, o slide #variancia do exemplo entra no
-// canto do vídeo (composicao.canto-video, dois erros, medido na Tarefa 2) e `validar` sai com 1; sem
-// Chrome, a composição é pulada e sai com 0. Um teste de CLI cujo código de saída dependesse de haver
-// Chrome não diria nada. O exemplo literal, com a meta e com Chrome, está em
-// tests/integracao/roteiro.test.mjs, com os dois erros presos lá.
+// O exemplo não tem a meta `video` (saiu da spec na revisão da 1.3.0): com ela, e com Chrome, o slide
+// #variancia entraria no canto do vídeo, e o código de saída deste teste dependeria de haver Chrome.
+// O caso com a meta está em tests/integracao/roteiro.test.mjs.
 function copiaDoExemplo() {
   const base = mkdtempSync(join(tmpdir(), 'aula-usp-roteiro-cli-'));
   cpSync(EXEMPLO, join(base, 'fonte'), { recursive: true });
   const roteiro = join(base, 'fonte/roteiro.md');
-  writeFileSync(roteiro, readFileSync(roteiro, 'utf8').replace('video: canto\n', ''));
   return { roteiro, pasta: join(base, 'aula'), base };
 }
 

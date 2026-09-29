@@ -190,7 +190,7 @@ O `lang` do `<html>` escolhe o idioma dos rótulos que o sistema escreve — "Bl
 
 A linha do `<script>` no `<head>` é a única que muda de um fluxo de trabalho para o outro. No esqueleto acima ela aparece como o `aula-usp pacotes` a escreve: o endereço da CDN, com a versão exata e a soma de integridade que o sistema mediu. Numa aula sua ela é essa mesma linha — nos fluxos com terminal, `aula-usp servir` e `aula-usp build` a reconhecem pelo `src` terminado em `/aula-usp.js` e a trocam, respectivamente, pelo runtime local e pelo motor embutido. O capítulo do seu fluxo diz o que esperar — **O fluxo com terminal**, **O fluxo no chat, sem terminal**, **A aula como artifact do Claude** ou **A aula pelo ChatGPT**.
 
-**A versão e o hash são reais; o endereço é que ainda não resolve:** o pacote não está publicado no npm, e a publicação é da fase 3. O modelo, os exemplos e o espécime do repositório já trazem a tag fixada. Até a publicação, a aula se experimenta com `aula-usp servir`; **O fluxo no chat, sem terminal** conta o resto.
+**A versão, o hash e o endereço são reais:** o pacote está publicado no npm, e o jsDelivr serve os arquivos com exatamente os bytes que o hash confere. O modelo, os exemplos e o espécime já trazem a tag fixada. A aula abre direto no navegador, sem instalar nada; **O fluxo no chat, sem terminal** conta o resto.
 
 Duas propriedades dessa tag. A primeira já está escrita nela: a versão é exata e vem com `integrity`, de modo que uma aula fique presa à versão com que foi feita e não mude de aparência sozinha; atualizar é trocar a tag — e ela passa a valer de fato no dia em que o endereço resolver. A segunda vale hoje, aqui e no runtime local: se o runtime não carregar — sem internet, por exemplo —, o HTML aparece cru, feio mas legível, em vez de aparecer em branco.
 
@@ -1441,17 +1441,13 @@ Os outros três fluxos estão em **O fluxo no chat, sem terminal**, **A aula com
 
 ## Instalar a CLI
 
-**Hoje a CLI se instala a partir do repositório do sistema**, com `npm link` (spec 8.1):
+A CLI se instala pelo npm (spec 8.1). Node 20.6 ou mais novo:
 
 ```bash
-cd caminho/para/lecture-design-system
-npm install
-npm link
+npm install -g aula-usp
 ```
 
-`npm install` traz as dependências; `npm link` põe `aula-usp` no seu PATH. Node 20.6 ou mais novo.
-
-**`npm install -g aula-usp` ainda não funciona.** O pacote não está publicado no npm, e publicá-lo é da fase 3 do projeto: até lá não há o que instalar por esse caminho. Quando houver, é esta seção que muda.
+Sem instalar nada global, `npx aula-usp <comando>` faz o mesmo. Quem trabalha num clone do repositório do sistema pode usar `npm install` e `npm link` dentro dele, que põe no PATH a versão do clone.
 
 Confira que respondeu, chamando a CLI sem comando nenhum:
 
@@ -1464,19 +1460,22 @@ Ela imprime o uso e termina com código 2:
 ```
 uso: aula-usp novo <pasta> --unidade ime
        aula-usp servir <pasta> [--porta 8765]
-       aula-usp validar <pasta> [--json]
+       aula-usp validar <pasta> [--slide <id|n>] [--json]
        aula-usp build <pasta> [--sem-pdf]
+       aula-usp avaliar <pasta> [--slide <id|n>] [--minutos N] [--fotos <dir>] [--json]
+       aula-usp slide <pasta> <id|n> [--substituir <arquivo> [--dividir] [--forcar]]
+       aula-usp roteiro <arquivo.md> <pasta> [--substituir]
        aula-usp dist
        aula-usp pacotes
 ```
 
-Se em vez disso vier "comando não encontrado", não insista no `npm link`: chame o arquivo pelo caminho, que faz exatamente o mesmo.
+Se em vez disso vier "comando não encontrado", o diretório global do npm não está no seu PATH: use `npx aula-usp`, ou, num clone do sistema, chame o arquivo pelo caminho, que faz exatamente o mesmo.
 
 ```bash
 node caminho/para/lecture-design-system/bin/aula-usp.mjs validar minha-aula
 ```
 
-Dos seis comandos, quatro são seus — `novo`, `validar`, `servir` e `build`, nesta ordem, e as quatro seções seguintes são eles. `aula-usp dist` e `aula-usp pacotes` são manutenção do sistema, e quem escreve aula não tem motivo para chamá-los.
+Os quatro do dia a dia são `novo`, `validar`, `servir` e `build`, nesta ordem, e as quatro seções seguintes são eles. `avaliar`, `slide` e `roteiro` avaliam, corrigem e geram aulas, e estão em **Avaliar uma aula**. `aula-usp dist` e `aula-usp pacotes` são manutenção do sistema: só rodam num clone do repositório, e quem escreve aula não tem motivo para chamá-los.
 
 ## `aula-usp novo` — começar uma aula
 
@@ -1496,7 +1495,7 @@ O comando não sobrescreve pasta que já tenha conteúdo, e recusa uma unidade q
 
 O que ele cria é o esqueleto de **A estrutura de uma aula**, com capa, duas aberturas, dois slides de conteúdo e encerramento. Troque o conteúdo, preencha as metas que faltam e acrescente seções.
 
-Uma observação sobre a tag do `<script>` que veio no esqueleto: ela aponta para a CDN, com a versão exata e a soma de integridade — é a forma que o `aula-usp pacotes` escreve. Esse endereço ainda não resolve, porque o pacote não está publicado (fase 3), e **não faz diferença neste fluxo**, porque `aula-usp servir` troca a tag pelo runtime local e `aula-usp build` a troca pelo motor embutido. Os dois a reconhecem pelo `src` terminado em `/aula-usp.js`, não pelo endereço. O que não funciona, até a publicação, é abrir o arquivo criado direto no navegador com dois cliques: para ver a aula, use `servir`.
+Uma observação sobre a tag do `<script>` que veio no esqueleto: ela aponta para a CDN, com a versão exata e a soma de integridade — é a forma que o `aula-usp pacotes` escreve. O endereço resolve, porque o pacote está publicado no npm e o jsDelivr o serve. Mesmo assim, **ele não faz diferença neste fluxo**, porque `aula-usp servir` troca a tag pelo runtime local, e `aula-usp build`, pelo motor embutido. Os dois a reconhecem pelo `src` terminado em `/aula-usp.js`, não pelo endereço. Abrir o arquivo direto no navegador, com dois cliques, também funciona, carregando o runtime da CDN; para escrever, prefira `servir`, que não depende de internet.
 
 ## O ciclo
 
@@ -1648,7 +1647,7 @@ A aula inteira depende de uma linha, no `<head>`, com esta forma:
 
 A versão é exata e vem acompanhada de um hash de integridade: se o arquivo na CDN mudar, o navegador se recusa a executá-lo. O efeito colateral é bom para quem dá aula — a sua aula fica presa à versão com que foi feita, e não muda de aparência sozinha na véspera. Atualizar é trocar a tag.
 
-**A tag já traz a versão e o hash reais; o endereço é que ainda não resolve.** Quem a escreve é o `aula-usp pacotes`, lendo a versão do `package.json` do sistema e o `integrity` do manifesto que o `aula-usp dist` escreve, e ela chega pronta no modelo, nos exemplos e nos quatro pacotes para agentes. O que falta é o outro lado: o pacote não está publicado no npm — a publicação é da fase 3 do projeto —, então buscar esse endereço hoje não traz nada. Até lá, este fluxo se experimenta com `aula-usp servir` (**O fluxo com terminal**), que troca a tag pelo runtime local; o resto deste arquivo vale igual nos dois casos.
+**A tag traz a versão, o hash e o endereço reais.** Quem a escreve é o `aula-usp pacotes`, lendo a versão do `package.json` do sistema e o `integrity` do manifesto que o `aula-usp dist` escreve, e ela chega pronta no modelo, nos exemplos e nos pacotes para agentes. O pacote está publicado no npm, e o jsDelivr serve o runtime por esse endereço. O arquivo que o modelo de chat entrega abre direto no navegador, com internet. Sem internet, `aula-usp servir` (**O fluxo com terminal**) troca a tag pelo runtime local; o resto deste arquivo vale igual nos dois casos.
 
 Uma propriedade da tag vale conhecer antes de precisar dela: **se o runtime não carregar, a aula não some.** Sem internet, ou com a CDN fora do ar, nada é escondido e o HTML aparece cru — feio, sem grade e sem cor, mas legível, com o texto de todos os slides na tela.
 
@@ -1733,9 +1732,9 @@ Um artifact do claude.ai é uma página que o Claude escreve e mostra ao lado da
 
 ## Antes de tudo: o que este arquivo é
 
-**Este fluxo ainda não pode ser exercitado.** Ele depende da tag do runtime apontando para o pacote publicado no npm, e a publicação é da fase 3 do projeto (**O fluxo no chat, sem terminal**). O aceite em claude.ai está marcado para essa fase justamente por isso.
+**Este fluxo funciona, e foi exercitado uma vez.** Com o pacote publicado no npm, a tag do runtime resolve pelo jsDelivr. Na primeira rodada de aceite num Projeto do claude.ai, o artifact carregou a aula inteira, com matemática e o painel do validador. O painel acusou um transbordo de 1 px no mapa de blocos da capa, que fora do artifact não aparecia; a versão 1.0.1 deu folga a esse mapa, e a nova rodada de aceite ainda não foi feita.
 
-E há uma segunda ressalva, que vale para o arquivo inteiro: **o que se afirma aqui sobre o que um artifact permite é o que o projeto assume**, escrito na tabela de riscos da especificação e usado como premissa de desenho. Não é um relato de teste. Onde a especificação diz "bloqueia", o sistema já está desenhado para não depender daquilo; onde ela diz "pode bloquear", há um plano B, e é ele que você vai usar se o bloqueio acontecer com você. Quando o aceite da fase 3 rodar, o que se aprender ali entra neste arquivo, e as ressalvas saem.
+E há uma segunda ressalva, que vale para o arquivo inteiro: **o que se afirma aqui sobre o que um artifact permite é o que o projeto assume**, escrito na tabela de riscos da especificação e usado como premissa de desenho. Não é um relato de teste. Onde a especificação diz "bloqueia", o sistema já está desenhado para não depender daquilo; onde ela diz "pode bloquear", há um plano B, e é ele que você vai usar se o bloqueio acontecer com você. O que a primeira rodada de aceite mostrou já está no parágrafo acima; o que as próximas mostrarem entra aqui, e as ressalvas saem.
 
 ## O que o projeto assume que um artifact bloqueia
 
@@ -1798,7 +1797,7 @@ Aqui a aula chega como **arquivo**. Você conversa, o modelo escreve o HTML, voc
 
 O que este tem de próprio é o começo e o fim: como dar o guia ao modelo, e como tirar dele o arquivo inteiro sem perder um pedaço no caminho.
 
-Como os outros dois fluxos de navegador, ele depende da tag do runtime apontando para o pacote publicado, e a publicação é da fase 3 do projeto (**O fluxo no chat, sem terminal**). O aceite em ChatGPT está marcado para essa fase.
+Como os outros dois fluxos de navegador, ele depende da tag do runtime apontando para o pacote publicado, e o pacote está publicado no npm (**O fluxo no chat, sem terminal**). O aceite em ChatGPT ainda não foi feito: o que este arquivo diz sobre o GPT é desenho, não relato de teste.
 
 ## O GPT personalizado
 

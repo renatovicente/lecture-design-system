@@ -6,9 +6,9 @@ Um artifact do claude.ai é uma página que o Claude escreve e mostra ao lado da
 
 ## Antes de tudo: o que este arquivo é
 
-**Este fluxo ainda não pode ser exercitado.** Ele depende da tag do runtime apontando para o pacote publicado no npm, e a publicação é da fase 3 do projeto (`71-fluxo-chat.md`). O aceite em claude.ai está marcado para essa fase justamente por isso.
+**Este fluxo funciona, e foi exercitado uma vez.** Com o pacote publicado no npm, a tag do runtime resolve pelo jsDelivr. Na primeira rodada de aceite num Projeto do claude.ai, o artifact carregou a aula inteira, com matemática e o painel do validador. O painel acusou um transbordo de 1 px no mapa de blocos da capa, que fora do artifact não aparecia; a versão 1.0.1 deu folga a esse mapa, e a nova rodada de aceite ainda não foi feita.
 
-E há uma segunda ressalva, que vale para o arquivo inteiro: **o que se afirma aqui sobre o que um artifact permite é o que o projeto assume**, escrito na tabela de riscos da especificação e usado como premissa de desenho. Não é um relato de teste. Onde a especificação diz "bloqueia", o sistema já está desenhado para não depender daquilo; onde ela diz "pode bloquear", há um plano B, e é ele que você vai usar se o bloqueio acontecer com você. Quando o aceite da fase 3 rodar, o que se aprender ali entra neste arquivo, e as ressalvas saem.
+E há uma segunda ressalva, que vale para o arquivo inteiro: **o que se afirma aqui sobre o que um artifact permite é o que o projeto assume**, escrito na tabela de riscos da especificação e usado como premissa de desenho. Não é um relato de teste. Onde a especificação diz "bloqueia", o sistema já está desenhado para não depender daquilo; onde ela diz "pode bloquear", há um plano B, e é ele que você vai usar se o bloqueio acontecer com você. O que a primeira rodada de aceite mostrou já está no parágrafo acima; o que as próximas mostrarem entra aqui, e as ressalvas saem.
 
 ## O que o projeto assume que um artifact bloqueia
 

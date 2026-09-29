@@ -111,7 +111,7 @@ O `lang` do `<html>` escolhe o idioma dos rótulos que o sistema escreve — "Bl
 
 A linha do `<script>` no `<head>` é a única que muda de um fluxo de trabalho para o outro. No esqueleto acima ela aparece como o `aula-usp pacotes` a escreve: o endereço da CDN, com a versão exata e a soma de integridade que o sistema mediu. Numa aula sua ela é essa mesma linha — nos fluxos com terminal, `aula-usp servir` e `aula-usp build` a reconhecem pelo `src` terminado em `/aula-usp.js` e a trocam, respectivamente, pelo runtime local e pelo motor embutido. O capítulo do seu fluxo diz o que esperar — `70-fluxo-terminal.md`, `71-fluxo-chat.md`, `72-artifact-claude.md` ou `73-chatgpt.md`.
 
-**A versão e o hash são reais; o endereço é que ainda não resolve:** o pacote não está publicado no npm, e a publicação é da fase 3. O modelo, os exemplos e o espécime do repositório já trazem a tag fixada. Até a publicação, a aula se experimenta com `aula-usp servir`; `71-fluxo-chat.md` conta o resto.
+**A versão, o hash e o endereço são reais:** o pacote está publicado no npm, e o jsDelivr serve os arquivos com exatamente os bytes que o hash confere. O modelo, os exemplos e o espécime já trazem a tag fixada. A aula abre direto no navegador, sem instalar nada; `71-fluxo-chat.md` conta o resto.
 
 Duas propriedades dessa tag. A primeira já está escrita nela: a versão é exata e vem com `integrity`, de modo que uma aula fique presa à versão com que foi feita e não mude de aparência sozinha; atualizar é trocar a tag — e ela passa a valer de fato no dia em que o endereço resolver. A segunda vale hoje, aqui e no runtime local: se o runtime não carregar — sem internet, por exemplo —, o HTML aparece cru, feio mas legível, em vez de aparecer em branco.
 

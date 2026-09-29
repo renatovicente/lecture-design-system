@@ -34,28 +34,27 @@ async function validarComChrome(pasta) {
 const secoes = (html) => [...html.matchAll(/<section data-layout="([^"]+)"(?: id="([^"]+)")?/g)]
   .map(([, layout, id]) => ({ layout, id: id ?? null }));
 
-test('o exemplo da spec 6.1 vira aula; sem a meta video, 0 erros; com ela, o canto do vídeo acusa o slide #variancia', async () => {
+test('o exemplo da spec 6.1 vira aula com 0 erros; com a meta video acrescentada, o canto acusa o slide #variancia', async () => {
   const base = mkdtempSync(join(tmpdir(), 'aula-usp-roteiro-'));
   cpSync(EXEMPLO, join(base, 'fonte'), { recursive: true });
   const literal = join(base, 'fonte/roteiro.md');
-  const semVideo = join(base, 'fonte/sem-video.md');
-  writeFileSync(semVideo, readFileSync(literal, 'utf8').replace('video: canto\n', ''));
+  const comVideoMd = join(base, 'fonte/com-video.md');
+  writeFileSync(comVideoMd, readFileSync(literal, 'utf8').replace('professor: Prof. Renato Vicente\n', 'professor: Prof. Renato Vicente\nvideo: canto\n'));
 
-  // Sem `video: canto`: a aula valida limpa com a composição rodada; os dois avisos são do exemplo (uma
-  // abertura só; a figura sem nota), os mesmos de tests/unit/roteiro.test.mjs.
-  const limpo = roteiro(semVideo, join(base, 'sem-video'));
+  // O exemplo literal da spec: a aula valida limpa com a composição rodada; os dois avisos são do
+  // exemplo (uma abertura só; a figura sem nota), os mesmos de tests/unit/roteiro.test.mjs.
+  const limpo = roteiro(literal, join(base, 'literal'));
   assert.equal(limpo.status, 0, `${limpo.stdout}\n${limpo.stderr}`);
-  const semCanto = await validarComChrome(join(base, 'sem-video'));
+  const semCanto = await validarComChrome(join(base, 'literal'));
   assert.equal(semCanto.erros, 0, semCanto.achados.map((a) => `${a.regra}: ${a.mensagem}`).join(' / '));
   assert.deepEqual(semCanto.achados.map((a) => a.regra), ['estrutura.blocos', 'estrutura.notas-ausentes']);
 
-  // O exemplo literal, com `video: canto`: medido na Tarefa 2, a lista do slide #variancia desce até o
-  // canto reservado ao vídeo, e o destaque e a fonte entram nele. Não é defeito do gerador — o mesmo
-  // HTML sem a meta valida limpo — e sim do exemplo da spec, que não cabe com o canto ligado. Preso
-  // aqui para a divergência com o plano ("validar dá 0 erros") ficar à vista, e não calada.
-  const comVideo = roteiro(literal, join(base, 'literal'));
+  // O mesmo roteiro com `video: canto`: a lista do slide #variancia desce até o canto reservado ao
+  // vídeo, e o destaque e a fonte entram nele. Até a revisão da 1.3.0 a meta estava no exemplo da
+  // spec, que por isso não validava limpo; saiu de lá, e o caso do canto ficou aqui, de propósito.
+  const comVideo = roteiro(comVideoMd, join(base, 'com-video'));
   assert.equal(comVideo.status, 1, comVideo.stdout);
-  const canto = await validarComChrome(join(base, 'literal'));
+  const canto = await validarComChrome(join(base, 'com-video'));
   assert.deepEqual(canto.achados.filter((a) => a.severidade === 'erro').map((a) => `${a.regra} #${a.id}`),
     ['composicao.canto-video #variancia', 'composicao.canto-video #variancia']);
 });

@@ -4,7 +4,6 @@ disciplina: Física Estatística
 aula: 3
 data: 2026-10-05
 professor: Prof. Renato Vicente
-video: canto
 ---
 
 # Passeio aleatório | e difusão
