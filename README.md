@@ -261,6 +261,13 @@ Avaliação Aula USP: 1 alerta, 0 conselhos
 ```
 
 ```bash
+aula-usp slide <pasta> <id|n>
+aula-usp slide <pasta> <id|n> --substituir <arquivo> [--dividir] [--forcar]
+```
+
+Corrige um slide sem tocar no resto do arquivo. Sem opção, imprime o fonte daquela `section`, byte a byte, pelo id ou pela posição (de 1 a N, a mesma numeração de `validar` e `avaliar`). Com `--substituir`, troca só aquela `section` pela do arquivo, que tem de ter exatamente uma, com o mesmo id; fora dela, a aula fica idêntica byte a byte, e a escrita é atômica. `--forcar` aceita um id diferente, e `--dividir` aceita duas `section`s no arquivo, a segunda com um id novo, para partir um slide em dois. Um alvo que não existe, um arquivo com zero ou três `section`s ou um id trocado sem `--forcar` saem com 1, sem mexer na aula. O comando não valida: depois dele, rode `validar --slide`.
+
+```bash
 aula-usp dist
 aula-usp pacotes
 ```

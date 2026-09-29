@@ -1,7 +1,7 @@
 #!/usr/bin/env node
-// CLI do Aula USP (spec 8.1). Com `novo`, os seis comandos da spec estão implementados; `avaliar` é
-// da spec 2026-09-28 (4.1).
-import { cpSync, existsSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
+// CLI do Aula USP (spec 8.1). Com `novo`, os seis comandos da spec estão implementados; `avaliar` e
+// `slide` são da spec 2026-09-28 (4.1 e 5.1).
+import { cpSync, existsSync, readdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { basename, resolve, join, dirname } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 // build/servir.mjs, build/validar.mjs, build/bundle.mjs e build/cobertura.mjs só são importados
@@ -19,6 +19,7 @@ const USO = 'uso: aula-usp novo <pasta> --unidade ime\n'
   + '       aula-usp validar <pasta> [--json]\n'
   + '       aula-usp build <pasta> [--sem-pdf]\n'
   + '       aula-usp avaliar <pasta> [--slide <id|n>] [--minutos N] [--fotos <dir>] [--json]\n'
+  + '       aula-usp slide <pasta> <id|n> [--substituir <arquivo> [--dividir] [--forcar]]\n'
   + '       aula-usp dist\n'
   + '       aula-usp pacotes';
 
@@ -32,7 +33,8 @@ function sair(mensagem) {
 // e ignorada em silêncio — o oposto da regra que este arquivo já segue para flag desconhecida
 // ("melhor recusar que ignorar em silêncio"), e que vale tanto para uma flag que não existe quanto
 // para uma que existe, mas não é deste comando (achado numa rodada de revisão da tarefa 3).
-function lerArgumentos(argumentos, flagsPermitidas) {
+// `maximoDePosicionais` é 1 para todo comando, salvo `slide`, que recebe a pasta e o alvo.
+function lerArgumentos(argumentos, flagsPermitidas, maximoDePosicionais = 1) {
   const opcoes = { porta: 8765 };
   const posicionais = [];
   for (let i = 0; i < argumentos.length; i++) {
@@ -40,6 +42,8 @@ function lerArgumentos(argumentos, flagsPermitidas) {
     else if (argumentos[i] === '--json' && flagsPermitidas.has('--json')) opcoes.json = true;
     else if (argumentos[i] === '--sem-pdf' && flagsPermitidas.has('--sem-pdf')) opcoes.semPdf = true;
     else if (argumentos[i] === '--unidade' && flagsPermitidas.has('--unidade')) opcoes.unidade = argumentos[++i];
+    else if (argumentos[i] === '--dividir' && flagsPermitidas.has('--dividir')) opcoes.dividir = true;
+    else if (argumentos[i] === '--forcar' && flagsPermitidas.has('--forcar')) opcoes.forcar = true;
     else if (FLAGS_COM_VALOR.has(argumentos[i]) && flagsPermitidas.has(argumentos[i])) {
       const valor = argumentos[++i];
       // Sem valor, ou com outra flag no lugar do valor, é engano de uso: `--slide --json` não é o
@@ -50,7 +54,7 @@ function lerArgumentos(argumentos, flagsPermitidas) {
     else if (argumentos[i].startsWith('--')) sair(USO); // desconhecida OU de outro comando: mesmo tratamento
     else posicionais.push(argumentos[i]);
   }
-  if (posicionais.length > 1) sair(USO); // um alvo só; mais de um é engano do autor, não uma lista
+  if (posicionais.length > maximoDePosicionais) sair(USO); // um alvo só; mais de um é engano do autor, não uma lista
   return { opcoes, posicionais };
 }
 
@@ -59,11 +63,12 @@ const FLAGS_VALIDAR = new Set(['--json']);
 const FLAGS_BUILD = new Set(['--sem-pdf']);
 const FLAGS_NOVO = new Set(['--unidade']);
 const FLAGS_AVALIAR = new Set(['--slide', '--minutos', '--fotos', '--json']);
+const FLAGS_SLIDE = new Set(['--substituir', '--dividir', '--forcar']);
 
-// As flags de `avaliar` que levam valor, e o nome da opção que cada uma preenche. Entram em
-// lerArgumentos pelo mesmo filtro das outras: fora de FLAGS_AVALIAR, caem em "desconhecida" e saem
-// com o uso — `validar --minutos 3` continua recusado.
-const FLAGS_COM_VALOR = new Map([['--slide', 'slide'], ['--minutos', 'minutos'], ['--fotos', 'fotos']]);
+// As flags que levam valor, e o nome da opção que cada uma preenche. Entram em lerArgumentos pelo
+// mesmo filtro das outras: fora do conjunto do comando, caem em "desconhecida" e saem com o uso —
+// `validar --minutos 3` continua recusado.
+const FLAGS_COM_VALOR = new Map([['--slide', 'slide'], ['--minutos', 'minutos'], ['--fotos', 'fotos'], ['--substituir', 'substituir']]);
 
 // O modelo da spec 10.3 — a mesma pasta que `guia/10-estrutura.md` mostra como esqueleto, e que
 // `build/guia.mjs` lê para gerar aquele bloco. `novo` copia esta pasta; não guarda uma segunda
@@ -320,6 +325,118 @@ async function avaliarComando(argumentos) {
   process.exitCode = 0;
 }
 
+// Recusa de conteúdo (saída 1), em uma linha: o comando rodou, e o que ele recusa é o alvo ou o
+// arquivo do autor. Falha de uso ou de ambiente continua em `sair` (saída 2).
+function recusar(mensagem) {
+  console.error(mensagem);
+  process.exit(1);
+}
+
+const rotuloDoSlide = (posicao, id) => (id ? `slide ${posicao} #${id}` : `slide ${posicao}`);
+
+// `aula-usp slide <pasta> <id|n> [--substituir <arquivo> [--dividir] [--forcar]]` (spec 2026-09-28,
+// 5.1; plano do corrigir, D2 e D3). Sem --substituir, imprime a fatia exata do fonte daquela
+// section, sem acrescentar nada. Com --substituir, troca só aquele intervalo de bytes pelo conteúdo
+// do arquivo: fora dele, o fonte fica idêntico byte a byte (build/secoes.mjs). Não valida a aula —
+// quem valida é `validar --slide`, e a skill aula-usp-corrigir roda os dois.
+async function slideComando(argumentos) {
+  const { opcoes, posicionais } = lerArgumentos(argumentos, FLAGS_SLIDE, 2);
+  const [pasta, alvo] = posicionais;
+  if (!pasta || alvo === undefined) sair(USO);
+  // --dividir e --forcar só qualificam uma substituição; sozinhos, são engano de uso.
+  if ((opcoes.dividir || opcoes.forcar) && opcoes.substituir === undefined) sair(USO);
+  let localizarSecoes;
+  let resolverAlvo;
+  let substituirSecao;
+  let caminhoDaAula;
+  try {
+    ({ localizarSecoes, resolverAlvo, substituirSecao } = await import('../build/secoes.mjs'));
+    ({ caminhoDaAula } = await import('../build/validar.mjs'));
+  } catch (erro) {
+    sair(`falha de ambiente: ${erro.message}\nrode npm install na pasta do sistema`);
+  }
+  let caminho;
+  let texto;
+  try {
+    caminho = caminhoDaAula(pasta);
+    texto = readFileSync(caminho, 'utf8');
+  } catch (erro) {
+    sair(`não encontrei a aula em ${pasta}: ${erro.message}`);
+  }
+  let secoes;
+  try {
+    secoes = localizarSecoes(texto);
+  } catch (erro) {
+    recusar(`${caminho}: ${erro.message}`);
+  }
+  const indice = resolverAlvo(secoes, alvo);
+  if (indice === -1) recusar(`não há slide "${alvo}" nesta aula (${plural(secoes.length, 'slide', 'slides')}: use um id ou uma posição de 1 a ${secoes.length})`);
+  const original = secoes[indice];
+
+  if (opcoes.substituir === undefined) {
+    process.stdout.write(texto.slice(original.inicio, original.fim));
+    process.exitCode = 0;
+    return;
+  }
+
+  let substituto;
+  try {
+    substituto = readFileSync(opcoes.substituir, 'utf8');
+  } catch (erro) {
+    sair(`não foi possível ler ${opcoes.substituir}: ${erro.message}`);
+  }
+  let novas;
+  try {
+    novas = localizarSecoes(substituto);
+  } catch (erro) {
+    recusar(`${opcoes.substituir}: ${erro.message}`);
+  }
+  const esperadas = opcoes.dividir ? 2 : 1;
+  if (novas.length !== esperadas) {
+    recusar(`${opcoes.substituir} tem ${plural(novas.length, 'section', 'sections')}; ${opcoes.dividir ? 'com --dividir, são exatamente duas' : 'é exatamente uma (duas, só com --dividir)'}`);
+  }
+  // Fora das sections, só espaço: um parágrafo solto antes ou depois iria parar fora de slide nenhum.
+  const inicioNovo = novas[0].inicio;
+  const fimNovo = novas.at(-1).fim;
+  const entre = novas.length === 2 ? substituto.slice(novas[0].fim, novas[1].inicio) : '';
+  if (/\S/.test(substituto.slice(0, inicioNovo) + entre + substituto.slice(fimNovo))) {
+    recusar(`${opcoes.substituir} tem texto fora da section; o arquivo é só a section, com espaço em volta`);
+  }
+  // Os ids das OUTRAS sections da aula: nenhum id novo pode repetir um deles.
+  const outros = new Set(secoes.filter((_, k) => k !== indice).map((secao) => secao.id).filter(Boolean));
+  const [primeira, segunda] = novas;
+  if (primeira.id !== original.id) {
+    if (!opcoes.forcar) {
+      recusar(`a section nova tem id ${primeira.id ? `"${primeira.id}"` : 'nenhum'} e a original, ${original.id ? `"${original.id}"` : 'nenhum'}; mantenha o id ou use --forcar`);
+    }
+    if (primeira.id && outros.has(primeira.id)) recusar(`o id "${primeira.id}" já é de outro slide desta aula`);
+  }
+  if (segunda) {
+    if (!segunda.id) recusar('com --dividir, a segunda section precisa de um id novo');
+    if (outros.has(segunda.id) || segunda.id === primeira.id || segunda.id === original.id) {
+      recusar(`com --dividir, a segunda section precisa de um id novo, e "${segunda.id}" já existe nesta aula`);
+    }
+  }
+
+  const resultado = substituirSecao(texto, secoes, indice, substituto.slice(inicioNovo, fimNovo));
+  // Escrita atômica: um temporário na mesma pasta (o mesmo sistema de arquivos) e um rename por cima.
+  // Um processo interrompido no meio deixa o original inteiro, e não meio arquivo.
+  const temporario = join(dirname(caminho), `.${basename(caminho)}.${process.pid}.tmp`);
+  try {
+    writeFileSync(temporario, resultado);
+    renameSync(temporario, caminho);
+  } catch (erro) {
+    rmSync(temporario, { force: true });
+    sair(`não foi possível gravar ${caminho}: ${erro.message}`);
+  }
+  const posicao = indice + 1;
+  let mensagem = `${rotuloDoSlide(posicao, primeira.id)} substituído`;
+  if (primeira.id !== original.id) mensagem += ` (era ${original.id ? `#${original.id}` : 'sem id'})`;
+  if (segunda) mensagem += `; ${rotuloDoSlide(posicao + 1, segunda.id)} acrescentado depois dele`;
+  console.log(mensagem);
+  process.exitCode = 0;
+}
+
 // `dist` e `pacotes` são manutenção do sistema (spec 8.1): precisam do repositório — especime/, que
 // `pacotes` lê, e as devDependencies, como o esbuild de build/bundle.mjs —, e o pacote do npm não leva
 // nenhum dos dois (package.json, "files"). Sem esta conferência, no pacote instalado os dois saíam
@@ -396,6 +513,7 @@ else if (comando === 'servir') servir(argumentos);
 else if (comando === 'validar') validarComando(argumentos);
 else if (comando === 'build') buildComando(argumentos);
 else if (comando === 'avaliar') avaliarComando(argumentos);
+else if (comando === 'slide') slideComando(argumentos);
 else if (comando === 'dist') distComando(argumentos);
 else if (comando === 'pacotes') pacotesComando(argumentos);
 else sair(USO);
