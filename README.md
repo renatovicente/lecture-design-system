@@ -130,6 +130,57 @@ A capa e o encerramento trazem a assinatura da USP e um segundo logo, escolhido 
 3. Registre a origem e as medidas em `assets/marcas/README.md`. Acrescente o logo ao `import` de `montar/dist.js`, que embute os logos no runtime, e à lista de `tests/unit/marcas.test.mjs`. Um logo que não seja preto precisa de exceção nomeada na spec 4.5.
 4. Rode `aula-usp dist`, `aula-usp pacotes`, `npm test` e `npm run test:integracao`, e publique uma versão nova. A tag das aulas aponta para uma versão exata da CDN, então o logo só aparece para quem usar essa versão ou uma posterior.
 
+## Espaço para o vídeo do ministrante
+
+Para gravar ou transmitir a aula com a sua câmera sobreposta no canto inferior direito do slide, a aula reserva esse canto. O sistema **não mostra vídeo nenhum**: quem põe a câmera por cima é o programa de gravação ou de transmissão (OBS, Zoom, Meet). A aula só garante que nada dela fique embaixo da câmera.
+
+### 1. Ligue a reserva na aula
+
+No `<head>` do `index.html`, acrescente uma linha:
+
+```html
+<meta name="video" content="canto">
+```
+
+É opcional. Sem ela, a aula sai exatamente como antes.
+
+Com ela:
+- **O canto reservado** é um retângulo 16:9 de 334 × 188 px no palco de 1280 × 720, encostado nas bordas direita e de baixo: de x = 946 a 1280 e de y = 532 a 720. São as colunas 10 a 12 da grade, mais a margem direita.
+- **O que o sistema arruma sozinho:**
+  - o rodapé e os logos da capa e do encerramento terminam antes do canto;
+  - a abertura sobe;
+  - a afirmação se centra acima do canto;
+  - figuras e demos perdem a faixa da direita.
+- **O que fica com você:** o corpo dos slides de `conteudo`. A coluna da direita, ou o corpo inteiro se não houver colunas, tem de terminar antes de y = 532. Uma grade `8-4` com um destaque curto na coluna estreita costuma resolver.
+- **O validador confere:** `aula-usp validar` acusa com `composicao.canto-video` todo bloco que entrar no canto, dizendo quantos pixels entrou. Na abertura cabe um título de duas linhas sem pergunta, ou de uma linha com uma pergunta de até duas. Mais que isso transborda.
+
+O exemplo completo, com os sete layouts e o canto ligado, é `especime/video.html`, e o guia detalha tudo em `guia/20-layouts.md`, seção "O canto do vídeo".
+
+### 2. Ponha a câmera no canto
+
+O canto ocupa **26,1% da largura e 26,1% da altura** do slide, a partir do canto inferior direito, em qualquer resolução 16:9:
+
+| resolução da gravação | posição da câmera (x, y) | tamanho da câmera |
+|---|---|---|
+| 1280 × 720 | 946, 532 | 334 × 188 |
+| 1920 × 1080 | 1419, 798 | 501 × 282 |
+| 2560 × 1440 | 1892, 1064 | 668 × 376 |
+| 3840 × 2160 | 2838, 1596 | 1002 × 564 |
+
+**No OBS Studio,** o caminho mais seguro, porque grava e transmite. Os nomes dos menus variam um pouco entre versões.
+
+1. Em **Configurações → Vídeo**, ponha a resolução base em 1920 × 1080, ou em outra da tabela.
+2. Abra a aula no navegador (`aula-usp servir minha-aula`, ou o HTML de `minha-aula/dist/` depois do `build`) e aperte **F** para a tela cheia.
+3. Acrescente a fonte **Captura de janela**, apontando o navegador, e ajuste-a para ocupar a tela inteira do OBS: botão direito → Transformar → Ajustar à tela.
+   - **Se a sua tela não for 16:9,** como a de muitos Macs (16:10), o slide fica com faixas brancas. Recorte-as (Alt + arrastar a borda da fonte) até o slide encostar nas quatro bordas do OBS. A tabela acima só vale se o slide ocupar exatamente a tela do OBS.
+4. Acrescente a fonte **Dispositivo de captura de vídeo**, com a sua câmera, **acima** da captura de janela na lista de fontes. Em botão direito → Transformar → Editar transformação, ponha a posição e o tamanho da tabela, por exemplo 1419, 798 e 501 × 282 em 1920 × 1080. Uma câmera 16:9 encaixa sem distorção. Se a sua for 4:3, use o tipo de caixa delimitadora que recorta, para preencher o retângulo sem esticar.
+5. **Confira:** vá até um slide de conteúdo com texto na coluna da direita. Nada dele pode ficar embaixo da câmera, e o rodapé tem de aparecer inteiro à esquerda dela.
+6. **Grave,** ou transmita. Para usar o resultado numa chamada, use **Iniciar câmera virtual** e escolha "OBS Virtual Camera" como câmera no Zoom, no Meet ou no Teams, ou compartilhe na chamada a janela do projetor do OBS (botão direito na prévia → Projetor em janela).
+
+**Direto no Zoom ou no Meet, sem OBS:** esses programas põem a sua câmera onde eles querem, num quadro que você não controla com precisão. Dá para compartilhar a tela e arrastar a miniatura da sua câmera para o canto inferior direito, mas a posição não é garantida, e cada participante pode ver o quadro num lugar diferente. Para uma gravação que vai ficar, prefira o OBS.
+
+**No PDF e no HTML construído,** o canto sai vazio, como na tela. É o espaço onde a câmera estava na gravação.
+
 ## Skills para agentes
 
 Uma skill é uma pasta com um `SKILL.md`: instruções que o agente carrega sozinho quando o pedido combina com a descrição dela. O Aula USP traz três, em `pacotes/skill/`, e cada uma leva dentro tudo o que cita: guia, contrato, exemplos e rubrica. Ela funciona sem este repositório.
