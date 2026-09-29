@@ -23,6 +23,7 @@
     "motor/",
     "componentes/",
     "validador/",
+    "avaliador/",
     "contrato/",
     "tokens/",
     "estilos/",

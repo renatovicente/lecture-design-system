@@ -74,6 +74,8 @@ aula-usp validar minha-aula
 
 `servir` abre a aula no navegador: salve o arquivo e recarregue. `validar` lista erros e avisos com o slide, a regra e o que fazer, e sai com 0 quando não há erros.
 
+Com a aula válida, `aula-usp avaliar minha-aula` aconselha sobre a qualidade dos slides, pelas boas práticas de Naegle (2021) e da UCSD, sem mudar nada.
+
 **5. Apresente.** No navegador:
 
 | tecla | faz |
@@ -175,6 +177,20 @@ aula-usp build <pasta> [--sem-pdf]
 ```
 
 Constrói a aula: valida, monta, pré-renderiza, embute tudo num HTML autocontido e gera o PDF. Escreve só em `<pasta>/dist/`.
+
+```bash
+aula-usp avaliar <pasta> [--slide <id|n>] [--minutos N] [--fotos <dir>] [--json]
+```
+
+Julga uma aula já válida pelas boas práticas de Naegle (2021) e da UCSD, com a rubrica de `avaliador/rubrica.json`: título que é rótulo e não conclusão, slide com elementos, itens ou palavras demais, lista sem revelação, aula só de texto, figura sem crédito e, com `--minutos`, slides demais para o tempo. Dá só `ALERTA` e `CONSELHO`, nunca erro, e sai com 0 com ou sem alertas; uma aula com erro de validação não é avaliada ("valide primeiro"). `--slide` avalia um slide só, pelo id ou pela posição. `--fotos <dir>` grava um PNG de 1280 × 720 por slide, com os passos revelados, e um `indice.json`, para um agente julgar o que não se mede; é a única opção que precisa do Chrome, e sem ele sai com 2.
+
+```
+ALERTA · slide 5 #desvio · titulo-rotulo (N3) · o título "Desvio típico" é rótulo, não conclusão (2 palavras, sem afirmar nada). Troque o rótulo por uma frase que diga a conclusão do slide: não "Resultados", mas o que os resultados mostram.
+    <h2>Desvio típico</h2>
+Avaliação Aula USP: 1 alerta, 0 conselhos
+  titulo-rotulo (N3) · 1 alerta, 0 conselhos
+  …
+```
 
 ```bash
 aula-usp dist

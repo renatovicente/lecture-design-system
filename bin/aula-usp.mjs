@@ -1,5 +1,6 @@
 #!/usr/bin/env node
-// CLI do Aula USP (spec 8.1). Com `novo`, os seis comandos da spec estão implementados.
+// CLI do Aula USP (spec 8.1). Com `novo`, os seis comandos da spec estão implementados; `avaliar` é
+// da spec 2026-09-28 (4.1).
 import { cpSync, existsSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { basename, resolve, join, dirname } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -17,6 +18,7 @@ const USO = 'uso: aula-usp novo <pasta> --unidade ime\n'
   + '       aula-usp servir <pasta> [--porta 8765]\n'
   + '       aula-usp validar <pasta> [--json]\n'
   + '       aula-usp build <pasta> [--sem-pdf]\n'
+  + '       aula-usp avaliar <pasta> [--slide <id|n>] [--minutos N] [--fotos <dir>] [--json]\n'
   + '       aula-usp dist\n'
   + '       aula-usp pacotes';
 
@@ -38,6 +40,13 @@ function lerArgumentos(argumentos, flagsPermitidas) {
     else if (argumentos[i] === '--json' && flagsPermitidas.has('--json')) opcoes.json = true;
     else if (argumentos[i] === '--sem-pdf' && flagsPermitidas.has('--sem-pdf')) opcoes.semPdf = true;
     else if (argumentos[i] === '--unidade' && flagsPermitidas.has('--unidade')) opcoes.unidade = argumentos[++i];
+    else if (FLAGS_COM_VALOR.has(argumentos[i]) && flagsPermitidas.has(argumentos[i])) {
+      const valor = argumentos[++i];
+      // Sem valor, ou com outra flag no lugar do valor, é engano de uso: `--slide --json` não é o
+      // slide "--json".
+      if (valor === undefined || valor === '' || valor.startsWith('--')) sair(USO);
+      opcoes[FLAGS_COM_VALOR.get(argumentos[i - 1])] = valor;
+    }
     else if (argumentos[i].startsWith('--')) sair(USO); // desconhecida OU de outro comando: mesmo tratamento
     else posicionais.push(argumentos[i]);
   }
@@ -49,6 +58,12 @@ const FLAGS_SERVIR = new Set(['--porta']);
 const FLAGS_VALIDAR = new Set(['--json']);
 const FLAGS_BUILD = new Set(['--sem-pdf']);
 const FLAGS_NOVO = new Set(['--unidade']);
+const FLAGS_AVALIAR = new Set(['--slide', '--minutos', '--fotos', '--json']);
+
+// As flags de `avaliar` que levam valor, e o nome da opção que cada uma preenche. Entram em
+// lerArgumentos pelo mesmo filtro das outras: fora de FLAGS_AVALIAR, caem em "desconhecida" e saem
+// com o uso — `validar --minutos 3` continua recusado.
+const FLAGS_COM_VALOR = new Map([['--slide', 'slide'], ['--minutos', 'minutos'], ['--fotos', 'fotos']]);
 
 // O modelo da spec 10.3 — a mesma pasta que `guia/10-estrutura.md` mostra como esqueleto, e que
 // `build/guia.mjs` lê para gerar aquele bloco. `novo` copia esta pasta; não guarda uma segunda
@@ -241,6 +256,70 @@ async function buildComando(argumentos) {
   process.exitCode = codigo;
 }
 
+// `aula-usp avaliar` (spec 2026-09-28, 4.1): os critérios medidos da rubrica, por slide e por aula.
+// Avaliar não é validar: a saída é 0 com a avaliação feita, com ou sem alertas, e 2 com falha de
+// ambiente — nunca 1. Uma aula com erro de validação não é avaliada: sai com 0 e a mensagem
+// "valide primeiro". Sem Chrome, só --fotos falha (saída 2); o resto não abre navegador.
+async function avaliarComando(argumentos) {
+  const { opcoes, posicionais } = lerArgumentos(argumentos, FLAGS_AVALIAR);
+  const [alvo] = posicionais;
+  if (!alvo) sair(USO);
+  let minutos;
+  if (opcoes.minutos !== undefined) {
+    if (!/^[0-9]+$/.test(opcoes.minutos) || Number(opcoes.minutos) < 1) sair(USO);
+    minutos = Number(opcoes.minutos);
+  }
+  let avaliarArquivo;
+  let fotografar;
+  let resumoDaAvaliacao;
+  let linhaDeAvaliacao;
+  let lerRubrica;
+  try {
+    ({ avaliarArquivo, fotografar, lerRubrica } = await import('../build/avaliar.mjs'));
+    ({ resumoDaAvaliacao, linhaDeAvaliacao } = await import('../avaliador/avaliar.js'));
+  } catch (erro) {
+    sair(`falha de ambiente: ${erro.message}\nrode npm install na pasta do sistema`);
+  }
+  let resultado;
+  try {
+    resultado = await avaliarArquivo(alvo, { slide: opcoes.slide, minutos });
+  } catch (erro) {
+    // O mesmo critério de validarComando para o caminho da aula; o resto (um --slide que não existe,
+    // um arquivo do sistema ausente) sai com 2 e a mensagem de verdade.
+    const alvoAbsoluto = resolve(alvo);
+    const ehCaminhoDaAula = erro.code === 'ENOENT'
+      && (erro.path === alvoAbsoluto || erro.path === join(alvoAbsoluto, 'index.html'));
+    if (ehCaminhoDaAula) sair(`não encontrei a aula em ${alvo}: ${erro.message}`);
+    else sair(erro.code ? `falha de ambiente: ${erro.message}` : erro.message);
+  }
+  const { caminho, contrato, erros, achados, resumo } = resultado;
+  if (erros > 0) {
+    const mensagem = `valide primeiro: ${plural(erros, 'erro', 'erros')}`;
+    if (opcoes.json) console.log(JSON.stringify({ achados: null, resumo: null, erros, mensagem }, null, 2));
+    else console.log(`${mensagem} — rode aula-usp validar ${alvo}. A avaliação é para aula válida.`);
+    process.exitCode = 0;
+    return;
+  }
+  // As fotos antes de imprimir qualquer coisa: se o Chrome falhar, a saída é só a falha (código 2), e
+  // não meia avaliação seguida de um erro.
+  let fotos;
+  if (opcoes.fotos !== undefined) {
+    try {
+      fotos = await fotografar(caminho, resolve(opcoes.fotos), { contrato, slide: opcoes.slide });
+    } catch (erro) {
+      sair(`falha de ambiente: ${erro.message}`);
+    }
+  }
+  if (opcoes.json) {
+    console.log(JSON.stringify(fotos ? { achados, resumo, fotos: { pasta: resolve(opcoes.fotos), indice: fotos } } : { achados, resumo }, null, 2));
+  } else {
+    for (const achado of achados) console.log(linhaDeAvaliacao(achado));
+    console.log(resumoDaAvaliacao(achados, lerRubrica()));
+    if (fotos) console.log(`Fotos: ${plural(fotos.length, 'slide', 'slides')} em ${opcoes.fotos} (indice.json).`);
+  }
+  process.exitCode = 0;
+}
+
 // `dist` e `pacotes` são manutenção do sistema (spec 8.1): precisam do repositório — especime/, que
 // `pacotes` lê, e as devDependencies, como o esbuild de build/bundle.mjs —, e o pacote do npm não leva
 // nenhum dos dois (package.json, "files"). Sem esta conferência, no pacote instalado os dois saíam
@@ -316,6 +395,7 @@ if (comando === 'novo') novoComando(argumentos);
 else if (comando === 'servir') servir(argumentos);
 else if (comando === 'validar') validarComando(argumentos);
 else if (comando === 'build') buildComando(argumentos);
+else if (comando === 'avaliar') avaliarComando(argumentos);
 else if (comando === 'dist') distComando(argumentos);
 else if (comando === 'pacotes') pacotesComando(argumentos);
 else sair(USO);
