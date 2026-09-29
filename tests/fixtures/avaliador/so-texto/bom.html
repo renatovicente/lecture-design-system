@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Fixture do avaliador: so-texto</title>
+<meta name="unidade" content="ime">
+<meta name="disciplina" content="Teste do avaliador">
+<meta name="aula" content="1">
+<meta name="data" content="2026-09-28">
+<meta name="professor" content="Prof. Teste">
+<script src="../../../../dist/aula-usp.js"></script>
+</head>
+<body>
+
+<section data-layout="capa">
+  <h1>Passeio aleatório<br><span class="sinal">e difusão</span></h1>
+</section>
+
+<section data-layout="abertura" id="bloco-um" data-curto="Passeio">
+  <h2>O passeio</h2>
+  <p class="pergunta">Onde para quem dá N passos ao acaso?</p>
+</section>
+
+<section data-layout="conteudo" id="variancia">
+  <h2>A variância cresce<br><span class="sinal">linearmente com o número de passos.</span></h2>
+  <p class="lide">Cada passo soma a sua variância à do caminho.</p>
+  \[ \sigma_N^2 = N a^2 \]
+  <aside class="notas">Os termos cruzados somem na média porque os passos são independentes.</aside>
+</section>
+
+<section data-layout="abertura" id="bloco-dois" data-curto="Difusão">
+  <h2>A difusão</h2>
+  <p class="pergunta">O que sobra quando os passos ficam pequenos?</p>
+</section>
+
+<section data-layout="conteudo" id="desvio">
+  <h2>O desvio típico cresce<br><span class="sinal">com a raiz do número de passos.</span></h2>
+  <p>A distância típica da origem cresce com a raiz do número de passos, e não com o número de passos.</p>
+  <aside class="notas">Comentar em voz alta o que o slide não escreve.</aside>
+</section>
+
+<section data-layout="conteudo" id="limite">
+  <h2>No limite contínuo<br><span class="sinal">o passeio vira difusão.</span></h2>
+  <p>Com passos cada vez menores, a densidade obedece à equação do calor.</p>
+  \[ \partial_t p = D\, \partial_x^2 p \]
+  <aside class="notas">Comentar em voz alta o que o slide não escreve.</aside>
+</section>
+
+<section data-layout="encerramento">
+  <h2>O que fica</h2>
+  <ol class="sintese">
+    <li>A variância cresce com o número de passos.</li>
+    <li>A difusão é o limite contínuo do passeio.</li>
+  </ol>
+  <p class="proxima">Próxima aula: a equação de Fokker-Planck.</p>
+</section>
+
+</body>
+</html>
