@@ -132,3 +132,16 @@ test('palavras-slide não conta notas, título, TeX, código nem o JSON de um gr
   secao.insertAdjacentHTML('beforeend', `<figure class="grafico"><script type="application/json">{"a": "${muitas}"}</script></figure>`);
   assert.deepEqual(avaliar(doc, { rubrica, contrato }).filter((a) => a.criterio === 'palavras-slide'), []);
 });
+
+// O aceite do marco (tests/aceite/avaliar.md) pede "nenhuma falsa grave no exemplo": as duas
+// aulas-exemplo são aulas boas, escritas no estilo do autor, e um ALERTA nelas é a rubrica errando.
+// Medido na revisão da 1.1.0: com so-texto contando só `conteudo` e sem a matemática em linha, a
+// regressao-linear (gráfico, diagrama e demo) levava alerta de "só texto", e a descida-do-gradiente
+// também (#derivacao, toda em matemática em linha). Conselhos continuam permitidos aqui.
+for (const aula of ['exemplos/descida-do-gradiente/index.html', 'exemplos/regressao-linear/index.html']) {
+  test(`${aula}: nenhum alerta da rubrica numa aula-exemplo`, () => {
+    const doc = lerAula(fileURLToPath(new URL(aula, RAIZ)), contrato);
+    const alertas = avaliar(doc, { rubrica, contrato }).filter((achado) => achado.nivel === 'alerta');
+    assert.deepEqual(alertas.map(linhaDeAvaliacao), []);
+  });
+}

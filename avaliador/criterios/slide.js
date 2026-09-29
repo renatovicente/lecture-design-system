@@ -56,9 +56,12 @@ function palavrasDoCorpo(secao) {
 
 // Figuras que precisam de crédito (plano, D3): figure com img ou svg e figure.grafico. figure.diagrama
 // e as demos são desenhadas pelo próprio autor.
-function figurasComDados(secao) {
+// Quais figuras pedem crédito vem da rubrica (`figuras`): o gráfico com dados e a imagem de arquivo.
+// O `svg` escrito à mão no slide ficou de fora na revisão da 1.1.0 — é desenho do próprio autor,
+// como o diagrama e a demo, e cobrá-lo dava conselho de ruído em todo o espécime.
+function figurasComDados(secao, regra) {
   return [...secao.querySelectorAll('figure')].filter((figura) => !figura.closest(NOTAS)
-    && (figura.matches('figure.grafico') || figura.querySelector(':scope > img, :scope > svg')));
+    && regra.figuras.some((seletor) => figura.matches(seletor)));
 }
 
 function temCredito(figura, secao, regra) {
@@ -136,7 +139,7 @@ export const CRITERIOS_DE_SLIDE = {
   credito: {
     alcance: 'slide',
     *aplicar(secao, { slides, regra }) {
-      for (const figura of figurasComDados(secao)) {
+      for (const figura of figurasComDados(secao, regra)) {
         if (temCredito(figura, secao, regra)) continue;
         yield { ...onde(slides, secao), mensagem: 'figura sem crédito: nem linha de fonte no slide nem legenda que diga a origem.', trecho: trechoDe(figura) };
       }

@@ -42,9 +42,9 @@ O código executa a rubrica sem repetir números. Os limiares que vêm das fonte
 | `elementos` | N7 | slide | blocos de corpo visíveis, contados como na sequência do layout; mais de 6 | alerta |
 | `itens` | U | slide | itens numa lista; mais de 4 | conselho |
 | `revelacao` | U | slide | lista com mais de 3 itens sem `data-passo` | conselho |
-| `so-texto` | N6, U | aula | fração dos slides de `conteudo` sem figura, gráfico, diagrama, demo, fórmula em destaque ou código; acima de 0,5 | alerta |
+| `so-texto` | N6, U | aula | fração dos slides de `conteudo`, `figura` e `demo` sem figura, gráfico, diagrama, demo, fórmula (em destaque ou em linha) ou código; acima de 0,5 (calibrado na revisão da 1.1.0: só `conteudo` e sem a matemática em linha davam alerta falso na aula-exemplo de regressão linear) | alerta |
 | `paineis` | N6 | slide | `figure` com mais de uma imagem | conselho |
-| `credito` | N5 | slide | `figure`, `img` ou gráfico com dados sem `p.fonte` nem `figcaption` que cite origem | conselho |
+| `credito` | N5 | slide | `figure` com `img` (arquivo de imagem) ou gráfico com dados, sem `p.fonte` nem `figcaption` que cite origem; o `svg` e o diagrama desenhados pelo autor não contam | conselho |
 | `tempo` | N2 | aula | com `--minutos N`, slides que tomam tempo (todos menos capa, abertura e encerramento) contra N, a cerca de 1 minuto por slide; acima de 1,2 × N | alerta |
 | `palavras-slide` | N4, N7 | slide | palavras visíveis no corpo, fora das notas; acima do limiar da rubrica, abaixo do teto do contrato | conselho |
 

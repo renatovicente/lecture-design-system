@@ -35,13 +35,10 @@
 
 <section data-layout="figura" id="nuvem">
   <h2>A nuvem se espalha<br><span class="sinal">como a raiz do tempo.</span></h2>
-  <figure>
-    <svg viewBox="0 0 400 240" role="img" aria-label="Histograma das posições finais">
-      <rect x="40" y="120" width="60" height="100" fill="#1094AB"></rect>
-      <rect x="120" y="60" width="60" height="160" fill="#1094AB"></rect>
-      <rect x="200" y="40" width="60" height="180" fill="#1094AB"></rect>
-      <rect x="280" y="100" width="60" height="120" fill="#1094AB"></rect>
-    </svg>
+  <figure class="grafico">
+    <script type="application/json">
+    {"tipo":"barras","dados":{"posicao":["-2","-1","0","1","2"],"caminhantes":[1200,2400,3000,2300,1100]},"x":"posicao","y":["caminhantes"],"eixos":{"x":"posição final","y":"caminhantes"}}
+    </script>
     <figcaption>Histograma das posições finais de dez mil caminhantes.</figcaption>
   </figure>
   <aside class="notas">Comentar em voz alta o que o slide não escreve.</aside>

@@ -85,7 +85,9 @@ test('os limiares ficam abaixo dos tetos do contrato: a avaliação é conselho 
 test('as listas da D1, D2 e D3 moram na rubrica', () => {
   assert.deepEqual(rubrica.criterios['titulo-rotulo'].rotulos, ROTULOS);
   assert.deepEqual(rubrica.criterios['titulo-rotulo'].layouts, ['conteudo', 'figura', 'afirmacao']);
-  assert.deepEqual(rubrica.criterios['so-texto'].layouts, ['conteudo']);
+  assert.deepEqual(rubrica.criterios['so-texto'].layouts, ['conteudo', 'figura', 'demo']);
+  assert.deepEqual(rubrica.criterios['so-texto'].visuais, ['figure', 'div.demo', 'pre', 'tex-destaque', 'tex-em-linha']);
+  assert.deepEqual(rubrica.criterios.credito.figuras, ['figure.grafico', 'figure:has(> img)']);
   assert.deepEqual(rubrica.criterios.tempo.layoutsSemTempo, ['capa', 'abertura', 'encerramento']);
   assert.deepEqual(rubrica.criterios.credito.marcadores, MARCADORES_DE_CREDITO);
   const ano = new RegExp(rubrica.criterios.credito.padraoAno);

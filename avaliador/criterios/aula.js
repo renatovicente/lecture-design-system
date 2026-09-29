@@ -7,12 +7,12 @@ const NOTAS = 'aside.notas';
 
 // Há fórmula em destaque (\[ … \]) no slide, fora das notas e do código? Procura em todo nó de texto,
 // e não só nos filhos diretos da section: a fórmula pode estar numa coluna ou numa caixa.
-function temTexDestaque(secao) {
+function temTex(secao, tipo) {
   const pilha = [secao];
   while (pilha.length) {
     const no = pilha.pop();
     if (no.nodeType === 3) {
-      if (segmentosDeTex(no.data).some((segmento) => segmento.tipo === 'destaque')) return true;
+      if (segmentosDeTex(no.data).some((segmento) => segmento.tipo === tipo)) return true;
       continue;
     }
     if (no.nodeType !== 1 || (no !== secao && no.matches(`${NOTAS}, pre, code`))) continue;
@@ -23,9 +23,14 @@ function temTexDestaque(secao) {
 
 // `visuais` é a lista da rubrica: seletores CSS, e o nome `tex-destaque` que o contrato já usa para a
 // fórmula em destaque (que é texto, e não elemento).
+// `tex-em-linha` é a matemática entre \( e \): numa aula de exatas, a fórmula é o "gráfico" do
+// slide (a ação da rubrica manda trocar texto por "fórmula"), e uma derivação passo a passo em
+// matemática em linha não é "só texto" — medido na descida-do-gradiente, #derivacao (revisão 1.1.0).
+const TIPO_DE_TEX = { 'tex-destaque': 'destaque', 'tex-em-linha': 'inline' };
+
 function temVisual(secao, visuais) {
-  return visuais.some((visual) => (visual === 'tex-destaque'
-    ? temTexDestaque(secao)
+  return visuais.some((visual) => (Object.hasOwn(TIPO_DE_TEX, visual)
+    ? temTex(secao, TIPO_DE_TEX[visual])
     : [...secao.querySelectorAll(visual)].some((elemento) => !elemento.closest(NOTAS))));
 }
 

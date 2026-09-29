@@ -31,9 +31,9 @@
     },
     "so-texto": {
       "fonte": ["N6", "U"], "tipo": "medido", "alcance": "aula", "nivel": "alerta",
-      "layouts": ["conteudo"],
+      "layouts": ["conteudo", "figura", "demo"],
       "maxFracao": 0.5,
-      "visuais": ["figure", "div.demo", "pre", "tex-destaque"],
+      "visuais": ["figure", "div.demo", "pre", "tex-destaque", "tex-em-linha"],
       "acao": "Troque parte do texto por figura, gráfico, diagrama, fórmula ou código: mais da metade dos slides de conteúdo só tem texto."
     },
     "paineis": {
@@ -43,6 +43,7 @@
     },
     "credito": {
       "fonte": ["N5"], "tipo": "medido", "alcance": "slide", "nivel": "conselho",
+      "figuras": ["figure.grafico", "figure:has(> img)"],
       "marcadores": ["Fonte", "Adaptado de", "Dados de", "Crédito"],
       "padraoAno": "\\((19|20)\\d{2}\\)",
       "acao": "Diga de onde vem a figura ou os dados, numa linha de fonte ou na legenda; se for sua, a legenda pode dizer isso."
