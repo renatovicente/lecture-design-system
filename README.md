@@ -6,6 +6,8 @@ Uma aula é **um arquivo HTML**. Sem framework, sem build para abrir, sem PowerP
 
 Feito para o IME-USP e o IFUSP, com a identidade visual da USP.
 
+**[Wiki](https://github.com/renatovicente/lecture-design-system/wiki)** · **[pacote no npm](https://www.npmjs.com/package/aula-usp)** (`npm install -g aula-usp`) · runtime pelo jsDelivr, com versão exata e hash de integridade.
+
 ## Guia rápido
 
 Do zero a uma aula projetada, em seis passos. Precisa de Node 20.6 ou superior e, para o painel de composição e o PDF, do Google Chrome instalado.
@@ -458,7 +460,7 @@ O vocabulário é fechado de propósito: o validador recusa elemento, classe ou 
 
 ## Por onde continuar
 
-Este arquivo é a porta de entrada, e para de propósito aqui. Quem chega vai para um de dois lugares:
+Este arquivo é a porta de entrada, e para de propósito aqui. A [wiki](https://github.com/renatovicente/lecture-design-system/wiki) reorganiza o mesmo conteúdo por tarefa (começar, usar com agentes, apresentar, resolver problemas). Quem chega vai para um de dois lugares:
 
 - **escrever aulas** — `guia/`, o guia do autor: layouts, componentes, matemática e código, gráficos, diagramas e demos, o que o validador cobra, e um arquivo por fluxo de trabalho (terminal, chat, artifact do Claude, GPT personalizado). Para trabalhar com um agente, os pacotes prontos estão em `pacotes/`, inclusive as skills de avaliar e de corrigir;
 - **desenvolver o sistema** — `AGENTS.md`, que é onde estão a fronteira do Node, as guardas dos artefatos gerados, como se acrescenta uma regra e o que este projeto já aprendeu errando.
