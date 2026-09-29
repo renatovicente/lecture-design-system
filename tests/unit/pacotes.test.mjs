@@ -34,6 +34,7 @@ const PACOTES = [
 // guardas de caminho e de citação, que valem para todo pacote.
 const SKILLS_NOVAS = [
   'pacotes/skill/aula-usp-avaliar',
+  'pacotes/skill/aula-usp-corrigir',
 ];
 const TODOS_OS_PACOTES = [...PACOTES, ...SKILLS_NOVAS];
 
@@ -638,4 +639,33 @@ test('a skill de avaliar leva a rubrica e o capítulo de avaliar, byte a byte, e
   }
   const skill = texto('pacotes/skill/aula-usp-avaliar/SKILL.md');
   assert.match(skill, /^---\nname: aula-usp-avaliar\ndescription: [^\n]*avaliar[^\n]*\n---\n/);
+});
+
+// ---------------------------------------------------------------------------------------------
+// 13. A skill de corrigir leva o capítulo que explica os comandos dela, e tem a descrição do plano.
+
+// Spec 2026-09-28, seção 7: cada skill nova tem o seu SKILL.md "e o que citar". A de corrigir cita o
+// capítulo de avaliar, corrigir e gerar, que é onde moram `slide`, `--substituir` e `validar --slide`.
+// O par (origem, destino) e a descrição estão escritos aqui, e não lidos do gerador (SKILL_CORRIGIR,
+// FONTES_DE_PACOTE), pela mesma razão da guarda 12. A descrição é a do plano do corrigir, literal: é
+// ela que o Claude Code lê para decidir quando a skill entra.
+test('a skill de corrigir leva o capítulo de avaliar, corrigir e gerar, byte a byte, e se chama aula-usp-corrigir', () => {
+  const pares = [
+    ['guia/80-avaliar-corrigir-gerar.md', 'pacotes/skill/aula-usp-corrigir/references/80-avaliar-corrigir-gerar.md'],
+  ];
+  for (const [origem, destino] of pares) {
+    assert.ok(existsSync(new URL(destino, RAIZ)), `${destino} não existe — rode \`aula-usp pacotes\``);
+    assert.equal(texto(destino), texto(origem), `${destino} divergiu de ${origem}`);
+  }
+  const skill = texto('pacotes/skill/aula-usp-corrigir/SKILL.md');
+  const descricao = 'Use quando o autor pedir para corrigir, reescrever, encurtar ou melhorar um slide específico de uma'
+    + ' aula do Aula USP, ou para aplicar a um slide as sugestões de avaliacao.md ou os achados do validador.';
+  assert.ok(skill.startsWith(`---\nname: aula-usp-corrigir\ndescription: ${descricao}\n---\n`), skill.slice(0, 300));
+  // Os três comandos que a skill combina (plano do corrigir, Tarefa 4), e o limite de voltas.
+  for (const trecho of ['aula-usp slide <pasta> <alvo>', '--substituir', '--dividir', 'aula-usp validar <pasta> --slide <alvo>',
+    'aula-usp avaliar <pasta> --slide <alvo> --fotos <pasta>/correcao/antes', '3 voltas']) {
+    assert.ok(skill.includes(trecho), `o SKILL.md de corrigir não traz "${trecho}"`);
+  }
+  // E o capítulo que ela leva tem a seção que ela manda ler.
+  assert.match(texto('pacotes/skill/aula-usp-corrigir/references/80-avaliar-corrigir-gerar.md'), /^## Corrigir um slide$/m);
 });

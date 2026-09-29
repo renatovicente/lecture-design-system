@@ -21,7 +21,7 @@ O vocabulário é fechado e está em `contrato/contrato.json`, que o validador l
 aula-usp
 ```
 
-**Se respondeu** com a lista de comandos (`novo`, `servir`, `validar`, `build`, `avaliar`, `dist`, `pacotes`), você está no **modo terminal**: siga `references/70-fluxo-terminal.md`. É o modo completo — validação com os quatro grupos de regras e PDF gerado pelo sistema.
+**Se respondeu** com a lista de comandos (`novo`, `servir`, `validar`, `build`, `avaliar`, `slide`, `dist`, `pacotes`), você está no **modo terminal**: siga `references/70-fluxo-terminal.md`. É o modo completo — validação com os quatro grupos de regras e PDF gerado pelo sistema.
 
 **Se não respondeu** — comando não encontrado, ou não há terminal —, você está no **modo navegador**: siga `references/71-fluxo-chat.md`. Escreva o HTML com a tag do runtime, entregue o arquivo ao autor, e peça a ele a lista do painel do validador (tecla V, botão "Copiar para o chat") para corrigir. Diga ao autor, uma vez, o que ele ganha instalando a CLI — validação completa, inclusive das regras de composição, e o PDF conferido pelo sistema — e como se instala hoje: `npm install` e `npm link` no repositório do Aula USP. `npm install -g aula-usp` ainda não funciona, porque o pacote não está publicado no npm.
 
@@ -42,6 +42,8 @@ Quando uma regra acusar e você não souber o conserto, abra `references/60-vali
 ## Avaliar não é escrever
 
 Se o autor pedir para **avaliar**, julgar ou revisar a qualidade de uma aula já escrita — e não para escrevê-la ou validá-la —, use a skill `aula-usp-avaliar`, se ela estiver instalada. Sem ela, no modo terminal, rode `aula-usp avaliar <pasta>` e leia os achados com `references/80-avaliar-corrigir-gerar.md`. A avaliação dá só alerta e conselho, nunca erro, e não muda a aula: o que fazer com cada achado é do autor.
+
+Se o autor pedir para **corrigir**, reescrever ou encurtar **um slide** de uma aula que já existe, use a skill `aula-usp-corrigir`, se ela estiver instalada. Sem ela, no modo terminal, leia o slide com `aula-usp slide <pasta> <id>`, troque só aquela `section` com `--substituir` e confira com `aula-usp validar <pasta> --slide <id>`, como explica `references/80-avaliar-corrigir-gerar.md`. Nunca reescreva o arquivo inteiro para mudar um slide.
 
 ## Regras essenciais
 

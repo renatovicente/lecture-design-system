@@ -515,10 +515,10 @@ test('o bloco de regras essenciais de guia/00-principios.md existe e não está 
 
 // A lista vem de FONTES_DE_PACOTE, que é a tabela da spec 10.1 escrita uma vez. Um arquivo a mais
 // ou a menos na pasta é uma divergência entre o que o guia tem e o que o 6c vai procurar.
-test('guia/pacotes/ tem exatamente os arquivos-fonte de FONTES_DE_PACOTE: os cinco da spec 10.1 e o da skill de avaliar', () => {
+test('guia/pacotes/ tem exatamente os arquivos-fonte de FONTES_DE_PACOTE: os cinco da spec 10.1 e os das skills de avaliar e de corrigir', () => {
   const esperados = Object.keys(FONTES_DE_PACOTE).map((caminho) => caminho.split('/').pop());
   assert.deepEqual(readdirSync(new URL('guia/pacotes/', RAIZ)).sort(), esperados.sort());
-  assert.equal(esperados.length, 6, 'os cinco arquivos-fonte da spec 10.1 e o da skill de avaliar (spec 2026-09-28, 7)');
+  assert.equal(esperados.length, 7, 'os cinco arquivos-fonte da spec 10.1 e os das skills de avaliar e de corrigir (spec 2026-09-28, 7)');
 });
 
 // Spec 10.1: o bloco "entra, literalmente, em todos os pacotes". Quem diz ONDE é a linha do

@@ -439,6 +439,10 @@ export const FONTES_DE_PACOTE = {
   // avalia, e o bloco é sobre como escrever. O resto do que ela leva — a rubrica e o capítulo que a
   // explica — é montado em build/pacotes.mjs (SKILL_AVALIAR).
   'guia/pacotes/skill-avaliar.md': { destino: 'pacotes/skill/aula-usp-avaliar/SKILL.md', essenciais: false },
+  // A skill de corrigir (spec 2026-09-28, seção 7). Sem regras essenciais, como a de avaliar: ela
+  // reescreve uma section de uma aula que já existe e confere cada volta com `validar --slide`. O
+  // capítulo que ela cita é montado em build/pacotes.mjs (SKILL_CORRIGIR).
+  'guia/pacotes/skill-corrigir.md': { destino: 'pacotes/skill/aula-usp-corrigir/SKILL.md', essenciais: false },
 };
 
 // O bloco que a spec 10.1 manda entrar "literalmente, em todos os pacotes". Ele é LIDO de

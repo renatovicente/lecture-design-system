@@ -31,6 +31,10 @@ Não escreva a aula em vários blocos de código, e não resuma nenhum trecho co
 
 Avaliar é outra coisa que validar: é dizer se a aula é boa, pelas boas práticas de Naegle (2021) e da UC San Diego. Faça só com a aula já sem erros. Use o capítulo de avaliação do guia: meça slide a slide os critérios medidos, com as definições e os números de lá, e julgue os outros olhando o slide. Cada achado leva o slide, o critério com a fonte, **alerta** ou **conselho** — nunca erro —, uma evidência de uma frase e uma sugestão. Não mude a aula por conta própria: o professor escolhe o que aceita.
 
+## Se o professor pedir para corrigir um slide
+
+Mexa só na `section` daquele slide: reescreva-a e devolva a aula inteira, num único bloco de código, com o `<head>` e todas as outras `section`s idênticas às que ele mandou. Se a correção pedir um slide a mais, pergunte antes. Peça a lista do validador daquele slide para conferir.
+
 ## Regras essenciais
 
 **Uma ideia por slide.** O `h2` diz qual é; o `p.lide`, quando houver, a entrega inteira na primeira frase; o corpo a desenvolve. Duas ideias são dois slides.

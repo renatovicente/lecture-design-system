@@ -1935,3 +1935,23 @@ Um alerta é um convite a olhar o slide de novo, não uma ordem. Três cuidados:
 - **`so-texto` conta só os slides de conteúdo.** Uma aula que põe as figuras em slides de figura, e o texto nos de conteúdo, pode receber o alerta tendo imagem de sobra — e a matemática em linha também não conta como figura. Leia o alerta com a aula inteira na cabeça.
 
 A avaliação não muda a aula. O que fazer com cada achado é do autor.
+
+## Corrigir um slide
+
+Corrigir é mexer num slide só e deixar o resto do arquivo como estava, byte a byte: sem reformatar, sem trocar aspas, sem tocar no `<head>` nem nos outros slides. O pedido vem do autor ("o título está longo"), de uma sugestão da avaliação que ele aceitou, ou de um achado do validador naquele slide.
+
+Com a linha de comando instalada, são três comandos:
+
+```bash
+aula-usp slide minha-aula variancia                     # imprime o fonte do slide, byte a byte
+aula-usp slide minha-aula variancia --substituir novo.html
+aula-usp validar minha-aula --slide variancia           # valida a aula, relata só este slide
+```
+
+O slide se diz pelo `id` da `section` ou pela posição, de 1 ao último — a mesma numeração das mensagens do validador e da avaliação. Se um id e uma posição coincidirem, vale o id.
+
+`--substituir` troca só aquela `section` pela do arquivo, que tem de ter **uma** `section` e mais nada, com o mesmo `id` da original. O resto da aula fica idêntico, e a gravação é de uma vez: um comando interrompido não deixa meio arquivo. Um id diferente é recusado, porque outro slide pode apontar para ele; se a troca for de propósito, `--forcar`. Para **partir um slide em dois**, o arquivo leva duas `section`s e o comando leva `--dividir`: a primeira fica no lugar da original, e a segunda, com um id novo, entra logo depois. É o único jeito de a correção acrescentar um slide, e ele só se usa com o autor de acordo.
+
+`slide` não valida nada: depois de trocar, rode `validar --slide`. Ele valida a aula inteira — a composição só se mede com a aula toda na tela —, mas relata só o slide pedido, conta numa linha os achados que ficaram de fora, e sai com erro só se o erro for daquele slide. Se o pedido veio de uma avaliação, rode também `aula-usp avaliar minha-aula --slide variancia` e confira que o alerta sumiu. Para ver o slide antes e depois, `--fotos` do `avaliar` grava a imagem dele.
+
+**Sem a linha de comando**, a regra é a mesma, feita à mão: reescreva só a `section` pedida e devolva a aula inteira, com todas as outras `section`s e o `<head>` exatamente como estavam, sem resumir nenhum trecho.
