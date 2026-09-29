@@ -21,7 +21,7 @@ O vocabulário é fechado e está em `contrato/contrato.json`, que o validador l
 aula-usp
 ```
 
-**Se respondeu** com a lista de comandos (`novo`, `servir`, `validar`, `build`, `avaliar`, `slide`, `dist`, `pacotes`), você está no **modo terminal**: siga `references/70-fluxo-terminal.md`. É o modo completo — validação com os quatro grupos de regras e PDF gerado pelo sistema.
+**Se respondeu** com a lista de comandos (`novo`, `servir`, `validar`, `build`, `avaliar`, `slide`, `roteiro`, `dist`, `pacotes`), você está no **modo terminal**: siga `references/70-fluxo-terminal.md`. É o modo completo — validação com os quatro grupos de regras e PDF gerado pelo sistema.
 
 **Se não respondeu** — comando não encontrado, ou não há terminal —, você está no **modo navegador**: siga `references/71-fluxo-chat.md`. Escreva o HTML com a tag do runtime, entregue o arquivo ao autor, e peça a ele a lista do painel do validador (tecla V, botão "Copiar para o chat") para corrigir. Diga ao autor, uma vez, o que ele ganha instalando a CLI — validação completa, inclusive das regras de composição, e o PDF conferido pelo sistema — e como se instala hoje: `npm install` e `npm link` no repositório do Aula USP. `npm install -g aula-usp` ainda não funciona, porque o pacote não está publicado no npm.
 
@@ -45,6 +45,8 @@ Se o autor pedir para **avaliar**, julgar ou revisar a qualidade de uma aula já
 
 Se o autor pedir para **corrigir**, reescrever ou encurtar **um slide** de uma aula que já existe, use a skill `aula-usp-corrigir`, se ela estiver instalada. Sem ela, no modo terminal, leia o slide com `aula-usp slide <pasta> <id>`, troque só aquela `section` com `--substituir` e confira com `aula-usp validar <pasta> --slide <id>`, como explica `references/80-avaliar-corrigir-gerar.md`. Nunca reescreva o arquivo inteiro para mudar um slide.
 
+Se o autor pedir uma aula **a partir de artigos, de apresentações** (PDF, PPTX, Beamer, outras aulas do Aula USP) **ou de um roteiro em markdown**, use a skill `aula-usp-gerar`, se ela estiver instalada. Sem ela, escreva o roteiro com a sintaxe de `references/80-avaliar-corrigir-gerar.md`, mostre-o ao autor e espere o "sim"; no modo terminal, gere a aula com `aula-usp roteiro roteiro.md <pasta>` e continue daqui, completando o que o roteiro não exprime; no modo navegador, escreva o HTML direto, seguindo o roteiro.
+
 ## Regras essenciais
 
 <!-- inserir:regras-essenciais -->
@@ -64,7 +66,7 @@ Se o autor pedir para **corrigir**, reescrever ou encurtar **um slide** de uma a
 | `references/71-fluxo-chat.md` | o modo navegador, de ponta a ponta |
 | `references/72-artifact-claude.md` | a aula como artifact do Claude: fluxo do autor, e o que não funciona lá dentro |
 | `references/73-chatgpt.md` | a entrega pelo ChatGPT: fluxo do autor, e onde o arquivo costuma sair cortado |
-| `references/80-avaliar-corrigir-gerar.md` | a rubrica de avaliação da qualidade, em linguagem de autor, e como ler um alerta |
+| `references/80-avaliar-corrigir-gerar.md` | a rubrica de avaliação da qualidade, em linguagem de autor, como corrigir um slide, e a sintaxe do roteiro em markdown |
 | `assets/modelo.html` | o esqueleto de onde toda aula começa |
 | `assets/exemplo.html` | uma aula inteira escrita dentro do sistema |
 | `assets/exemplo-recursos.html` | outra aula inteira, com gráfico, diagrama e demo |

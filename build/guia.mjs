@@ -443,6 +443,10 @@ export const FONTES_DE_PACOTE = {
   // reescreve uma section de uma aula que já existe e confere cada volta com `validar --slide`. O
   // capítulo que ela cita é montado em build/pacotes.mjs (SKILL_CORRIGIR).
   'guia/pacotes/skill-corrigir.md': { destino: 'pacotes/skill/aula-usp-corrigir/SKILL.md', essenciais: false },
+  // A skill de gerar (spec 2026-09-28, 6.3 e 7). Sem regras essenciais: o HTML sai de `aula-usp
+  // roteiro`, e o que o agente completa à mão (demos, exercícios) ele escreve seguindo a skill
+  // `aula-usp`, que leva o bloco. O que ela cita é montado em build/pacotes.mjs (SKILL_GERAR).
+  'guia/pacotes/skill-gerar.md': { destino: 'pacotes/skill/aula-usp-gerar/SKILL.md', essenciais: false },
 };
 
 // O bloco que a spec 10.1 manda entrar "literalmente, em todos os pacotes". Ele é LIDO de

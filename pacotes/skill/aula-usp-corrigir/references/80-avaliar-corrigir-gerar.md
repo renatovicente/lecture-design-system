@@ -93,3 +93,137 @@ O slide se diz pelo `id` da `section` ou pela posição, de 1 ao último — a m
 `slide` não valida nada: depois de trocar, rode `validar --slide`. Ele valida a aula inteira — a composição só se mede com a aula toda na tela —, mas relata só o slide pedido, conta numa linha os achados que ficaram de fora, e sai com erro só se o erro for daquele slide. Se o pedido veio de uma avaliação, rode também `aula-usp avaliar minha-aula --slide variancia` e confira que o alerta sumiu. Para ver o slide antes e depois, `--fotos` do `avaliar` grava a imagem dele.
 
 **Sem a linha de comando**, a regra é a mesma, feita à mão: reescreva só a `section` pedida e devolva a aula inteira, com todas as outras `section`s e o `<head>` exatamente como estavam, sem resumir nenhum trecho.
+
+## Gerar a partir de um roteiro e de fontes
+
+Gerar é partir de um **roteiro**: um arquivo em markdown que diz, slide a slide, o layout, o título e o corpo de cada um. O roteiro é esqueleto e rascunho, não um segundo formato completo: o que ele não sabe dizer — demos, exercícios — se escreve depois, no HTML. A vantagem é poder discutir a aula antes de escrevê-la: o roteiro cabe numa tela, e o professor aprova ou corta slides nele, sem ler HTML.
+
+Com a linha de comando instalada:
+
+```bash
+aula-usp roteiro roteiro.md minha-aula
+aula-usp roteiro roteiro.md minha-aula --substituir
+```
+
+O comando escreve `minha-aula/index.html`, com a tag do runtime da versão instalada, copia para `minha-aula/img/` as figuras que o roteiro cita pelo caminho relativo a ele, e roda `aula-usp validar`: a saída é a do validador, e o código também. A conversão é determinística — o mesmo roteiro dá sempre os mesmos bytes, sem modelo de linguagem no meio. Uma pasta que já tem `index.html` é recusada, salvo com `--substituir`, que troca o `index.html` e as figuras e deixa o resto da pasta como está.
+
+Um **erro de roteiro** para tudo antes de escrever: o comando sai com 1 e diz o arquivo e a linha de cada erro — um layout que não existe, uma marcação desconhecida, uma legenda solta, uma figura que não está lá, um bloco que o layout não aceita. Conserte o roteiro e rode de novo.
+
+### Um roteiro inteiro
+
+````markdown
+---
+unidade: ifusp
+disciplina: Física Estatística
+aula: 3
+data: 2026-10-05
+professor: Prof. Renato Vicente
+---
+
+# Passeio aleatório | e difusão
+
+## abertura: O passeio {#passeio}
+? Onde para quem dá N passos ao acaso?
+
+## conteudo: A variância cresce | linearmente com o tempo {#variancia}
+> A variância depois de N passos é \( N a^2 \).
+1. Os passos são independentes.
+2. + Os termos cruzados somem na média.
+[destaque: Definição] Passeio aleatório: soma de passos independentes.
+nota: Pedir a um aluno que ande jogando uma moeda.
+fonte: Adaptado de Feller, vol. 1, cap. III.
+
+## figura: A nuvem se espalha | como raiz de t {#nuvem}
+![Dez mil caminhantes depois de 100 passos](figuras/nuvem.png)
+legenda: Posições finais de dez mil caminhantes, numa simulação nossa.
+nota: A largura do histograma é o desvio, que cresce como a raiz de N.
+
+## afirmacao {#dobro}
+Com quatro vezes mais passos, a nuvem fica só duas vezes mais larga.
+nota: Parar aqui e deixar a turma conferir com a figura anterior.
+
+## abertura: O limite contínuo {#limite curto="Limite"}
+? O que acontece quando os passos ficam pequenos?
+
+## conteudo: A difusão é o limite | de passos pequenos {#difusao}
+:::colunas 6-6
+Com passos de tamanho \( a \) a cada intervalo \( \tau \):
+$$ D = \frac{a^2}{2\tau} $$
+---
+[alerta: Cuidado] O limite pede \( a \to 0 \) e \( \tau \to 0 \) **juntos**.
+[quadro: Exemplo] Uma gota de tinta num copo d'água parado.
+:::
+nota: A razão entre os dois precisa ficar fixa; é o que dá sentido ao *coeficiente*.
+
+## conteudo: A simulação | cabe num laço {#simulacao}
+> Cada linha soma um passo de mais ou menos um.
+```python
+import numpy as np
+passos = np.random.choice([-1, 1], size=(10000, 100))
+posicoes = passos.sum(axis=1)
+print(posicoes.var())
+```
+nota: Rodar ao vivo com 100 e com 400 passos.
+
+## figura: A variância medida | cresce em linha reta {#medida}
+```grafico
+{"tipo":"linha","dados":{"passos":[100,200,400],"variancia":[99,203,398]},"x":"passos","y":["variancia"],"eixos":{"x":"passos","y":"variância"}}
+```
+legenda: Variância das posições finais, na mesma simulação.
+nota: A reta é a previsão; os pontos, o que a simulação mediu.
+
+## figura: Cada passo | depende só do anterior {#cadeia}
+```dot
+digraph {
+  rankdir=LR;
+  x0 -> x1 -> x2 -> x3;
+}
+```
+nota: A cadeia não tem memória: é o que faz os termos cruzados sumirem.
+
+## encerramento: O que fica
+- A variância cresce com N.
+- A difusão é o limite contínuo.
+próxima: equação de Fokker-Planck.
+````
+
+### A sintaxe
+
+O **cabeçalho**, entre as duas linhas `---`, traz as metas, uma por linha, como `chave: valor`: `unidade`, `data` e `professor` são obrigatórias, e `disciplina`, `aula` e `video` são opcionais. A linha `# Título | segunda linha` é a capa, uma vez só, antes do primeiro slide; o `|` separa a segunda linha, que sai em azul, e o título da aba do navegador é o que vem antes dele.
+
+Cada slide começa com `## layout: título {#id}`, termina no próximo `##` ou no fim do arquivo, e o `|` do título separa a segunda linha, como na capa. O `{#id}` é opcional: sem ele, o id é tirado do título, e repetidos ganham `-2`, `-3`. A capa e o encerramento ficam sem id. Na abertura, `curto="…"` dá o nome curto do bloco no mapa; sem ele, um título que passe do limite é truncado nesse limite, numa fronteira de palavra. `afirmacao` não tem título: o texto do slide é a frase, e o id sai dela.
+
+Linhas seguidas formam um parágrafo, e uma linha em branco separa um parágrafo do seguinte. No começo da linha, estas marcações:
+
+| marcação | vira |
+|---|---|
+| `>` | o lide |
+| `?` | a pergunta da abertura |
+| `- ` | uma lista; no encerramento, a síntese |
+| `1. ` | uma lista numerada, com qualquer número; no encerramento, a síntese |
+| `+ ` logo depois do marcador do item | o item revelado num clique |
+| `[destaque: rótulo]`, `[alerta: rótulo]`, `[quadro: rótulo]` | a caixa, com o texto na mesma linha |
+| `nota:` | as notas do apresentador; várias se juntam, no fim do slide |
+| `fonte:` | a linha de fonte, logo depois do corpo; numa coluna, no fim da coluna |
+| `legenda:` | a legenda da figura, do gráfico ou do diagrama logo acima |
+| `próxima:` | a próxima aula, no encerramento, depois de "Próxima aula:" |
+| `![descrição](caminho)` | a figura, sozinha na linha, com a descrição no `alt` |
+
+E estes blocos, de várias linhas:
+
+- três crases e a linguagem abrem um bloco de **código**, e três crases o fecham; a linguagem é uma das do contrato (`python`, `r`, `sql`, `javascript`, `bash`, `json`, `latex`);
+- `grafico` no lugar da linguagem faz um **gráfico**, com o JSON dele dentro; `dot` faz um **diagrama**;
+- `$$ … $$`, numa linha ou em várias, ou `\[ … \]`, é a **fórmula em destaque**;
+- `:::colunas 6-6` abre as **colunas**, `---` passa para a coluna seguinte e `:::` fecha; a grade é uma das do contrato, com uma coluna para cada parte.
+
+No texto, `\( … \)` é matemática em linha, `**assim**` é negrito e `*assim*` é itálico. Nenhum outro markdown em linha: um `_sublinhado_` ou um link ficam como estão. O roteiro escapa `&`, `<` e `>` do texto; dentro da matemática, só `<` e `&`.
+
+Três coisas o roteiro não exprime, e ficam para o HTML depois de gerado: a **demo**, que precisa do script dela; o **exercício**, com enunciado e resposta; e o quadro numerado. Um `## demo:` no roteiro é recusado com a linha, para ninguém achar que ele saiu.
+
+### De onde vem o roteiro
+
+A skill `aula-usp-gerar` escreve o roteiro a partir de fontes: artigos em PDF, apresentações em PDF, PPTX ou Beamer, e outras aulas do Aula USP. Ela lê as fontes, escreve o roteiro seguindo a rubrica de avaliação acima — título que afirma, uma ideia por slide, cerca de um minuto por slide, crédito em toda figura e dado alheio —, **mostra o roteiro ao professor e espera o "sim"** antes de gerar o HTML. Depois roda `aula-usp roteiro`, completa o que o roteiro não exprime, valida até zero erros, avalia, e aplica as correções que o professor aceitar.
+
+Figura tirada de um artigo entra só com crédito, na `fonte:` ou na legenda, e com a licença do artigo em mente: quando ela não for aberta, o professor precisa saber antes de projetar.
+
+**Sem a linha de comando**, o roteiro continua servindo de plano: o agente mostra o roteiro, espera o "sim", e escreve o HTML direto, slide a slide, seguindo o roteiro e a tabela acima — cada marcação vira o elemento que ela diz.

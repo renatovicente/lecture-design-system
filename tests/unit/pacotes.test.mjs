@@ -35,6 +35,7 @@ const PACOTES = [
 const SKILLS_NOVAS = [
   'pacotes/skill/aula-usp-avaliar',
   'pacotes/skill/aula-usp-corrigir',
+  'pacotes/skill/aula-usp-gerar',
 ];
 const TODOS_OS_PACOTES = [...PACOTES, ...SKILLS_NOVAS];
 
@@ -668,4 +669,36 @@ test('a skill de corrigir leva o capítulo de avaliar, corrigir e gerar, byte a 
   }
   // E o capítulo que ela leva tem a seção que ela manda ler.
   assert.match(texto('pacotes/skill/aula-usp-corrigir/references/80-avaliar-corrigir-gerar.md'), /^## Corrigir um slide$/m);
+});
+
+// ---------------------------------------------------------------------------------------------
+// 14. A skill de gerar leva o formato do roteiro, a rubrica e o contrato, e tem a descrição do plano.
+
+// Spec 2026-09-28, seção 7: "a `gerar` leva o formato do roteiro". O formato mora na seção de gerar do
+// capítulo 80; a rubrica é o que o roteiro tem de respeitar (plano do gerar, Tarefa 3, passo 2 do
+// fluxo); o contrato traz o TeX permitido contra o qual a matemática de um Beamer é conferida. Os pares
+// e a descrição estão escritos aqui, e não lidos de SKILL_GERAR nem de FONTES_DE_PACOTE, pela mesma
+// razão das guardas 12 e 13. A descrição é a do plano do gerar, literal.
+test('a skill de gerar leva o capítulo com o formato do roteiro, a rubrica e o contrato, byte a byte, e se chama aula-usp-gerar', () => {
+  const pares = [
+    ['guia/80-avaliar-corrigir-gerar.md', 'pacotes/skill/aula-usp-gerar/references/80-avaliar-corrigir-gerar.md'],
+    ['avaliador/rubrica.json', 'pacotes/skill/aula-usp-gerar/references/rubrica.json'],
+    ['contrato/contrato.json', 'pacotes/skill/aula-usp-gerar/references/contrato.json'],
+  ];
+  for (const [origem, destino] of pares) {
+    assert.ok(existsSync(new URL(destino, RAIZ)), `${destino} não existe — rode \`aula-usp pacotes\``);
+    assert.equal(texto(destino), texto(origem), `${destino} divergiu de ${origem}`);
+  }
+  const skill = texto('pacotes/skill/aula-usp-gerar/SKILL.md');
+  const descricao = 'Use quando o autor pedir uma aula a partir de artigos, de apresentações existentes (PDF, PPTX, Beamer,'
+    + ' aulas do Aula USP) ou de um roteiro em markdown.';
+  assert.ok(skill.startsWith(`---\nname: aula-usp-gerar\ndescription: ${descricao}\n---\n`), skill.slice(0, 300));
+  // O fluxo da spec 6.3: as fontes, o ponto de controle, o comando, a avaliação e a entrega com a licença.
+  for (const trecho of ['ppt/presentation.xml', 'ppt/slides/slideN.xml', 'ppt/media/', '\\begin{frame}{título}',
+    'aula-usp slide <pasta> <id>', 'Só siga com o "sim" dele', 'aula-usp roteiro roteiro.md <pasta>',
+    'aula-usp validar <pasta>', 'aula-usp-avaliar', 'aula-usp-corrigir', 'avaliacao.md', 'licença não for aberta']) {
+    assert.ok(skill.includes(trecho), `o SKILL.md de gerar não traz "${trecho}"`);
+  }
+  // E o capítulo que ela leva tem a seção que ela manda ler.
+  assert.match(texto('pacotes/skill/aula-usp-gerar/references/80-avaliar-corrigir-gerar.md'), /^## Gerar a partir de um roteiro e de fontes$/m);
 });

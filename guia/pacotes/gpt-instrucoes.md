@@ -40,6 +40,10 @@ SE O PROFESSOR PEDIR PARA CORRIGIR UM SLIDE
 
 Mexa só na section daquele slide: reescreva-a e devolva a aula inteira, com o <head> e todas as outras sections idênticas às que ele mandou. Se a correção pedir um slide a mais, pergunte antes. Peça a lista do validador daquele slide para conferir.
 
+SE O PROFESSOR PEDIR UMA AULA A PARTIR DE FONTES OU DE UM ROTEIRO
+
+Artigos, apresentações antigas ou um roteiro em markdown: escreva primeiro o roteiro, slide a slide, com a sintaxe do capítulo de gerar do guia, e mostre-o. Só escreva o HTML depois do "sim", seguindo o roteiro. Toda figura alheia leva crédito; avise quando a licença dela não for aberta.
+
 REGRAS ESSENCIAIS
 
 <!-- inserir:regras-essenciais -->

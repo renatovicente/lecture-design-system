@@ -109,6 +109,19 @@ export const SKILL_CORRIGIR = {
   },
 };
 
+// A skill de gerar (spec 2026-09-28, seção 7: "a `gerar` leva o formato do roteiro"): o capítulo cuja
+// seção "Gerar a partir de um roteiro e de fontes" traz a sintaxe e um roteiro inteiro, a rubrica que
+// o roteiro tem de respeitar, e o contrato, que diz o TeX permitido contra o qual a matemática de um
+// Beamer é conferida. Cópias byte a byte, pela mesma razão das outras duas skills.
+export const SKILL_GERAR = {
+  pasta: 'pacotes/skill/aula-usp-gerar',
+  copias: {
+    'references/80-avaliar-corrigir-gerar.md': 'guia/80-avaliar-corrigir-gerar.md',
+    'references/rubrica.json': 'avaliador/rubrica.json',
+    'references/contrato.json': 'contrato/contrato.json',
+  },
+};
+
 // As TRÊS pastas que a spec 8.1 nomeia, `especime/` inclusive.
 //
 // O espécime esteve fora desta lista por uma rodada, e a razão era real: ele é a base dos testes de
@@ -285,7 +298,7 @@ function escrever(raiz, caminho, texto) {
   writeFileSync(alvo, texto);
 }
 
-// Os quatro pacotes da spec 10.2, e as skills de avaliar e de corrigir da spec 2026-09-28. Devolve o que escreveu
+// Os quatro pacotes da spec 10.2, e as skills de avaliar, corrigir e gerar da spec 2026-09-28. Devolve o que escreveu
 // (caminho -> texto) e o que mediu, sem decidir nada: quem lê os limites e escolhe o código de saída
 // é `aula-usp pacotes`.
 //
@@ -322,7 +335,7 @@ export function montarPacotes({ raiz = RAIZ, escrever: gravar = false } = {}) {
       arquivos.set(`${pacote}/${base}${caminho}`, readFileSync(new URL(caminho, raiz), 'utf8'));
     }
   }
-  for (const skill of [SKILL_AVALIAR, SKILL_CORRIGIR]) {
+  for (const skill of [SKILL_AVALIAR, SKILL_CORRIGIR, SKILL_GERAR]) {
     for (const [destino, origem] of Object.entries(skill.copias)) {
       arquivos.set(`${skill.pasta}/${destino}`, readFileSync(new URL(origem, raiz), 'utf8'));
     }

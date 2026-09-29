@@ -5,6 +5,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
 import { readdirSync } from 'node:fs';
+import { lerRoteiro, gerarAula } from '../../montar/roteiro.js';
 import {
   BLOCOS_POR_ARQUIVO,
   FONTES_DE_PACOTE,
@@ -515,10 +516,10 @@ test('o bloco de regras essenciais de guia/00-principios.md existe e não está 
 
 // A lista vem de FONTES_DE_PACOTE, que é a tabela da spec 10.1 escrita uma vez. Um arquivo a mais
 // ou a menos na pasta é uma divergência entre o que o guia tem e o que o 6c vai procurar.
-test('guia/pacotes/ tem exatamente os arquivos-fonte de FONTES_DE_PACOTE: os cinco da spec 10.1 e os das skills de avaliar e de corrigir', () => {
+test('guia/pacotes/ tem exatamente os arquivos-fonte de FONTES_DE_PACOTE: os cinco da spec 10.1 e os das skills de avaliar, corrigir e gerar', () => {
   const esperados = Object.keys(FONTES_DE_PACOTE).map((caminho) => caminho.split('/').pop());
   assert.deepEqual(readdirSync(new URL('guia/pacotes/', RAIZ)).sort(), esperados.sort());
-  assert.equal(esperados.length, 7, 'os cinco arquivos-fonte da spec 10.1 e os das skills de avaliar e de corrigir (spec 2026-09-28, 7)');
+  assert.equal(esperados.length, 8, 'os cinco arquivos-fonte da spec 10.1 e os das skills de avaliar, corrigir e gerar (spec 2026-09-28, 7)');
 });
 
 // Spec 10.1: o bloco "entra, literalmente, em todos os pacotes". Quem diz ONDE é a linha do
@@ -590,4 +591,71 @@ test('o capítulo de avaliar traz todos os critérios da rubrica, uma linha cada
       }
     }
   }
+});
+
+// O capítulo de gerar (plano do gerar, Tarefa 3) ensina a sintaxe do roteiro por exemplo, e o guia
+// não pode prometer marcação que o parser não tem. Duas metades, e as duas olham o ARQUIVO em disco:
+// - todo exemplo de roteiro da seção (bloco cercado `markdown`), rodado por lerRoteiro e gerarAula
+//   com o contrato de verdade, sai sem nenhum erro; um exemplo que é só um slide ganha o cabeçalho e a
+//   capa mínimos antes;
+// - os exemplos, juntos, usam toda marcação da sintaxe. O universo é LITERAL, escrito aqui a partir
+//   da spec 2026-09-28, 6.1 e da D1 do plano, e não tirado de montar/roteiro.js: uma marcação que o
+//   parser perdesse sairia junto do universo, e a guarda ficaria verde (a sétima lição do AGENTS.md).
+const MARCACOES_DO_ROTEIRO = [
+  'parágrafo', 'lide', 'pergunta', 'lista', 'lista numerada', 'passo', 'destaque', 'alerta', 'quadro',
+  'nota', 'fonte', 'legenda', 'próxima', 'figura', 'gráfico', 'diagrama', 'código', 'fórmula em destaque',
+  'colunas', 'id', 'curto', 'segunda linha', 'afirmacao sem título', 'negrito', 'itálico', 'matemática em linha',
+];
+
+function marcacoesDe(texto, roteiro) {
+  const achadas = new Set();
+  const nomes = {
+    paragrafo: 'parágrafo', lide: 'lide', pergunta: 'pergunta', fonte: 'fonte', proxima: 'próxima', figura: 'figura',
+    grafico: 'gráfico', diagrama: 'diagrama', codigo: 'código', tex: 'fórmula em destaque', colunas: 'colunas',
+  };
+  const visitar = (blocos) => {
+    for (const bloco of blocos) {
+      if (nomes[bloco.tipo]) achadas.add(nomes[bloco.tipo]);
+      if (bloco.tipo === 'lista') achadas.add(bloco.lista === 'ul' ? 'lista' : 'lista numerada');
+      if (bloco.itens?.some((item) => item.passo)) achadas.add('passo');
+      if (bloco.tipo === 'caixa') achadas.add(bloco.caixa);
+      if (bloco.legenda !== undefined) achadas.add('legenda');
+      if (bloco.tipo === 'colunas') bloco.colunas.forEach(visitar);
+    }
+  };
+  for (const slide of roteiro.slides) {
+    visitar(slide.blocos);
+    if (slide.notas.length) achadas.add('nota');
+    if (slide.id !== undefined) achadas.add('id');
+    if (slide.curto !== undefined) achadas.add('curto');
+    if (slide.segunda !== undefined) achadas.add('segunda linha');
+    if (slide.layout === 'afirmacao' && slide.titulo === undefined) achadas.add('afirmacao sem título');
+  }
+  if (/\*\*\S[^*\n]*\*\*/.test(texto)) achadas.add('negrito');
+  if (/(^|[^*])\*[^*\s][^*\n]*\*(?!\*)/m.test(texto)) achadas.add('itálico');
+  if (texto.includes('\\(')) achadas.add('matemática em linha');
+  return achadas;
+}
+
+test('todo exemplo de roteiro do capítulo de gerar sai sem erros, e os exemplos, juntos, usam toda marcação do roteiro', () => {
+  const contrato = JSON.parse(readFileSync(new URL('contrato/contrato.json', RAIZ), 'utf8'));
+  const capitulo = readFileSync(new URL('guia/80-avaliar-corrigir-gerar.md', RAIZ), 'utf8');
+  const inicio = capitulo.indexOf('\n## Gerar a partir de um roteiro e de fontes\n');
+  assert.ok(inicio >= 0, 'o capítulo 80 não tem a seção "Gerar a partir de um roteiro e de fontes"');
+  const secao = capitulo.slice(inicio);
+  const exemplos = [...secao.matchAll(/^(`{3,})markdown\n([\s\S]*?)^\1$/gm)].map((achado) => achado[2]);
+  assert.ok(exemplos.length > 0, 'a seção de gerar não tem nenhum exemplo de roteiro');
+
+  const usadas = new Set();
+  for (const exemplo of exemplos) {
+    const texto = exemplo.startsWith('---\n')
+      ? exemplo
+      : `---\nunidade: ime\ndata: 2026-10-05\nprofessor: Prof. Nome Sobrenome\n---\n\n# Título\n\n${exemplo}`;
+    const roteiro = lerRoteiro(texto);
+    const { erros } = gerarAula(roteiro, { contrato, tagDoRuntime: '<script src="aula-usp.js"></script>' });
+    assert.deepEqual(erros, [], `um exemplo do capítulo de gerar não passa pelo roteiro:\n${exemplo.slice(0, 200)}`);
+    for (const marcacao of marcacoesDe(exemplo, roteiro)) usadas.add(marcacao);
+  }
+  const faltando = MARCACOES_DO_ROTEIRO.filter((marcacao) => !usadas.has(marcacao));
+  assert.deepEqual(faltando, [], `os exemplos do capítulo de gerar não mostram: ${faltando.join(', ')}`);
 });
