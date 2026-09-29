@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-// CLI do Aula USP (spec 8.1). Com `novo`, os seis comandos da spec estão implementados; `avaliar` e
-// `slide` são da spec 2026-09-28 (4.1 e 5.1).
+// CLI do Aula USP (spec 8.1). Com `novo`, os seis comandos da spec estão implementados; `avaliar`,
+// `slide` e `roteiro` são da spec 2026-09-28 (4.1, 5.1 e 6.2).
 import { cpSync, existsSync, readdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { basename, resolve, join, dirname } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -20,6 +20,7 @@ const USO = 'uso: aula-usp novo <pasta> --unidade ime\n'
   + '       aula-usp build <pasta> [--sem-pdf]\n'
   + '       aula-usp avaliar <pasta> [--slide <id|n>] [--minutos N] [--fotos <dir>] [--json]\n'
   + '       aula-usp slide <pasta> <id|n> [--substituir <arquivo> [--dividir] [--forcar]]\n'
+  + '       aula-usp roteiro <arquivo.md> <pasta> [--substituir]\n'
   + '       aula-usp dist\n'
   + '       aula-usp pacotes';
 
@@ -33,12 +34,16 @@ function sair(mensagem) {
 // e ignorada em silêncio — o oposto da regra que este arquivo já segue para flag desconhecida
 // ("melhor recusar que ignorar em silêncio"), e que vale tanto para uma flag que não existe quanto
 // para uma que existe, mas não é deste comando (achado numa rodada de revisão da tarefa 3).
-// `maximoDePosicionais` é 1 para todo comando, salvo `slide`, que recebe a pasta e o alvo.
-function lerArgumentos(argumentos, flagsPermitidas, maximoDePosicionais = 1) {
+// `maximoDePosicionais` é 1 para todo comando, salvo `slide` e `roteiro`, que recebem dois.
+// `booleanas` são as flags que, NESTE comando, não levam valor, mesmo que levem em outro: `--substituir`
+// é `--substituir <arquivo>` em `slide` e só `--substituir` em `roteiro`. Elas são lidas antes de
+// FLAGS_COM_VALOR, e só para o comando que as declara.
+function lerArgumentos(argumentos, flagsPermitidas, maximoDePosicionais = 1, booleanas = new Set()) {
   const opcoes = { porta: 8765 };
   const posicionais = [];
   for (let i = 0; i < argumentos.length; i++) {
-    if (argumentos[i] === '--porta' && flagsPermitidas.has('--porta')) opcoes.porta = Number(argumentos[++i]);
+    if (booleanas.has(argumentos[i]) && flagsPermitidas.has(argumentos[i])) opcoes[argumentos[i].slice(2)] = true;
+    else if (argumentos[i] === '--porta' && flagsPermitidas.has('--porta')) opcoes.porta = Number(argumentos[++i]);
     else if (argumentos[i] === '--json' && flagsPermitidas.has('--json')) opcoes.json = true;
     else if (argumentos[i] === '--sem-pdf' && flagsPermitidas.has('--sem-pdf')) opcoes.semPdf = true;
     else if (argumentos[i] === '--unidade' && flagsPermitidas.has('--unidade')) opcoes.unidade = argumentos[++i];
@@ -64,6 +69,7 @@ const FLAGS_BUILD = new Set(['--sem-pdf']);
 const FLAGS_NOVO = new Set(['--unidade']);
 const FLAGS_AVALIAR = new Set(['--slide', '--minutos', '--fotos', '--json']);
 const FLAGS_SLIDE = new Set(['--substituir', '--dividir', '--forcar']);
+const FLAGS_ROTEIRO = new Set(['--substituir']);
 
 // As flags que levam valor, e o nome da opção que cada uma preenche. Entram em lerArgumentos pelo
 // mesmo filtro das outras: fora do conjunto do comando, caem em "desconhecida" e saem com o uso —
@@ -463,6 +469,45 @@ async function slideComando(argumentos) {
   process.exitCode = 0;
 }
 
+// `aula-usp roteiro <arquivo.md> <pasta> [--substituir]` (spec 2026-09-28, 6.2; plano do gerar, D5):
+// converte o roteiro em <pasta>/index.html, copia as figuras para <pasta>/img/ e roda `validar`, cujo
+// código de saída é o do comando. Um erro de roteiro sai com 1, uma linha por erro, sem escrever nada;
+// uma pasta que já tem index.html sai com 2, como `novo` com pasta cheia, salvo com --substituir, que
+// troca o index.html e as figuras e deixa o resto da pasta como está.
+async function roteiroComando(argumentos) {
+  const { opcoes, posicionais } = lerArgumentos(argumentos, FLAGS_ROTEIRO, 2, FLAGS_ROTEIRO);
+  const [arquivo, pasta] = posicionais;
+  if (!arquivo || !pasta) sair(USO);
+  let converterRoteiro;
+  let escreverAula;
+  try {
+    ({ converterRoteiro, escreverAula } = await import('../build/roteiro.mjs'));
+  } catch (erro) {
+    sair(`falha de ambiente: ${erro.message}\nrode npm install na pasta do sistema`);
+  }
+  if (existsSync(join(pasta, 'index.html')) && !opcoes.substituir) {
+    sair(`${pasta} já tem index.html — escolha outra pasta ou use --substituir`);
+  }
+  let resultado;
+  try {
+    resultado = converterRoteiro(arquivo);
+  } catch (erro) {
+    if (erro.code === 'ENOENT' && erro.path === resolve(arquivo)) sair(`não encontrei o roteiro ${arquivo}: ${erro.message}`);
+    sair(`falha de ambiente: ${erro.message}`);
+  }
+  if (resultado.erros.length > 0) {
+    for (const { linha, mensagem } of resultado.erros) console.error(`${arquivo}:${linha} · ${mensagem}`);
+    process.exit(1);
+  }
+  try {
+    escreverAula(pasta, resultado);
+  } catch (erro) {
+    sair(`não foi possível escrever ${pasta}: ${erro.message}`);
+  }
+  console.log(`${join(pasta, 'index.html')} gerado de ${arquivo}: ${plural(resultado.slides, 'slide', 'slides')}, ${plural(resultado.figuras.length, 'figura', 'figuras')}`);
+  await validarComando([pasta]);
+}
+
 // `dist` e `pacotes` são manutenção do sistema (spec 8.1): precisam do repositório — especime/, que
 // `pacotes` lê, e as devDependencies, como o esbuild de build/bundle.mjs —, e o pacote do npm não leva
 // nenhum dos dois (package.json, "files"). Sem esta conferência, no pacote instalado os dois saíam
@@ -540,6 +585,7 @@ else if (comando === 'validar') validarComando(argumentos);
 else if (comando === 'build') buildComando(argumentos);
 else if (comando === 'avaliar') avaliarComando(argumentos);
 else if (comando === 'slide') slideComando(argumentos);
+else if (comando === 'roteiro') roteiroComando(argumentos);
 else if (comando === 'dist') distComando(argumentos);
 else if (comando === 'pacotes') pacotesComando(argumentos);
 else sair(USO);

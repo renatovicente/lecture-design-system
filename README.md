@@ -65,6 +65,8 @@ Algumas convenções:
 
 O vocabulário é fechado: o que não está no contrato, o validador recusa.
 
+Quem prefere começar por um esqueleto em markdown, slide a slide, escreve um `roteiro.md` e roda `aula-usp roteiro roteiro.md minha-aula`, que gera o `index.html` e o valida.
+
 **4. Veja e corrija enquanto escreve.**
 
 ```bash
@@ -319,6 +321,12 @@ aula-usp slide <pasta> <id|n> --substituir <arquivo> [--dividir] [--forcar]
 ```
 
 Corrige um slide sem tocar no resto do arquivo. Sem opção, imprime o fonte daquela `section`, byte a byte, pelo id ou pela posição (de 1 a N, a mesma numeração de `validar` e `avaliar`). Com `--substituir`, troca só aquela `section` pela do arquivo, que tem de ter exatamente uma, com o mesmo id; fora dela, a aula fica idêntica byte a byte, e a escrita é atômica. `--forcar` aceita um id diferente, e `--dividir` aceita duas `section`s no arquivo, a segunda com um id novo, para partir um slide em dois. Um alvo que não existe, um arquivo com zero ou três `section`s ou um id trocado sem `--forcar` saem com 1, sem mexer na aula. O comando não valida: depois dele, rode `validar --slide`.
+
+```bash
+aula-usp roteiro <arquivo.md> <pasta> [--substituir]
+```
+
+Converte um roteiro em markdown, slide a slide, em `<pasta>/index.html`, com a tag do runtime do modelo, copia para `<pasta>/img/` as figuras citadas pelo caminho relativo ao roteiro e roda `validar`, cujo código de saída é o do comando. A conversão é determinística: o mesmo roteiro dá os mesmos bytes. Um erro de roteiro — um layout que não existe, uma marcação desconhecida, uma figura que não está lá — sai com 1, uma linha por erro, com o arquivo e a linha, e nada é escrito. Uma pasta que já tem `index.html` é recusada com 2, salvo com `--substituir`, que troca o `index.html` e as figuras e deixa o resto da pasta como está. O que o roteiro não exprime (demos, exercícios) se escreve depois no HTML.
 
 ```bash
 aula-usp dist
