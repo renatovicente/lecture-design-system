@@ -90,7 +90,8 @@ test('uma flag com valor sem o valor sai com o uso e 2', () => {
 test('as flags de avaliar não vazam para os outros comandos, nem as deles para avaliar', () => {
   const casos = [
     ['validar', BOM, '--minutos', '3'],
-    ['validar', BOM, '--slide', '2'],
+    // `validar --slide` existe desde a 1.2.0 (spec 2026-09-28, 5.1); --fotos continua só de avaliar.
+    ['validar', BOM, '--fotos', 'x'],
     ['build', BOM, '--fotos', 'x'],
     ['avaliar', BOM, '--porta', '8000'],
     ['avaliar', BOM, '--sem-pdf'],

@@ -226,10 +226,10 @@ aula-usp servir <pasta> [--porta 8765]
 Serve a aula com o runtime local e abre o modo navegador. É como se escreve uma aula: salvar o arquivo e recarregar.
 
 ```bash
-aula-usp validar <pasta> [--json]
+aula-usp validar <pasta> [--slide <id|n>] [--json]
 ```
 
-Roda as regras estáticas e de carga e, havendo Chrome, as de composição. Saída 0 sem erros, 1 com erros de validação, 2 com falha de ambiente. Falta de Chrome não é falha: vira aviso e pula a composição.
+Roda as regras estáticas e de carga e, havendo Chrome, as de composição. Saída 0 sem erros, 1 com erros de validação, 2 com falha de ambiente. Falta de Chrome não é falha: vira aviso e pula a composição. Com `--slide`, valida a aula inteira, mas relata só os achados daquele slide, conta numa última linha os que ficaram de fora, e sai com 1 só se houver erro nele.
 
 ```
 AVISO · slide 3 #uma-ideia · estrutura.notas-ausentes · slide de layout "conteudo" sem notas do apresentador. Acrescente <aside class="notas"> com o que dizer neste slide.

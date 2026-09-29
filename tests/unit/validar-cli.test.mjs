@@ -512,3 +512,79 @@ test('Class e class no mesmo elemento: vence o primeiro do fonte, como no navega
   assert.equal(div.getAttribute('class'), 'primeiro');
   assert.deepEqual([...div.attributes].map((atributo) => atributo.name), ['class', 'data-rotulo']);
 });
+
+// `validar --slide <id|n>` (spec 2026-09-28, 5.1; plano do corrigir, D4): valida a aula inteira, como
+// sempre — a composição precisa dela toda no Chrome —, relata só os achados do slide pedido e sai
+// com 1 só se houver ERRO nele. Aula com um erro no slide 3 (estrutura.nome-curto) e um aviso no
+// slide 5 (estrutura.notas-ausentes). Sem Chrome de propósito: os dois achados são estáticos, e o
+// que se prova aqui é o filtro, não a composição.
+const AULA_3_E_5 = BOA.replace('<section data-layout="abertura" id="dois"><h2>Dois</h2></section>',
+  '<section data-layout="abertura" id="tres"><h2>Retropropagação</h2></section>\n'
+  + '<section data-layout="abertura" id="quatro"><h2>Quatro</h2></section>\n'
+  + '<section data-layout="conteudo" id="cinco"><h2>Cinco</h2><p>Um parágrafo.</p></section>');
+
+function validarSlide(pasta, ...extras) {
+  return spawnSync('node', [CLI, 'validar', pasta, ...extras], { encoding: 'utf8', env: SEM_CHROME });
+}
+
+test('a aula de --slide tem de fato um erro no slide 3 e um aviso no slide 5, e nada mais', () => {
+  const { status, stdout } = validarSlide(aulaTemporaria(AULA_3_E_5), '--json');
+  assert.equal(status, 1);
+  assert.deepEqual(JSON.parse(stdout).map((a) => [a.severidade, a.slide, a.id, a.regra]),
+    [['erro', 3, 'tres', 'estrutura.nome-curto'], ['aviso', 5, 'cinco', 'estrutura.notas-ausentes']]);
+});
+
+test('validar --slide 3 imprime só o erro do slide 3, a linha do que ficou de fora, e sai com 1', () => {
+  const { status, stdout } = validarSlide(aulaTemporaria(AULA_3_E_5), '--slide', '3');
+  assert.equal(status, 1);
+  assert.match(stdout, /^ERRO · slide 3 #tres · estrutura\.nome-curto ·/m);
+  assert.doesNotMatch(stdout, /slide 5/);
+  assert.match(stdout, /^1 achado em outros slides e 0 da aula, fora deste relatório$/m);
+});
+
+test('validar --slide 5 imprime o aviso e sai com 0, mesmo com erro no slide 3', () => {
+  const { status, stdout } = validarSlide(aulaTemporaria(AULA_3_E_5), '--slide', '5');
+  assert.equal(status, 0, stdout);
+  assert.match(stdout, /^AVISO · slide 5 #cinco · estrutura\.notas-ausentes ·/m);
+  assert.doesNotMatch(stdout, /ERRO/);
+  assert.match(stdout, /^1 achado em outros slides e 0 da aula, fora deste relatório$/m);
+});
+
+test('validar --slide aceita o id, como `aula-usp slide`', () => {
+  const pasta = aulaTemporaria(AULA_3_E_5);
+  const porId = validarSlide(pasta, '--slide', 'cinco');
+  assert.equal(porId.status, 0);
+  assert.equal(porId.stdout, validarSlide(pasta, '--slide', '5').stdout);
+  assert.equal(validarSlide(pasta, '--slide', 'tres').status, 1);
+});
+
+test('validar --slide num slide limpo sai com 0 e sem nenhuma linha de achado', () => {
+  const { status, stdout } = validarSlide(aulaTemporaria(AULA_3_E_5), '--slide', 'um');
+  assert.equal(status, 0);
+  assert.doesNotMatch(stdout, /^(ERRO|AVISO) ·/m);
+  assert.match(stdout, /^2 achados em outros slides e 0 da aula, fora deste relatório$/m);
+});
+
+test('validar --slide com alvo inexistente sai com 1 e não valida', () => {
+  for (const alvo of ['nao-existe', '0', '99']) {
+    const { status, stdout, stderr } = validarSlide(aulaTemporaria(AULA_3_E_5), '--slide', alvo);
+    assert.equal(status, 1, alvo);
+    assert.equal(stdout, '');
+    assert.match(stderr, /não há slide/);
+  }
+});
+
+test('validar --json --slide sai com a lista filtrada, e só ela no stdout', () => {
+  const pasta = aulaTemporaria(AULA_3_E_5);
+  const cinco = validarSlide(pasta, '--json', '--slide', '5');
+  assert.equal(cinco.status, 0);
+  assert.deepEqual(JSON.parse(cinco.stdout).map((a) => [a.slide, a.regra]), [[5, 'estrutura.notas-ausentes']]);
+  const tres = validarSlide(pasta, '--slide', '3', '--json');
+  assert.equal(tres.status, 1);
+  assert.deepEqual(JSON.parse(tres.stdout).map((a) => [a.slide, a.regra]), [[3, 'estrutura.nome-curto']]);
+});
+
+test('validar --slide sem valor sai com 2', () => {
+  assert.equal(validarSlide(aulaTemporaria(AULA_3_E_5), '--slide').status, 2);
+  assert.equal(validarSlide(aulaTemporaria(AULA_3_E_5), '--slide', '--json').status, 2);
+});

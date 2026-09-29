@@ -16,7 +16,7 @@ import { linhaDe, cabecalhoDe, plural } from '../validador/validar.js';
 
 const USO = 'uso: aula-usp novo <pasta> --unidade ime\n'
   + '       aula-usp servir <pasta> [--porta 8765]\n'
-  + '       aula-usp validar <pasta> [--json]\n'
+  + '       aula-usp validar <pasta> [--slide <id|n>] [--json]\n'
   + '       aula-usp build <pasta> [--sem-pdf]\n'
   + '       aula-usp avaliar <pasta> [--slide <id|n>] [--minutos N] [--fotos <dir>] [--json]\n'
   + '       aula-usp slide <pasta> <id|n> [--substituir <arquivo> [--dividir] [--forcar]]\n'
@@ -59,7 +59,7 @@ function lerArgumentos(argumentos, flagsPermitidas, maximoDePosicionais = 1) {
 }
 
 const FLAGS_SERVIR = new Set(['--porta']);
-const FLAGS_VALIDAR = new Set(['--json']);
+const FLAGS_VALIDAR = new Set(['--json', '--slide']);
 const FLAGS_BUILD = new Set(['--sem-pdf']);
 const FLAGS_NOVO = new Set(['--unidade']);
 const FLAGS_AVALIAR = new Set(['--slide', '--minutos', '--fotos', '--json']);
@@ -183,8 +183,25 @@ async function validarComando(argumentos) {
   const [alvo] = posicionais;
   if (!alvo) sair(USO);
   let resultado;
+  let posicao;
   try {
-    const { validarArquivo } = await import('../build/validar.mjs');
+    const { validarArquivo, caminhoDaAula } = await import('../build/validar.mjs');
+    // --slide (spec 2026-09-28, 5.1; plano do corrigir, D4): o alvo se resolve ANTES de validar, pelo
+    // mesmo localizador e pelo mesmo resolverAlvo de `aula-usp slide`, para os dois comandos nunca
+    // discordarem do que é o slide N. Um alvo que não existe sai com 1, sem validar nada.
+    if (opcoes.slide !== undefined) {
+      const { localizarSecoes, resolverAlvo } = await import('../build/secoes.mjs');
+      let secoes;
+      try {
+        secoes = localizarSecoes(readFileSync(caminhoDaAula(alvo), 'utf8'));
+      } catch (erro) {
+        if (erro.code) throw erro; // ENOENT e afins: o tratamento de baixo
+        recusar(`${alvo}: ${erro.message}`);
+      }
+      const indice = resolverAlvo(secoes, opcoes.slide);
+      if (indice === -1) recusar(`não há slide "${opcoes.slide}" nesta aula (${plural(secoes.length, 'slide', 'slides')}: use um id ou uma posição de 1 a ${secoes.length})`);
+      posicao = indice + 1;
+    }
     resultado = await validarArquivo(alvo);
   } catch (erro) {
     // "não encontrei" só quando o caminho ausente é o da própria aula (o alvo, ou o index.html
@@ -196,7 +213,11 @@ async function validarComando(argumentos) {
     if (ehCaminhoDaAula) sair(`não encontrei a aula em ${alvo}: ${erro.message}`);
     else sair(`falha de ambiente: ${erro.message}`);
   }
-  const { achados, erros, avisoDeComposicao } = resultado;
+  const { avisoDeComposicao } = resultado;
+  // Com --slide, o relatório e o código de saída são só os daquele slide: a aula foi validada
+  // inteira, e o que ficou de fora é contado numa linha, para ninguém tomar o slide limpo pela aula.
+  const achados = posicao === undefined ? resultado.achados : resultado.achados.filter((achado) => achado.slide === posicao);
+  const erros = posicao === undefined ? resultado.erros : achados.filter((achado) => achado.severidade === 'erro').length;
   // Vai para stderr, não stdout: --json manda só o array de achados para o cano (spec 9.1), e um
   // aviso solto ali quebraria o parse. Spec 8.1: falta de Chrome não é falha, é aviso para o autor.
   if (avisoDeComposicao) console.error(`Aula USP: aviso: ${avisoDeComposicao}`);
@@ -204,6 +225,11 @@ async function validarComando(argumentos) {
   else {
     for (const achado of achados) console.log(linhaDe(achado));
     console.log(cabecalhoDe(achados));
+    if (posicao !== undefined) {
+      const daAula = resultado.achados.filter((achado) => achado.slide === null).length;
+      const deOutros = resultado.achados.length - achados.length - daAula;
+      console.log(`${plural(deOutros, 'achado', 'achados')} em outros slides e ${daAula} da aula, fora deste relatório`);
+    }
   }
   // process.exitCode, não process.exit: process.exit descarta escrita pendente em stdout, e num
   // cano (o jeito que --json costuma ser consumido) o JSON grande sai truncado.
