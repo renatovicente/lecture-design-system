@@ -582,9 +582,10 @@ O destaque de código usa o Shiki (núcleo, motor de expressões regulares em Ja
 | comando | faz |
 |---|---|
 | `aula-usp novo <pasta> --unidade ime` | copia `modelos/aula/` com os metadados preenchidos |
-| `aula-usp validar <pasta> [--json]` | roda as regras estáticas e de carga e, havendo Chrome, as de composição |
+| `aula-usp validar <pasta> [--slide <id\|n>] [--json]` | roda as regras estáticas e de carga e, havendo Chrome, as de composição; desde a 1.2.0, `--slide` valida a aula inteira e relata só aquele slide, e o código de saída considera só ele |
 | `aula-usp build <pasta> [--sem-pdf]` | roda o pipeline completo (seção 3.3) |
 | `aula-usp avaliar <pasta> [--slide <id\|n>] [--minutos N] [--fotos <dir>] [--json]` | desde a 1.1.0: julga uma aula já válida pela rubrica de `avaliador/rubrica.json` (Naegle 2021 e UCSD), só com alerta e conselho, e sai com 0 ou 2, nunca 1; a definição é da spec `2026-09-28-aula-usp-skills-design.md`, seção 4 |
+| `aula-usp slide <pasta> <id\|n> [--substituir <arquivo> [--dividir] [--forcar]]` | desde a 1.2.0: imprime o fonte de uma `section`, byte a byte, ou troca só aquele intervalo pelo conteúdo do arquivo, deixando o resto do fonte idêntico; recusa com 1 alvo inexistente, arquivo que não seja exatamente uma `section` (duas com `--dividir`) e `id` trocado sem `--forcar`; a definição é da spec `2026-09-28-aula-usp-skills-design.md`, seção 5 |
 | `aula-usp servir <pasta> [--porta 8765]` | serve a aula com o runtime local de `dist/`, para desenvolver e para usar o modo navegador sem publicar |
 | `aula-usp dist` | gera os scripts de `dist/` e `validador/cobertura.json` (manutenção do sistema) |
 | `aula-usp pacotes` | gera `pacotes/`, reescreve a tag do runtime (versão e `integrity`) em `modelos/`, `especime/` e `exemplos/`, e checa limites e consistência (manutenção do sistema) |

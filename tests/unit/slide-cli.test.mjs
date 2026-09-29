@@ -45,9 +45,13 @@ const conteudo = (id, titulo = 'A ideia nova;<br><span class="sinal">dita no tí
   <aside class="notas">Nota.</aside>
 </section>`;
 
-async function assertValidaSemErro(pasta) {
-  const { erros, achados } = await validarArquivo(pasta);
+// Sem Chrome, `validarArquivo` pula a composição (spec 8.1) e o teste continua valendo para os outros
+// grupos e para a fatia de bytes, que é o que ele prova. O pulo não fica mudo: vira diagnóstico,
+// com a frase que build/validar.mjs escreve.
+async function assertValidaSemErro(t, pasta) {
+  const { erros, achados, avisoDeComposicao } = await validarArquivo(pasta);
   assert.equal(erros, 0, achados.filter((a) => a.severidade === 'erro').map((a) => `${a.regra}: ${a.mensagem}`).join(' / '));
+  if (avisoDeComposicao) t.diagnostic(`sem Chrome: a validação desta troca pulou a composição — ${avisoDeComposicao}`);
 }
 
 test('imprime a fatia exata do fonte por id, sem acrescentar nada, e sai com 0', () => {
@@ -81,7 +85,7 @@ test('alvo inexistente sai com 1 e mensagem de uma linha', () => {
   }
 });
 
-test('substituir mantendo o id troca só o intervalo, e a aula valida sem erro', async () => {
+test('substituir mantendo o id troca só o intervalo, e a aula valida sem erro', async (t) => {
   const pasta = copiaDoModelo();
   const antes = lerIndex(pasta);
   const secoes = localizarSecoes(antes);
@@ -95,10 +99,10 @@ test('substituir mantendo o id troca só o intervalo, e a aula valida sem erro',
   assert.equal(lerIndex(pasta), antes.slice(0, secoes[k].inicio) + novo + antes.slice(secoes[k].fim));
   // Nenhum temporário da escrita atômica fica para trás.
   assert.deepEqual(readdirSync(pasta).filter((nome) => nome !== 'index.html' && !nome.startsWith('img')), []);
-  await assertValidaSemErro(pasta);
+  await assertValidaSemErro(t, pasta);
 });
 
-test('substituir por posição um slide sem id, com uma section sem id', async () => {
+test('substituir por posição um slide sem id, com uma section sem id', async (t) => {
   const pasta = copiaDoModelo();
   const antes = lerIndex(pasta);
   const secoes = localizarSecoes(antes);
@@ -107,10 +111,10 @@ test('substituir por posição um slide sem id, com uma section sem id', async (
   assert.equal(status, 0);
   assert.equal(stdout.trim(), 'slide 1 substituído');
   assert.equal(lerIndex(pasta), antes.slice(0, secoes[0].inicio) + novo + antes.slice(secoes[0].fim));
-  await assertValidaSemErro(pasta);
+  await assertValidaSemErro(t, pasta);
 });
 
-test('id trocado é recusado com 1, sem tocar no arquivo; com --forcar é aceito', async () => {
+test('id trocado é recusado com 1, sem tocar no arquivo; com --forcar é aceito', async (t) => {
   const pasta = copiaDoModelo();
   const antes = lerIndex(pasta);
   const secoes = localizarSecoes(antes);
@@ -126,7 +130,7 @@ test('id trocado é recusado com 1, sem tocar no arquivo; com --forcar é aceito
   const aceito = rodar('slide', pasta, 'uma-ideia', '--substituir', arquivo, '--forcar');
   assert.equal(aceito.status, 0, aceito.stderr);
   assert.equal(lerIndex(pasta), antes.slice(0, secoes[k].inicio) + novo + antes.slice(secoes[k].fim));
-  await assertValidaSemErro(pasta);
+  await assertValidaSemErro(t, pasta);
 });
 
 test('--forcar não aceita um id que já é de outro slide', () => {
@@ -137,7 +141,7 @@ test('--forcar não aceita um id que já é de outro slide', () => {
   assert.equal(lerIndex(pasta), antes);
 });
 
-test('--dividir com id novo põe as duas sections no lugar de uma, e a aula valida sem erro', async () => {
+test('--dividir com id novo põe as duas sections no lugar de uma, e a aula valida sem erro', async (t) => {
   const pasta = copiaDoModelo();
   const antes = lerIndex(pasta);
   const secoes = localizarSecoes(antes);
@@ -150,7 +154,7 @@ test('--dividir com id novo põe as duas sections no lugar de uma, e a aula vali
   const depois = lerIndex(pasta);
   assert.equal(depois, antes.slice(0, secoes[k].inicio) + novo + antes.slice(secoes[k].fim));
   assert.equal(localizarSecoes(depois).length, secoes.length + 1);
-  await assertValidaSemErro(pasta);
+  await assertValidaSemErro(t, pasta);
 });
 
 test('--dividir recusa a segunda section com id repetido, ou sem id', () => {

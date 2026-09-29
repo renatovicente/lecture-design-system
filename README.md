@@ -103,6 +103,7 @@ Gera, em `minha-aula/dist/`, um HTML autocontido que abre sem internet e o PDF d
 - `gpt/gpt-personalizado`: um GPT personalizado;
 - `skill/aula-usp`: Claude Code e Codex CLI;
 - `skill/aula-usp-avaliar`: a skill que avalia uma aula pronta, no Claude Code;
+- `skill/aula-usp-corrigir`: a skill que corrige um slide sem tocar no resto da aula, no Claude Code;
 - `repositorio-de-disciplina`: o repositório de uma disciplina.
 
 Suba o pacote e peça a aula em português. O que ele gerar passa pelo mesmo `aula-usp validar`. O guia completo do autor está em `guia/`.
@@ -131,14 +132,15 @@ A capa e o encerramento trazem a assinatura da USP e um segundo logo, escolhido 
 
 ## Skills para agentes
 
-Uma skill é uma pasta com um `SKILL.md`: instruções que o agente carrega sozinho quando o pedido combina com a descrição dela. O Aula USP traz duas, em `pacotes/skill/`, e cada uma leva dentro tudo o que cita: guia, contrato, exemplos e rubrica. Ela funciona sem este repositório.
+Uma skill é uma pasta com um `SKILL.md`: instruções que o agente carrega sozinho quando o pedido combina com a descrição dela. O Aula USP traz três, em `pacotes/skill/`, e cada uma leva dentro tudo o que cita: guia, contrato, exemplos e rubrica. Ela funciona sem este repositório.
 
 | skill | para quê | quando o agente a usa |
 |---|---|---|
 | `aula-usp` | escrever aulas e slides no Aula USP: o arquivo HTML, os layouts, a matemática, o código e as figuras, e corrigir os achados do validador até dar 0 erros | "faça uma aula sobre…", "escreva um slide de abertura…", "corrija os erros do validador" |
 | `aula-usp-avaliar` | julgar a qualidade de uma aula pronta ou de um slide pela rubrica de Naegle e da UCSD, com o relatório em `avaliacao.md`, sem editar a aula | "avalie esta aula", "o slide 5 está bom?", "revise a qualidade dos slides" |
+| `aula-usp-corrigir` | corrigir, reescrever ou encurtar um slide específico sem tocar no resto do arquivo, aplicando o pedido do autor, uma sugestão de `avaliacao.md` ou um achado do validador, com a foto de antes e a de depois | "corrija o slide #variancia: o título está longo", "aplique ao slide 5 a sugestão da avaliação" |
 
-Duas outras estão especificadas e virão nas próximas versões: `aula-usp-corrigir`, para corrigir um slide específico sem tocar no resto, e `aula-usp-gerar`, para montar a aula a partir de artigos, apresentações e um roteiro em markdown.
+Uma outra está especificada e virá na próxima versão: `aula-usp-gerar`, para montar a aula a partir de artigos, apresentações e um roteiro em markdown.
 
 **Como usar no Claude Code:**
 
@@ -148,20 +150,20 @@ Duas outras estão especificadas e virão nas próximas versões: `aula-usp-corr
    npm install -g aula-usp
    ```
 
-   As skills chamam `aula-usp validar`, `build` e `avaliar`.
+   As skills chamam `aula-usp validar`, `build`, `avaliar` e `slide`.
 2. Copie as skills para onde o Claude Code as carrega. Pode ser a pasta do projeto, `.claude/skills/`, ou todas as suas pastas, `~/.claude/skills/`:
 
    ```bash
    mkdir -p ~/.claude/skills
-   cp -R pacotes/skill/aula-usp pacotes/skill/aula-usp-avaliar ~/.claude/skills/
+   cp -R pacotes/skill/aula-usp pacotes/skill/aula-usp-avaliar pacotes/skill/aula-usp-corrigir ~/.claude/skills/
    ```
 
    As pastas não vão no pacote do npm, que leva a CLI, o runtime, o modelo, os exemplos e o guia, mas não os pacotes para agentes. Elas estão no repositório público: `git clone https://github.com/renatovicente/lecture-design-system` e copie de `lecture-design-system/pacotes/skill/`.
-3. Abra o Claude Code na pasta de trabalho e peça em português, por exemplo: "Faça uma aula de 12 slides sobre passeio aleatório para a graduação, unidade ifusp." Depois: "Avalie a aula em passeio/ para 50 minutos." Não precisa chamar a skill pelo nome: a descrição dela basta para o agente escolher.
+3. Abra o Claude Code na pasta de trabalho e peça em português, por exemplo: "Faça uma aula de 12 slides sobre passeio aleatório para a graduação, unidade ifusp." Depois: "Avalie a aula em passeio/ para 50 minutos." E, para um slide só: "Na aula em passeio/, corrija o slide #variancia: o título está longo." Não precisa chamar a skill pelo nome: a descrição dela basta para o agente escolher.
 
 **No Codex CLI:** use a mesma pasta `pacotes/skill/aula-usp/`, carregada da forma que a sua versão do Codex aceita skills ou instruções de projeto. O aceite da fase 1 rodou assim, e a forma de carregar é registrada em `tests/aceite/roteiro.md`.
 
-**Sem terminal:** o claude.ai e o ChatGPT não carregam skills. Para eles existem os pacotes `pacotes/claude/projeto/` (instruções e arquivos de um Projeto) e `pacotes/gpt/gpt-personalizado/` (instruções e conhecimento de um GPT personalizado). Os dois já têm os modos de escrever e de avaliar.
+**Sem terminal:** o claude.ai e o ChatGPT não carregam skills. Para eles existem os pacotes `pacotes/claude/projeto/` (instruções e arquivos de um Projeto) e `pacotes/gpt/gpt-personalizado/` (instruções e conhecimento de um GPT personalizado). Os dois já têm os modos de escrever, de avaliar e de corrigir um slide.
 
 ## Avaliar a qualidade
 
@@ -308,8 +310,8 @@ validador/               validar.js e regras/*.js — executam o contrato, não 
 avaliador/               a rubrica de avaliação (rubrica.json) e os critérios medidos de `aula-usp avaliar`
 build/                   glue de Node: servir, validar, construir, PDF, empacotar
 dist/                    o runtime versionado: 14 arquivos, gerados por `aula-usp dist`
-guia/                    o guia do autor, 18 arquivos, com as fontes dos pacotes em guia/pacotes/
-pacotes/                 os 4 pacotes para agentes e a skill de avaliar, 56 arquivos, gerados por `aula-usp pacotes`
+guia/                    o guia do autor, 19 arquivos, com as fontes dos pacotes em guia/pacotes/
+pacotes/                 os 4 pacotes para agentes e as skills de avaliar e de corrigir, 58 arquivos, gerados por `aula-usp pacotes`
 modelos/aula/            o esqueleto que `aula-usp novo` copia
 exemplos/                as aulas-exemplo: descida do gradiente, e regressão linear com gráfico, diagrama e demo
 especime/                sete decks que exercitam tudo
@@ -353,7 +355,7 @@ O vocabulário é fechado de propósito: o validador recusa elemento, classe ou 
 
 Este arquivo é a porta de entrada, e para de propósito aqui. Quem chega vai para um de dois lugares:
 
-- **escrever aulas** — `guia/`, o guia do autor: layouts, componentes, matemática e código, gráficos, diagramas e demos, o que o validador cobra, e um arquivo por fluxo de trabalho (terminal, chat, artifact do Claude, GPT personalizado). Para trabalhar com um agente, os pacotes prontos estão em `pacotes/`, inclusive a skill de avaliar;
+- **escrever aulas** — `guia/`, o guia do autor: layouts, componentes, matemática e código, gráficos, diagramas e demos, o que o validador cobra, e um arquivo por fluxo de trabalho (terminal, chat, artifact do Claude, GPT personalizado). Para trabalhar com um agente, os pacotes prontos estão em `pacotes/`, inclusive as skills de avaliar e de corrigir;
 - **desenvolver o sistema** — `AGENTS.md`, que é onde estão a fronteira do Node, as guardas dos artefatos gerados, como se acrescenta uma regra e o que este projeto já aprendeu errando.
 
 A spec é a autoridade sobre os dois: `docs/superpowers/specs/2026-09-14-aula-usp-design.md`, e, para avaliar, corrigir e gerar aulas, `docs/superpowers/specs/2026-09-28-aula-usp-skills-design.md`.

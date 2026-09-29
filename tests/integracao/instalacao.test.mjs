@@ -19,7 +19,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync, spawn, spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, mkdtempSync, renameSync, rmSync, symlinkSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -60,6 +60,21 @@ test('instalado, o pacote cria, valida e constrói uma aula nova, com PDF', () =
     r = cli(pacote, 'validar', aula);
     assert.equal(r.status, 0, r.stdout + r.stderr);
     assert.match(r.stdout, /0 erros, 0 avisos/);
+    // 1.2.0: `slide` no pacote instalado — build/secoes.mjs entra por import() e tem de estar em
+    // `files`. Imprimir o slide 2 e substituí-lo por ele mesmo deixa o arquivo idêntico, byte a byte;
+    // e `validar --slide 2` relata só aquele slide.
+    const antes = readFileSync(join(aula, 'index.html'), 'utf8');
+    r = cli(pacote, 'slide', aula, '2');
+    assert.equal(r.status, 0, r.stderr);
+    assert.match(r.stdout, /^<section[\s\S]*<\/section>$/);
+    const slide2 = join(dir, 'slide-2.html');
+    writeFileSync(slide2, r.stdout);
+    r = cli(pacote, 'slide', aula, '2', '--substituir', slide2);
+    assert.equal(r.status, 0, r.stdout + r.stderr);
+    assert.equal(readFileSync(join(aula, 'index.html'), 'utf8'), antes);
+    r = cli(pacote, 'validar', aula, '--slide', '2');
+    assert.equal(r.status, 0, r.stdout + r.stderr);
+    assert.match(r.stdout, /fora deste relatório/);
     // 1.1.0: `avaliar` no pacote instalado — a rubrica (avaliador/rubrica.json) é lida por caminho
     // montado em tempo de execução, o alcance que tests/unit/publicacao.test.mjs não tem. Com
     // --fotos, também o servidor e o runtime local no arranjo içado.

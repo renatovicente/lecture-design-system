@@ -16,9 +16,10 @@ A CLI vive em `bin/aula-usp.mjs`. Sem `npm link`, chame por `node bin/aula-usp.m
 |---|---|
 | `aula-usp novo <pasta> --unidade ime` | copia `modelos/aula/` preenchendo `unidade` (da opção) e `data` (de hoje); não sobrescreve pasta que já tenha conteúdo |
 | `aula-usp servir <pasta> [--porta 8765]` | serve a aula com o runtime local de `dist/`; troca o endereço da tag e remove o `integrity` |
-| `aula-usp validar <pasta> [--json]` | regras estáticas e de carga e, havendo Chrome, as de composição |
+| `aula-usp validar <pasta> [--slide <id\|n>] [--json]` | regras estáticas e de carga e, havendo Chrome, as de composição; com `--slide` (desde a 1.2.0), valida a aula inteira, imprime só os achados daquele slide e a linha "N achados em outros slides e M da aula, fora deste relatório", e sai com 1 só se houver erro nele |
 | `aula-usp build <pasta> [--sem-pdf]` | as sete etapas da spec 3.3; escreve só em `<pasta>/dist/` |
 | `aula-usp avaliar <pasta> [--slide <id\|n>] [--minutos N] [--fotos <dir>] [--json]` | os critérios medidos da rubrica (spec `2026-09-28-aula-usp-skills-design.md`, 4.1); só `ALERTA` e `CONSELHO`, saída 0 com ou sem eles, 2 em falha de ambiente, nunca 1; aula com erro estático não é avaliada ("valide primeiro", saída 0); `--fotos` é a única opção que abre o Chrome |
+| `aula-usp slide <pasta> <id\|n> [--substituir <arquivo> [--dividir] [--forcar]]` | desde a 1.2.0 (spec `2026-09-28-aula-usp-skills-design.md`, 5.1): imprime o fonte de uma `section` byte a byte ou troca só aquele intervalo, com escrita atômica; o localizador é `build/secoes.mjs`, por intervalo de bytes e sem DOM. Recusas de conteúdo (alvo inexistente, arquivo sem exatamente uma `section` — duas com `--dividir` —, texto fora dela, id trocado sem `--forcar`, id repetido) saem com 1; de uso, com 2. Não valida: quem valida é `validar --slide` |
 | `aula-usp dist` | gera `validador/cobertura.json` e os 13 scripts de `dist/` (manutenção do sistema; fora de um clone do repositório recusa com 2) |
 | `aula-usp pacotes` | fixa a tag do runtime, gera o guia e monta `pacotes/`, nessa ordem; confere os limites da spec 11.1 (manutenção do sistema; fora de um clone do repositório recusa com 2) |
 
@@ -26,7 +27,7 @@ A CLI vive em `bin/aula-usp.mjs`. Sem `npm link`, chame por `node bin/aula-usp.m
 
 Códigos de saída (spec 8.1): 0 sem erros, avisos permitidos; 1 com erros de validação; 2 com falha de ambiente. Cada comando aceita **só as suas** flags: `--json` em `build` ou `--porta` em `validar` saem com o uso e código 2, como uma flag inexistente — melhor recusar que ignorar em silêncio.
 
-Os seis comandos da spec 8.1 existem, e `avaliar` é o sétimo, da spec de 2026-09-28 (a 8.1 remete a ela). Das seis metas do contrato, `novo` preenche duas: `disciplina`, `aula` e `professor` ficam com o texto de exemplo do modelo, porque um `professor` inventado seria pior que um lugar visivelmente vazio, e `video` (opcional, de fase 2) não entra no modelo. Desde a 1.0.1, só `unidade`, `data` e `professor` são obrigatórias.
+Os seis comandos da spec 8.1 existem, e `avaliar` e `slide` são o sétimo e o oitavo, da spec de 2026-09-28 (a 8.1 remete a ela). `slide` e `validar --slide` resolvem o alvo pela mesma função, `resolverAlvo` de `build/secoes.mjs` — um id que existe ganha de um número —, e `tests/unit/secoes.test.mjs` prova que a numeração do localizador é a de `slidesDoFonte` em todo deck do espécime, dos exemplos e do modelo. `avaliar --slide` ainda resolve pelo caminho dele (número é sempre posição), o que só diverge numa aula com um id só de algarismos. Das seis metas do contrato, `novo` preenche duas: `disciplina`, `aula` e `professor` ficam com o texto de exemplo do modelo, porque um `professor` inventado seria pior que um lugar visivelmente vazio, e `video` (opcional, de fase 2) não entra no modelo. Desde a 1.0.1, só `unidade`, `data` e `professor` são obrigatórias.
 
 `aula-usp pacotes` reescreve a tag nas **três** pastas da spec 8.1: `modelos/`, `especime/` e `exemplos/`. O espécime é servido cru por `dist.test.mjs` e `visual.test.mjs` — um servidor que **não** reescreve nada, e é ele que prova que a tag escrita pelo autor chega ao navegador como está. A 1.0.0 está publicada, e a CDN foi conferida de verdade uma vez (13 de 13 hashes, 0 erros em 5 decks num Chrome com a CDN real) — mas os testes continuam **offline, de propósito**: quem responde pela CDN neles é `rotearCdn` (`tests/integracao/utilitarios.mjs`), o **Chrome** intercepta a rota e devolve os bytes de `dist/` desta árvore, que é o que está sob teste (a versão publicada é outra, e uma suíte que dependesse da rede não diria nada sobre o código que você acabou de mudar). O servidor continua burro. Dois ganhos que a tag relativa não dava: o `integrity` conferido por um navegador de verdade (dois bytes a mais em `aula-usp.js` e o Chrome recusa o script) e a cadeia de scripts secundários resolvida pela base da CDN (9 pedidos em `codigo.html`). O modelo e as duas aulas-exemplo vão dentro dos pacotes, e o espécime inteiro também, desde o pacote autossuficiente: três dos quatro pacotes levam `especime/` com todos os decks (`tests/unit/pacotes.test.mjs`).
 
@@ -37,7 +38,7 @@ Node ≥ 20.6, ES modules. `playwright-core` usa o Google Chrome instalado (cana
 ## Testes
 
 ```bash
-npm test                 # 49 arquivos em tests/unit/: 47 sem navegador, 2 com Chrome
+npm test                 # 51 arquivos em tests/unit/: 48 sem navegador, 3 com Chrome
 npm run test:integracao  # 27 arquivos em tests/integracao/, Chrome de verdade
 ```
 
@@ -49,7 +50,7 @@ Os de integração são pesados — abrem Chrome, constroem decks, comparam pixe
 node --test tests/integracao/composicao.test.mjs
 ```
 
-Uma distinção que confunde: **"falta de Chrome não é falha" é regra da CLI**, não dos testes. `validar` e `build` degradam sozinhos — pulam composição e PDF, emitem aviso no stderr e terminam com 0 se não houver erros (spec 8.1). Os testes de integração não têm essa tolerância: chamam `chromium.launch()` direto (`tests/integracao/utilitarios.mjs:35`) e falham sem Chrome. Os dois arquivos de `tests/unit/` que sobem Chrome — `validar-cli.test.mjs` e `novo.test.mjs`, os dois por `validarArquivo` — seguem a regra da CLI e **pulam anunciando**: medido, `CHROME_PATH` inexistente dá 689 passam e 2 pulados (medido na 1.1.0), e nenhum pulo é mudo. `tests/unit/avaliar-cli.test.mjs` também põe um `CHROME_PATH` inexistente, mas para provar a falta: `avaliar --fotos` sem Chrome sai com 2, e sem `--fotos` o comando nem tenta abrir navegador.
+Uma distinção que confunde: **"falta de Chrome não é falha" é regra da CLI**, não dos testes. `validar` e `build` degradam sozinhos — pulam composição e PDF, emitem aviso no stderr e terminam com 0 se não houver erros (spec 8.1). Os testes de integração não têm essa tolerância: chamam `chromium.launch()` direto (`tests/integracao/utilitarios.mjs:35`) e falham sem Chrome. Os três arquivos de `tests/unit/` que sobem Chrome — `validar-cli.test.mjs`, `novo.test.mjs` e `slide-cli.test.mjs`, os três por `validarArquivo` — seguem a regra da CLI e **pulam anunciando**: medido na 1.2.0, `CHROME_PATH` inexistente dá 755 passam e 2 pulados, e nenhum pulo é mudo. Em `slide-cli.test.mjs` não há pulo: o que ele prova (a fatia de bytes e a aula sem erro nos outros grupos) vale sem Chrome, e a composição que ficou de fora sai como diagnóstico. `tests/unit/avaliar-cli.test.mjs` também põe um `CHROME_PATH` inexistente, mas para provar a falta: `avaliar --fotos` sem Chrome sai com 2, e sem `--fotos` o comando nem tenta abrir navegador.
 
 ## `dist/` é rastreado, e os testes comparam byte a byte
 
@@ -73,7 +74,7 @@ Consequência prática: **mexeu no empacotador (`build/bundle.mjs`), nos pontos 
 | `validador/cobertura.json` | `aula-usp dist` | `tests/unit/cobertura.test.mjs:74` |
 | `dist/` (13 scripts + manifesto) | `aula-usp dist` | `tests/unit/bundle.test.mjs:116` e `:136`, e as duas de propriedade em `:197` e `:220` |
 | `guia/10-estrutura.md`, `20-layouts.md`, `30-componentes.md`, `60-validador.md` e `80-avaliar-corrigir-gerar.md`, só entre `<!-- gerado:… -->` e `<!-- /gerado -->` | `npm run guia` | `tests/unit/guia.test.mjs:34`; a de propriedade do capítulo de avaliar — todo critério de `avaliador/rubrica.json`, uma linha cada, com os números dela — no fim do mesmo arquivo |
-| `pacotes/` (os quatro da spec 10.2 e a skill `aula-usp-avaliar`, 56 arquivos) e a tag do runtime em `modelos/` e `exemplos/` | `aula-usp pacotes` | `tests/unit/pacotes.test.mjs:68` |
+| `pacotes/` (os quatro da spec 10.2 e as skills `aula-usp-avaliar` e `aula-usp-corrigir`, 58 arquivos) e a tag do runtime em `modelos/` e `exemplos/` | `aula-usp pacotes` | `tests/unit/pacotes.test.mjs:69` |
 | `assets/aula-usp.mplstyle` | `npm run mplstyle` | `tests/unit/mplstyle.test.mjs` — regerar-e-comparar, mais a propriedade (as três cores do ciclo são as de `tokens.cor.tinta/azul/cinza`, sem `#`). O Aula USP não consome este arquivo, e não há Python no projeto (spec 8.2) para carregá-lo de verdade num matplotlib — a cobertura dele é textual porque a ferramenta que o lê não está no projeto |
 
 Todos são rastreados no git e trazem, quando o formato permite, o cabeçalho "Gerado por … Não editar à mão". Editar um à mão quebra a guarda, e a correção é sempre a mesma: edite a **fonte** e regere.
@@ -102,7 +103,7 @@ As duas têm a mesma forma e o mesmo perigo: **a ordem errada não falha.** A pr
 
 ## A fronteira: quem pode importar Node
 
-`montar/`, `motor/`, `componentes/`, `validador/` e `avaliador/` **não importam nada do Node** — rodam no navegador. Medido na 1.1.0: zero ocorrências de `node:` nos cinco diretórios. Só `bin/` (1 arquivo) e `build/` (21 arquivos) são Node. O `avaliador/` entrou na fronteira sem estar em painel nenhum ainda (spec 2026-09-28, 4.2): é o que deixa o caminho aberto para um.
+`montar/`, `motor/`, `componentes/`, `validador/` e `avaliador/` **não importam nada do Node** — rodam no navegador. Medido na 1.1.0: zero ocorrências de `node:` nos cinco diretórios. Só `bin/` (1 arquivo) e `build/` (22 arquivos, medido na 1.2.0) são Node. O `avaliador/` entrou na fronteira sem estar em painel nenhum ainda (spec 2026-09-28, 4.2): é o que deixa o caminho aberto para um.
 
 É o que permite a mesma regra rodar no painel dentro da aula e na linha de comando, e o que torna `dist/` possível: esbuild empacota esses diretórios para o navegador, e um `import … from 'node:fs'` ali não tem como resolver. `tests/` fica fora da fronteira e importa Node à vontade.
 
