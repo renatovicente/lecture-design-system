@@ -1,0 +1,95 @@
+{
+  "versao": 1,
+  "$descricao": "Rubrica do avaliador do Aula USP (spec 2026-09-28, seção 3). Dado, não código: o avaliador lê daqui os limiares, as listas e os textos. Nenhum critério dá erro — só o validador dá.",
+  "fontes": {
+    "N": "K. M. Naegle, Ten simple rules for effective presentation slides, PLOS Comput Biol 17(12): e1009554, 2021",
+    "U": "UC San Diego Multimedia Services, Evidence-Based Presentation Design Recommendations"
+  },
+  "criterios": {
+    "titulo-rotulo": {
+      "fonte": ["N3"], "tipo": "medido", "alcance": "slide", "nivel": "alerta",
+      "layouts": ["conteudo", "figura", "afirmacao"],
+      "maxPalavrasRotulo": 2,
+      "rotulos": ["introdução", "motivação", "resultados", "métodos", "metodologia", "discussão",
+                  "conclusão", "conclusões", "background", "contexto", "resumo", "exemplo", "exemplos"],
+      "acao": "Troque o rótulo por uma frase que diga a conclusão do slide: não \"Resultados\", mas o que os resultados mostram."
+    },
+    "elementos": {
+      "fonte": ["N7"], "tipo": "medido", "alcance": "slide", "nivel": "alerta",
+      "maxElementos": 6,
+      "acao": "Tire do slide o que não for essencial ou divida-o em dois: acima de uns seis elementos a plateia deixa de acompanhar."
+    },
+    "itens": {
+      "fonte": ["U"], "tipo": "medido", "alcance": "slide", "nivel": "conselho",
+      "maxItens": 4,
+      "acao": "Deixe a lista em até quatro itens: junte os parecidos, passe o resto para a fala ou para outro slide."
+    },
+    "revelacao": {
+      "fonte": ["U"], "tipo": "medido", "alcance": "slide", "nivel": "conselho",
+      "maxItensSemPasso": 3,
+      "acao": "Revele a lista item a item, com passos, para a plateia ler o que você está dizendo e não o que vem depois."
+    },
+    "so-texto": {
+      "fonte": ["N6", "U"], "tipo": "medido", "alcance": "aula", "nivel": "alerta",
+      "layouts": ["conteudo"],
+      "maxFracao": 0.5,
+      "visuais": ["figure", "div.demo", "pre", "tex-destaque"],
+      "acao": "Troque parte do texto por figura, gráfico, diagrama, fórmula ou código: mais da metade dos slides de conteúdo só tem texto."
+    },
+    "paineis": {
+      "fonte": ["N6"], "tipo": "medido", "alcance": "slide", "nivel": "conselho",
+      "maxFiguras": 1,
+      "acao": "Mostre uma figura por vez: divida o slide, e cada figura ganha o seu título e a sua fala."
+    },
+    "credito": {
+      "fonte": ["N5"], "tipo": "medido", "alcance": "slide", "nivel": "conselho",
+      "marcadores": ["Fonte", "Adaptado de", "Dados de", "Crédito"],
+      "padraoAno": "\\((19|20)\\d{2}\\)",
+      "acao": "Diga de onde vem a figura ou os dados, numa linha de fonte ou na legenda; se for sua, a legenda pode dizer isso."
+    },
+    "tempo": {
+      "fonte": ["N2"], "tipo": "medido", "alcance": "aula", "nivel": "alerta",
+      "layoutsSemTempo": ["capa", "abertura", "encerramento"],
+      "minutosPorSlide": 1,
+      "fatorMaximo": 1.2,
+      "acao": "Corte slides ou peça mais tempo: a conta é de cerca de um minuto por slide de conteúdo."
+    },
+    "palavras-slide": {
+      "fonte": ["N4", "N7"], "tipo": "medido", "alcance": "slide", "nivel": "conselho",
+      "maxPalavras": 60,
+      "acao": "Enxugue o texto: o que é explicação vai para a fala ou para as notas, e no slide fica o que a plateia precisa ver."
+    },
+    "uma-ideia": {
+      "fonte": ["N1"], "tipo": "julgado", "alcance": "slide", "nivel": "alerta",
+      "pergunta": "O slide entrega uma só ideia?"
+    },
+    "titulo-conclusao": {
+      "fonte": ["N3"], "tipo": "julgado", "alcance": "slide", "nivel": "alerta",
+      "pergunta": "O título afirma a conclusão que o corpo do slide sustenta?"
+    },
+    "essencial": {
+      "fonte": ["N4"], "tipo": "julgado", "alcance": "slide", "nivel": "alerta",
+      "pergunta": "Tudo o que está no slide vai ser comentado, ou há algo que ficaria sem ser dito?"
+    },
+    "grafico-eficaz": {
+      "fonte": ["N6"], "tipo": "julgado", "alcance": "slide", "nivel": "alerta",
+      "pergunta": "O gráfico ou a figura leva a mensagem do slide sozinho, legível de longe?"
+    },
+    "distraido": {
+      "fonte": ["N8"], "tipo": "julgado", "alcance": "slide", "nivel": "alerta",
+      "pergunta": "Quem não ouviu nada leva a mensagem só pelo título e pela figura?"
+    },
+    "redundancia": {
+      "fonte": ["U"], "tipo": "julgado", "alcance": "slide", "nivel": "conselho",
+      "pergunta": "O texto evita repetir por extenso o que a imagem já diz?"
+    },
+    "decorativa": {
+      "fonte": ["U"], "tipo": "julgado", "alcance": "slide", "nivel": "conselho",
+      "pergunta": "Toda imagem do slide tem função, sem nenhuma só de enfeite?"
+    },
+    "fluxo": {
+      "fonte": ["N9"], "tipo": "julgado", "alcance": "aula", "nivel": "alerta",
+      "pergunta": "A passagem de cada slide para o seguinte faz sentido para quem assiste?"
+    }
+  }
+}
