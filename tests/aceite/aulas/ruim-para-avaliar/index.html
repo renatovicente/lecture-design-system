@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Monte Carlo (aula ruim de propósito)</title>
+<meta name="unidade" content="ime">
+<meta name="disciplina" content="Métodos Computacionais">
+<meta name="aula" content="5">
+<meta name="data" content="2026-09-28">
+<meta name="professor" content="Prof. Teste">
+<script src="../../../../dist/aula-usp.js"></script>
+</head>
+<body>
+
+<!-- Aula do roteiro de aceite de avaliar (tests/aceite/avaliar.md). Valida limpa, e quebra de
+propósito N1 (#dois-assuntos), N3 (#introducao e #resultados), N6 (quatro dos cinco slides de
+conteúdo só têm texto) e U-itens (#passos). -->
+
+<section data-layout="capa">
+  <h1>O método de Monte Carlo<br><span class="sinal">sortear para calcular</span></h1>
+</section>
+
+<section data-layout="abertura" id="motivacao" data-curto="Motivação">
+  <h2>Por que sortear</h2>
+  <p class="pergunta">Como uma sequência de sorteios pode calcular uma área?</p>
+</section>
+
+<section data-layout="conteudo" id="introducao">
+  <h2>Introdução</h2>
+  <p>O método de Monte Carlo estima uma quantidade sorteando pontos ao acaso e contando quantos caem numa região. Ele é usado em física, em finanças e em estatística.</p>
+  <aside class="notas">Contar a história do nome, do cassino de Mônaco.</aside>
+</section>
+
+<section data-layout="conteudo" id="dois-assuntos">
+  <h2>O erro cai com a raiz de N<br><span class="sinal">e a semente fixa o resultado.</span></h2>
+  <p>O erro da estimativa diminui com a raiz quadrada do número de sorteios: para dividir o erro por dez, são cem vezes mais pontos.</p>
+  <p>Já a semente do gerador de números pseudoaleatórios decide a sequência inteira: com a mesma semente, a mesma estimativa sai de novo.</p>
+  <aside class="notas">Duas ideias num slide só, de propósito: o erro e a reprodutibilidade.</aside>
+</section>
+
+<section data-layout="abertura" id="metodo" data-curto="Método">
+  <h2>O método</h2>
+  <p class="pergunta">Que passos levam do sorteio à estimativa?</p>
+</section>
+
+<section data-layout="conteudo" id="passos">
+  <h2>O método em cinco passos<br><span class="sinal">do sorteio à estimativa.</span></h2>
+  <ul>
+    <li>Escolha a região que contém a área.</li>
+    <li>Sorteie pontos uniformes nela.</li>
+    <li>Conte os que caem dentro da área.</li>
+    <li>Divida pelo total de pontos.</li>
+    <li>Multiplique pela área da região.</li>
+  </ul>
+  <aside class="notas">A lista inteira aparece de uma vez.</aside>
+</section>
+
+<section data-layout="conteudo" id="resultados">
+  <h2>Resultados</h2>
+  <p>Com dez mil pontos no quadrado de lado um, a fração dentro do quarto de círculo ficou perto de 0,785, e a estimativa de pi, perto de 3,14.</p>
+  <aside class="notas">Mostrar a conta no quadro.</aside>
+</section>
+
+<section data-layout="conteudo" id="estimativa">
+  <h2>A estimativa de pi<br><span class="sinal">é quatro vezes a fração de acertos.</span></h2>
+  \[ \pi \approx 4\, \frac{\text{acertos}}{N} \]
+  <aside class="notas">Ligar a fórmula ao quarto de círculo.</aside>
+</section>
+
+<section data-layout="encerramento">
+  <h2>O que fica</h2>
+  <ol class="sintese">
+    <li>Sortear e contar estima uma área.</li>
+    <li>O erro cai com a raiz do número de pontos.</li>
+  </ol>
+  <p class="proxima">Próxima aula: amostragem por importância.</p>
+</section>
+
+</body>
+</html>

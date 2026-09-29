@@ -69,5 +69,6 @@ O bloco abaixo é o sistema inteiro em um punhado de linhas. Ele entra **literal
 | `71-fluxo-chat.md` | escrever a aula num chat, sem terminal |
 | `72-artifact-claude.md` | a aula como artifact do Claude, e o que não funciona lá dentro |
 | `73-chatgpt.md` | entregar a aula pelo ChatGPT |
+| `80-avaliar-corrigir-gerar.md` | avaliar a qualidade de uma aula já válida, pelas boas práticas de Naegle e da UCSD |
 
 Um caminho curto para a primeira aula: leia este capítulo e `10-estrutura.md`, crie a pasta com `aula-usp novo minha-aula --unidade ime` — que copia o esqueleto já com `unidade` e `data` preenchidas —, escreva, e use `60-validador.md` quando o validador falar. Sem terminal, o esqueleto é o que `10-estrutura.md` mostra inteiro, e `71-fluxo-chat.md` conta o resto. A aula-exemplo — `exemplos/descida-do-gradiente/` — é uma aula inteira, escrita dentro do sistema, para ver como fica; a segunda — `exemplos/regressao-linear/` — faz o mesmo com gráfico, diagrama e demo.

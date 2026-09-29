@@ -515,9 +515,10 @@ test('o bloco de regras essenciais de guia/00-principios.md existe e não está 
 
 // A lista vem de FONTES_DE_PACOTE, que é a tabela da spec 10.1 escrita uma vez. Um arquivo a mais
 // ou a menos na pasta é uma divergência entre o que o guia tem e o que o 6c vai procurar.
-test('guia/pacotes/ tem exatamente os cinco arquivos-fonte da spec 10.1', () => {
+test('guia/pacotes/ tem exatamente os arquivos-fonte de FONTES_DE_PACOTE: os cinco da spec 10.1 e o da skill de avaliar', () => {
   const esperados = Object.keys(FONTES_DE_PACOTE).map((caminho) => caminho.split('/').pop());
   assert.deepEqual(readdirSync(new URL('guia/pacotes/', RAIZ)).sort(), esperados.sort());
+  assert.equal(esperados.length, 6, 'os cinco arquivos-fonte da spec 10.1 e o da skill de avaliar (spec 2026-09-28, 7)');
 });
 
 // Spec 10.1: o bloco "entra, literalmente, em todos os pacotes". Quem diz ONDE é a linha do
@@ -558,5 +559,35 @@ test('cada arquivo-fonte com teto cabe nele depois de montado', () => {
     );
     assert.ok(montado.includes(bloco), `${caminho} montado não contém o bloco de regras essenciais`);
     assert.equal(montado.includes('<!--'), false, `${caminho} montado ainda tem comentário HTML`);
+  }
+});
+
+// O capítulo de avaliar (spec 2026-09-28, 7) traz a rubrica inteira, uma linha por critério, na
+// tabela do tipo dele. O "todos" vem de avaliador/rubrica.json, que tests/unit/rubrica.test.mjs prega
+// à spec critério a critério; a busca é no ARQUIVO em disco, entre os marcadores, que é o que o autor
+// lê. E cada número de um medido aparece na linha dele: a frase em volta é de build/guia.mjs, mas o
+// número tem de ser o da rubrica.
+test('o capítulo de avaliar traz todos os critérios da rubrica, uma linha cada, com os limiares dela', () => {
+  const rubrica = JSON.parse(readFileSync(new URL('avaliador/rubrica.json', RAIZ), 'utf8'));
+  const capitulo = readFileSync(new URL('guia/80-avaliar-corrigir-gerar.md', RAIZ), 'utf8');
+  for (const tipo of ['medido', 'julgado']) {
+    const marcador = `<!-- gerado:tabela-da-rubrica-${tipo}s -->\n`;
+    const inicio = capitulo.indexOf(marcador);
+    assert.ok(inicio >= 0, `o capítulo não tem o bloco gerado dos critérios ${tipo}s`);
+    const bloco = capitulo.slice(inicio + marcador.length, capitulo.indexOf('<!-- /gerado -->', inicio));
+    const linhas = bloco.split('\n').filter((linha) => linha.startsWith('| `'));
+    const ids = Object.keys(rubrica.criterios).filter((id) => rubrica.criterios[id].tipo === tipo);
+    assert.ok(ids.length > 0, `a rubrica não tem critério ${tipo}`);
+    assert.equal(linhas.length, ids.length, `${linhas.length} linhas de ${tipo}s, e a rubrica tem ${ids.length}`);
+    for (const id of ids) {
+      const linha = linhas.find((candidata) => candidata.startsWith(`| \`${id}\` |`));
+      assert.ok(linha, `o critério ${id} não está no capítulo de avaliar`);
+      assert.ok(linha.includes(`| ${rubrica.criterios[id].nivel} |`), `${id}: o nível da linha não é o da rubrica`);
+      for (const [chave, valor] of Object.entries(rubrica.criterios[id])) {
+        if (typeof valor !== 'number') continue;
+        const escrito = chave === 'maxFracao' ? `${Math.round(valor * 100)}%` : String(valor).replace('.', ',');
+        assert.ok(linha.includes(escrito), `${id}: a linha não traz ${chave} = ${escrito}`);
+      }
+    }
   }
 });

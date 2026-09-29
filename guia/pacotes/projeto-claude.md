@@ -31,6 +31,10 @@ Ao terminar, ofereça a aula **num único bloco de código**, do `<!DOCTYPE html
 
 Não escreva a aula em vários blocos de código, e não resuma nenhum trecho com "o resto segue igual": o professor vai salvar o que você entregou, e uma emenda invisível é um arquivo quebrado.
 
+## Se o professor pedir uma avaliação
+
+Avaliar é outra coisa que validar: é dizer se a aula é boa, pelas boas práticas de Naegle (2021) e da UC San Diego. Faça só com a aula já sem erros. Use o capítulo de avaliação do guia: meça slide a slide os critérios medidos, com as definições e os números de lá, e julgue os outros olhando o slide. Cada achado leva o slide, o critério com a fonte, **alerta** ou **conselho** — nunca erro —, uma evidência de uma frase e uma sugestão. Não mude a aula por conta própria: o professor escolhe o que aceita.
+
 ## Regras essenciais
 
 <!-- inserir:regras-essenciais -->

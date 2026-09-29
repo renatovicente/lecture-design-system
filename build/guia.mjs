@@ -17,6 +17,9 @@ export const BLOCOS_POR_ARQUIVO = {
   'guia/20-layouts.md': ['tabela-de-layouts', 'exemplos-por-layout'],
   'guia/30-componentes.md': ['tabela-de-papeis'],
   'guia/60-validador.md': ['tabela-de-regras'],
+  // A rubrica do avaliador (spec 2026-09-28, 3 e 7), em linguagem de autor: os números e as listas
+  // saem de avaliador/rubrica.json, como os limites saem do contrato.
+  'guia/80-avaliar-corrigir-gerar.md': ['tabela-da-rubrica-medidos', 'tabela-da-rubrica-julgados'],
 };
 
 // O esqueleto que o guia mostra é este arquivo, não uma cópia dele: enquanto era cópia, nada
@@ -286,6 +289,41 @@ export function tabelaDeLimites(contrato) {
   return tabela(['limite', 'quanto cabe', 'onde'], linhas);
 }
 
+// As duas tabelas da rubrica do avaliador (spec 2026-09-28, 3.1 e 3.2), para o capítulo de avaliar.
+// O número e a lista vêm sempre de avaliador/rubrica.json; o que mora aqui são as PALAVRAS em volta,
+// uma frase por critério medido, como as de ONDE e UNIDADE fazem para os limites. Um critério medido
+// sem frase aqui para `npm run guia` com erro, em vez de publicar "undefined" no guia.
+const porcento = (fracao) => `${Math.round(fracao * 100)}%`;
+const numero = (valor) => String(valor).replace('.', ',');
+const lista = (valores) => valores.map((valor) => `"${valor}"`).join(', ');
+
+const MEDIDO_EM_PALAVRAS = {
+  'titulo-rotulo': (r) => `título de ${r.layouts.join(', ')} com até ${r.maxPalavrasRotulo} palavras, ou igual a um rótulo genérico (${lista(r.rotulos)}), sem contar caixa nem pontuação`,
+  elementos: (r) => `mais de ${r.maxElementos} blocos de corpo no slide, contados dentro das colunas; título, lide e notas não contam`,
+  itens: (r) => `lista com mais de ${r.maxItens} itens`,
+  revelacao: (r) => `lista com mais de ${r.maxItensSemPasso} itens e nenhum \`data-passo\``,
+  'so-texto': (r) => `mais de ${porcento(r.maxFracao)} dos slides de ${r.layouts.join(', ')} sem figura, gráfico, diagrama, demo, código nem fórmula em destaque; a matemática em linha não conta`,
+  paineis: (r) => `mais de ${r.maxFiguras} figura no mesmo slide`,
+  credito: (r) => `figura com imagem, SVG ou gráfico sem \`p.fonte\` no slide nem legenda com ${lista(r.marcadores)} ou um ano entre parênteses; diagramas e demos não contam`,
+  tempo: (r) => `só com a duração da aula: mais de ${numero(r.fatorMaximo)} × N slides para N minutos, a ${r.minutosPorSlide} minuto por slide, contando todos menos ${r.layoutsSemTempo.join(', ')}`,
+  'palavras-slide': (r) => `mais de ${r.maxPalavras} palavras no slide, sem contar título, notas, matemática, código e os dados de gráfico e diagrama`,
+};
+
+export function tabelasDaRubrica(rubrica) {
+  const criterios = Object.entries(rubrica.criterios);
+  const medidos = criterios.filter(([, criterio]) => criterio.tipo === 'medido').map(([id, criterio]) => {
+    const frase = MEDIDO_EM_PALAVRAS[id];
+    if (!frase) throw new Error(`o critério medido "${id}" não tem frase em MEDIDO_EM_PALAVRAS (build/guia.mjs)`);
+    return `| \`${id}\` | ${criterio.fonte.join(', ')} | ${criterio.alcance} | ${criterio.nivel} | ${celula(frase(criterio))} | ${celula(criterio.acao)} |`;
+  });
+  const julgados = criterios.filter(([, criterio]) => criterio.tipo === 'julgado')
+    .map(([id, criterio]) => `| \`${id}\` | ${criterio.fonte.join(', ')} | ${criterio.alcance} | ${criterio.nivel} | ${celula(criterio.pergunta)} |`);
+  return {
+    'tabela-da-rubrica-medidos': tabela(['critério', 'fonte', 'alcance', 'nível máximo', 'acusa quando', 'o que fazer'], medidos),
+    'tabela-da-rubrica-julgados': tabela(['critério', 'fonte', 'alcance', 'nível máximo', 'a pergunta'], julgados),
+  };
+}
+
 // O esqueleto, lido do próprio modelo. É a guarda que faltava ao trecho que o guia mostrava: antes,
 // a cópia era conferida à mão uma vez e nunca mais.
 export function blocoDoModelo(raiz) {
@@ -397,6 +435,10 @@ export const FONTES_DE_PACOTE = {
   // Sem regras essenciais: iniciadores de conversa não são instrução, são quatro frases de botão.
   'guia/pacotes/gpt-iniciadores.md': { destino: 'pacotes/gpt/gpt-personalizado/iniciadores.txt', essenciais: false },
   'guia/pacotes/agents-disciplina.md': { destino: 'pacotes/repositorio-de-disciplina/AGENTS.md', essenciais: true },
+  // A skill de avaliar (spec 2026-09-28, seção 7). Sem regras essenciais: ela não escreve slide, só
+  // avalia, e o bloco é sobre como escrever. O resto do que ela leva — a rubrica e o capítulo que a
+  // explica — é montado em build/pacotes.mjs (SKILL_AVALIAR).
+  'guia/pacotes/skill-avaliar.md': { destino: 'pacotes/skill/aula-usp-avaliar/SKILL.md', essenciais: false },
 };
 
 // O bloco que a spec 10.1 manda entrar "literalmente, em todos os pacotes". Ele é LIDO de
@@ -436,6 +478,7 @@ export async function blocosGerados({ raiz = RAIZ } = {}) {
     'tabela-de-limites': tabelaDeLimites(contrato),
     'tabela-de-papeis': tabelaDePapeis(contrato),
     'tabela-de-regras': tabelaDeRegras(contrato),
+    ...tabelasDaRubrica(JSON.parse(readFileSync(new URL('avaliador/rubrica.json', raiz), 'utf8'))),
   };
 }
 

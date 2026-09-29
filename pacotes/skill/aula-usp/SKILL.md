@@ -17,7 +17,7 @@ O vocabulário é fechado e está em `contrato/contrato.json`, que o validador l
 aula-usp
 ```
 
-**Se respondeu** com a lista de comandos (`novo`, `servir`, `validar`, `build`, `dist`, `pacotes`), você está no **modo terminal**: siga `references/70-fluxo-terminal.md`. É o modo completo — validação com os quatro grupos de regras e PDF gerado pelo sistema.
+**Se respondeu** com a lista de comandos (`novo`, `servir`, `validar`, `build`, `avaliar`, `dist`, `pacotes`), você está no **modo terminal**: siga `references/70-fluxo-terminal.md`. É o modo completo — validação com os quatro grupos de regras e PDF gerado pelo sistema.
 
 **Se não respondeu** — comando não encontrado, ou não há terminal —, você está no **modo navegador**: siga `references/71-fluxo-chat.md`. Escreva o HTML com a tag do runtime, entregue o arquivo ao autor, e peça a ele a lista do painel do validador (tecla V, botão "Copiar para o chat") para corrigir. Diga ao autor, uma vez, o que ele ganha instalando a CLI — validação completa, inclusive das regras de composição, e o PDF conferido pelo sistema — e como se instala hoje: `npm install` e `npm link` no repositório do Aula USP. `npm install -g aula-usp` ainda não funciona, porque o pacote não está publicado no npm.
 
@@ -34,6 +34,10 @@ Não invente o ambiente: rode o comando e leia a resposta.
 7. **Entregue em zero erros.** No modo terminal, feche com `aula-usp build <pasta>`, que escreve o HTML autocontido e o PDF em `<pasta>/dist/`.
 
 Quando uma regra acusar e você não souber o conserto, abra `references/60-validador.md`, que traz a família da regra e o que fazer.
+
+## Avaliar não é escrever
+
+Se o autor pedir para **avaliar**, julgar ou revisar a qualidade de uma aula já escrita — e não para escrevê-la ou validá-la —, use a skill `aula-usp-avaliar`, se ela estiver instalada. Sem ela, no modo terminal, rode `aula-usp avaliar <pasta>` e leia os achados com `references/80-avaliar-corrigir-gerar.md`. A avaliação dá só alerta e conselho, nunca erro, e não muda a aula: o que fazer com cada achado é do autor.
 
 ## Regras essenciais
 
@@ -70,12 +74,13 @@ Quando uma regra acusar e você não souber o conserto, abra `references/60-vali
 | `references/71-fluxo-chat.md` | o modo navegador, de ponta a ponta |
 | `references/72-artifact-claude.md` | a aula como artifact do Claude: fluxo do autor, e o que não funciona lá dentro |
 | `references/73-chatgpt.md` | a entrega pelo ChatGPT: fluxo do autor, e onde o arquivo costuma sair cortado |
+| `references/80-avaliar-corrigir-gerar.md` | a rubrica de avaliação da qualidade, em linguagem de autor, e como ler um alerta |
 | `assets/modelo.html` | o esqueleto de onde toda aula começa |
 | `assets/exemplo.html` | uma aula inteira escrita dentro do sistema |
 | `assets/exemplo-recursos.html` | outra aula inteira, com gráfico, diagrama e demo |
 | `contrato/contrato.json` | o vocabulário fechado inteiro, e os limites — é este arquivo que o validador lê |
 | `especime/` | os seis decks que exercitam todo layout e todo componente; é para eles que o guia aponta por âncora |
 
-A tabela cobre os onze arquivos de `references/`, que são o guia inteiro. Os dois últimos são fluxos do **autor**, não seus: você os lê para saber o que ele vai fazer com o arquivo que receber.
+A tabela cobre os doze arquivos de `references/`, que são o guia inteiro. `72-` e `73-` são fluxos do **autor**, não seus: você os lê para saber o que ele vai fazer com o arquivo que receber.
 
 Dois erros que este sistema vê o tempo todo, e que não custam nada evitar: **escrever o cromo à mão** — cabeçalho, rodapé, número de slide, logo — quando o sistema já o desenha, e **reduzir o texto para caber**, o que não existe aqui. Quando não couber, corte o conteúdo ou divida o slide em dois.

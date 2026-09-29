@@ -27,6 +27,16 @@ const PACOTES = [
   'pacotes/skill/aula-usp',
 ];
 
+// As skills da spec 2026-09-28 (seção 7), fora da tabela da spec 10.2. Literal, e não derivada de
+// FONTES_DE_PACOTE nem de SKILL_AVALIAR: uma skill que saísse do gerador sairia junto do universo das
+// guardas que a percorrem (a "sétima" do AGENTS.md). Elas não levam o bloco de regras essenciais —
+// não escrevem slide —, e por isso ficam fora de PACOTES, que é o universo daquela guarda; entram nas
+// guardas de caminho e de citação, que valem para todo pacote.
+const SKILLS_NOVAS = [
+  'pacotes/skill/aula-usp-avaliar',
+];
+const TODOS_OS_PACOTES = [...PACOTES, ...SKILLS_NOVAS];
+
 // Toda tag de runtime de um texto, com o `src` e o resto dos atributos separados. Lida aqui, e não
 // importada de build/pacotes.mjs, de propósito: uma guarda que pergunta ao gerador como ele
 // reconhece a tag não tem como discordar dele.
@@ -68,8 +78,11 @@ test('os pacotes em disco são o que `aula-usp pacotes` monta hoje', () => {
   // O conjunto, e não só o conteúdo: um arquivo que DEIXASSE de ser gerado continuaria em disco, e
   // o laço acima nunca o visitaria. `montarPacotes` apaga pacotes/ antes de gravar justamente para
   // que essa diferença apareça aqui, e não na mão de quem instala o pacote.
+  // As duas listas ordenadas pela mesma regra: `arquivosDe` ordena pasta a pasta, e desde a skill de
+  // avaliar isso não é mais a ordem da string inteira — `aula-usp-avaliar/` vem depois de `aula-usp/`
+  // na visita, e antes dela no `.sort()` do caminho completo, porque `-` é menor que `/`.
   assert.deepEqual(
-    arquivosDe('pacotes'),
+    arquivosDe('pacotes').sort(),
     [...arquivos.keys()].sort(),
     'pacotes/ tem arquivo que o gerador não escreve, ou falta um que ele escreve — rode `aula-usp pacotes`',
   );
@@ -279,7 +292,7 @@ test('references/ traz exatamente os arquivos de guia/, e nenhum de guia/pacotes
 // `modelos/aula` sem o `/index.html` fica de fora de propósito: é o que `aula-usp novo` imprime na
 // tela, e guia/70-fluxo-terminal.md mostra essa saída como ela é.
 test('nenhum arquivo de pacote cita o modelo ou o exemplo pelo caminho do repositório', () => {
-  const arquivos = PACOTES.flatMap((pacote) => arquivosDe(pacote));
+  const arquivos = TODOS_OS_PACOTES.flatMap((pacote) => arquivosDe(pacote));
   assert.ok(arquivos.length > 0, 'pacotes/ está vazio — esta guarda não mede nada');
   for (const caminho of arquivos) {
     const conteudo = texto(caminho);
@@ -306,7 +319,7 @@ test('nenhum arquivo de pacote cita o modelo ou o exemplo pelo caminho do reposi
 // pasta, em pacote nenhum, venha ele de `apontar` ou da mão de quem escreve a prosa. Medido nesta
 // árvore: zero ocorrências de "pasta `…`" nos quatro pacotes, com ou sem `.html`.
 test('nenhum arquivo de pacote chama de pasta um caminho que é arquivo', () => {
-  const arquivos = PACOTES.flatMap((pacote) => arquivosDe(pacote));
+  const arquivos = TODOS_OS_PACOTES.flatMap((pacote) => arquivosDe(pacote));
   assert.ok(arquivos.length > 0, 'pacotes/ está vazio — esta guarda não mede nada');
   for (const caminho of arquivos) {
     for (const [achado] of texto(caminho).matchAll(/\bpastas?\s+`[^`\n]+\.[A-Za-z0-9]+`/g)) {
@@ -356,7 +369,7 @@ test('os pacotes ensinam `aula-usp novo` como começo, e nenhum manda copiar o m
       `${destino} pressupõe terminal e não ensina \`aula-usp novo\` — é o comando que cria a aula`,
     );
   }
-  const arquivos = PACOTES.flatMap((pacote) => arquivosDe(pacote));
+  const arquivos = TODOS_OS_PACOTES.flatMap((pacote) => arquivosDe(pacote));
   assert.ok(arquivos.length > 0, 'pacotes/ está vazio — o resto desta guarda não mede nada');
   for (const caminho of arquivos) {
     const conteudo = texto(caminho);
@@ -518,7 +531,7 @@ test('todo caminho e todo capítulo citado entre crases dentro do pacote existe 
   const mortas = [];
   const porPacote = {};
 
-  for (const pacote of PACOTES) {
+  for (const pacote of TODOS_OS_PACOTES) {
     const naRaizDoPacote = new Set(readdirSync(new URL(`${pacote}/`, RAIZ)));
     porPacote[pacote] = 0;
     for (const arquivo of arquivosDe(pacote)) {
@@ -550,6 +563,11 @@ test('todo caminho e todo capítulo citado entre crases dentro do pacote existe 
   // guia e não cita caminho nenhum; os três que levam o guia têm de citar.
   for (const pacote of Object.keys(BASE_DO_ACERVO)) {
     assert.ok(porPacote[pacote] > 0, `${pacote} leva o guia e não teve uma única citação conferida`);
+  }
+  // As skills novas citam a rubrica e o capítulo que levam: sem citação conferida nelas, a varredura
+  // não as viu.
+  for (const pacote of SKILLS_NOVAS) {
+    assert.ok(porPacote[pacote] > 0, `${pacote} não teve uma única citação conferida`);
   }
   const conferidas = Object.values(porPacote).reduce((soma, n) => soma + n, 0);
   assert.ok(conferidas >= 200, `só ${conferidas} citações conferidas — o reconhecimento virou decoração`);
@@ -600,4 +618,24 @@ test('o texto de exemplo citado no passo 3 do SKILL.md é o que o esqueleto do p
         + ' esqueleto que viaja no pacote — ou a citação envelheceu, ou o esqueleto mudou',
     );
   }
+});
+
+// ---------------------------------------------------------------------------------------------
+// 12. A skill de avaliar leva a rubrica que o avaliador lê, e não uma cópia envelhecida dela.
+
+// Spec 2026-09-28, seção 7: "a `avaliar` leva `rubrica.json`". O par (origem, destino) está escrito
+// aqui, e não lido de SKILL_AVALIAR (build/pacotes.mjs): uma guarda que pergunta ao gerador o que ele
+// copia aprova qualquer cópia que ele deixe de fazer. E o SKILL.md tem o nome que o Claude Code usa
+// para achar a skill, no frontmatter.
+test('a skill de avaliar leva a rubrica e o capítulo de avaliar, byte a byte, e se chama aula-usp-avaliar', () => {
+  const pares = [
+    ['avaliador/rubrica.json', 'pacotes/skill/aula-usp-avaliar/references/rubrica.json'],
+    ['guia/80-avaliar-corrigir-gerar.md', 'pacotes/skill/aula-usp-avaliar/references/80-avaliar-corrigir-gerar.md'],
+  ];
+  for (const [origem, destino] of pares) {
+    assert.ok(existsSync(new URL(destino, RAIZ)), `${destino} não existe — rode \`aula-usp pacotes\``);
+    assert.equal(texto(destino), texto(origem), `${destino} divergiu de ${origem}`);
+  }
+  const skill = texto('pacotes/skill/aula-usp-avaliar/SKILL.md');
+  assert.match(skill, /^---\nname: aula-usp-avaliar\ndescription: [^\n]*avaliar[^\n]*\n---\n/);
 });

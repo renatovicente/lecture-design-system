@@ -87,6 +87,18 @@ export function apontar(texto, { modelo, exemplo, exemploRecursos }) {
     .split(pasta(EXEMPLO_RECURSOS)).join(exemploRecursos);
 }
 
+// A skill de avaliar (spec 2026-09-28, seção 7) e o que ela leva além do SKILL.md: a rubrica, que é
+// dado e é lida pelo agente como está, e o capítulo do guia que a explica em linguagem de autor — é
+// dele que sai a definição de cada critério medido para quem mede à mão, sem a linha de comando. Os
+// dois são cópia byte a byte: o capítulo não cita modelo nem exemplo, então não há o que `apontar`.
+export const SKILL_AVALIAR = {
+  pasta: 'pacotes/skill/aula-usp-avaliar',
+  copias: {
+    'references/rubrica.json': 'avaliador/rubrica.json',
+    'references/80-avaliar-corrigir-gerar.md': 'guia/80-avaliar-corrigir-gerar.md',
+  },
+};
+
 // As TRÊS pastas que a spec 8.1 nomeia, `especime/` inclusive.
 //
 // O espécime esteve fora desta lista por uma rodada, e a razão era real: ele é a base dos testes de
@@ -263,8 +275,9 @@ function escrever(raiz, caminho, texto) {
   writeFileSync(alvo, texto);
 }
 
-// Os quatro pacotes da spec 10.2. Devolve o que escreveu (caminho -> texto) e o que mediu, sem
-// decidir nada: quem lê os limites e escolhe o código de saída é `aula-usp pacotes`.
+// Os quatro pacotes da spec 10.2, e a skill de avaliar da spec 2026-09-28. Devolve o que escreveu
+// (caminho -> texto) e o que mediu, sem decidir nada: quem lê os limites e escolhe o código de saída
+// é `aula-usp pacotes`.
 //
 // `pacotes/` é apagado antes: sem isso, um arquivo que deixasse de ser gerado ficaria para trás e a
 // guarda de regerar-e-comparar não veria — ela compara o que o gerador escreve, não o que sobrou.
@@ -298,6 +311,9 @@ export function montarPacotes({ raiz = RAIZ, escrever: gravar = false } = {}) {
     for (const caminho of acervo(raiz)) {
       arquivos.set(`${pacote}/${base}${caminho}`, readFileSync(new URL(caminho, raiz), 'utf8'));
     }
+  }
+  for (const [destino, origem] of Object.entries(SKILL_AVALIAR.copias)) {
+    arquivos.set(`${SKILL_AVALIAR.pasta}/${destino}`, readFileSync(new URL(origem, raiz), 'utf8'));
   }
   // Spec 10.2: "trecho de `AGENTS.md` e `CLAUDE.md` com `@AGENTS.md`". É a mesma linha única do
   // CLAUDE.md da raiz deste repositório, e a razão é a mesma: o Claude Code lê CLAUDE.md, o resto
