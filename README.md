@@ -6,23 +6,6 @@ Uma aula é **um arquivo HTML**. Sem framework, sem build para abrir, sem PowerP
 
 Feito para o IME-USP e o IFUSP, com a identidade visual da USP.
 
-## Estado
-
-**Fases 1 e 2 completas; a fase 3, a publicação, em andamento.**
-
-| | |
-|---|---|
-| Layouts | os 7 do contrato: `capa`, `abertura`, `conteudo`, `afirmacao`, `figura`, `demo`, `encerramento` |
-| Motor | navegação, passos revelados, notas do apresentador, visão geral, ajuda, janela do apresentador, impressão |
-| Componentes | campos, exercício, listas, tabela, figura, código com destaque (Shiki), matemática (KaTeX, com `\passo`) |
-| Recursos visuais | gráficos (`linha`, `barras`, `dispersao`, `histograma`), diagramas em DOT desenhados pelo Graphviz, controles de demo, e a foto automática das demos no PDF |
-| Validador | as **65 regras do contrato, todas implementadas**: 48 estáticas, 7 de carga, 6 de composição e 4 de saída |
-| Canto do vídeo | com `<meta name="video" content="canto">` (1.0.1), o canto inferior direito, 334 × 188 px, fica reservado ao vídeo do ministrante que o OBS, o Zoom ou o Meet sobrepõem: o cromo recua, e `composicao.canto-video` acusa o conteúdo que entrar lá |
-| CLI | os **6 comandos** da spec 8.1 |
-| Guia e pacotes | 16 arquivos de guia do autor e 4 pacotes montados a partir deles, para Claude, GPT e um repositório de disciplina |
-
-O aceite da fase 1 foi rodado em 2026-09-21, com Claude Code e Codex CLI, e os dois passaram. O da fase 2 está em `docs/superpowers/revisoes/2026-09-28-aula-usp-fase2-aceite.md`. O da fase 3 (claude.ai e ChatGPT) depende da publicação: `tests/aceite/roteiro.md` fixa o pedido e o critério.
-
 ## Guia rápido
 
 Do zero a uma aula projetada, em seis passos. Precisa de Node 20.6 ou superior e, para o painel de composição e o PDF, do Google Chrome instalado.
@@ -34,7 +17,7 @@ npm install -g aula-usp
 aula-usp novo minha-aula --unidade ime
 ```
 
-`--unidade` escolhe o segundo logo da capa: `ime`, `ifusp`, `acs` ou `ciaam`. A pasta nasce com `index.html`, que é a aula inteira, já com a tag do runtime.
+`--unidade` escolhe o segundo logo da capa e do encerramento, ao lado da assinatura da USP (veja "Logos da capa", abaixo). A pasta nasce com `index.html`, que é a aula inteira, já com a tag do runtime.
 
 **2. Preencha o cabeçalho.** No `<head>` de `minha-aula/index.html`:
 
@@ -120,6 +103,28 @@ Gera, em `minha-aula/dist/`, um HTML autocontido que abre sem internet e o PDF d
 - `repositorio-de-disciplina`: o repositório de uma disciplina.
 
 Suba o pacote e peça a aula em português. O que ele gerar passa pelo mesmo `aula-usp validar`. O guia completo do autor está em `guia/`.
+
+## Logos da capa
+
+A capa e o encerramento trazem a assinatura da USP e um segundo logo, escolhido pela meta `unidade`:
+
+| `unidade` | logo |
+|---|---|
+| `ime` | Instituto de Matemática, Estatística e Ciência da Computação: assinatura conjunta IME+USP, preta |
+| `ifusp` | Instituto de Física, preto |
+| `acs` | Agentic Complex Systems, preto |
+| `ciaam` | Centro de Inteligência Artificial e Aprendizado de Máquina: a inscrição "CIAAM" em azul, a única exceção à regra dos logos pretos (spec 4.5) |
+
+**Para acrescentar outro logo** (um centro, um grupo, outra unidade), num clone deste repositório:
+
+1. Ponha o arquivo oficial em `assets/marcas/`: SVG de preferência, ou PNG com resolução folgada, recortado na caixa de tinta e sem nenhuma outra alteração.
+2. Acrescente a entrada em `assets/marcas/unidades.json`. A chave é o valor da meta `unidade`. Os campos são:
+   - `nome`, por extenso, que vira o texto alternativo;
+   - `arquivo`;
+   - `integraUSP`, verdadeiro só se o logo já traz a assinatura da USP;
+   - `altura`, `protecao` e `alturaMinima`, em px, tirados do manual de identidade visual quando houver.
+3. Registre a origem e as medidas em `assets/marcas/README.md`. Acrescente o logo ao `import` de `montar/dist.js`, que embute os logos no runtime, e à lista de `tests/unit/marcas.test.mjs`. Um logo que não seja preto precisa de exceção nomeada na spec 4.5.
+4. Rode `aula-usp dist`, `aula-usp pacotes`, `npm test` e `npm run test:integracao`, e publique uma versão nova. A tag das aulas aponta para uma versão exata da CDN, então o logo só aparece para quem usar essa versão ou uma posterior.
 
 ## Instalar
 
