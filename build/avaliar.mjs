@@ -4,7 +4,7 @@
 import { readFileSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join, dirname, basename } from 'node:path';
 import { lerERodarEstatica, lerAula, RAIZ_SISTEMA } from './validar.mjs';
-import { avaliar, contarAvaliacao } from '../avaliador/avaliar.js';
+import { avaliar, contarAvaliacao, indiceDoAlvo } from '../avaliador/avaliar.js';
 import { contar, slidesDoFonte } from '../validador/validar.js';
 
 // A foto tem o tamanho do palco (motor/motor.js: 1280 × 720), com escala 1: o motor escala o palco
@@ -59,7 +59,7 @@ export async function fotografar(caminho, pasta, { contrato, slide, antesDaFoto 
     return { slide: k + 1, id, layout, arquivo: nomeDaFoto(k + 1, fonte.length, id ?? layout ?? 'slide') };
   });
   const pedidos = slide === undefined || slide === null ? indice
-    : indice.filter((item) => (/^[0-9]+$/.test(String(slide)) ? item.slide === Number(slide) : item.id === String(slide)));
+    : [indice[indiceDoAlvo(fonte, slide)]].filter(Boolean);
   if (pedidos.length === 0) throw new Error(`não há slide "${slide}" nesta aula`);
 
   let navegador;

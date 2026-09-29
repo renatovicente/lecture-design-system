@@ -16,13 +16,24 @@ const CAIXA = { alerta: 'ALERTA', conselho: 'CONSELHO' };
 
 const fonteDe = (criterio) => criterio.fonte.join(', ');
 
-// --slide aceita a posição (começando em 1, como o validador conta) ou o id da section. Um número
-// escrito como texto ("4", da linha de comando) é posição.
+// --slide aceita o id da section ou a posição (começando em 1, como o validador conta), com a regra de
+// `aula-usp slide` e de `validar --slide` (build/secoes.mjs, resolverAlvo): um id que existe ganha de
+// um número que parece posição, e um número sem id igual é posição. A regra é repetida aqui, e não
+// importada, porque avaliador/ é do lado do navegador e não importa de build/; quem prova que as duas
+// concordam é tests/unit/secoes.test.mjs ("os três comandos escolhem o mesmo slide"). Revisão da
+// 1.2.0: com "número é sempre posição", numa aula com id="5" o avaliar e o slide apontavam slides
+// diferentes para o alvo "5", e a skill de corrigir fotografaria um slide e trocaria outro.
+export function indiceDoAlvo(slides, alvo) {
+  const texto = String(alvo);
+  const porId = slides.findIndex((candidata) => candidata.getAttribute('id') === texto);
+  if (porId !== -1) return porId;
+  if (/^[0-9]+$/.test(texto) && Number(texto) >= 1 && Number(texto) <= slides.length) return Number(texto) - 1;
+  return -1;
+}
+
 function escolherSlide(slides, slide) {
   const texto = String(slide);
-  const secao = /^[0-9]+$/.test(texto)
-    ? slides[Number(texto) - 1]
-    : slides.find((candidata) => candidata.getAttribute('id') === texto);
+  const secao = slides[indiceDoAlvo(slides, texto)];
   if (!secao) throw new Error(`não há slide "${texto}" nesta aula: use a posição (1 a ${slides.length}) ou o id da section.`);
   return secao;
 }

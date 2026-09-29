@@ -149,3 +149,21 @@ for (const deck of DECKS) {
     }
   });
 }
+
+// Os três comandos escolhem o mesmo slide para o mesmo alvo: `slide` e `validar --slide` por
+// resolverAlvo (build/secoes.mjs), `avaliar --slide` e as fotos por indiceDoAlvo (avaliador/, que não
+// importa de build/). A regra está escrita duas vezes de propósito; é este teste que as prende uma à
+// outra. O caso que as separava antes da revisão da 1.2.0: um id só de algarismos que não é a posição.
+test('os três comandos escolhem o mesmo slide: id que existe ganha de posição', async () => {
+  const { indiceDoAlvo } = await import('../../avaliador/avaliar.js');
+  const { parseHTML } = await import('linkedom');
+  const fonte = '<body><section data-layout="capa"></section><section id="3" data-layout="conteudo"></section>'
+    + '<section id="a" data-layout="conteudo"></section><section data-layout="encerramento"></section></body>';
+  const secoes = localizarSecoes(fonte);
+  const slides = slidesDoFonte(parseHTML(`<!DOCTYPE html><html>${fonte}</html>`).document.body);
+  assert.equal(slides.length, 4);
+  for (const alvo of ['1', '2', '3', '4', '5', '0', 'a', 'b']) {
+    assert.equal(indiceDoAlvo(slides, alvo), resolverAlvo(secoes, alvo), `alvo "${alvo}"`);
+  }
+  assert.equal(resolverAlvo(secoes, '3'), 1, 'o id "3" ganha da posição 3');
+});
