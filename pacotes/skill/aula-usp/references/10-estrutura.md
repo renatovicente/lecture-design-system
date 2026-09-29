@@ -18,7 +18,7 @@ Uma aula é um arquivo HTML: um `<head>` com os metadados e a tag do runtime, e 
 <meta name="aula" content="1">
 <meta name="data" content="2026-03-02">
 <meta name="professor" content="Prof. Nome Sobrenome">
-<script src="https://cdn.jsdelivr.net/npm/aula-usp@1.0.2/dist/aula-usp.js"
+<script src="https://cdn.jsdelivr.net/npm/aula-usp@1.1.0/dist/aula-usp.js"
         integrity="sha384-ic2mDwhYVA/r3PMu0md7Ev5FHiMJKan/phs/3KCOW5Va4evbNVArhgZCQHlE2XgP" crossorigin="anonymous"></script>
 </head>
 <body>

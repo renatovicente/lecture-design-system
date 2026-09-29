@@ -60,6 +60,16 @@ test('instalado, o pacote cria, valida e constrói uma aula nova, com PDF', () =
     r = cli(pacote, 'validar', aula);
     assert.equal(r.status, 0, r.stdout + r.stderr);
     assert.match(r.stdout, /0 erros, 0 avisos/);
+    // 1.1.0: `avaliar` no pacote instalado — a rubrica (avaliador/rubrica.json) é lida por caminho
+    // montado em tempo de execução, o alcance que tests/unit/publicacao.test.mjs não tem. Com
+    // --fotos, também o servidor e o runtime local no arranjo içado.
+    const fotos = join(dir, 'fotos');
+    r = cli(pacote, 'avaliar', aula, '--json', '--fotos', fotos);
+    assert.equal(r.status, 0, r.stdout + r.stderr);
+    const avaliacao = JSON.parse(r.stdout);
+    assert.ok(avaliacao.resumo?.total, `avaliar --json sem resumo: ${r.stdout.slice(0, 200)}`);
+    assert.ok(Array.isArray(avaliacao.achados));
+    assert.ok(avaliacao.fotos.indice.length > 0 && existsSync(join(fotos, 'indice.json')));
     r = cli(pacote, 'build', aula);
     assert.equal(r.status, 0, r.stdout + r.stderr);
     assert.ok(existsSync(join(aula, 'dist', 'aula-nova.html')));

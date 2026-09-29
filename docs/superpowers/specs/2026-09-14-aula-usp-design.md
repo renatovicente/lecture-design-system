@@ -584,6 +584,7 @@ O destaque de código usa o Shiki (núcleo, motor de expressões regulares em Ja
 | `aula-usp novo <pasta> --unidade ime` | copia `modelos/aula/` com os metadados preenchidos |
 | `aula-usp validar <pasta> [--json]` | roda as regras estáticas e de carga e, havendo Chrome, as de composição |
 | `aula-usp build <pasta> [--sem-pdf]` | roda o pipeline completo (seção 3.3) |
+| `aula-usp avaliar <pasta> [--slide <id\|n>] [--minutos N] [--fotos <dir>] [--json]` | desde a 1.1.0: julga uma aula já válida pela rubrica de `avaliador/rubrica.json` (Naegle 2021 e UCSD), só com alerta e conselho, e sai com 0 ou 2, nunca 1; a definição é da spec `2026-09-28-aula-usp-skills-design.md`, seção 4 |
 | `aula-usp servir <pasta> [--porta 8765]` | serve a aula com o runtime local de `dist/`, para desenvolver e para usar o modo navegador sem publicar |
 | `aula-usp dist` | gera os scripts de `dist/` e `validador/cobertura.json` (manutenção do sistema) |
 | `aula-usp pacotes` | gera `pacotes/`, reescreve a tag do runtime (versão e `integrity`) em `modelos/`, `especime/` e `exemplos/`, e checa limites e consistência (manutenção do sistema) |

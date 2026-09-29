@@ -6,7 +6,7 @@ A spec é a autoridade: `docs/superpowers/specs/2026-09-14-aula-usp-design.md`. 
 
 ## O sistema em um parágrafo
 
-Uma aula é um arquivo HTML. `montar/` transforma o fonte do autor no slide montado, `motor/` navega, `componentes/` renderiza matemática (KaTeX) e código (Shiki), `validador/` acusa o que fugiu do contrato — no terminal e num painel dentro da própria aula. `bin/` e `build/` são a camada de Node: CLI, servidor local, pipeline de build, PDF e empacotamento. `contrato/contrato.json` diz o que é permitido; `tokens/aula-usp.tokens.json` diz com que cores e medidas.
+Uma aula é um arquivo HTML. `montar/` transforma o fonte do autor no slide montado, `motor/` navega, `componentes/` renderiza matemática (KaTeX) e código (Shiki), `validador/` acusa o que fugiu do contrato — no terminal e num painel dentro da própria aula —, e `avaliador/`, desde a 1.1.0, aconselha sobre a qualidade de uma aula já válida, pela rubrica de `avaliador/rubrica.json`. `bin/` e `build/` são a camada de Node: CLI, servidor local, pipeline de build, PDF e empacotamento. `contrato/contrato.json` diz o que é permitido; `tokens/aula-usp.tokens.json` diz com que cores e medidas.
 
 ## Comandos
 
@@ -18,6 +18,7 @@ A CLI vive em `bin/aula-usp.mjs`. Sem `npm link`, chame por `node bin/aula-usp.m
 | `aula-usp servir <pasta> [--porta 8765]` | serve a aula com o runtime local de `dist/`; troca o endereço da tag e remove o `integrity` |
 | `aula-usp validar <pasta> [--json]` | regras estáticas e de carga e, havendo Chrome, as de composição |
 | `aula-usp build <pasta> [--sem-pdf]` | as sete etapas da spec 3.3; escreve só em `<pasta>/dist/` |
+| `aula-usp avaliar <pasta> [--slide <id\|n>] [--minutos N] [--fotos <dir>] [--json]` | os critérios medidos da rubrica (spec `2026-09-28-aula-usp-skills-design.md`, 4.1); só `ALERTA` e `CONSELHO`, saída 0 com ou sem eles, 2 em falha de ambiente, nunca 1; aula com erro estático não é avaliada ("valide primeiro", saída 0); `--fotos` é a única opção que abre o Chrome |
 | `aula-usp dist` | gera `validador/cobertura.json` e os 13 scripts de `dist/` (manutenção do sistema; fora de um clone do repositório recusa com 2) |
 | `aula-usp pacotes` | fixa a tag do runtime, gera o guia e monta `pacotes/`, nessa ordem; confere os limites da spec 11.1 (manutenção do sistema; fora de um clone do repositório recusa com 2) |
 
@@ -25,7 +26,7 @@ A CLI vive em `bin/aula-usp.mjs`. Sem `npm link`, chame por `node bin/aula-usp.m
 
 Códigos de saída (spec 8.1): 0 sem erros, avisos permitidos; 1 com erros de validação; 2 com falha de ambiente. Cada comando aceita **só as suas** flags: `--json` em `build` ou `--porta` em `validar` saem com o uso e código 2, como uma flag inexistente — melhor recusar que ignorar em silêncio.
 
-Os seis comandos da spec 8.1 existem. Das seis metas do contrato, `novo` preenche duas: `disciplina`, `aula` e `professor` ficam com o texto de exemplo do modelo, porque um `professor` inventado seria pior que um lugar visivelmente vazio, e `video` (opcional, de fase 2) não entra no modelo. Desde a 1.0.1, só `unidade`, `data` e `professor` são obrigatórias.
+Os seis comandos da spec 8.1 existem, e `avaliar` é o sétimo, da spec de 2026-09-28 (a 8.1 remete a ela). Das seis metas do contrato, `novo` preenche duas: `disciplina`, `aula` e `professor` ficam com o texto de exemplo do modelo, porque um `professor` inventado seria pior que um lugar visivelmente vazio, e `video` (opcional, de fase 2) não entra no modelo. Desde a 1.0.1, só `unidade`, `data` e `professor` são obrigatórias.
 
 `aula-usp pacotes` reescreve a tag nas **três** pastas da spec 8.1: `modelos/`, `especime/` e `exemplos/`. O espécime é servido cru por `dist.test.mjs` e `visual.test.mjs` — um servidor que **não** reescreve nada, e é ele que prova que a tag escrita pelo autor chega ao navegador como está. A 1.0.0 está publicada, e a CDN foi conferida de verdade uma vez (13 de 13 hashes, 0 erros em 5 decks num Chrome com a CDN real) — mas os testes continuam **offline, de propósito**: quem responde pela CDN neles é `rotearCdn` (`tests/integracao/utilitarios.mjs`), o **Chrome** intercepta a rota e devolve os bytes de `dist/` desta árvore, que é o que está sob teste (a versão publicada é outra, e uma suíte que dependesse da rede não diria nada sobre o código que você acabou de mudar). O servidor continua burro. Dois ganhos que a tag relativa não dava: o `integrity` conferido por um navegador de verdade (dois bytes a mais em `aula-usp.js` e o Chrome recusa o script) e a cadeia de scripts secundários resolvida pela base da CDN (9 pedidos em `codigo.html`). O modelo e as duas aulas-exemplo vão dentro dos pacotes, e o espécime inteiro também, desde o pacote autossuficiente: três dos quatro pacotes levam `especime/` com todos os decks (`tests/unit/pacotes.test.mjs`).
 
@@ -36,8 +37,8 @@ Node ≥ 20.6, ES modules. `playwright-core` usa o Google Chrome instalado (cana
 ## Testes
 
 ```bash
-npm test                 # 46 arquivos em tests/unit/: 44 sem navegador, 2 com Chrome
-npm run test:integracao  # 26 arquivos em tests/integracao/, Chrome de verdade
+npm test                 # 49 arquivos em tests/unit/: 47 sem navegador, 2 com Chrome
+npm run test:integracao  # 27 arquivos em tests/integracao/, Chrome de verdade
 ```
 
 Não há CI. Quem roda os testes antes de commitar é você.
@@ -48,7 +49,7 @@ Os de integração são pesados — abrem Chrome, constroem decks, comparam pixe
 node --test tests/integracao/composicao.test.mjs
 ```
 
-Uma distinção que confunde: **"falta de Chrome não é falha" é regra da CLI**, não dos testes. `validar` e `build` degradam sozinhos — pulam composição e PDF, emitem aviso no stderr e terminam com 0 se não houver erros (spec 8.1). Os testes de integração não têm essa tolerância: chamam `chromium.launch()` direto (`tests/integracao/utilitarios.mjs:35`) e falham sem Chrome. Os dois arquivos de `tests/unit/` que sobem Chrome — `validar-cli.test.mjs` e `novo.test.mjs`, os dois por `validarArquivo` — seguem a regra da CLI e **pulam anunciando**: medido, `CHROME_PATH` inexistente dá 633 passam e 2 pulados (medido na 1.0.1), e nenhum pulo é mudo.
+Uma distinção que confunde: **"falta de Chrome não é falha" é regra da CLI**, não dos testes. `validar` e `build` degradam sozinhos — pulam composição e PDF, emitem aviso no stderr e terminam com 0 se não houver erros (spec 8.1). Os testes de integração não têm essa tolerância: chamam `chromium.launch()` direto (`tests/integracao/utilitarios.mjs:35`) e falham sem Chrome. Os dois arquivos de `tests/unit/` que sobem Chrome — `validar-cli.test.mjs` e `novo.test.mjs`, os dois por `validarArquivo` — seguem a regra da CLI e **pulam anunciando**: medido, `CHROME_PATH` inexistente dá 689 passam e 2 pulados (medido na 1.1.0), e nenhum pulo é mudo. `tests/unit/avaliar-cli.test.mjs` também põe um `CHROME_PATH` inexistente, mas para provar a falta: `avaliar --fotos` sem Chrome sai com 2, e sem `--fotos` o comando nem tenta abrir navegador.
 
 ## `dist/` é rastreado, e os testes comparam byte a byte
 
@@ -71,8 +72,8 @@ Consequência prática: **mexeu no empacotador (`build/bundle.mjs`), nos pontos 
 | `estilos/fontes.css` | `npm run fontes:css` | `tests/unit/fontes-css.test.mjs:24` |
 | `validador/cobertura.json` | `aula-usp dist` | `tests/unit/cobertura.test.mjs:74` |
 | `dist/` (13 scripts + manifesto) | `aula-usp dist` | `tests/unit/bundle.test.mjs:116` e `:136`, e as duas de propriedade em `:197` e `:220` |
-| `guia/10-estrutura.md`, `20-layouts.md`, `30-componentes.md` e `60-validador.md`, só entre `<!-- gerado:… -->` e `<!-- /gerado -->` | `npm run guia` | `tests/unit/guia.test.mjs:34` |
-| `pacotes/` (os quatro da spec 10.2, 52 arquivos) e a tag do runtime em `modelos/` e `exemplos/` | `aula-usp pacotes` | `tests/unit/pacotes.test.mjs:58` |
+| `guia/10-estrutura.md`, `20-layouts.md`, `30-componentes.md`, `60-validador.md` e `80-avaliar-corrigir-gerar.md`, só entre `<!-- gerado:… -->` e `<!-- /gerado -->` | `npm run guia` | `tests/unit/guia.test.mjs:34`; a de propriedade do capítulo de avaliar — todo critério de `avaliador/rubrica.json`, uma linha cada, com os números dela — no fim do mesmo arquivo |
+| `pacotes/` (os quatro da spec 10.2 e a skill `aula-usp-avaliar`, 56 arquivos) e a tag do runtime em `modelos/` e `exemplos/` | `aula-usp pacotes` | `tests/unit/pacotes.test.mjs:68` |
 | `assets/aula-usp.mplstyle` | `npm run mplstyle` | `tests/unit/mplstyle.test.mjs` — regerar-e-comparar, mais a propriedade (as três cores do ciclo são as de `tokens.cor.tinta/azul/cinza`, sem `#`). O Aula USP não consome este arquivo, e não há Python no projeto (spec 8.2) para carregá-lo de verdade num matplotlib — a cobertura dele é textual porque a ferramenta que o lê não está no projeto |
 
 Todos são rastreados no git e trazem, quando o formato permite, o cabeçalho "Gerado por … Não editar à mão". Editar um à mão quebra a guarda, e a correção é sempre a mesma: edite a **fonte** e regere.
@@ -101,11 +102,11 @@ As duas têm a mesma forma e o mesmo perigo: **a ordem errada não falha.** A pr
 
 ## A fronteira: quem pode importar Node
 
-`montar/`, `motor/`, `componentes/` e `validador/` **não importam nada do Node** — rodam no navegador. Medido: zero ocorrências de `node:` nos quatro diretórios. Só `bin/` (1 arquivo) e `build/` (20 arquivos) são Node.
+`montar/`, `motor/`, `componentes/`, `validador/` e `avaliador/` **não importam nada do Node** — rodam no navegador. Medido na 1.1.0: zero ocorrências de `node:` nos cinco diretórios. Só `bin/` (1 arquivo) e `build/` (21 arquivos) são Node. O `avaliador/` entrou na fronteira sem estar em painel nenhum ainda (spec 2026-09-28, 4.2): é o que deixa o caminho aberto para um.
 
 É o que permite a mesma regra rodar no painel dentro da aula e na linha de comando, e o que torna `dist/` possível: esbuild empacota esses diretórios para o navegador, e um `import … from 'node:fs'` ali não tem como resolver. `tests/` fica fora da fronteira e importa Node à vontade.
 
-Não há teste que varra imports: a fronteira se mantém à mão. Se você se vir precisando de `node:` em um dos quatro, o que você quer provavelmente é receber o dado já lido por parâmetro — é assim que o validador recebe o contrato, as unidades e a cobertura.
+Não há teste que varra imports: a fronteira se mantém à mão. Se você se vir precisando de `node:` em um dos cinco, o que você quer provavelmente é receber o dado já lido por parâmetro — é assim que o validador recebe o contrato, as unidades e a cobertura.
 
 Do lado Node, um arquivo de dependência se acha como o Node acha (`import.meta.resolve`), nunca montando `node_modules/…` sobre a raiz do sistema: instalado por `npx` ou por `npm install` num projeto, o npm iça as dependências para o lado de `aula-usp`, e `<raiz>/node_modules/` não existe. Medido na fase 3a: `build/fontes-embutidas.mjs` lia `katex.min.css` assim, e o `build` de toda aula com TeX saía com 2 no pacote instalado. `tests/integracao/instalacao.test.mjs` monta o pacote nesse arranjo. (`build/bundle.mjs` ainda monta o caminho, e pode: só roda em `aula-usp dist`, num clone.) Uma dependência que um comando do autor importa é de produção, não de desenvolvimento — o `fontkit` era devDependency e o mesmo teste o achou.
 
@@ -123,6 +124,16 @@ Duas guardas seguram isso, e vale conhecê-las antes de mexer nas regras:
 - `tests/unit/validador.test.mjs` confere o contrato contra o código, um registro por grupo, **sem escrever nenhum nome de grupo nem número de regras no teste**: os grupos vêm do próprio contrato. É o que faz "apareceu um grupo novo no contrato e ninguém escreveu o código dele" cair como falha.
 
 Número que **não** vem do contrato — porque é da spec — entra como constante nomeada com a citação da seção ao lado. Dois exemplos no repositório: o teto de diferença visual em `tests/integracao/visual.test.mjs` e as metas de tamanho de `dist/` em `tests/integracao/tamanhos.test.mjs`.
+
+## A rubrica do avaliador também é dado
+
+`avaliador/rubrica.json` está para o avaliador como o contrato está para o validador: os 17 critérios da spec 2026-09-28 (3.1 e 3.2), com fonte, tipo, alcance, nível máximo, limiares, listas e a `acao` de cada medido ou a `pergunta` de cada julgado. `avaliador/criterios/` só sabe contar; nenhum limiar mora no código. Três guardas:
+
+- `tests/unit/rubrica.test.mjs` prega a rubrica à spec com uma tabela escrita no teste — o universo não sai do JSON, e um critério apagado ou inventado nele cai citando o `id`;
+- `tests/unit/avaliador.test.mjs` gera um caso por pasta de `tests/fixtures/avaliador/<criterio>/` (hoje 9, uma por medido): o `ruim` tem exatamente um achado do seu critério, o `bom` nenhum de nenhum, e os 18 arquivos validam com 0 erros e 0 avisos — avaliar é para aula válida. A lista dos medidos é literal no teste, e `avaliar()` estoura com um medido da rubrica sem implementação, em vez de pulá-lo;
+- a de propriedade do capítulo de avaliar do guia, na tabela acima.
+
+Avaliar não é validar, e isso é regra, não gosto: nenhum critério tem nível `erro`, o comando nunca sai com 1, e nem o contrato, nem o validador, nem o `build` leem a rubrica.
 
 ## Acrescentar ou mudar uma regra
 

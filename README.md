@@ -102,6 +102,7 @@ Gera, em `minha-aula/dist/`, um HTML autocontido que abre sem internet e o PDF d
 - `claude/projeto`: um Projeto do claude.ai;
 - `gpt/gpt-personalizado`: um GPT personalizado;
 - `skill/aula-usp`: Claude Code e Codex CLI;
+- `skill/aula-usp-avaliar`: a skill que avalia uma aula pronta, no Claude Code;
 - `repositorio-de-disciplina`: o repositório de uma disciplina.
 
 Suba o pacote e peça a aula em português. O que ele gerar passa pelo mesmo `aula-usp validar`. O guia completo do autor está em `guia/`.
@@ -230,10 +231,11 @@ montar/                  transforma o fonte do autor no slide montado
 motor/                   navegação, passos, notas, apresentador, painéis, impressão
 componentes/             matemática (KaTeX), código (Shiki), gráficos, diagramas e controles, nos dois modos
 validador/               validar.js e regras/*.js — executam o contrato, não o repetem
+avaliador/               a rubrica de avaliação (rubrica.json) e os critérios medidos de `aula-usp avaliar`
 build/                   glue de Node: servir, validar, construir, PDF, empacotar
 dist/                    o runtime versionado: 14 arquivos, gerados por `aula-usp dist`
-guia/                    o guia do autor, 16 arquivos, com as fontes dos pacotes em guia/pacotes/
-pacotes/                 os 4 pacotes para agentes, 49 arquivos, gerados por `aula-usp pacotes`
+guia/                    o guia do autor, 18 arquivos, com as fontes dos pacotes em guia/pacotes/
+pacotes/                 os 4 pacotes para agentes e a skill de avaliar, 56 arquivos, gerados por `aula-usp pacotes`
 modelos/aula/            o esqueleto que `aula-usp novo` copia
 exemplos/                as aulas-exemplo: descida do gradiente, e regressão linear com gráfico, diagrama e demo
 especime/                sete decks que exercitam tudo
@@ -241,7 +243,7 @@ tests/                   unit/, integracao/, fixtures/ e o roteiro de aceite
 docs/superpowers/        a spec, os planos de cada marco e as revisões finais
 ```
 
-Uma divisão importa mais que as outras: **`montar/`, `motor/`, `componentes/` e `validador/` não importam nada do Node** — rodam no navegador. Só `bin/` e `build/` são Node. É o que permite a mesma regra rodar no painel dentro da aula e na linha de comando.
+Uma divisão importa mais que as outras: **`montar/`, `motor/`, `componentes/`, `validador/` e `avaliador/` não importam nada do Node** — rodam no navegador. Só `bin/` e `build/` são Node. É o que permite a mesma regra rodar no painel dentro da aula e na linha de comando.
 
 Sete artefatos são **gerados e versionados**, cada um com uma guarda que falha se o arquivo em disco divergir do gerador: `estilos/tokens.css` e `tokens/tokens.js`, `estilos/fontes.css`, `validador/cobertura.json`, `dist/`, os blocos gerados de quatro arquivos do `guia/`, `pacotes/` e `assets/aula-usp.mplstyle`.
 
