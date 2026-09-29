@@ -19,7 +19,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync, spawn, spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -124,6 +124,31 @@ test('instalado, servir responde com a aula e o runtime local', async () => {
     assert.doesNotMatch(html, /cdn\.jsdelivr\.net/, 'servir troca a tag pelo runtime local');
   } finally {
     servidor.kill();
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+// `aula-usp roteiro` no pacote instalado (plano do gerar, Tarefa 4): o parser mora em montar/, o
+// comando em build/, e a tag do runtime sai de modelos/aula/index.html — os três têm de viajar no
+// tarball. O roteiro é o exemplo da spec 2026-09-28, 6.1, que não viaja (tests/ fica fora do `files`),
+// e por isso é copiado daqui; SEM a meta `video: canto`, pela razão medida na Tarefa 2 e presa em
+// tests/integracao/roteiro.test.mjs: com ela, o slide #variancia entra no canto do vídeo.
+test('instalado, roteiro converte o exemplo da spec 6.1 numa aula válida, com a tag do modelo instalado', () => {
+  const { dir, pacote } = instalar();
+  try {
+    const fonte = join(dir, 'fonte');
+    cpSync(join(RAIZ, 'tests/fixtures/roteiro/exemplo-spec'), fonte, { recursive: true });
+    const roteiro = join(fonte, 'roteiro.md');
+    writeFileSync(roteiro, readFileSync(roteiro, 'utf8').replace('video: canto\n', ''));
+    const aula = join(dir, 'aula-do-roteiro');
+    const r = cli(pacote, 'roteiro', roteiro, aula);
+    assert.equal(r.status, 0, r.stdout + r.stderr);
+    assert.match(r.stdout, /Validador Aula USP: 0 erros/);
+    assert.doesNotMatch(r.stderr, /composição pulada/, 'a validação do roteiro pulou a composição');
+    const tag = (texto) => /<script src="[^"]*aula-usp\.js"[^>]*><\/script>/.exec(texto)[0];
+    assert.equal(tag(readFileSync(join(aula, 'index.html'), 'utf8')), tag(readFileSync(join(pacote, 'modelos/aula/index.html'), 'utf8')));
+    assert.ok(existsSync(join(aula, 'img/nuvem.png')));
+  } finally {
     rmSync(dir, { recursive: true, force: true });
   }
 });

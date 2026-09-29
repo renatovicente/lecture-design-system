@@ -106,6 +106,7 @@ Gera, em `minha-aula/dist/`, um HTML autocontido que abre sem internet e o PDF d
 - `skill/aula-usp`: Claude Code e Codex CLI;
 - `skill/aula-usp-avaliar`: a skill que avalia uma aula pronta, no Claude Code;
 - `skill/aula-usp-corrigir`: a skill que corrige um slide sem tocar no resto da aula, no Claude Code;
+- `skill/aula-usp-gerar`: a skill que monta a aula a partir de artigos, apresentações e um roteiro em markdown, no Claude Code;
 - `repositorio-de-disciplina`: o repositório de uma disciplina.
 
 Suba o pacote e peça a aula em português. O que ele gerar passa pelo mesmo `aula-usp validar`. O guia completo do autor está em `guia/`.
@@ -185,15 +186,14 @@ O canto ocupa **26,1% da largura e 26,1% da altura** do slide, a partir do canto
 
 ## Skills para agentes
 
-Uma skill é uma pasta com um `SKILL.md`: instruções que o agente carrega sozinho quando o pedido combina com a descrição dela. O Aula USP traz três, em `pacotes/skill/`, e cada uma leva dentro tudo o que cita: guia, contrato, exemplos e rubrica. Ela funciona sem este repositório.
+Uma skill é uma pasta com um `SKILL.md`: instruções que o agente carrega sozinho quando o pedido combina com a descrição dela. O Aula USP traz quatro, em `pacotes/skill/`, e cada uma leva dentro tudo o que cita: guia, contrato, exemplos e rubrica. Ela funciona sem este repositório.
 
 | skill | para quê | quando o agente a usa |
 |---|---|---|
 | `aula-usp` | escrever aulas e slides no Aula USP: o arquivo HTML, os layouts, a matemática, o código e as figuras, e corrigir os achados do validador até dar 0 erros | "faça uma aula sobre…", "escreva um slide de abertura…", "corrija os erros do validador" |
 | `aula-usp-avaliar` | julgar a qualidade de uma aula pronta ou de um slide pela rubrica de Naegle e da UCSD, com o relatório em `avaliacao.md`, sem editar a aula | "avalie esta aula", "o slide 5 está bom?", "revise a qualidade dos slides" |
 | `aula-usp-corrigir` | corrigir, reescrever ou encurtar um slide específico sem tocar no resto do arquivo, aplicando o pedido do autor, uma sugestão de `avaliacao.md` ou um achado do validador, com a foto de antes e a de depois | "corrija o slide #variancia: o título está longo", "aplique ao slide 5 a sugestão da avaliação" |
-
-Uma outra está especificada e virá na próxima versão: `aula-usp-gerar`, para montar a aula a partir de artigos, apresentações e um roteiro em markdown.
+| `aula-usp-gerar` | montar uma aula a partir de artigos em PDF, de apresentações antigas (PDF, PPTX, Beamer, outras aulas do Aula USP) ou de um roteiro em markdown: escreve o roteiro, **para e mostra ao autor**, e com o "sim" gera, valida, avalia e corrige, entregando a lista das figuras alheias com a licença de cada uma | "faça uma aula de 50 minutos a partir deste artigo e da minha apresentação em Beamer", "transforme este roteiro em aula" |
 
 **Como usar no Claude Code:**
 
@@ -203,12 +203,12 @@ Uma outra está especificada e virá na próxima versão: `aula-usp-gerar`, para
    npm install -g aula-usp
    ```
 
-   As skills chamam `aula-usp validar`, `build`, `avaliar` e `slide`.
+   As skills chamam `aula-usp validar`, `build`, `avaliar`, `slide` e `roteiro`.
 2. Copie as skills para onde o Claude Code as carrega. Pode ser a pasta do projeto, `.claude/skills/`, ou todas as suas pastas, `~/.claude/skills/`:
 
    ```bash
    mkdir -p ~/.claude/skills
-   cp -R pacotes/skill/aula-usp pacotes/skill/aula-usp-avaliar pacotes/skill/aula-usp-corrigir ~/.claude/skills/
+   cp -R pacotes/skill/aula-usp pacotes/skill/aula-usp-avaliar pacotes/skill/aula-usp-corrigir pacotes/skill/aula-usp-gerar ~/.claude/skills/
    ```
 
    As pastas não vão no pacote do npm, que leva a CLI, o runtime, o modelo, os exemplos e o guia, mas não os pacotes para agentes. Elas estão no repositório público: `git clone https://github.com/renatovicente/lecture-design-system` e copie de `lecture-design-system/pacotes/skill/`.
@@ -216,7 +216,54 @@ Uma outra está especificada e virá na próxima versão: `aula-usp-gerar`, para
 
 **No Codex CLI:** use a mesma pasta `pacotes/skill/aula-usp/`, carregada da forma que a sua versão do Codex aceita skills ou instruções de projeto. O aceite da fase 1 rodou assim, e a forma de carregar é registrada em `tests/aceite/roteiro.md`.
 
-**Sem terminal:** o claude.ai e o ChatGPT não carregam skills. Para eles existem os pacotes `pacotes/claude/projeto/` (instruções e arquivos de um Projeto) e `pacotes/gpt/gpt-personalizado/` (instruções e conhecimento de um GPT personalizado). Os dois já têm os modos de escrever, de avaliar e de corrigir um slide.
+**Sem terminal:** o claude.ai e o ChatGPT não carregam skills. Para eles existem os pacotes `pacotes/claude/projeto/` (instruções e arquivos de um Projeto) e `pacotes/gpt/gpt-personalizado/` (instruções e conhecimento de um GPT personalizado). Os dois já têm os modos de escrever, de avaliar, de corrigir um slide e de gerar a partir de um roteiro.
+
+## Gerar a partir de um roteiro
+
+Um roteiro é um arquivo em markdown que descreve a aula slide a slide: o layout, o título e o corpo de cada um. É um esqueleto, curto o bastante para discutir a aula antes de escrevê-la, e o comando o transforma na aula:
+
+````markdown
+---
+unidade: ifusp
+disciplina: Física Estatística
+aula: 3
+data: 2026-10-05
+professor: Prof. Renato Vicente
+video: canto
+---
+
+# Passeio aleatório | e difusão
+
+## abertura: O passeio {#passeio curto="O passeio"}
+? Onde para quem dá N passos ao acaso?
+
+## conteudo: A variância cresce | linearmente com o tempo {#variancia}
+> A variância depois de N passos é \( N a^2 \).
+1. Os passos são independentes.
+2. + Os termos cruzados somem na média.
+[destaque: Definição] Passeio aleatório: soma de passos independentes.
+nota: Pedir a um aluno que ande jogando uma moeda.
+fonte: Adaptado de Feller, vol. 1, cap. III.
+
+## figura: A nuvem se espalha | como raiz de t {#nuvem}
+![Dez mil caminhantes depois de 100 passos](img/nuvem.png)
+legenda: Histograma das posições finais.
+
+## encerramento: O que fica
+- A variância cresce com N.
+- A difusão é o limite contínuo.
+próxima: Equação de Fokker-Planck.
+````
+
+```bash
+aula-usp roteiro roteiro.md passeio
+```
+
+O comando escreve `passeio/index.html`, copia `img/nuvem.png` para `passeio/img/` e roda `aula-usp validar`. A conversão é determinística: o mesmo roteiro dá sempre os mesmos bytes. Um erro de roteiro sai com a linha, sem escrever nada. O que o roteiro não exprime — demos, exercícios — se escreve depois no HTML. A sintaxe completa, com um roteiro inteiro que valida limpo, está em `guia/80-avaliar-corrigir-gerar.md`, na seção "Gerar a partir de um roteiro e de fontes".
+
+Neste exemplo, que é o da spec, a meta `video: canto` reserva o canto do vídeo, e o validador acusa que o destaque e a fonte do slide `#variancia` entram nele: é o validador fazendo o trabalho dele. Tire a meta, ou passe um bloco para outro slide, e a aula valida limpa.
+
+A skill `aula-usp-gerar` escreve o roteiro por você, a partir de artigos e de apresentações antigas, e o mostra antes de gerar a aula (veja "Skills para agentes", acima).
 
 ## Avaliar a qualidade
 
@@ -369,8 +416,8 @@ validador/               validar.js e regras/*.js — executam o contrato, não 
 avaliador/               a rubrica de avaliação (rubrica.json) e os critérios medidos de `aula-usp avaliar`
 build/                   glue de Node: servir, validar, construir, PDF, empacotar
 dist/                    o runtime versionado: 14 arquivos, gerados por `aula-usp dist`
-guia/                    o guia do autor, 19 arquivos, com as fontes dos pacotes em guia/pacotes/
-pacotes/                 os 4 pacotes para agentes e as skills de avaliar e de corrigir, 58 arquivos, gerados por `aula-usp pacotes`
+guia/                    o guia do autor, 20 arquivos, com as fontes dos pacotes em guia/pacotes/
+pacotes/                 os 4 pacotes para agentes e as skills de avaliar, corrigir e gerar, 62 arquivos, gerados por `aula-usp pacotes`
 modelos/aula/            o esqueleto que `aula-usp novo` copia
 exemplos/                as aulas-exemplo: descida do gradiente, e regressão linear com gráfico, diagrama e demo
 especime/                sete decks que exercitam tudo

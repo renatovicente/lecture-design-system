@@ -1,6 +1,6 @@
 // O roteiro em markdown (spec 2026-09-28, 6.1; plano do gerar, D1 a D4): lê o texto do autor, slide a
-// slide, e gera a aula HTML. Do lado do navegador, sem `node:`, para um dia poder rodar num artifact:
-// quem lê o arquivo, copia as figuras e valida é build/roteiro.mjs.
+// slide, e gera a aula HTML. Do lado do navegador, sem importar nada do Node, para um dia poder rodar
+// num artifact: quem lê o arquivo, copia as figuras e valida é build/roteiro.mjs.
 //
 // Duas funções puras. `lerRoteiro(texto)` só conhece a sintaxe; `gerarAula(roteiro, { contrato,
 // tagDoRuntime })` só conhece o contrato. O que cada layout aceita, as grades, as linguagens, as metas,
